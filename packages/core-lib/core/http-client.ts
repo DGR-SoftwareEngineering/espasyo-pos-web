@@ -24,7 +24,7 @@ export class Http {
         this.options = options;
         this.middlewareOptions = middlewareOptions;
         this.client = axios.create(options);
-        
+        this.setupInterceptors();
     }
 
     public setupMiddlewareOptions(options: HttpMiddlewareOptions) {
