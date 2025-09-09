@@ -23,6 +23,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "axios": "workspace:*",
-    "qs": "workspace:*"
+    "qs": "workspace:*",
+    "isomorphic-dompurify": "workspace:*",
+    "query-string": "workspace:*"
   }
 }
