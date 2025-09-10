@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
+  transpilePackages: ["core-lib"],
   basePath: '',
   productionBrowserSourceMaps: process.env.NODE_ENV === 'development',
   poweredByHeader: false,
