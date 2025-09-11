@@ -25,6 +25,7 @@
     "axios": "workspace:*",
     "qs": "workspace:*",
     "isomorphic-dompurify": "workspace:*",
-    "query-string": "workspace:*"
+    "query-string": "workspace:*",
+    "react-async-hook": "workspace:*"
   }
 }
