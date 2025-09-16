@@ -17,7 +17,33 @@ type PathParameters = {
     query?: ParsedQuery<any>;
 }
 
-export const useRouter = () => {
+type NavigateFn = ReturnType<typeof navigate>;
+
+
+export interface CustomRouterReturn {
+    loading: boolean;
+    staticRoutes: StaticRoutes;
+    pathname: NextRouter['pathname'];
+    route: NextRouter['route'];
+    query: NextRouter['query'];
+    asPath: NextRouter['asPath'];
+    basePath: NextRouter['basePath'];
+    locale?: NextRouter['locale'];
+    locales?: NextRouter['locales'];
+    defaultLocale?: NextRouter['defaultLocale'];
+    isReady: NextRouter['isReady'];
+    isFallback: NextRouter['isFallback'];
+    isPreview: NextRouter['isPreview'];
+    back: NextRouter['back'];
+    reload: NextRouter['reload'];
+    prefetch: NextRouter['prefetch'];
+    push: NavigateFn;
+    replace: NavigateFn;
+    parsedQuery: ParsedQuery;
+}
+
+
+export const useRouter = (): CustomRouterReturn => {
     const router = useNextRouter();
     const [loading, setLoading] = useState(false);
     const staticRoutes = {} as StaticRoutes;
@@ -40,9 +66,9 @@ export const useRouter = () => {
         staticRoutes,
         ...useMemo(
             () => ({
-                router,
-                push: navigate(push),
-                replace: navigate(replace),
+                ...router,
+                push: navigate(push, () => staticRoutes),
+                replace: navigate(replace, () => staticRoutes),
                 parsedQuery: sanitizeQuery(),
             }),
             [router, staticRoutes],
@@ -61,31 +87,6 @@ export const useRouter = () => {
             : router.replace(routeUrl(path(staticRoutes)), path(staticRoutes), configuredRouteOptions(options))
     }
 
-    function navigate(fn: (path: string | PathFromRoutes, options?: TransitionOptions) => Promise<boolean>) {
-        return async (path: string | PathFromRoutes | PathParameters, options?: TransitionOptions) => {
-            setLoading(true);
-            if (typeof path === 'string') {
-                return await fn(path, options);
-            }
-
-            if (typeof path === 'function') {
-                return await fn(path, options);
-            }
-
-            try {
-                const stringifiedPath = qs.stringifyUrl({
-                    url: typeof path.url === 'string' ? path.url : path.url(staticRoutes),
-                    query: path.query
-                });
-
-                return await fn(stringifiedPath, options);
-            } catch (error) {
-                console.error(error);
-                return false;
-            }
-        }
-    }
-
     function sanitizeQuery(): ParsedQuery {
         const query = qs.parseUrl(router?.asPath ?? 'q').query;
 
@@ -100,6 +101,33 @@ export const useRouter = () => {
         return path === staticRoutes.home || path.includes('http://') || path.includes('https://') ? path : '/[...slug]'
     }
 }
+
+function navigate(
+    fn: (path: string | PathFromRoutes, options?: TransitionOptions,) => Promise<boolean>,
+    getStaticRoutes: () => StaticRoutes) {
+        return async (path: string | PathFromRoutes | PathParameters, options?: TransitionOptions) => {
+            if (typeof path === 'string') {
+                return await fn(path, options);
+            }
+
+            if (typeof path === 'function') {
+                return await fn(path, options);
+            }
+
+            try {
+                const routes = getStaticRoutes();
+                const stringifiedPath = qs.stringifyUrl({
+                    url: typeof path.url === 'string' ? path.url : path.url(routes),
+                    query: path.query
+                });
+
+                return await fn(stringifiedPath, options);
+            } catch (error) {
+                console.error(error);
+                return false;
+            }
+        }
+    }
 
 const configuredRouteOptions = (options?: TransitionOptions) =>
     options ? { scroll: false, ...options } : { scroll: false }
