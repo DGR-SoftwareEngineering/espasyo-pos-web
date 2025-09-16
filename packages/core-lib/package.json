@@ -26,6 +26,8 @@
     "qs": "workspace:*",
     "isomorphic-dompurify": "workspace:*",
     "query-string": "workspace:*",
-    "react-async-hook": "workspace:*"
+    "react-async-hook": "workspace:*",
+    "clsx": "workspace:*",
+    "@mui/icons-material": "workspace:*"
   }
 }

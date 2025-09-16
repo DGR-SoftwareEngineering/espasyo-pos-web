@@ -1,0 +1,106 @@
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { DialogElement } from '../../../api/content/types/common';
+import { openInNewTab } from '../../../business/navigation';
+import { useRouter } from '../../router';
+import { DialogBox } from '../../../components';
+
+export type CustomDialogElement = DialogElement & {
+    customOnClick?: AsyncFunction | VoidFunction;
+    customOnClose?: AsyncFunction | VoidFunction;
+}
+
+const context = createContext<{
+    isDialogOpen: boolean;
+    openDialog(element: CustomDialogElement): void;
+    closeDialog(): void;
+    loading: boolean;
+}>(undefined as any);
+
+interface Props {
+    loading?: boolean;
+    dialogOnLoad?: DialogElement;
+}
+
+export const useDialogContext = () => {
+    if (!context) {
+        throw new Error('DialogContextProvider should be used');
+    }
+    return useContext(context);
+}
+
+export const DialogContextProvider: React.FC<React.PropsWithChildren<Props>> = ({
+    children,
+    loading,
+    dialogOnLoad
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [dialogElement, setDialogElement] = useState<CustomDialogElement>();
+    const [actionLoading, setActionLoading] = useState(false);
+    const router = useRouter();
+    const isAlternateStyle = !!dialogElement?.value?.elements?.showInAlternateStyle?.value;
+    const hideCloseInAlternateStyle = !!dialogElement?.value?.elements?.hideCloseInAlternateStyle?.value;
+    const isButtonLoading = router.loading || actionLoading;
+    const hideCloseButton = !!dialogElement?.value?.elements?.hideModalCloseButton?.value;
+
+    useEffect(() => {
+        if (loading) {
+            handleForcedClose();
+            return;
+        }
+        if (dialogOnLoad?.value?.elements) {
+            handleOpen(dialogOnLoad);
+            return;
+        }
+        handleForcedClose();
+        return () => {
+            handleForcedClose();
+        }
+    }, [dialogOnLoad?.value?.elements, router.asPath, loading]);
+
+    return (
+        <context.Provider
+            value={useMemo(
+                () => ({
+                    isDialogOpen: isOpen,
+                    loading: actionLoading,
+                    openDialog: handleOpen,
+                    closeDialog: handleClose
+                }),
+                [isOpen, actionLoading]
+            )}
+        >
+            {children}
+            {!isAlternateStyle && (
+                <DialogBox
+                    open={isOpen && !!dialogElement && !loading}
+                    handleClose={handleClose}
+                    header={dialogElement?.value?.elements?.header?.value}
+                    loading={router.loading}
+                    hideCloseButton={hideCloseButton}
+                ></DialogBox>
+            )}
+        </context.Provider>
+    )
+
+    async function handleClose() {
+        if (router.loading || hideCloseButton) {
+            return;
+        }
+        if (dialogElement?.customOnClose) {
+            setActionLoading(true);
+            await dialogElement.customOnClose();
+            setActionLoading(false);
+        }
+        setIsOpen(false);
+    }
+
+    async function handleForcedClose() {
+        setIsOpen(false);
+        setDialogElement(undefined);
+    }
+
+    function handleOpen(element: CustomDialogElement) {
+        setDialogElement(element);
+        setIsOpen(true);
+    }
+}
