@@ -1,6 +1,7 @@
 import { LocalizationProvider } from '@mui/lab'
 import DateAdapter from '@mui/lab/AdapterDateFns'
 import { CssBaseline, ThemeProvider, useTheme } from '@mui/material';
+import { theme } from '../core/theme/theme';
 
 interface Props {} //pass props from top-level to lower-level components.
 
@@ -9,11 +10,10 @@ interface Props {} //pass props from top-level to lower-level components.
  * Create PageContainer & PageContent for dynamic switching of components blocks.
  */
 export const Layout: React.FC<React.PropsWithChildren<Props>> = ({ children }) => {
-    const theme = useTheme();
 
     return (
         <LocalizationProvider dateAdapter={DateAdapter}>
-            <ThemeProvider theme={theme}>
+            <ThemeProvider theme={theme()}>
                 <CssBaseline />
                 {children}
             </ThemeProvider>
