@@ -1,7 +1,7 @@
 import NProgress from 'nprogress';
 import type { AppProps } from "next/app";
 import { Router } from 'next/router';
-import { PageLoaderContextProvider, Page } from 'core-lib'
+import { PageLoaderContextProvider } from 'core-lib'
 import { Suspense } from 'react';
 import Head from 'next/head';
 
@@ -19,9 +19,7 @@ const App: React.FC<AppProps> = ({ Component, pageProps }) => {
 
     const content = (
       <Suspense fallback={<div>Loading...</div>}>
-        <Page>
-          <Component {...pageProps} />
-        </Page>
+        <Component {...pageProps} />
       </Suspense>
     );
 

@@ -23,6 +23,80 @@ export interface SelectionValue<T = string> {
   };
 }
 
+export interface AccessGroupsValue extends CMSValue {
+    values: {
+        creatorId: string;
+        typeId: string;
+        id: string;
+        status: string;
+        url: string;
+        protectedUrl: string;
+    }[];
+}
+
+export interface MultiSelectionValue<T = string> {
+    values?: {
+        label: T;
+        selection: T;
+    }[];
+}
+
+export interface PageWidget {
+    pageUrl: string;
+    imageRelativeUrl: string;
+}
+
+export type ValueFormatType =
+    | 'Text'
+    | 'Date'
+    | 'Label'
+    | 'Multirows'
+    | 'File list'
+    | 'SortCode';
+
+export type FormatSelection = SelectionValue<ValueFormatType>;
+
+export type ButtonType =
+  | 'Primary'
+  | 'Secondary'
+  | 'PrimaryDarkBG'
+  | 'SecondaryDarkBG'
+  | 'Critical'
+  | 'Success'
+  | 'Link'
+  | 'ButtonWithIcon';
+
+export type ButtonSelection = SelectionValue<ButtonType>;
+
+export interface FileValue {
+    asset: {
+        altText: string;
+        fileName: string;
+        fileSize: number;
+        height?: number;
+        id: string;
+        mediaType: string;
+        resourceUri: string;
+        width?: number;
+    };
+    link?: {
+        target?: string;
+        url?: string;
+    }
+    elementType: string;
+    mode?: string;
+    renditions?: {
+        default?: {
+            height?: number;
+            source: string;
+            url: string;
+            width?: number;
+        };
+    };
+    url: string;
+    value?: string;
+}
+
 export interface DialogElement {
     value?: {
         elements?: {
