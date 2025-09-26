@@ -23,6 +23,31 @@ export interface CmsPageResponse {
   description: string;
 }
 
+export interface CmsPage {
+  content: PageContent;
+  pageHeader?: StringValue;
+  headerIcon?: FileValue;
+  pageUrl: StringValue;
+  pageKey: StringValue;
+  showAsStickOut?: BooleanValue;
+  backPageKey?: StringValue;
+  heroBlocks?: { values: HeroBlock[] };
+  pageMenu?: { value: PageContentValues };
+  showDialogOnLoad?: DialogElement;
+  hideTemplateNavigation?: BooleanValue;
+  pageBackground?: BackgroundColorConfig;
+}
+
+export interface HeroBlock {
+  elements: {
+    heroContent: {
+      value: PageContentValues;
+    };
+    heroImage?: FileValue;
+  };
+  type: string;
+}
+
 interface PageElements
   extends Partial<ButtonElements>,
     Partial<ResourceListElements>,
