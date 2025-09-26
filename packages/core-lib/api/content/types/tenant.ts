@@ -35,6 +35,11 @@ export interface CmsTenant {
   increasedAccessibility?: BooleanValue;
 }
 
+export interface CmsFooter {
+  elementType: string;
+  elements: FooterElements;
+}
+
 interface Footer {
   elementType: string;
   value: {
