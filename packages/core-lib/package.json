@@ -28,6 +28,7 @@
     "query-string": "workspace:*",
     "react-async-hook": "workspace:*",
     "clsx": "workspace:*",
-    "@mui/icons-material": "workspace:*"
+    "@mui/icons-material": "workspace:*",
+    "react-hook-form": "workspace:*"
   }
 }
