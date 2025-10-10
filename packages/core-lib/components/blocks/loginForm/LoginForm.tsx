@@ -24,7 +24,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
     <>
       <form data-testid="authentication_form" id="login-form" name="login-form">
         <Grid container direction="column" rowSpacing={12}>
-          <Grid size={{ md: 6, lg: 4 }}>
+          <Grid size={{ xs: 12 }}>
             <TextField<LoginFormType>
               data-testid="auth-username"
               name="userName"
@@ -33,7 +33,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
               onBlur={() => clearErrors()}
             />
           </Grid>
-          <Grid size={{ md: 6, lg: 4 }}>
+          <Grid size={{ xs: 12 }}>
             <TextField<LoginFormType>
               data-testid="auth-password"
               name="password"
