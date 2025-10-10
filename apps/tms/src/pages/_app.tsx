@@ -30,7 +30,7 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page) => page);
   const renderApp = () => {
     const baseApp = (children: React.ReactNode) => {
-      return <PageLoaderContextProvider>{children}</PageLoaderContextProvider>;
+      return <>{children}</>;
     };
 
     const content = (

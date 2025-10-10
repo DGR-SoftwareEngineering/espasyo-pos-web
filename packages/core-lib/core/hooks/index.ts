@@ -4,3 +4,4 @@ export * from "./useResolution";
 export * from "./useFormFocusOnError";
 export * from "./useClearCookies";
 export * from "./useCookie";
+export * from "./useScroll";

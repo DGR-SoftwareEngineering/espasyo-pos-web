@@ -1,32 +1,40 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState } from "react";
 
-const context = createContext<{
-    isLoading: boolean;
-    setIsLoading(status: boolean): void;
-}>(undefined as any);
+const context = createContext<
+  | {
+      isLoading: boolean;
+      setIsLoading(status: boolean): void;
+    }
+  | undefined
+>(undefined);
 
 interface Props {
-    loading?: boolean;
+  loading?: boolean;
 }
 
 export const usePageLoaderContext = () => {
-    if (!context) {
-        throw new Error('PageLoaderContextProvider should be used.');
-    }
-    return useContext(context);
-}
+  const ctx = useContext(context);
+  if (!ctx) {
+    throw new Error(
+      "usePageLoaderContext must be used within a PageLoaderContextProvider"
+    );
+  }
+  return ctx;
+};
 
-export const PageLoaderContextProvider: React.FC<React.PropsWithChildren<Props>> = ({ children, loading }) => {
-    const [isLoading, setIsLoading] = useState(false);
+export const PageLoaderContextProvider: React.FC<
+  React.PropsWithChildren<Props>
+> = ({ children, loading }) => {
+  const [isLoading, setIsLoading] = useState(false);
 
-    return (
-        <context.Provider
-            value={{
-                isLoading: isLoading || !!loading,
-                setIsLoading
-            }}
-        >
-            {children}
-        </context.Provider>
-    )
-}
+  return (
+    <context.Provider
+      value={{
+        isLoading: isLoading || !!loading,
+        setIsLoading,
+      }}
+    >
+      {children}
+    </context.Provider>
+  );
+};

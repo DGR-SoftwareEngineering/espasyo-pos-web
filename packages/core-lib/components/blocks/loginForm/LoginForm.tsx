@@ -51,6 +51,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
             id="login-button"
             name="login-button"
             data-testid="auth-submit-button"
+            fullWidth
           >
             Sign in
           </PrimaryButton>

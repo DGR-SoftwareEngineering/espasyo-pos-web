@@ -1,5 +1,6 @@
 export const AUTH_METHODS = {
   STANDARD_AUTH: "STANDARD_AUTH",
+  AUTH0: "AUTH0",
   //add auth methods
 } as const;
 

@@ -1,5 +1,10 @@
 import { AxiosInstance } from "axios";
-import { LoginParams, LoginResponse, SsoSessionParams } from "./types";
+import {
+  LoginParams,
+  LoginResponse,
+  SsoSessionParams,
+  LogoutParams,
+} from "./types";
 
 export class AuthenticationApi {
   constructor(
@@ -16,6 +21,13 @@ export class AuthenticationApi {
 
   public session() {
     return this.axios.get(`/authentication-api/api/sso/session`);
+  }
+
+  public logout(params: LogoutParams) {
+    return this.axios.post(
+      `/authentication-api/api/authentication/logout`,
+      params
+    );
   }
 
   public createSession(params: SsoSessionParams) {
