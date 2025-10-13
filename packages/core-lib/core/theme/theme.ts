@@ -148,7 +148,7 @@ export const theme = (tenant?: CmsTenant | null) => {
       divider,
     },
     typography: {
-      fontFamily: `Inter var`,
+      // fontFamily: `Roboto, sans-serif`,
       htmlFontSize: 16,
       fontWeightLight: 300,
       fontWeightRegular: 400,
