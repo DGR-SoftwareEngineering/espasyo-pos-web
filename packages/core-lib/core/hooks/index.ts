@@ -5,3 +5,4 @@ export * from "./useFormFocusOnError";
 export * from "./useClearCookies";
 export * from "./useCookie";
 export * from "./useScroll";
+export * from "./useKeyDown";
