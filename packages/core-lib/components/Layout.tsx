@@ -31,8 +31,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
                 <PageContainer>
                   {/* set loading to false by default for now. */}
                   <LoadablePageContent loading={false}>
-                    {/* <PageContent children={children} /> */}
-                    {children}
+                    <PageContent children={children} />
                   </LoadablePageContent>
                 </PageContainer>
               </Box>

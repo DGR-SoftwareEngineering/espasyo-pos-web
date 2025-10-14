@@ -11,12 +11,17 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true
   },
-  "include": ["."],
+  "include": [
+    ".",
+    "core/types/global.d.ts",
+    "core/types/react.d.ts",
+    "core/types/theme.d.ts",
+    "core/types/eva-icons.d.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }
