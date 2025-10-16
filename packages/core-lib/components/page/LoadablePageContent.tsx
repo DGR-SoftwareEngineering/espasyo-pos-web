@@ -14,31 +14,29 @@ export const LoadablePageContent: React.FC<React.PropsWithChildren<Props>> = ({
 }) => {
   const { isLoading } = usePageLoaderContext();
   const router = useRouter();
-
-  const isPageLoading =
-    (loading || isLoading) && router.asPath === router.staticRoutes.hub;
-
-  useEffect(() => {
-    if (!isPageLoading && router.staticRoutes.page_not_found) {
-      router.push((routes) => routes.page_not_found);
-    }
-  }, [isPageLoading, router.staticRoutes.page_not_found]);
+  const calculationsLoading = router.asPath === router.staticRoutes.hub;
+  const isPageLoading = (loading || isLoading) && !calculationsLoading;
 
   return (
     <>
-      {isPageLoading && (
+      {isPageLoading && calculationsLoading && (
         <Box
           flex={1}
           height="100%"
           display="flex"
           alignItems="center"
           justifyContent="center"
+          sx={{}}
         >
-          <ComponentLoader disableMarginBottom />
+          <ComponentLoader disableMarginBottom={false} />
         </Box>
       )}
       {!isPageLoading && (
-        <Box display="flex" flexDirection="column" height="100%">
+        <Box
+          display={loading ? "none" : "block"}
+          flexDirection="column"
+          height="100%"
+        >
           {children}
         </Box>
       )}

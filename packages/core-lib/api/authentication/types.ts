@@ -1,3 +1,12 @@
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export type ApiResponse<T> = {
+  response: T;
+};
+
 export interface SsoSessionParams {
   tokenId: string;
 }
@@ -7,12 +16,8 @@ export interface LoginParams {
   password: string;
 }
 
-export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-}
+export type LogoutParams = AuthTokens;
+export type RefreshParams = { refreshToken: string };
 
-export interface LogoutParams {
-  accessToken: string;
-  refreshToken: string;
-}
+export type LoginResponse = ApiResponse<AuthTokens>;
+export type RefreshTokenResponse = ApiResponse<AuthTokens>;

@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { useState } from "react";
-import { useAuthContext } from "../../../core/contexts";
+import { useAuthContext, useToastContext } from "../../../core/contexts";
 import { useRouter } from "../../../core/router";
 import { LoginForm } from "./LoginForm";
 import { LoginForm as LoginFormType } from "./validation";
@@ -14,6 +14,7 @@ export const LoginFormBlock: React.FC<Props> = ({ id, backgroundColor }) => {
   const router = useRouter();
   const { login } = useAuthContext();
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToastContext();
 
   return (
     <Box id={id} sx={{ backgroundColor, width: "100%" }} display="flex">
@@ -23,6 +24,16 @@ export const LoginFormBlock: React.FC<Props> = ({ id, backgroundColor }) => {
 
   async function handleSubmit({ userName, password }: LoginFormType) {
     try {
-    } catch (error) {}
+      setLoading(true);
+      await login({ userName, password });
+      await router.push((router) => router.hub);
+      showToast("Success", "success");
+    } catch (err) {
+      const errors = err as string[];
+      console.error(`Problem during login: ${errors}`); //remove in the future.
+      showToast("Invalid username or password", "error");
+    } finally {
+      setLoading(false);
+    }
   }
 };

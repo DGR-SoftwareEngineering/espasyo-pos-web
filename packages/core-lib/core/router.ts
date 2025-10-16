@@ -3,10 +3,7 @@ import { NextRouter, useRouter as useNextRouter } from "next/router";
 import qs, { ParsedQuery } from "query-string";
 import { useEffect, useMemo, useState } from "react";
 
-type StaticRoutes = Record<
-  "home" | "hub" | "logout" | "page_not_found",
-  string
->;
+type StaticRoutes = Record<"home" | "hub" | "page_not_found", string>;
 type TransitionOptions = ArgumentTypes<NextRouter["push"]>[2];
 type PathFromRoutes = (routes: StaticRoutes) => string;
 
@@ -16,6 +13,12 @@ type PathParameters = {
 };
 
 type NavigateFn = ReturnType<typeof navigate>;
+
+export const STATIC_ROUTES: StaticRoutes = {
+  home: "/",
+  hub: "/hub",
+  page_not_found: "/404",
+};
 
 export interface CustomRouterReturn {
   events: NextRouter["events"];
@@ -43,7 +46,7 @@ export interface CustomRouterReturn {
 export const useRouter = (): CustomRouterReturn => {
   const router = useNextRouter();
   const [loading, setLoading] = useState(false);
-  const staticRoutes = {} as StaticRoutes;
+  const staticRoutes = STATIC_ROUTES;
 
   useEffect(() => {
     const start = () => setLoading(true);
@@ -76,26 +79,24 @@ export const useRouter = (): CustomRouterReturn => {
     path: string | PathFromRoutes,
     options?: TransitionOptions
   ) {
-    return typeof path === "string"
-      ? router.push(routeUrl(path), path, configuredRouteOptions(options))
-      : router.push(
-          routeUrl(path(staticRoutes)),
-          path(staticRoutes),
-          configuredRouteOptions(options)
-        );
+    const resolvedPath = typeof path === "string" ? path : path(staticRoutes);
+    return router.push(
+      resolvedPath,
+      resolvedPath,
+      configuredRouteOptions(options)
+    );
   }
 
   async function replace(
     path: string | PathFromRoutes,
     options?: TransitionOptions
   ) {
-    return typeof path === "string"
-      ? router.replace(routeUrl(path), path, configuredRouteOptions(options))
-      : router.replace(
-          routeUrl(path(staticRoutes)),
-          path(staticRoutes),
-          configuredRouteOptions(options)
-        );
+    const resolvedPath = typeof path === "string" ? path : path(staticRoutes);
+    return router.replace(
+      resolvedPath,
+      resolvedPath,
+      configuredRouteOptions(options)
+    );
   }
 
   function sanitizeQuery(): ParsedQuery {
@@ -109,11 +110,12 @@ export const useRouter = (): CustomRouterReturn => {
   }
 
   function routeUrl(path: string) {
-    return path === staticRoutes.home ||
-      path.includes("http://") ||
-      path.includes("https://")
-      ? path
-      : "/[...slug]";
+    const knownRoutes = Object.values(STATIC_ROUTES);
+    if (knownRoutes.includes(path) || path.startsWith("http")) {
+      return path;
+    }
+
+    return `/${path}`;
   }
 };
 

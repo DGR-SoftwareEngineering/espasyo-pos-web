@@ -15,6 +15,7 @@ export const config = {
         ";"
       ),
       SSO_COOKIE: processEnv.NEXT_PRIVATE_SSO_COOKIE!,
+      APIURL: processEnv.NEXT_PRIVATE_API_URL!,
     };
   },
 };
