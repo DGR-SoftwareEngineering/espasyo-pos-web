@@ -4,6 +4,8 @@ import {
   LoginResponse,
   SsoSessionParams,
   LogoutParams,
+  RefreshParams,
+  RefreshTokenResponse,
 } from "./types";
 
 export class AuthenticationApi {
@@ -39,5 +41,12 @@ export class AuthenticationApi {
 
   public keepAlive() {
     return this.axios.post(`/authentication-api/api/sso/session/keep-alive`);
+  }
+
+  public refreshToken(params: RefreshParams) {
+    return this.axios.post<RefreshTokenResponse>(
+      `/authentication-api/api/authentication/refresh-token`,
+      params
+    );
   }
 }

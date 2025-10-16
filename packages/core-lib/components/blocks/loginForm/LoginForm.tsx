@@ -26,7 +26,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
   return (
     <>
       <div className="flex items-center justify-between w-full h-auto md:h-screen">
-        <div className="hidden lg:flex flex-col justify-center items-center w-1/2 relative overflow-hidden">
+        <div className="hidden xl:flex lg:flex">
           <Box
             component={Image}
             src={AbbottBackground}
@@ -50,11 +50,9 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
           <Box className="flex z-0 items-center justify-center">
             <div className="flex items-center justify-center h-screen flex-col lg:px-24">
               <h4 className="pt-sans-caption-bold text-[3rem] text-white mb-2 z-1">
-                Welcome to <span className="text-yellow">Test EScreen TMS</span>
+                Welcome to <span className="text-yellow">Escreen TMS</span>
               </h4>
-              <h5 className="pt-sans-regular text-white text-[1.5rem]">
-                Test.
-              </h5>
+              <h5 className="pt-sans-regular text-white text-[1.5rem]">Test</h5>
             </div>
           </Box>
         </div>
@@ -95,17 +93,25 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                 id="login-form"
                 name="login-form"
               >
-                <Grid container direction="column" rowSpacing={12}>
-                  <Grid item md={6} lg={4}>
-                    <TextField<LoginFormType>
-                      data-testid="auth-username"
-                      name="userName"
-                      control={control}
-                      label="Username"
-                      onBlur={() => clearErrors()}
-                    />
-                  </Grid>
-                  <Grid item md={6} lg={4}>
+                <Grid size={{ lg: 12 }}>
+                  <TextField<LoginFormType>
+                    data-testid="auth-username"
+                    name="userName"
+                    control={control}
+                    label="Username"
+                    onBlur={() => clearErrors()}
+                  />
+                </Grid>
+                <Grid
+                  size={{ lg: 12 }}
+                  sx={{
+                    marginY: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Box sx={{ position: "relative", width: "100%" }}>
                     <TextField<LoginFormType>
                       data-testid="auth-password"
                       name="password"
@@ -114,9 +120,9 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                       type="password"
                       onBlur={() => clearErrors()}
                     />
-                  </Grid>
+                  </Box>
                 </Grid>
-                <Box mt={16}>
+                <div className="gap-4 flex items-center">
                   <Button
                     disabled={submitLoading}
                     loading={submitLoading}
@@ -137,7 +143,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                       Sign In
                     </span>
                   </Button>
-                </Box>
+                </div>
               </form>
             </div>
           </div>

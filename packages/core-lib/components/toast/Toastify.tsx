@@ -1,0 +1,30 @@
+import { ToastContainer, ToastPosition } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+type ToastProps = {
+  position?: ToastPosition;
+  autoClose: number;
+  hideProgressBar: boolean;
+};
+
+export const Toastify: React.FC<ToastProps> = ({
+  position,
+  autoClose,
+  hideProgressBar,
+  ...rest
+}) => {
+  return (
+    <ToastContainer
+      position={position}
+      autoClose={autoClose}
+      hideProgressBar={hideProgressBar}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      {...rest}
+    />
+  );
+};

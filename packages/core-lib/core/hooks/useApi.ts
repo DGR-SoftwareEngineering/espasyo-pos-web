@@ -20,12 +20,17 @@ const HTTP_OPTIONS: HttpOptions = {
   onError: (error) => {
     const user = getItem<string | undefined>("user");
     console.error(
-      `Error on response: ${JSON.stringify(error)}. User: ${JSON.stringify(user)}`
+      `Error on response: ${JSON.stringify(error)}. User: ${JSON.stringify(
+        user
+      )}`
     );
   },
 };
 
-export const httpClient = new Http({ ...HTTP_OPTIONS, baseURL: "" });
+export const httpClient = new Http({
+  ...HTTP_OPTIONS,
+  baseURL: config.value.APIURL,
+});
 
 export const httpSsrClient = new Http({
   ...HTTP_OPTIONS,
@@ -33,8 +38,8 @@ export const httpSsrClient = new Http({
     process.env.NODE_ENV === "development"
       ? "http://localhost:3000"
       : typeof window !== "undefined"
-        ? window.location.origin
-        : undefined,
+      ? window.location.origin
+      : undefined,
 });
 
 export const httpSsrRefreshedClient = (url: string) =>

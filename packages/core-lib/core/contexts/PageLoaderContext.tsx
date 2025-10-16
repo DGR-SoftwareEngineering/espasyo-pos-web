@@ -1,4 +1,6 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "../router";
+import { PageLoader } from "../../components";
 
 const context = createContext<
   | {
@@ -10,6 +12,7 @@ const context = createContext<
 
 interface Props {
   loading?: boolean;
+  isAuthenticated?: boolean;
 }
 
 export const usePageLoaderContext = () => {
@@ -24,17 +27,28 @@ export const usePageLoaderContext = () => {
 
 export const PageLoaderContextProvider: React.FC<
   React.PropsWithChildren<Props>
-> = ({ children, loading }) => {
-  const [isLoading, setIsLoading] = useState(false);
+> = ({ children, loading, isAuthenticated }) => {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(loading ?? router.loading);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 6000);
+  }, [isAuthenticated, isLoading, loading, router.loading]);
 
   return (
     <context.Provider
       value={{
-        isLoading: isLoading || !!loading,
+        isLoading: isLoading || router.loading,
         setIsLoading,
       }}
     >
-      {children}
+      {isAuthenticated || !(isLoading || loading || router.loading) ? (
+        <div data-testid="children-component">{children}</div>
+      ) : (
+        <PageLoader data-testid="page-loader" />
+      )}
     </context.Provider>
   );
 };

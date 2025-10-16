@@ -36,6 +36,7 @@ export const useAuthentication = (): AuthService => {
   const authSessionIdleTimer = useSessionIdleTimer({
     onSessionExpired: async () => {
       await logout();
+      await goToExpiredSessionPage();
     },
     sessionId: accessToken ? parseTokenId(accessToken) : accessToken,
   });
@@ -100,7 +101,7 @@ export const useAuthentication = (): AuthService => {
   }, [refreshToken, accessToken]);
 
   async function goToExpiredSessionPage() {
-    await router.replace((routes) => routes.logout, { shallow: false });
+    await router.replace((routes) => routes.home, { shallow: false });
   }
 
   return {
@@ -118,9 +119,9 @@ export const useAuthentication = (): AuthService => {
           userName: userName,
           password: password,
         });
-        setAccessToken(result.data.accessToken);
-        setRefreshToken(result.data.refreshToken);
-        setSsoCookie(parseTokenId(result.data.accessToken), {
+        setAccessToken(result.data.response.accessToken);
+        setRefreshToken(result.data.response.refreshToken);
+        setSsoCookie(parseTokenId(result.data.response.accessToken), {
           path: "/",
           sameSite: "strict",
           secure: process.env.NODE_ENV === "production",
