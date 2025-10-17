@@ -55,12 +55,9 @@ export const useAuthentication = (): AuthService => {
       console.log("authSessionIdleTimer.start() called");
       authSessionIdleTimer.start();
     } else {
-      console.log(
-        "authSessionIdleTimer.stop() called due to unauthenticated state"
-      );
       authSessionIdleTimer.stop();
     }
-  }, [isAuthenticated, accessToken]);
+  }, [isAuthenticated]);
 
   const logout = useCallback(async () => {
     try {
@@ -75,7 +72,7 @@ export const useAuthentication = (): AuthService => {
         }
 
         const { data } = await createSessionCb.execute({
-          accessTokenJti: ssoCookie,
+          id: ssoCookie,
         });
 
         currentAccessToken = data.accessToken;
@@ -98,7 +95,7 @@ export const useAuthentication = (): AuthService => {
       authSessionIdleTimer.stop();
       console.log("authSessionIdleTimer.stop() called!");
     }
-  }, [refreshToken, accessToken, createSessionCb, logoutCb]);
+  }, [accessToken, refreshToken, createSessionCb, logoutCb]);
 
   const softLogout = useCallback(async () => {
     clearSession();
