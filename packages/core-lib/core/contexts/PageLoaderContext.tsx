@@ -17,6 +17,7 @@ interface Props {
 
 export const usePageLoaderContext = () => {
   const ctx = useContext(context);
+  console.log("PageLoaderContext:", ctx);
   if (!ctx) {
     throw new Error(
       "usePageLoaderContext must be used within a PageLoaderContextProvider"

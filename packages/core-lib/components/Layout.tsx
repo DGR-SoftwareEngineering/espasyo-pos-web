@@ -1,15 +1,14 @@
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Box, CssBaseline } from "@mui/material";
-import { theme } from "../core/theme/theme";
 import { ErrorBoundary } from "./ErrorBoundary";
-import { PageContainer } from "./page/PageContainer";
 import { LoadablePageContent } from "./page/LoadablePageContent";
 import {
   NotificationsContextProvider,
   PageLoaderContextProvider,
   ToastContextProvider,
   useAuthContext,
+  FormSubmissionContextProvider,
 } from "../core/contexts";
 import LinearProgress, {
   linearProgressClasses,
@@ -19,7 +18,7 @@ import { DashboardLayout } from "./dashboard";
 import { Suspense } from "react";
 import { ThemeProvider } from "../core/theme/custom";
 import { Toastify } from "./toast/Toastify";
-import { useRefreshTokenHandler } from "../core/hooks";
+import { useRefreshTokenHandler, useLogout } from "../core/hooks";
 
 interface Props {} //pass props from top-level to lower-level components.
 
@@ -52,7 +51,8 @@ const renderFallback = () => (
 export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
   children,
 }) => {
-  const { isAuthenticated, loading, logout } = useAuthContext();
+  const { logout } = useLogout();
+  const { isAuthenticated, loading } = useAuthContext();
 
   useRefreshTokenHandler(logout);
   return (
@@ -67,22 +67,24 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
           >
             <ErrorBoundary errorMessage="Application Error">
               <NotificationsContextProvider>
-                <Box minHeight="100vh" display="flex" flexDirection="column">
-                  {/* set loading to false by default for now. */}
-                  <LoadablePageContent loading={false}>
-                    {isAuthenticated ? (
-                      <DashboardLayout logout={logout} loading={loading}>
+                <FormSubmissionContextProvider>
+                  <Box minHeight="100vh" display="flex" flexDirection="column">
+                    {/* set loading to false by default for now. */}
+                    <LoadablePageContent loading={false}>
+                      {isAuthenticated ? (
+                        <DashboardLayout logout={logout} loading={loading}>
+                          <Suspense fallback={renderFallback()}>
+                            {children}
+                          </Suspense>
+                        </DashboardLayout>
+                      ) : (
                         <Suspense fallback={renderFallback()}>
                           {children}
                         </Suspense>
-                      </DashboardLayout>
-                    ) : (
-                      <Suspense fallback={renderFallback()}>
-                        {children}
-                      </Suspense>
-                    )}
-                  </LoadablePageContent>
-                </Box>
+                      )}
+                    </LoadablePageContent>
+                  </Box>
+                </FormSubmissionContextProvider>
               </NotificationsContextProvider>
             </ErrorBoundary>
           </PageLoaderContextProvider>

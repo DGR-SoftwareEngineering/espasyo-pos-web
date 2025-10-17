@@ -3,7 +3,11 @@ import { Box, Grid } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { Button, TextField } from "../..";
 import { LoginForm as LoginFormType, loginFormSchema } from "./validation";
-import { useFormFocusOnError, useKeyDown } from "../../../core/hooks";
+import {
+  useFormFocusOnError,
+  useFormSubmissionBindingHooks,
+  useKeyDown,
+} from "../../../core/hooks";
 import Image from "next/image";
 import { AbbottBackground, AbbottLogo } from "../../../assets";
 
@@ -22,6 +26,12 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
 
   useFormFocusOnError<LoginFormType>(formState.errors, setFocus);
   useKeyDown("Enter", () => handleSubmit(onSubmit)());
+  useFormSubmissionBindingHooks({
+    key: "sign-in-submission-sample",
+    isValid: formState.isValid,
+    isDirty: formState.isDirty,
+    cb: () => handleSubmit(onSubmit)(),
+  });
 
   return (
     <>
@@ -127,6 +137,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                     disabled={submitLoading}
                     loading={submitLoading}
                     variant="contained"
+                    customActionKey="sign-in"
                     fullWidth
                     sx={{
                       px: 4,
@@ -137,7 +148,6 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                         backgroundColor: "#00173F",
                       },
                     }}
-                    onClick={handleSubmit(onSubmit)}
                   >
                     <span className="font-ptSansNarrow font-bold text-[18px] lg:text-[20px] normal-case">
                       Sign In

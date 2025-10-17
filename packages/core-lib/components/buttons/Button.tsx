@@ -5,6 +5,7 @@ import {
 } from "@mui/material";
 import React, { forwardRef } from "react";
 import { ButtonType } from "../../api/content/types/common";
+import { useCustomAction } from "./hooks/useCustomAction";
 
 export interface ButtonProps
   extends Pick<
@@ -24,6 +25,7 @@ export interface ButtonProps
   id?: string;
   loading?: boolean;
   disabled?: boolean;
+  customActionKey?: string;
   href?: string;
   type?: ButtonType;
   buttonActionType?: MuiButtonProps["type"];
@@ -58,12 +60,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       href,
       postRequestUrl,
       buttonActionType,
+      customActionKey,
       ...props
     },
     ref
   ) => {
+    const action = useCustomAction({
+      actionKey: customActionKey,
+    });
     const isDisabledOrLoading = loading || disabled;
-    const disabledReasonId = `disabledReason-${Math.random().toString(36).substring(2, 15)}`;
+    const disabledReasonId = `disabledReason-${Math.random()
+      .toString(36)
+      .substring(2, 15)}`;
     const role = !href ? { role: "button" } : {};
 
     const button = (
@@ -140,9 +148,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         return;
       }
 
-      if (onClick) {
+      if (action?.execute || onClick) {
         e.preventDefault();
-        onClick && onClick(e);
+        action && (await action.execute());
+        !action?.disableFurtherActions && onClick && onClick(e);
       }
     }
   }
