@@ -11,6 +11,7 @@ import IconButton from "@mui/material/IconButton";
 import MenuItem, { menuItemClasses } from "@mui/material/MenuItem";
 import { useRouter } from "../../../core/router";
 import { usePathname } from "next/navigation";
+import { LogoutOptions } from "../../../core/contexts/auth/types";
 
 export const _myAccount = {
   displayName: "John Doe",
@@ -25,11 +26,15 @@ export type AccountPopoverProps = IconButtonProps & {
     icon?: React.ReactNode;
     info?: React.ReactNode;
   }[];
+  logout: (options?: LogoutOptions | undefined) => Promise<void>;
+  loading?: boolean;
 };
 
 export function AccountPopover({
   data = [],
   sx,
+  logout,
+  loading,
   ...other
 }: AccountPopoverProps) {
   const router = useRouter();
@@ -141,11 +146,24 @@ export function AccountPopover({
         <Divider sx={{ borderStyle: "dashed" }} />
 
         <Box sx={{ p: 1 }}>
-          <Button fullWidth color="error" size="medium" variant="text">
+          <Button
+            onClick={onLogout}
+            fullWidth
+            color="error"
+            size="medium"
+            variant="text"
+          >
             Logout
           </Button>
         </Box>
       </Popover>
     </>
   );
+
+  async function onLogout() {
+    await logout?.();
+    if (!loading) {
+      await router.push((router) => router.home);
+    }
+  }
 }

@@ -4,8 +4,6 @@ import {
   LogoutParams,
   SsoSessionParams,
 } from "../../../../api/authentication/types";
-import { isTrue } from "../../../../business/boolean";
-import { config } from "../../../../config";
 import { clearSession, useApiCallback } from "../../../hooks";
 import { useRouter } from "../../../router";
 import { AuthService, LoginOptions } from "../types";
@@ -41,7 +39,8 @@ export const useAuthentication = (): AuthService => {
     sessionId: accessToken ? parseTokenId(accessToken) : accessToken,
   });
 
-  const loading = loginCb.loading || logoutCb.loading;
+  const loading =
+    loginCb.loading || logoutCb.loading || createSessionCb.loading;
 
   useEffect(() => {
     setIsAuthenticated(!!accessToken);
@@ -55,9 +54,13 @@ export const useAuthentication = (): AuthService => {
     if (isAuthenticated) {
       console.log("authSessionIdleTimer.start() called");
       authSessionIdleTimer.start();
+    } else {
+      console.log(
+        "authSessionIdleTimer.stop() called due to unauthenticated state"
+      );
+      authSessionIdleTimer.stop();
     }
-    return authSessionIdleTimer.stop;
-  }, [isAuthenticated]);
+  }, [isAuthenticated, accessToken]);
 
   const logout = useCallback(async () => {
     try {
@@ -72,7 +75,7 @@ export const useAuthentication = (): AuthService => {
         }
 
         const { data } = await createSessionCb.execute({
-          tokenId: ssoCookie,
+          accessTokenJti: ssoCookie,
         });
 
         currentAccessToken = data.accessToken;
@@ -93,6 +96,7 @@ export const useAuthentication = (): AuthService => {
       clearSession();
       setIsAuthenticated(false);
       authSessionIdleTimer.stop();
+      console.log("authSessionIdleTimer.stop() called!");
     }
   }, [refreshToken, accessToken, createSessionCb, logoutCb]);
 

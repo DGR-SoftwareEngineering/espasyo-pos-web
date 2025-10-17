@@ -21,6 +21,7 @@ export const useSessionIdleTimer = ({ onSessionExpired, sessionId }: Props) => {
 
   const idleTimer = useIdleTimer({
     onIdle: async () => {
+      if (!sessionId) return;
       try {
         await sessionCb.execute();
         idleTimer.start();
