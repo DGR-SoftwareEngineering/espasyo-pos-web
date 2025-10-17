@@ -9,3 +9,4 @@ export * from "./blocks";
 export * from "./dashboard";
 export * from "./toast/Toastify";
 export * from "./PageLoader";
+export * from "./Stepper";
