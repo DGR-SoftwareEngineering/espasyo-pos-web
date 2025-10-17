@@ -8,7 +8,7 @@ export type ApiResponse<T> = {
 };
 
 export interface SsoSessionParams {
-  accessTokenJti: string;
+  id: string;
 }
 
 export interface LoginParams {

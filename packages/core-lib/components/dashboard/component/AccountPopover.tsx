@@ -12,6 +12,7 @@ import MenuItem, { menuItemClasses } from "@mui/material/MenuItem";
 import { useRouter } from "../../../core/router";
 import { usePathname } from "next/navigation";
 import { LogoutOptions } from "../../../core/contexts/auth/types";
+import { usePageLoaderContext } from "../../../core/contexts";
 
 export const _myAccount = {
   displayName: "John Doe",
@@ -39,6 +40,7 @@ export function AccountPopover({
 }: AccountPopoverProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { setIsLoading } = usePageLoaderContext();
 
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(
     null
@@ -161,9 +163,11 @@ export function AccountPopover({
   );
 
   async function onLogout() {
+    setIsLoading(true);
     await logout?.();
     if (!loading) {
       await router.push((router) => router.home);
+      setIsLoading(false);
     }
   }
 }

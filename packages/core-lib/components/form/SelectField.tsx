@@ -1,0 +1,102 @@
+import { KeyboardArrowDown } from "@mui/icons-material";
+import { FormControl, Grid, MenuItem, Select, Typography } from "@mui/material";
+import { SelectProps } from "@mui/material/Select/Select";
+import { JSX, useState } from "react";
+import {
+  Control,
+  Controller,
+  ControllerFieldState,
+  ControllerRenderProps,
+  FieldValues,
+  Path,
+} from "react-hook-form";
+import { FieldError } from "./FieldError";
+import { InputLoader } from "../loaders/InputLoader";
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+type Props<T extends object> = SelectProps & {
+  name: Path<T>;
+  control: Control<T, object>;
+  isLoading?: boolean;
+  "data-testid"?: string;
+  label?: string | JSX.Element;
+  options?: SelectOption[];
+};
+
+export const SelectField = <T extends FieldValues>({
+  name,
+  control,
+  ...props
+}: Props<T>) => (
+  <Controller<T>
+    name={name}
+    control={control}
+    render={({ formState: _, ...controllerProps }) => (
+      <SelectComponent {...controllerProps} {...props} />
+    )}
+  />
+);
+
+interface ComponentProps<T extends FieldValues>
+  extends Omit<Props<T>, "name" | "control" | "defaultValue"> {
+  field: ControllerRenderProps<T, Path<T>>;
+  fieldState?: ControllerFieldState;
+}
+
+const SelectComponent = <T extends FieldValues>({
+  isLoading,
+  field,
+  fieldState,
+  label,
+  options = [],
+  ...props
+}: ComponentProps<T>) => {
+  const [ref, setRef] = useState<HTMLInputElement | null>(null);
+  return (
+    <Grid container spacing={2} direction="column">
+      <Grid>
+        {fieldState?.error?.message ? (
+          <FieldError message={fieldState.error.message} />
+        ) : (
+          <Typography component="label" htmlFor={field?.name}>
+            {label ?? "[[label_name]]"}
+          </Typography>
+        )}
+      </Grid>
+      <Grid>
+        {isLoading ? (
+          <InputLoader />
+        ) : (
+          <FormControl sx={{ width: "100%" }}>
+            <Select
+              {...props}
+              {...field}
+              fullWidth
+              ref={setRef}
+              color="primary"
+              value={field.value ?? ""}
+              data-testid={props["data-testid"] || `${field.name}-field`}
+              IconComponent={KeyboardArrowDown}
+              onChange={(e) => field.onChange(e.target.value)}
+            >
+              {options.map((option, index) => (
+                <MenuItem
+                  key={`${option.label}_${index}`}
+                  value={option.value}
+                  selected={option.value == field.value}
+                  id={option.value}
+                >
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+      </Grid>
+    </Grid>
+  );
+};
