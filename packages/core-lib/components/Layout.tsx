@@ -71,7 +71,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
                   {/* set loading to false by default for now. */}
                   <LoadablePageContent loading={false}>
                     {isAuthenticated ? (
-                      <DashboardLayout>
+                      <DashboardLayout logout={logout} loading={loading}>
                         <Suspense fallback={renderFallback()}>
                           {children}
                         </Suspense>

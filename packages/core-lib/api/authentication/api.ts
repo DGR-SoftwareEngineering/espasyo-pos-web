@@ -34,7 +34,7 @@ export class AuthenticationApi {
 
   public createSession(params: SsoSessionParams) {
     return this.axios.post(
-      `/authentication-api/api/sso/session/create`,
+      `/authentication-api/api/sso/session/create-session`,
       params
     );
   }

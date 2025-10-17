@@ -17,6 +17,7 @@ import type { MainSectionProps } from "../main-section";
 import type { AuthHeaderProps } from "../../Headers/dashboard/AuthHeader";
 import type { LayoutSectionProps } from "./layout-section";
 import { AccountPopover } from "../component/AccountPopover";
+import { LogoutOptions } from "../../../core/contexts/auth/types";
 
 type LayoutBaseProps = Pick<LayoutSectionProps, "sx" | "children" | "cssVars">;
 
@@ -26,6 +27,8 @@ export type DashboardLayoutProps = LayoutBaseProps & {
     header?: AuthHeaderProps;
     main?: MainSectionProps;
   };
+  logout: (options?: LogoutOptions | undefined) => Promise<void>;
+  loading?: boolean;
 };
 
 export function DashboardLayout({
@@ -34,6 +37,8 @@ export function DashboardLayout({
   children,
   slotProps,
   layoutQuery = "lg",
+  logout,
+  loading,
 }: DashboardLayoutProps) {
   const theme = useTheme();
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
@@ -83,7 +88,7 @@ export function DashboardLayout({
           {/* <NotificationsPopover data={_notifications} /> */}
 
           {/** @slot Account drawer */}
-          <AccountPopover data={_account} />
+          <AccountPopover data={_account} logout={logout} />
         </Box>
       ),
     };
