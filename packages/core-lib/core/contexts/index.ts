@@ -5,3 +5,4 @@ export * from "./auth/AuthContext";
 export * from "./NotificationsContext";
 export * from "./ToastContext";
 export * from "./FormSubmissionContext";
+export * from "./HeaderTitleContext";

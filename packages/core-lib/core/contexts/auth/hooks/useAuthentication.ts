@@ -27,6 +27,9 @@ export const useAuthentication = (): AuthService => {
   const logoutCb = useApiCallback((api, p: LogoutParams) =>
     api.authentication.logout(p)
   );
+  const logoutWithClearCookiesCb = useApiCallback((api) =>
+    api.authentication.logoutWithClearCookies()
+  );
   const createSessionCb = useApiCallback((api, p: SsoSessionParams) =>
     api.authentication.createSession(p)
   );
@@ -88,6 +91,7 @@ export const useAuthentication = (): AuthService => {
     } catch (error) {
       console.error("Failed executing the logout service", error as object);
     } finally {
+      logoutWithClearCookiesCb.execute();
       clearSsoCookie();
       clearCookies!();
       clearSession();

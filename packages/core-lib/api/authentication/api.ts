@@ -15,10 +15,7 @@ export class AuthenticationApi {
   ) {}
 
   public login(params: LoginParams) {
-    return this.axios.post<LoginResponse>(
-      `/authentication-api/api/authentication/login`,
-      params
-    );
+    return this.ssrAxios.post<LoginResponse>(`/api/auth/login`, params);
   }
 
   public session() {
@@ -30,6 +27,10 @@ export class AuthenticationApi {
       `/authentication-api/api/authentication/logout`,
       params
     );
+  }
+
+  public logoutWithClearCookies() {
+    return this.ssrAxios.post(`/api/auth/logout`);
   }
 
   public createSession(params: SsoSessionParams) {

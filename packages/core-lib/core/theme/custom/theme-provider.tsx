@@ -4,8 +4,6 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider as ThemeVarsProvider } from "@mui/material/styles";
 
 import { createTheme } from "./create-theme";
-
-import type {} from "./extend-theme-types"; //temporarily
 import type { ThemeOptions } from "./types";
 import { theme as tenantTheme } from "../theme";
 import { CmsTenant } from "../../../api/content/types/tenant";
@@ -24,12 +22,17 @@ export function ThemeProvider({
   tenant,
   ...other
 }: ThemeProviderProps) {
-  const baseTheme = tenantTheme();
+  const baseOptions = tenantTheme() as ThemeOptions;
 
-  const mergedTheme = deepmerge(baseTheme, themeOverrides ?? {});
+  const mergedOptions = deepmerge(
+    baseOptions,
+    themeOverrides ?? {}
+  ) as ThemeOptions;
+
+  const theme = createTheme(mergedOptions);
 
   return (
-    <ThemeVarsProvider disableTransitionOnChange theme={mergedTheme} {...other}>
+    <ThemeVarsProvider disableTransitionOnChange theme={theme} {...other}>
       <CssBaseline />
       {children}
     </ThemeVarsProvider>

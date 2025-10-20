@@ -1,6 +1,6 @@
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Box, CssBaseline } from "@mui/material";
+import { Box } from "@mui/material";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { LoadablePageContent } from "./page/LoadablePageContent";
 import {
@@ -9,6 +9,7 @@ import {
   ToastContextProvider,
   useAuthContext,
   FormSubmissionContextProvider,
+  HeaderTitleContextProvider,
 } from "../core/contexts";
 import LinearProgress, {
   linearProgressClasses,
@@ -58,37 +59,42 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <ThemeProvider>
-        <CssBaseline />
-        <ToastContextProvider>
-          <Toastify autoClose={5000} hideProgressBar={false} />
-          <PageLoaderContextProvider
-            isAuthenticated={isAuthenticated}
-            loading={loading}
-          >
-            <ErrorBoundary errorMessage="Application Error">
-              <NotificationsContextProvider>
-                <FormSubmissionContextProvider>
-                  <Box minHeight="100vh" display="flex" flexDirection="column">
-                    {/* set loading to false by default for now. */}
-                    <LoadablePageContent loading={false}>
-                      {isAuthenticated ? (
-                        <DashboardLayout logout={logout} loading={loading}>
+        <HeaderTitleContextProvider>
+          <ToastContextProvider>
+            <Toastify autoClose={5000} hideProgressBar={false} />
+            <PageLoaderContextProvider
+              isAuthenticated={isAuthenticated}
+              loading={loading}
+            >
+              <ErrorBoundary errorMessage="Application Error">
+                <NotificationsContextProvider>
+                  <FormSubmissionContextProvider>
+                    <Box
+                      minHeight="100vh"
+                      display="flex"
+                      flexDirection="column"
+                    >
+                      {/* set loading to false by default for now. */}
+                      <LoadablePageContent loading={false}>
+                        {isAuthenticated ? (
+                          <DashboardLayout logout={logout} loading={loading}>
+                            <Suspense fallback={renderFallback()}>
+                              {children}
+                            </Suspense>
+                          </DashboardLayout>
+                        ) : (
                           <Suspense fallback={renderFallback()}>
                             {children}
                           </Suspense>
-                        </DashboardLayout>
-                      ) : (
-                        <Suspense fallback={renderFallback()}>
-                          {children}
-                        </Suspense>
-                      )}
-                    </LoadablePageContent>
-                  </Box>
-                </FormSubmissionContextProvider>
-              </NotificationsContextProvider>
-            </ErrorBoundary>
-          </PageLoaderContextProvider>
-        </ToastContextProvider>
+                        )}
+                      </LoadablePageContent>
+                    </Box>
+                  </FormSubmissionContextProvider>
+                </NotificationsContextProvider>
+              </ErrorBoundary>
+            </PageLoaderContextProvider>
+          </ToastContextProvider>
+        </HeaderTitleContextProvider>
       </ThemeProvider>
     </LocalizationProvider>
   );

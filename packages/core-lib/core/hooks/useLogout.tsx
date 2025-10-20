@@ -8,7 +8,7 @@ export const useLogout = () => {
   return {
     logout: async () => {
       await auth.logout();
-      //   await router.replace((routes) => routes.home, { shallow: false });
+      await router.replace((routes) => routes.home, { shallow: false });
     },
   };
 };
