@@ -2,6 +2,7 @@ import DOMPurify from "isomorphic-dompurify";
 import { NextRouter, useRouter as useNextRouter } from "next/router";
 import qs, { ParsedQuery } from "query-string";
 import { useEffect, useMemo, useState } from "react";
+import { resolveTitle } from "./route-titles";
 
 type StaticRoutes = Record<"home" | "hub" | "page_not_found", string>;
 type TransitionOptions = ArgumentTypes<NextRouter["push"]>[2];
@@ -41,12 +42,18 @@ export interface CustomRouterReturn {
   push: NavigateFn;
   replace: NavigateFn;
   parsedQuery: ParsedQuery;
+  title: string;
 }
 
 export const useRouter = (): CustomRouterReturn => {
   const router = useNextRouter();
   const [loading, setLoading] = useState(false);
   const staticRoutes = STATIC_ROUTES;
+
+  const title = useMemo(
+    () => resolveTitle(router.pathname, router.query),
+    [router.pathname, router.query]
+  );
 
   useEffect(() => {
     const start = () => setLoading(true);
@@ -64,6 +71,7 @@ export const useRouter = (): CustomRouterReturn => {
   return {
     loading,
     staticRoutes,
+    title: title,
     ...useMemo(
       () => ({
         ...router,

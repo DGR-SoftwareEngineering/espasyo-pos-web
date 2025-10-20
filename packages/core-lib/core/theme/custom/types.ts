@@ -4,23 +4,18 @@ import type {
   CssVarsThemeOptions,
   SupportedColorScheme,
   ThemeOptions as MuiThemeOptions,
-} from '@mui/material/styles';
+} from "@mui/material/styles";
 
-import type { CustomShadows } from './core/custom-shadows';
-
-// ----------------------------------------------------------------------
-
-/**
- * Theme options
- * Extended type that includes additional properties for color schemes and CSS variables.
- *
- * @see https://github.com/mui/material-ui/blob/master/packages/mui-material/src/styles/createTheme.ts
- */
+import type { CustomShadows } from "./core/custom-shadows";
 
 export type ThemeColorScheme = SupportedColorScheme;
+
 export type ThemeCssVariables = Pick<
   CssVarsThemeOptions,
-  'colorSchemeSelector' | 'disableCssColorScheme' | 'cssVarPrefix' | 'shouldSkipGeneratingVar'
+  | "colorSchemeSelector"
+  | "disableCssColorScheme"
+  | "cssVarPrefix"
+  | "shouldSkipGeneratingVar"
 >;
 
 type ColorSchemeOptionsExtended = ColorSystemOptions & {
@@ -28,8 +23,10 @@ type ColorSchemeOptionsExtended = ColorSystemOptions & {
   customShadows?: CustomShadows;
 };
 
-export type ThemeOptions = Omit<MuiThemeOptions, 'components'> &
-  Pick<CssVarsThemeOptions, 'defaultColorScheme' | 'components'> & {
-    colorSchemes?: Partial<Record<ThemeColorScheme, ColorSchemeOptionsExtended>>;
+export type ThemeOptions = Omit<MuiThemeOptions, "components"> &
+  Pick<CssVarsThemeOptions, "defaultColorScheme" | "components"> & {
+    colorSchemes?: Partial<
+      Record<ThemeColorScheme, ColorSchemeOptionsExtended>
+    >;
     cssVariables?: ThemeCssVariables;
   };

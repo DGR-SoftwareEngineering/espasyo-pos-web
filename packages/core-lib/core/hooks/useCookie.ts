@@ -20,7 +20,7 @@ export const useCookie = <T>(
 ): [
   T | null,
   (value: T | null, options?: CookieSetOptions) => void,
-  VoidFunction,
+  VoidFunction
 ] => {
   const [cookie, updateCookie, removeCookie] = useReactCookies<
     string,
@@ -52,7 +52,7 @@ export const useCookie = <T>(
 export const useSSOCookie = (): [
   string | null,
   (value: string | null, options?: CookieSetOptions) => void,
-  VoidFunction,
+  VoidFunction
 ] => {
   return useCookie<string>(config.value.SSO_COOKIE);
 };

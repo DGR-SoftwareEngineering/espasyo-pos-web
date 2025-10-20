@@ -3,8 +3,13 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
-export type ApiResponse<T> = {
-  response: T;
+export type ApiResponse<TResponse = unknown, TError = unknown> = {
+  statusCode: number;
+  success: boolean;
+  response: TResponse;
+  message: string | null;
+  errors: TError | null;
+  traceId?: string;
 };
 
 export interface SsoSessionParams {
@@ -21,3 +26,4 @@ export type RefreshParams = { refreshToken: string };
 
 export type LoginResponse = ApiResponse<AuthTokens>;
 export type RefreshTokenResponse = ApiResponse<AuthTokens>;
+export type ValidateAccessTokenResponse = ApiResponse<string, unknown>;

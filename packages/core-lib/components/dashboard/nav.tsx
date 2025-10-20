@@ -15,6 +15,7 @@ import { useRouter } from "../../core/router";
 import { usePathname } from "next/navigation";
 import { EvaIcon } from "../EvaIcon";
 import Link from "next/link";
+import { alpha } from "@mui/material/styles";
 
 export type NavContentProps = {
   data: MenuItems[];
@@ -48,10 +49,7 @@ export function NavDesktop({
         flexDirection: "column",
         zIndex: "var(--layout-nav-zIndex)",
         width: "var(--layout-nav-vertical-width)",
-        borderRight: `1px solid ${varAlpha(
-          theme.vars.palette.grey["500Channel"],
-          0.12
-        )}`,
+        borderRight: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
         [theme.breakpoints.up(layoutQuery)]: {
           display: "flex",
         },
