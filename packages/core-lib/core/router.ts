@@ -38,7 +38,6 @@ export interface CustomRouterReturn {
   isPreview: NextRouter["isPreview"];
   back: NextRouter["back"];
   reload: NextRouter["reload"];
-  prefetch: NextRouter["prefetch"];
   push: NavigateFn;
   replace: NavigateFn;
   parsedQuery: ParsedQuery;

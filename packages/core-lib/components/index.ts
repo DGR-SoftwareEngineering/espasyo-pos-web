@@ -10,3 +10,4 @@ export * from "./dashboard";
 export * from "./toast/Toastify";
 export * from "./PageLoader";
 export * from "./Stepper";
+export * from "./Card";

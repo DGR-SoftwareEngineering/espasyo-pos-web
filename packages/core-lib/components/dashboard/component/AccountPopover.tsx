@@ -17,7 +17,7 @@ import { usePageLoaderContext } from "../../../core/contexts";
 export const _myAccount = {
   displayName: "John Doe",
   email: "demo@escreen.com",
-  photoURL: "/assets/images/avatar/avatar-25.webp",
+  photoURL: "",
 };
 
 export type AccountPopoverProps = IconButtonProps & {

@@ -14,7 +14,11 @@ export type MenuItemsChildren = {
   menuId: string;
   parentId: string;
   hide?: boolean;
-  children: MenuItemsChildren[];
+};
+
+export type NavNode = MenuItemsChildren & {
+  depth: number;
+  children: NavNode[];
 };
 
 export type NavItem = {
@@ -37,24 +41,30 @@ export const navData = [
   },
 ];
 
-export const authorizedNav: MenuItems[] = [
+export const authorizedNav: MenuItemsChildren[] = [
   {
-    id: "1",
+    id: "hub-dashboard",
     label: "Dashboard",
-    path: "/hub/hello-world",
+    path: "/hub",
     icon: "activity-outline",
     menuId: "menu1",
     parentId: "",
-    children: [],
   },
   {
-    id: "2",
-    label: "User",
-    path: "/hub/world-hello",
-    icon: "people-outline",
+    id: "booking",
+    label: "Booking Management",
+    path: "#",
+    icon: "briefcase-outline",
     menuId: "menu1",
     parentId: "",
-    children: [],
+  },
+  {
+    id: "booking-add",
+    label: "Create Booking",
+    path: "/hub/booking/create-booking",
+    icon: "plus-circle-outline",
+    menuId: "menu1",
+    parentId: "booking",
   },
 ];
 

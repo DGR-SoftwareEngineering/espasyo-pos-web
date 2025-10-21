@@ -40,6 +40,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
           <Box
             component={Image}
             src={AbbottBackground}
+            priority
             alt="Escreen-tms"
             sx={{
               width: "100%",
