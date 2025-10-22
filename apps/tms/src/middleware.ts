@@ -136,12 +136,8 @@ function applyFinalSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-async function handleRouteProtection(
-  request: NextRequest,
-  isAuthenticated: boolean
-): Promise<NextResponse | null> {
-  const { pathname, searchParams } = request.nextUrl;
-
+function handleSensitiveParams(request: NextRequest): NextResponse | null {
+  const { searchParams } = request.nextUrl;
   if (SENSITIVE_QUERY_PARAMS.some((param) => searchParams.has(param))) {
     const cleanUrl = request.nextUrl.clone();
     SENSITIVE_QUERY_PARAMS.forEach((param) =>
@@ -149,6 +145,17 @@ async function handleRouteProtection(
     );
     return NextResponse.redirect(cleanUrl);
   }
+  return null;
+}
+
+async function handleRouteProtection(
+  request: NextRequest,
+  isAuthenticated: boolean
+): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl;
+
+  const sensitiveRedirect = handleSensitiveParams(request);
+  if (sensitiveRedirect) return sensitiveRedirect;
 
   if (PUBLIC_ROUTES.includes(pathname)) {
     if (isAuthenticated) {
@@ -168,9 +175,8 @@ async function handleRouteProtection(
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/") && isAuthenticated) {
-    const response = NextResponse.redirect(new URL("/hub", request.url));
-    return response;
+  if (pathname === "/" && isAuthenticated) {
+    return NextResponse.redirect(new URL("/hub", request.url));
   }
 
   return null;
@@ -178,8 +184,25 @@ async function handleRouteProtection(
 
 async function getAuthState(request: NextRequest) {
   const token = request.cookies.get("ac")?.value;
+  const cachedAuth = request.cookies.get("auth_valid")?.value;
+
+  if (cachedAuth === "true") {
+    return { isAuthenticated: true };
+  }
 
   const isAuthenticated = token ? await validateToken(token) : false;
+
+  if (isAuthenticated) {
+    const response = NextResponse.next();
+    response.cookies.set("auth_valid", "true", {
+      maxAge: 300, // 5 minutes
+      path: "/",
+      httpOnly: true,
+      secure: ENV === "production",
+    });
+    return { isAuthenticated };
+  }
+
   return { isAuthenticated };
 }
 
@@ -196,7 +219,9 @@ async function validateToken(token: string): Promise<boolean> {
       headers: {
         ...SECURITY_HEADERS,
         Authorization: `Bearer ${token}`,
+        "Cache-Control": "no-cache",
       },
+      keepalive: true,
     });
 
     if (!response.ok) return false;
@@ -213,3 +238,8 @@ async function validateToken(token: string): Promise<boolean> {
     return false;
   }
 }
+
+export const config = {
+  matcher: ["/hub/:path*", "/"],
+  runtime: "experimental-edge",
+};

@@ -1,28 +1,38 @@
+import * as React from "react";
 import type { Theme, SxProps, Breakpoint } from "@mui/material/styles";
-import { varAlpha } from "minimal-shared/utils";
+import { useTheme, alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import { useTheme } from "@mui/material/styles";
 import ListItemButton from "@mui/material/ListItemButton";
-import { MenuItems } from "./layouts/nav-config-dashboard";
-import {
-  WorkspacesPopover,
-  WorkspacesPopoverProps,
-} from "./component/workspaces-popover";
+import ListItemText from "@mui/material/ListItemText";
+import ListSubheader from "@mui/material/ListSubheader";
+import Collapse from "@mui/material/Collapse";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { EvaIcon } from "../EvaIcon";
+import { varAlpha } from "minimal-shared/utils";
 import { Scrollbar } from "./component/scrollbar/scrollbar";
 import { Logo } from "./component/logo/Logo";
-import { useRouter } from "../../core/router";
-import { usePathname } from "next/navigation";
-import { EvaIcon } from "../EvaIcon";
-import Link from "next/link";
-import { alpha } from "@mui/material/styles";
+import {
+  WorkspacesPopover,
+  type WorkspacesPopoverProps,
+} from "./component/workspaces-popover";
+
+import type { MenuItemsChildren as MenuItemInput } from "./layouts/nav-config-dashboard";
+import type { NavNode } from "./layouts/nav-config-dashboard";
+import {
+  buildTree,
+  isActive,
+  hasActiveDescendant,
+  getLeftIconName,
+  getExpanderIconName,
+} from "./layouts/utils/nav-utils";
 
 export type NavContentProps = {
-  data: MenuItems[];
-  slots?: {
-    topArea?: React.ReactNode;
-    bottomArea?: React.ReactNode;
-  };
+  data: MenuItemInput[];
+  slots?: { topArea?: React.ReactNode; bottomArea?: React.ReactNode };
   workspaces: WorkspacesPopoverProps["data"];
   sx?: SxProps<Theme>;
 };
@@ -50,9 +60,7 @@ export function NavDesktop({
         zIndex: "var(--layout-nav-zIndex)",
         width: "var(--layout-nav-vertical-width)",
         borderRight: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
-        [theme.breakpoints.up(layoutQuery)]: {
-          display: "flex",
-        },
+        [theme.breakpoints.up(layoutQuery)]: { display: "flex" },
         ...sx,
       }}
     >
@@ -62,92 +70,31 @@ export function NavDesktop({
 }
 
 export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
-  const router = useRouter();
+  const tree = React.useMemo(() => buildTree(data), [data]);
   const pathname = usePathname();
-
-  const handleNavigate = (path: string) => {
-    router.push(path);
-  };
-
   return (
     <>
       <Logo />
-
       {slots?.topArea}
-
       <WorkspacesPopover data={workspaces} sx={{ my: 2 }} />
 
       <Scrollbar fillContent>
         <Box
           component="nav"
           sx={[
-            {
-              display: "flex",
-              flex: "1 1 auto",
-              flexDirection: "column",
-            },
+            { display: "flex", flex: "1 1 auto", flexDirection: "column" },
             ...(Array.isArray(sx) ? sx : [sx]),
           ]}
         >
-          <Box
-            component="ul"
-            sx={{
-              gap: 0.5,
-              display: "flex",
-              flexDirection: "column",
-            }}
+          {/* Root UL */}
+          <List
+            disablePadding
+            sx={{ gap: 0.5, display: "flex", flexDirection: "column" }}
           >
-            {data.map((item) => {
-              //   const isActived = item.path === pathname;
-
-              return (
-                <ListItem disableGutters disablePadding key={item.label}>
-                  <Link href={item.path} passHref legacyBehavior>
-                    <ListItemButton
-                      disableGutters
-                      LinkComponent="a"
-                      sx={[
-                        (theme) => ({
-                          pl: 2,
-                          py: 1,
-                          gap: 2,
-                          pr: 1.5,
-                          borderRadius: 0.75,
-                          typography: "body2",
-                          minHeight: 44,
-                          // add if isActivated
-                          ...{
-                            fontWeight: "fontWeightSemiBold",
-                            color: theme.vars.palette.primary.main,
-                            bgcolor: varAlpha(
-                              theme.vars.palette.primary.mainChannel,
-                              0.08
-                            ),
-                            "&:hover": {
-                              bgcolor: varAlpha(
-                                theme.vars.palette.primary.mainChannel,
-                                0.16
-                              ),
-                            },
-                          },
-                        }),
-                      ]}
-                    >
-                      <Box component="span" sx={{ width: 24, height: 24 }}>
-                        <EvaIcon name={item.icon} />
-                      </Box>
-
-                      <Box component="span" sx={{ flexGrow: 1 }}>
-                        {item.label}
-                      </Box>
-
-                      {/* {item.info && item.info} */}
-                    </ListItemButton>
-                  </Link>
-                </ListItem>
-              );
-            })}
-          </Box>
+            {tree.map((node) => (
+              <NavNodeItem key={node.id} node={node} pathname={pathname} />
+            ))}
+          </List>
         </Box>
       </Scrollbar>
 
@@ -155,3 +102,135 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
     </>
   );
 }
+
+const NavNodeItem = React.memo(function NavNodeItem({
+  node,
+  pathname,
+}: {
+  node: NavNode;
+  pathname: string | null;
+}) {
+  const theme = useTheme();
+  const hasChildren = !!node.children?.length;
+  const isCategoryOnly = hasChildren && (!node.path || node.path === "#");
+  const active = pathname ? isActive(pathname, node) : false;
+  const defaultOpen = pathname ? hasActiveDescendant(pathname, node) : false;
+  const [open, setOpen] = React.useState(defaultOpen);
+
+  React.useEffect(() => {
+    if (pathname && hasActiveDescendant(pathname, node)) setOpen(true);
+  }, [pathname, node.id]);
+
+  const leftIcon = getLeftIconName(node);
+  const rightIcon = hasChildren ? getExpanderIconName(open) : null;
+  const indent = 2 + node.depth * 2;
+
+  const buttonSx = (t: Theme) => ({
+    pl: indent,
+    py: 1,
+    gap: 2,
+    pr: 1.5,
+    borderRadius: 0.75,
+    typography: "body2",
+    minHeight: 44,
+    ...(active && {
+      fontWeight: t.typography.fontWeightSemiBold,
+      color: t.vars?.palette?.primary?.main ?? t.palette.primary.main,
+      bgcolor: t.vars
+        ? varAlpha(t.vars.palette.primary.mainChannel, 0.08)
+        : alpha(t.palette.primary.main, 0.08),
+      "&:hover": {
+        bgcolor: t.vars
+          ? varAlpha(t.vars.palette.primary.mainChannel, 0.16)
+          : alpha(t.palette.primary.main, 0.16),
+      },
+    }),
+  });
+
+  if (isCategoryOnly) {
+    return (
+      <React.Fragment>
+        {/* Header row as an li */}
+        <ListItem disableGutters disablePadding component="li">
+          <ListSubheader
+            disableSticky
+            component="div" // not an <li>
+            sx={{
+              mt: node.depth === 0 ? 1 : 0.5,
+              mb: 0.5,
+              lineHeight: 1.75,
+              fontWeight: 700,
+              color: theme.palette.text.secondary,
+              bgcolor: "transparent",
+              px: indent,
+              width: "100%",
+            }}
+          >
+            {node.label}
+          </ListSubheader>
+        </ListItem>
+
+        <List disablePadding>
+          {node.children!.map((c) => (
+            <NavNodeItem key={c.id} node={c} pathname={pathname} />
+          ))}
+        </List>
+      </React.Fragment>
+    );
+  }
+
+  // --- PARENT WITH CHILDREN (collapsible) ---
+  if (hasChildren) {
+    return (
+      <React.Fragment>
+        <ListItem disableGutters disablePadding component="li">
+          <ListItemButton
+            onClick={() => setOpen((v) => !v)}
+            sx={buttonSx(theme)}
+            aria-expanded={open}
+          >
+            <Box component="span" sx={{ width: 24, height: 24 }}>
+              <EvaIcon name={leftIcon} />
+            </Box>
+            <ListItemText primary={node.label} />
+            {rightIcon && (
+              <Box
+                component="span"
+                sx={{ width: 20, height: 20, color: "text.secondary" }}
+              >
+                <EvaIcon name={rightIcon} />
+              </Box>
+            )}
+          </ListItemButton>
+        </ListItem>
+
+        <Collapse in={open} unmountOnExit>
+          {/* Children list as a new UL */}
+          <List disablePadding>
+            {node.children!.map((c) => (
+              <NavNodeItem key={c.id} node={c} pathname={pathname} />
+            ))}
+          </List>
+        </Collapse>
+      </React.Fragment>
+    );
+  }
+
+  // --- LEAF (link) ---
+  return (
+    <ListItem disableGutters disablePadding component="li">
+      {/* ✅ No legacyBehavior. Render the button as the Link itself. */}
+      <ListItemButton
+        component={Link}
+        href={node.path || "#"}
+        sx={buttonSx(theme)}
+        aria-current={active ? "page" : undefined}
+      >
+        <Box component="span" sx={{ width: 24, height: 24 }}>
+          <EvaIcon name={leftIcon} />
+        </Box>
+        <ListItemText primary={node.label} />
+      </ListItemButton>
+    </ListItem>
+  );
+});
