@@ -9,3 +9,21 @@ export type CmsTokens = Nullable<{
   name: string;
   submissionDate: string;
 }>;
+
+export type ApiResponse<TResponse = unknown, TError = unknown> = {
+  statusCode: number;
+  success: boolean;
+  response: TResponse;
+  message: string | null;
+  errors: TError | null;
+  traceId?: string;
+};
+
+export type Driver = {
+  fullName: string;
+  userInfoID: string;
+  userID: string;
+  email: string;
+  contactNumber: string;
+  licenseNumber: string;
+};

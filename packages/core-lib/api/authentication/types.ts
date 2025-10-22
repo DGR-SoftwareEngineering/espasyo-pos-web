@@ -1,16 +1,9 @@
+import { ApiResponse } from "../types";
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
 }
-
-export type ApiResponse<TResponse = unknown, TError = unknown> = {
-  statusCode: number;
-  success: boolean;
-  response: TResponse;
-  message: string | null;
-  errors: TError | null;
-  traceId?: string;
-};
 
 export interface SsoSessionParams {
   id: string;

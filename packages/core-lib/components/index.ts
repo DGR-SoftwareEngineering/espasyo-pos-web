@@ -11,3 +11,4 @@ export * from "./toast/Toastify";
 export * from "./PageLoader";
 export * from "./Stepper";
 export * from "./Card";
+export * from "./tabs";
