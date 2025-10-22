@@ -1,5 +1,8 @@
-export type DriverSelectionOptions = {
+export type HelperSelectionOptions = {
   email: string;
   contactNumber: string;
-  licenseNumber: string;
 };
+
+export type DriverSelectionOptions = HelperSelectionOptions & {  
+  licenseNumber: string;
+}
