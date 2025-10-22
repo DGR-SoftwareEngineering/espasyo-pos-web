@@ -60,7 +60,7 @@ export const useAuthentication = (): AuthService => {
     } else {
       authSessionIdleTimer.stop();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, accessToken]);
 
   const logout = useCallback(async () => {
     try {

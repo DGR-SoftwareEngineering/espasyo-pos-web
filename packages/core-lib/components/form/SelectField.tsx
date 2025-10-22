@@ -12,10 +12,12 @@ import {
 } from "react-hook-form";
 import { FieldError } from "./FieldError";
 import { InputLoader } from "../loaders/InputLoader";
+import { DriverSelectionOptions } from "./selection-types";
 
 export interface SelectOption {
   value: string;
   label: string;
+  driver?: DriverSelectionOptions;
 }
 
 type Props<T extends object> = SelectProps & {
@@ -25,6 +27,7 @@ type Props<T extends object> = SelectProps & {
   "data-testid"?: string;
   label?: string | JSX.Element;
   options?: SelectOption[];
+  onSelectOption?: (option: SelectOption) => void;
 };
 
 export const SelectField = <T extends FieldValues>({
@@ -81,7 +84,17 @@ const SelectComponent = <T extends FieldValues>({
               value={field.value ?? ""}
               data-testid={props["data-testid"] || `${field.name}-field`}
               IconComponent={KeyboardArrowDown}
-              onChange={(e) => field.onChange(e.target.value)}
+              onChange={(e) => {
+                const selectedValue = e.target.value;
+                const selectedOption = options.find(
+                  (opt) => opt.value === selectedValue
+                );
+
+                if (selectedOption && props.onSelectOption) {
+                  props.onSelectOption(selectedOption);
+                }
+                field.onChange(selectedValue);
+              }}
             >
               {options.map((option, index) => (
                 <MenuItem

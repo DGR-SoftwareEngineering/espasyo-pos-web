@@ -6,9 +6,7 @@ import {
   useWizardForm,
   WizardFormMap,
 } from "../../../../../../../../core/hooks";
-import { EvaIcon } from "../../../../../../../EvaIcon";
 import { MobileStepper, ProgressStepper } from "../../../../../../../Stepper";
-//add icons
 import { CreateBookingType } from "../validation";
 import { useCreateBookingFormContext } from "../CreateBookingContext";
 import AccessibilityIcon from "@mui/icons-material/Accessibility";
@@ -16,6 +14,7 @@ import DriveEtaIcon from "@mui/icons-material/DriveEta";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import AddLocationIcon from "@mui/icons-material/AddLocation";
 import SummarizeIcon from "@mui/icons-material/Summarize";
+import { DriverSelectionBlock } from "./contents";
 
 export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
   const { isMobile } = useResolution();
@@ -23,7 +22,7 @@ export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
   const steps = useMemo(() => {
     return {
       DriverSelection: {
-        content: (props) => <>Select Driver Content here...</>,
+        content: (props) => <DriverSelectionBlock {...props} />,
         nextStep: "HelperSelection",
       },
       HelperSelection: {

@@ -1,13 +1,13 @@
 import * as yup from "yup";
 
 export const createBookingSchema = yup.object({
-  driverId: yup.string().required("Kindly select driver").default(""),
-  helperId: yup.string().required("Kindly select helper").default(""),
-  vehicleId: yup.string().required("Kindly select vehicle").default(""),
-  chassisId: yup.string().required("Kindly select chassis").default(""),
+  driverId: yup.string().required("Kindly select driver"),
+  helperId: yup.string().required("Kindly select helper"),
+  vehicleId: yup.string().required("Kindly select vehicle"),
+  chassisId: yup.string().required("Kindly select chassis"),
   location: yup.object({
-    start: yup.string().required("Kindly fill start route").default(""),
-    stop: yup.string().required("Kindly fill stop route").default(""),
+    start: yup.string().required("Kindly fill start route"),
+    stop: yup.string().required("Kindly fill stop route"),
   }),
 });
 

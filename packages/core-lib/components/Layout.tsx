@@ -10,6 +10,7 @@ import {
   useAuthContext,
   FormSubmissionContextProvider,
   HeaderTitleContextProvider,
+  TabContextProvider,
 } from "../core/contexts";
 import LinearProgress, {
   linearProgressClasses,
@@ -75,19 +76,21 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
                       flexDirection="column"
                     >
                       {/* set loading to false by default for now. */}
-                      <LoadablePageContent loading={false}>
-                        {isAuthenticated ? (
-                          <DashboardLayout logout={logout} loading={loading}>
+                      <TabContextProvider>
+                        <LoadablePageContent loading={false}>
+                          {isAuthenticated ? (
+                            <DashboardLayout logout={logout} loading={loading}>
+                              <Suspense fallback={renderFallback()}>
+                                {children}
+                              </Suspense>
+                            </DashboardLayout>
+                          ) : (
                             <Suspense fallback={renderFallback()}>
                               {children}
                             </Suspense>
-                          </DashboardLayout>
-                        ) : (
-                          <Suspense fallback={renderFallback()}>
-                            {children}
-                          </Suspense>
-                        )}
-                      </LoadablePageContent>
+                          )}
+                        </LoadablePageContent>
+                      </TabContextProvider>
                     </Box>
                   </FormSubmissionContextProvider>
                 </NotificationsContextProvider>
