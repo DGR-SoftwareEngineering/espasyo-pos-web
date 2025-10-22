@@ -10,6 +10,8 @@ const ParseBlocks: React.FC<ParseBlocksProps> = (props) => {
       return <>Hub</>;
     case "BookingBlock":
       return <CreateBookingBlock />;
+    case "UserManagementBlock":
+      return <>test</>;
   }
 };
 

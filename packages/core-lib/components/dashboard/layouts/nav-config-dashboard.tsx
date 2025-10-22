@@ -66,6 +66,11 @@ export const authorizedNav: MenuItemsChildren[] = [
     menuId: "menu1",
     parentId: "booking",
   },
+  {
+    id: "user-management",
+    label: "Create User",
+    path: "/hub/user-ma"
+  }
 ];
 
 export const _account: AccountPopoverProps["data"] = [
