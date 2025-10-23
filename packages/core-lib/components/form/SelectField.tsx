@@ -12,12 +12,13 @@ import {
 } from "react-hook-form";
 import { FieldError } from "./FieldError";
 import { InputLoader } from "../loaders/InputLoader";
-import { DriverSelectionOptions } from "./selection-types";
+import { DriverSelectionOptions, HelperSelectionOptions } from "./selection-types";
 
 export interface SelectOption {
   value: string;
   label: string;
   driver?: DriverSelectionOptions;
+  helper?: HelperSelectionOptions;
 }
 
 type Props<T extends object> = SelectProps & {

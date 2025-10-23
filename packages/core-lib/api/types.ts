@@ -19,11 +19,14 @@ export type ApiResponse<TResponse = unknown, TError = unknown> = {
   traceId?: string;
 };
 
-export type Driver = {
+export type User = {
   fullName: string;
   userInfoID: string;
   userID: string;
   email: string;
   contactNumber: string;
+}
+
+export type Driver = User & {
   licenseNumber: string;
 };

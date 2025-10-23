@@ -1,5 +1,11 @@
-export type DriverSelectionOptions = {
-  email: string;
-  contactNumber: string;
-  licenseNumber: string;
-};
+export interface ContactInfo {
+email: string;
+contactNumber: string;
+}
+
+export interface HelperSelectionOptions extends ContactInfo {}
+
+export interface DriverSelectionOptions extends ContactInfo {
+licenseNumber: string;
+}
+

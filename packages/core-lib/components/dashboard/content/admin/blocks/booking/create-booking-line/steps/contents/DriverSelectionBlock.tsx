@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card } from "../../../../../../../../Card";
 import { Box, Divider, Typography } from "@mui/material";
 import {
@@ -8,24 +8,12 @@ import {
 import { ProceedButton } from "../../../../../../../../buttons";
 import { useCreateBookingFormContext } from "../../CreateBookingContext";
 import { useApi } from "../../../../../../../../../core/hooks";
+import { dataStyle, divStyle, infoStyle } from "./styles";
 
 interface Props {
   nextStep({}): void;
   next(): void;
 }
-
-const infoStyle = {
-  fontFamily: "PT Sans",
-  fontWeight: "bold",
-  color: "#0F2A71",
-  fontSize: "clamp(1rem, 2.5vw, 1.5rem)",
-};
-
-const dataStyle = {
-  fontFamily: "PT Sans Narrow",
-  color: "#030303",
-  fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
-};
 
 export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
   const { form, isDirty } = useCreateBookingFormContext();
@@ -52,6 +40,19 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
     next();
     nextStep("HelperSelection");
   };
+
+
+  useEffect(() => {
+    const selectedDriverId = form.watch("driverId");
+    const selectedOption = driverSelectOptions?.find(
+    (opt) => opt.value === selectedDriverId
+    );
+
+    if (selectedOption?.driver) {
+    setSelectedDriverInfo(selectedOption.driver);
+    }
+  }, [form.watch("helperId"), driverSelectOptions]);
+  
 
   return (
     <Box
@@ -83,7 +84,7 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
                 Kindly select driver
               </Typography>
               <Divider
-                sx={{ borderColor: "#0F2A7180", borderWidth: "1px", mb: 5 }}
+                sx={divStyle}
               />
               <SelectField
                 name="driverId"
@@ -97,7 +98,7 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
                 }}
               />
               <Divider
-                sx={{ borderColor: "#0F2A7180", borderWidth: "1px", mb: 5 }}
+                sx={divStyle}
               />
               <Box className="w-full flex items-center justify-between mt-4">
                 <Typography sx={infoStyle}>Email&#58; </Typography>
