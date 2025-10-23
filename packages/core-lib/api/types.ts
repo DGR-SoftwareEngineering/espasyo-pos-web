@@ -30,7 +30,3 @@ export type User = {
 export type Driver = User & {
   licenseNumber: string;
 };
-
-export type Helper = User & {
-
-};

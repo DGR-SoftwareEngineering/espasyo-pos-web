@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card } from "../../../../../../../../Card";
 import { Box, Divider, Typography } from "@mui/material";
 import {
@@ -45,18 +45,29 @@ export const HelperSelectionBlock: React.FC<BackBtnProps> = ({ previousStep, pre
     previousStep("DriverSelection");
   }
 
+  useEffect(() => {
+    const selectedHelperId = form.watch("helperId");
+    const selectedOption = helperSelectOptions?.find(
+      (opt) => opt.value === selectedHelperId
+    );
+
+    if (selectedOption?.helper) {
+      setselectedHelperInfo(selectedOption.helper);
+    }
+  }, [form.watch("helperId"), helperSelectOptions]);
+
   return (
     <Box
       sx={{
         width: "100%",
-        height: "auto",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
+        justifyContent: "space-between",
+        marginTop: 2,
       }}
     >
-      <div className="w-full p-2 lg:w-[800px] lg:p-0 mt-[40px]">
+      <div className="w-full lg:w-[800px]">
+        <BackButton onClick={handlePrevious} disabled={!isDirty} loading={false} />
         <Box sx={{ width: "100%" }}>
           <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
             Helper Selection
@@ -91,21 +102,24 @@ export const HelperSelectionBlock: React.FC<BackBtnProps> = ({ previousStep, pre
               <Divider
                 sx={divStyle}
               />
-              <Box className="w-full flex items-center justify-between mt-4">
-                <Typography sx={infoStyle}>Email&#58; </Typography>
-                <Typography sx={infoStyle}>Contact Number&#58; </Typography>
+              <Box className="w-full flex items-center mt-4">
+                <Box className="flex-1 flex justify-start">
+                  <Typography sx={infoStyle}>Email:</Typography>
+                </Box>
+                <Box className="flex-1 flex justify-start">
+                  <Typography sx={infoStyle}>Contact Number:</Typography>
+                </Box>
               </Box>
-              <Box className="flex items-center justify-between">
-                <Typography sx={dataStyle}>
-                  {selectedHelperInfo?.email}{" "}
-                </Typography>
-                <Typography sx={dataStyle}>
-                  {selectedHelperInfo?.contactNumber}
-                </Typography>
+              <Box className="w-full flex items-start">
+                <Box className="flex-1 flex justify-start">
+                  <Typography sx={dataStyle}>{selectedHelperInfo?.email}{" "}</Typography>
+                </Box>
+                <Box className="flex-1 flex justify-center">
+                  <Typography sx={dataStyle}>{selectedHelperInfo?.contactNumber}</Typography>
+                </Box>
               </Box>
             </Box>
           </Card>
-          <BackButton onClick={handlePrevious} disabled={!isDirty}  />
           <ProceedButton onClick={handleNext} disabled={!isDirty} />
         </Box>
       </div>

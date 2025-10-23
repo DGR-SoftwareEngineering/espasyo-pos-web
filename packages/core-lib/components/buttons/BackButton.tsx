@@ -17,7 +17,7 @@ export const BackButton: React.FC<Props> = ({
   loading,
 }) => {
   return (
-    <Box className="w-full flex items-center justify-end my-4">
+    <Box className="w-full flex items-center justify-start my-1">
       <Button
         onClick={onClick}
         disabled={disabled || loading}
@@ -26,24 +26,27 @@ export const BackButton: React.FC<Props> = ({
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "end",
-          color: "#fff",
-          boxShadow: 4,
-          gap: 2,
-          borderRadius: "10px",
-          paddingX: 12,
-          backgroundColor: "#0F2A71",
-          background:
-            "var(--linear-main-blue, linear-gradient(90deg, #0F2A71 0%, #181E2F 100%))",
+          justifyContent: "flex-start",
+          color: "#0F2A71",
+          boxShadow: 0,
+          minWidth: 10,
+          maxHeight: 10,
+          gap: 1,
+          borderRadius: "0px",          
+          paddingX: 0,
+          paddingY: 0,
+          backgroundColor: "transparent",
+          background: "transparent",  
+          border: "1px solid transparent"
         }}
       >
-        {text}
         <EvaIcon
           name="arrow-ios-back-outline"
-          fill="#f3f3f3"
+          fill="var(--linear-main-blue, linear-gradient(90deg, #0F2A71 0%, #181E2F 100%))"
           width={20}
           height={20}
         />
+        {text}       
       </Button>
     </Box>
   );

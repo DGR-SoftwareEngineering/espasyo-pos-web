@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card } from "../../../../../../../../Card";
 import { Box, Divider, Typography } from "@mui/material";
 import {
@@ -40,6 +40,19 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
     next();
     nextStep("HelperSelection");
   };
+
+
+  useEffect(() => {
+    const selectedDriverId = form.watch("driverId");
+    const selectedOption = driverSelectOptions?.find(
+    (opt) => opt.value === selectedDriverId
+    );
+
+    if (selectedOption?.driver) {
+    setSelectedDriverInfo(selectedOption.driver);
+    }
+  }, [form.watch("helperId"), driverSelectOptions]);
+  
 
   return (
     <Box
