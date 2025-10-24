@@ -30,6 +30,7 @@ export const useSessionIdleTimer = ({ onSessionExpired, sessionId }: Props) => {
       }
     },
     onAction: async () => {
+      if (!sessionId) return;
       if (!aliveCheck) {
         resetAliveCheck();
       }

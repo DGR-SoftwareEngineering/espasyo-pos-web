@@ -7,19 +7,41 @@ import {
 } from "../../../../../../../../form/SelectField";
 import { ProceedButton, BackButton } from "../../../../../../../../buttons";
 import { useCreateBookingFormContext } from "../../CreateBookingContext";
-import { useApi } from "../../../../../../../../../core/hooks";
+import {
+  fieldsOf,
+  useApi,
+  useFieldsValidation,
+} from "../../../../../../../../../core/hooks";
 import { dataStyle, divStyle, infoStyle } from "./styles";
+import { CreateBookingType } from "../../validation";
+import { useWatch } from "react-hook-form";
 
-interface BackBtnProps {
+interface Props {
   previousStep({}): void;
   nextStep({}): void;
   next(): void;
   previous(): void;
 }
 
-export const HelperSelectionBlock: React.FC<BackBtnProps> = ({ previousStep, previous, nextStep, next }) => {
+export const HelperSelectionBlock: React.FC<Props> = ({
+  previousStep,
+  previous,
+  nextStep,
+  next,
+}) => {
   const { form, isDirty } = useCreateBookingFormContext();
   const helperOptions = useApi((api) => api.commons.getAllHelpers());
+  const helperFields = fieldsOf<CreateBookingType>()("helperId");
+  const { isValid } = useFieldsValidation<CreateBookingType>(
+    form,
+    helperFields,
+    {
+      enabled: true,
+      debounceMs: 200,
+      validateOnMount: true,
+      shouldFocus: false,
+    }
+  );
 
   const [selectedHelperInfo, setselectedHelperInfo] = React.useState<{
     email: string;
@@ -43,10 +65,13 @@ export const HelperSelectionBlock: React.FC<BackBtnProps> = ({ previousStep, pre
   const handlePrevious = () => {
     previous();
     previousStep("DriverSelection");
-  }
+  };
 
+  const selectedHelperId = useWatch({
+    control: form.control,
+    name: "helperId",
+  });
   useEffect(() => {
-    const selectedHelperId = form.watch("helperId");
     const selectedOption = helperSelectOptions?.find(
       (opt) => opt.value === selectedHelperId
     );
@@ -54,7 +79,7 @@ export const HelperSelectionBlock: React.FC<BackBtnProps> = ({ previousStep, pre
     if (selectedOption?.helper) {
       setselectedHelperInfo(selectedOption.helper);
     }
-  }, [form.watch("helperId"), helperSelectOptions]);
+  }, [selectedHelperId, helperSelectOptions]);
 
   return (
     <Box
@@ -67,7 +92,11 @@ export const HelperSelectionBlock: React.FC<BackBtnProps> = ({ previousStep, pre
       }}
     >
       <div className="w-full lg:w-[800px]">
-        <BackButton onClick={handlePrevious} disabled={!isDirty} loading={false} />
+        <BackButton
+          onClick={handlePrevious}
+          disabled={!isDirty}
+          loading={false}
+        />
         <Box sx={{ width: "100%" }}>
           <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
             Helper Selection
@@ -85,9 +114,7 @@ export const HelperSelectionBlock: React.FC<BackBtnProps> = ({ previousStep, pre
               >
                 Kindly select helper
               </Typography>
-              <Divider
-                sx={divStyle}
-              />
+              <Divider sx={divStyle} />
               <SelectField
                 name="helperId"
                 control={form.control}
@@ -99,9 +126,7 @@ export const HelperSelectionBlock: React.FC<BackBtnProps> = ({ previousStep, pre
                   }
                 }}
               />
-              <Divider
-                sx={divStyle}
-              />
+              <Divider sx={divStyle} />
               <Box className="w-full flex items-center mt-4">
                 <Box className="flex-1 flex justify-start">
                   <Typography sx={infoStyle}>Email:</Typography>
@@ -112,15 +137,19 @@ export const HelperSelectionBlock: React.FC<BackBtnProps> = ({ previousStep, pre
               </Box>
               <Box className="w-full flex items-start">
                 <Box className="flex-1 flex justify-start">
-                  <Typography sx={dataStyle}>{selectedHelperInfo?.email}{" "}</Typography>
+                  <Typography sx={dataStyle}>
+                    {selectedHelperInfo?.email}{" "}
+                  </Typography>
                 </Box>
                 <Box className="flex-1 flex justify-center">
-                  <Typography sx={dataStyle}>{selectedHelperInfo?.contactNumber}</Typography>
+                  <Typography sx={dataStyle}>
+                    {selectedHelperInfo?.contactNumber}
+                  </Typography>
                 </Box>
               </Box>
             </Box>
           </Card>
-          <ProceedButton onClick={handleNext} disabled={!isDirty} />
+          <ProceedButton onClick={handleNext} disabled={!isValid} />
         </Box>
       </div>
     </Box>
