@@ -30,3 +30,15 @@ export type User = {
 export type Driver = User & {
   licenseNumber: string;
 };
+
+export interface CarResponse {
+  vehicleId: string;
+  model: string;
+  plateNumber:  string;
+  chassis: {
+    chassisId:  string;
+    vehicleId: string;
+    type: string,
+    serialNumber: string
+  }
+}

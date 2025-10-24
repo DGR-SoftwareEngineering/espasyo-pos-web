@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
 import qs from "query-string";
-import { ApiResponse, Driver, User } from "../types";
+import { ApiResponse, Driver, User, CarResponse } from "../types";
 
 export class CommonsApi {
   constructor(
@@ -30,4 +30,9 @@ export class CommonsApi {
   public getAllHelpers() {
     return this.axios.get<ApiResponse<User[]>>(`/user-api/api/user/helpers`);
   }
+
+  public getAllCar() {
+    return this.axios.get<ApiResponse<CarResponse[]>>(`/vehicle-api/api/vehicle?Includes=Chassis`);
+  }
+
 }

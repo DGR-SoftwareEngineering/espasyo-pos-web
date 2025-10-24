@@ -29,6 +29,7 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
     driverOptions.result?.data.response?.map((driver) => ({
       value: driver.userID,
       label: driver.fullName,
+      selected: false,
       driver: {
         email: driver.email,
         contactNumber: driver.contactNumber,
@@ -51,7 +52,7 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
     if (selectedOption?.driver) {
     setSelectedDriverInfo(selectedOption.driver);
     }
-  }, [form.watch("helperId"), driverSelectOptions]);
+  }, [form, form.watch("driverId"), driverSelectOptions]);
   
 
   return (
@@ -94,28 +95,35 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
                 onSelectOption={(option) => {
                   if (option.driver) {
                     setSelectedDriverInfo(option.driver);
+                    option.selected = true;
                   }
                 }}
               />
-              <Divider
-                sx={divStyle}
-              />
-              <Box className="w-full flex items-center justify-between mt-4">
-                <Typography sx={infoStyle}>Email&#58; </Typography>
-                <Typography sx={infoStyle}>Contact Number&#58; </Typography>
-                <Typography sx={infoStyle}>License Number&#58; </Typography>
-              </Box>
-              <Box className="flex items-center justify-between">
-                <Typography sx={dataStyle}>
-                  {selectedDriverInfo?.email}{" "}
-                </Typography>
-                <Typography sx={dataStyle}>
-                  {selectedDriverInfo?.contactNumber}
-                </Typography>
-                <Typography sx={dataStyle}>
-                  {selectedDriverInfo?.licenseNumber}
-                </Typography>
-              </Box>
+                {
+                selectedDriverInfo && (
+                  <>
+                    <Divider
+                      sx={divStyle}
+                    />
+                    <Box className="w-full flex items-center justify-between mt-4">
+                      <Typography sx={infoStyle}>Email&#58; </Typography>
+                      <Typography sx={infoStyle}>Contact Number&#58; </Typography>
+                      <Typography sx={infoStyle}>License Number&#58; </Typography>
+                    </Box>
+                    <Box className="flex items-center justify-between">
+                      <Typography sx={dataStyle}>
+                        {selectedDriverInfo?.email}{" "}
+                      </Typography>
+                      <Typography sx={dataStyle}>
+                        {selectedDriverInfo?.contactNumber}
+                      </Typography>
+                      <Typography sx={dataStyle}>
+                        {selectedDriverInfo?.licenseNumber}
+                      </Typography>
+                    </Box>
+                  </>
+                )
+              }
             </Box>
           </Card>
           <ProceedButton onClick={handleNext} disabled={!isDirty} />

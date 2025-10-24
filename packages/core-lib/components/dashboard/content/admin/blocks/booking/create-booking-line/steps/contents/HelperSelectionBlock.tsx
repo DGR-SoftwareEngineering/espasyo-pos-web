@@ -15,13 +15,8 @@ import {
 import { dataStyle, divStyle, infoStyle } from "./styles";
 import { CreateBookingType } from "../../validation";
 import { useWatch } from "react-hook-form";
+import { Props } from "./types";
 
-interface Props {
-  previousStep({}): void;
-  nextStep({}): void;
-  next(): void;
-  previous(): void;
-}
 
 export const HelperSelectionBlock: React.FC<Props> = ({
   previousStep,
@@ -38,7 +33,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
     {
       enabled: true,
       debounceMs: 200,
-      validateOnMount: true,
+      validateOnMount: false,
       shouldFocus: false,
     }
   );
@@ -52,6 +47,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
     helperOptions.result?.data.response?.map((e) => ({
       value: e.userID,
       label: e.fullName,
+      selected: false,
       helper: {
         email: e.email,
         contactNumber: e.contactNumber,
@@ -66,11 +62,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
     previous();
     previousStep("DriverSelection");
   };
-
-  const selectedHelperId = useWatch({
-    control: form.control,
-    name: "helperId",
-  });
+  
   useEffect(() => {
     const selectedOption = helperSelectOptions?.find(
       (opt) => opt.value === selectedHelperId
@@ -79,7 +71,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
     if (selectedOption?.helper) {
       setselectedHelperInfo(selectedOption.helper);
     }
-  }, [selectedHelperId, helperSelectOptions]);
+  }, [form, form.watch("helperId"), helperSelectOptions]);
 
   return (
     <Box
@@ -122,6 +114,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
                 label="Select Helpers"
                 onSelectOption={(option) => {
                   if (option.helper) {
+                    option.selected = true;
                     setselectedHelperInfo(option.helper);
                   }
                 }}

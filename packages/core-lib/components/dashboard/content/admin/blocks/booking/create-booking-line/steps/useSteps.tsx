@@ -15,6 +15,7 @@ import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import AddLocationIcon from "@mui/icons-material/AddLocation";
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import { DriverSelectionBlock, HelperSelectionBlock } from "./contents";
+import CarSelectionBlock from "./contents/CarSelectionBlock";
 
 export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
   const { isMobile } = useResolution();
@@ -31,8 +32,7 @@ export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
         previousStep: "DriverSelection",
       },
       VehicleAndChassisSelection: {
-        content: (props) => <>Select vehicle and chassis content here...
-        </>,
+        content: (props) => <CarSelectionBlock {...props} />,
         nextStep: "AddingLocation",
         previousStep: "HelperSelection",
       },
