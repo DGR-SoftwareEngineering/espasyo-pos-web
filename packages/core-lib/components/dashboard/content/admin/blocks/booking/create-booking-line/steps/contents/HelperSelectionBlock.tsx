@@ -15,13 +15,7 @@ import {
 import { dataStyle, divStyle, infoStyle } from "./styles";
 import { CreateBookingType } from "../../validation";
 import { useWatch } from "react-hook-form";
-
-interface Props {
-  previousStep({ }): void;
-  nextStep({ }): void;
-  next(): void;
-  previous(): void;
-}
+import { Props } from "./types";
 
 export const HelperSelectionBlock: React.FC<Props> = ({
   previousStep,
@@ -94,7 +88,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
       skipHelper.current = false;
       setIsValid(false);
     }
-  }, [selectedHelperId, helperSelectOptions]);
+  }, [setIsValid, validateNow, selectedHelperId, helperSelectOptions]);
 
   return (
     <Box
@@ -113,9 +107,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
           loading={false}
         />
         <Box sx={{ width: "100%" }}>
-          <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
-            Helper Selection
-          </h1>
+          <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">Helper Selection (Optional)</h1>
           <Card sx={{ padding: 5, width: "100%" }} elevation={4}>
             <Box sx={{ width: "100%" }}>
               <Typography
@@ -140,30 +132,28 @@ export const HelperSelectionBlock: React.FC<Props> = ({
                     setBtnTxt("Proceed");
                     skipHelper.current = false;
                   }
-                }}
-              />
-              {
-                selectedHelperInfo && (<>
-                  <Divider sx={divStyle} />
-                  <Box className="w-full flex flex-col gap-1 mt-4">
-                    <Box className="flex w-full">
-                      <Box className="flex-1">
-                        <Typography sx={infoStyle}>Email&#58;</Typography>
-                      </Box>
-                      <Box className="flex-1">
-                        <Typography sx={infoStyle}>Contact Number&#58;</Typography>
-                      </Box>
+                }} />
+              {selectedHelperInfo && (<>
+                <Divider sx={divStyle} />
+                <Box className="w-full flex flex-col gap-1 mt-4">
+                  <Box className="flex w-full">
+                    <Box className="flex-1">
+                      <Typography sx={infoStyle}>Email&#58;</Typography>
                     </Box>
-                    <Box className="flex w-full">
-                      <Box className="flex-1">
-                        <Typography sx={dataStyle}>{selectedHelperInfo?.email}</Typography>
-                      </Box>
-                      <Box className="flex-1 text-center">
-                        <Typography sx={dataStyle}>{selectedHelperInfo?.contactNumber}</Typography>
-                      </Box>
+                    <Box className="flex-1">
+                      <Typography sx={infoStyle}>Contact Number&#58;</Typography>
                     </Box>
                   </Box>
-                </>)
+                  <Box className="flex w-full">
+                    <Box className="flex-1">
+                      <Typography sx={dataStyle}>{selectedHelperInfo?.email}</Typography>
+                    </Box>
+                    <Box className="flex-1 text-center">
+                      <Typography sx={dataStyle}>{selectedHelperInfo?.contactNumber}</Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </>)
               }
             </Box>
           </Card>

@@ -9,7 +9,7 @@ import { BackButton, ProceedButton } from "../../../../../../../../buttons";
 import { Card } from "../../../../../../../../Card";
 import { divStyle } from "./styles";
 
-export const CoordinateSelectionBlock: React.FC<Props> = ({ previous, next, nextStep, previousStep }) => {
+export const SummaryViewBlock: React.FC<Props> = ({ previous, next, nextStep, previousStep }) => {
     const { form, isDirty } = useCreateBookingFormContext();
     const helperFields = fieldsOf<CreateBookingType>()("location");
     const { isValid, validateNow, setIsValid } = useFieldsValidation<CreateBookingType>(

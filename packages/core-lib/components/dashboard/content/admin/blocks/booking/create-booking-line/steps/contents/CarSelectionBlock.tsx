@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Card } from "../../../../../../../../Card";
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Divider, Link, Typography } from "@mui/material";
 import {
   SelectField,
   SelectOption,
@@ -15,13 +15,7 @@ import {
 import { dataStyle, divStyle, infoStyle } from "./styles";
 import { CreateBookingType } from "../../validation";
 import { useWatch } from "react-hook-form";
-
-interface Props {
-  previousStep({ }): void;
-  nextStep({ }): void;
-  next(): void;
-  previous(): void;
-}
+import { Props } from "./types";
 
 export const CarSelectionBlock: React.FC<Props> = ({
   previousStep,
@@ -32,7 +26,7 @@ export const CarSelectionBlock: React.FC<Props> = ({
   const { form, isDirty } = useCreateBookingFormContext();
   const carOptions = useApi((api) => api.commons.getAllCars());
   const helperFields = fieldsOf<CreateBookingType>()("vehicleId");
-  const { isValid, validateNow, setIsValid } = useFieldsValidation<CreateBookingType>(
+  const { isValid, validateNow } = useFieldsValidation<CreateBookingType>(
     form,
     helperFields,
     {
@@ -50,7 +44,7 @@ export const CarSelectionBlock: React.FC<Props> = ({
     type: string;
   } | null>(null);
 
-  const carSelectOptions: SelectOption[] =
+  const carSelectOptions: SelectOption[] = //[];
     carOptions.result?.data.response?.map((e) => ({
       value: e.vehicleID,
       label: `${e.plateNumber} | ${e.model}`,
@@ -61,8 +55,7 @@ export const CarSelectionBlock: React.FC<Props> = ({
         type: e.chassis.type
       },
     })) ?? [];
-
-  console.log(carSelectOptions)
+    
   const handleNext = () => {
     next();
     nextStep("AddingLocation");
@@ -107,80 +100,95 @@ export const CarSelectionBlock: React.FC<Props> = ({
           disabled={!isDirty}
           loading={false}
         />
-        <Box sx={{ width: "100%" }}>
-          <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
-            Vehicle Selection
-          </h1>
-          <Card sx={{ padding: 5, width: "100%" }} elevation={4}>
-            <Box sx={{ width: "100%" }}>
-              <Typography
-                sx={{
-                  fontFamily: "PT Sans",
-                  fontWeight: "bold",
-                  color: "#0F2A71",
-                  marginBottom: 4,
-                  fontSize: "clamp(1.2rem, 2.5vw, 1.5rem)",
-                }}
-              >Kindly select vehicle</Typography>
-              <Divider sx={divStyle} />
-              <SelectField
-                name="vehicleId"
-                control={form.control}
-                options={carSelectOptions}
-                label="Select Vehicle"
-                onSelectOption={(option) => {
-                  if (option.vehicle) {
-                    setSelectedCarInfo(option.vehicle);
-                    validateNow();
-
-                  }
-                }}
-              />
-              {
-                selectedCarInfo && (<>
-                  <Divider sx={divStyle} />
-                  {/* Plate Number & Vehicle Model */}
-                  <Box className="w-full flex flex-col gap-1">
-                    <Box className="flex w-full">
-                      <Box className="flex-1">
-                        <Typography sx={infoStyle}>Plate Number:</Typography>
-                      </Box>
-                      <Box className="flex-1">
-                        <Typography sx={infoStyle}>Vehicle Model:</Typography>
-                      </Box>
-                    </Box>
-                    <Box className="flex w-full">
-                      <Box className="flex-1">
-                        <Typography sx={dataStyle}>{selectedCarInfo?.plateNumber}</Typography>
-                      </Box>
-                      <Box className="flex-1 text-left">
-                        <Typography sx={dataStyle}>{selectedCarInfo?.model}</Typography>
-                      </Box>
-                    </Box>
-                    {/* Serial Number & Vehicle Type */}
-                    <Box className="flex w-full mt-2">
-                      <Box className="flex-1">
-                        <Typography sx={infoStyle}>Serial Number:</Typography>
-                      </Box>
-                      <Box className="flex-1">
-                        <Typography sx={infoStyle}>Vehicle Type:</Typography>
-                      </Box>
-                    </Box>
-                    <Box className="flex w-full">
-                      <Box className="flex-1">
-                        <Typography sx={dataStyle}>{selectedCarInfo?.serialNumber}</Typography>
-                      </Box>
-                      <Box className="flex-1 text-left">
-                        <Typography sx={dataStyle}>{selectedCarInfo?.type}</Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-                </>)
-              }
+        {
+          !(carSelectOptions.length > 0) ? (<>
+          <Box sx={{ width: "100%" }}>
+              <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
+                No Vehicle Available in Selection
+              </h1>
+              <Link>
+                { /*** TO COMPLETE THIS SECTION UAC ADMIN LEVEL */}
+                To navigate to user management under construction
+              </Link>
             </Box>
-          </Card>
-          <ProceedButton onClick={handleNext} disabled={!isValid} />
-        </Box>
+          </>) :
+            (<>
+              <Box sx={{ width: "100%" }}>
+                <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
+                  Vehicle Selection
+                </h1>
+                <Card sx={{ padding: 5, width: "100%" }} elevation={4}>
+                  <Box sx={{ width: "100%" }}>
+                    <Typography
+                      sx={{
+                        fontFamily: "PT Sans",
+                        fontWeight: "bold",
+                        color: "#0F2A71",
+                        marginBottom: 4,
+                        fontSize: "clamp(1.2rem, 2.5vw, 1.5rem)",
+                      }}
+                    >Kindly select vehicle</Typography>
+                    <Divider sx={divStyle} />
+                    <SelectField
+                      name="vehicleId"
+                      control={form.control}
+                      options={carSelectOptions}
+                      label="Select Vehicle"
+                      onSelectOption={(option) => {
+                        if (option.vehicle) {
+                          setSelectedCarInfo(option.vehicle);
+                          validateNow();
+
+                        }
+                      }}
+                    />
+                    {
+                      selectedCarInfo && (<>
+                        <Divider sx={divStyle} />
+                        {/* Plate Number & Vehicle Model */}
+                        <Box className="w-full flex flex-col gap-1">
+                          <Box className="flex w-full">
+                            <Box className="flex-1">
+                              <Typography sx={infoStyle}>Plate Number:</Typography>
+                            </Box>
+                            <Box className="flex-1">
+                              <Typography sx={infoStyle}>Vehicle Model:</Typography>
+                            </Box>
+                          </Box>
+                          <Box className="flex w-full">
+                            <Box className="flex-1">
+                              <Typography sx={dataStyle}>{selectedCarInfo?.plateNumber}</Typography>
+                            </Box>
+                            <Box className="flex-1 text-left">
+                              <Typography sx={dataStyle}>{selectedCarInfo?.model}</Typography>
+                            </Box>
+                          </Box>
+                          {/* Serial Number & Vehicle Type */}
+                          <Box className="flex w-full mt-2">
+                            <Box className="flex-1">
+                              <Typography sx={infoStyle}>Serial Number:</Typography>
+                            </Box>
+                            <Box className="flex-1">
+                              <Typography sx={infoStyle}>Vehicle Type:</Typography>
+                            </Box>
+                          </Box>
+                          <Box className="flex w-full">
+                            <Box className="flex-1">
+                              <Typography sx={dataStyle}>{selectedCarInfo?.serialNumber}</Typography>
+                            </Box>
+                            <Box className="flex-1 text-left">
+                              <Typography sx={dataStyle}>{selectedCarInfo?.type}</Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </>)
+                    }
+                  </Box>
+                </Card>
+                <ProceedButton onClick={handleNext} disabled={!isValid} />
+              </Box>
+            </>)
+        }
       </div>
     </Box>
   );

@@ -14,7 +14,7 @@ import DriveEtaIcon from "@mui/icons-material/DriveEta";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import AddLocationIcon from "@mui/icons-material/AddLocation";
 import SummarizeIcon from "@mui/icons-material/Summarize";
-import { DriverSelectionBlock, HelperSelectionBlock, CarSelectionBlock } from "./contents";
+import { DriverSelectionBlock, HelperSelectionBlock, CarSelectionBlock, CoordinateSelectionBlock, SummaryViewBlock } from "./contents";
 
 export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
   const { isMobile } = useResolution();
@@ -36,11 +36,14 @@ export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
         previousStep: "HelperSelection",
       },
       AddingLocation: {
-        content: (props) => <>add start and stop location...</>,
+        content: (props) => <CoordinateSelectionBlock {...props} />,
         nextStep: "SummaryView",
         previousStep: "VehicleAndChassisSelection",
       },
-      SummaryView: {},
+      SummaryView: {
+        content: (props) => <SummaryViewBlock {...props} />,
+        previousStep: "AddingLocation"
+      },
     } as WizardFormMap<
       Partial<CreationManagementSteps>,
       CreateBookingType,
