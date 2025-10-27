@@ -4,3 +4,6 @@ export * from "./LinkButton";
 export * from "./TabButton";
 export * from "./ProceedButton";
 export * from "./BackButton";
+export * from "./SecondaryButton";
+export * from "./TextButton";
+export * from "./BackButtonV2";

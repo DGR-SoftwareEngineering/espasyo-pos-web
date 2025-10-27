@@ -100,3 +100,7 @@ export const isoTimeToText = (
     ? list.slice(0, timeValuesLimit).join(", ")
     : list.join(", ");
 };
+
+export function isValidDate(date?: Date): boolean {
+  return (date && !isNaN(date.getTime())) || false;
+}
