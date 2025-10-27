@@ -23,15 +23,15 @@ interface Props {
   previous(): void;
 }
 
-export const HelperSelectionBlock: React.FC<Props> = ({
+export const CarSelectionBlock: React.FC<Props> = ({
   previousStep,
   previous,
   nextStep,
   next,
 }) => {
   const { form, isDirty } = useCreateBookingFormContext();
-  const helperOptions = useApi((api) => api.commons.getAllHelpers());
-  const helperFields = fieldsOf<CreateBookingType>()("helperId");
+  const carOptions = useApi((api) => api.commons.getAllCars());
+  const helperFields = fieldsOf<CreateBookingType>()("vehicleId");
   const { isValid, validateNow, setIsValid } = useFieldsValidation<CreateBookingType>(
     form,
     helperFields,
@@ -43,58 +43,53 @@ export const HelperSelectionBlock: React.FC<Props> = ({
     }
   );
 
-  const [selectedHelperInfo, setselectedHelperInfo] = React.useState<{
-    email: string;
-    contactNumber: string;
+  const [selectedCarInfo, setSelectedCarInfo] = React.useState<{
+    model: string;
+    plateNumber: string;
+    serialNumber: string;
+    type: string;
   } | null>(null);
 
-  const helperSelectOptions: SelectOption[] =
-    helperOptions.result?.data.response?.map((e) => ({
-      value: e.userID,
-      label: e.fullName,
-      helper: {
-        email: e.email,
-        contactNumber: e.contactNumber,
+  const carSelectOptions: SelectOption[] =
+    carOptions.result?.data.response?.map((e) => ({
+      value: e.vehicleID,
+      label: `${e.plateNumber} | ${e.model}`,
+      vehicle: {
+        model: e.model,
+        plateNumber: e.plateNumber,
+        serialNumber: e.chassis.serialNumber,
+        type: e.chassis.type
       },
     })) ?? [];
 
+  console.log(carSelectOptions)
   const handleNext = () => {
     next();
-    nextStep("VehicleAndChassisSelection");
-  };
-  const handlePrevious = () => {
-    previous();
-    previousStep("DriverSelection");
+    nextStep("AddingLocation");
   };
 
-  const selectedHelperId = useWatch({
+  const handlePrevious = () => {
+    previous();
+    previousStep("HelperSelection");
+  };
+
+  const selectedCarId = useWatch({
     control: form.control,
-    name: "helperId",
+    name: "vehicleId",
     defaultValue: ""
   });
 
-  const skipHelper = React.useRef(false);
-  const [nextBtnTxt, setBtnTxt] = React.useState("Skip");
 
   useEffect(() => {
-    const selectedOption = helperSelectOptions?.find(
-      (opt) => opt.value === selectedHelperId
+    const selectedOption = carSelectOptions?.find(
+      (opt) => opt.value === selectedCarId
     );
 
-    if (selectedOption?.helper) {
-      setselectedHelperInfo(selectedOption.helper);
+    if (selectedOption?.vehicle) {
+      setSelectedCarInfo(selectedOption.vehicle);
       validateNow();
-      setBtnTxt("Proceed");
     }
-
-    if (!skipHelper.current) {
-      setIsValid(true);
-    }
-    else {
-      skipHelper.current = false;
-      setIsValid(false);
-    }
-  }, [selectedHelperId, helperSelectOptions]);
+  }, [validateNow, selectedCarId, carSelectOptions]);
 
   return (
     <Box
@@ -114,7 +109,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
         />
         <Box sx={{ width: "100%" }}>
           <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
-            Helper Selection
+            Vehicle Selection
           </h1>
           <Card sx={{ padding: 5, width: "100%" }} elevation={4}>
             <Box sx={{ width: "100%" }}>
@@ -126,40 +121,57 @@ export const HelperSelectionBlock: React.FC<Props> = ({
                   marginBottom: 4,
                   fontSize: "clamp(1.2rem, 2.5vw, 1.5rem)",
                 }}
-              >Kindly select helper</Typography>
+              >Kindly select vehicle</Typography>
               <Divider sx={divStyle} />
               <SelectField
-                name="helperId"
+                name="vehicleId"
                 control={form.control}
-                options={helperSelectOptions}
-                label="Select Helpers"
+                options={carSelectOptions}
+                label="Select Vehicle"
                 onSelectOption={(option) => {
-                  if (option.helper) {
-                    setselectedHelperInfo(option.helper);
+                  if (option.vehicle) {
+                    setSelectedCarInfo(option.vehicle);
                     validateNow();
-                    setBtnTxt("Proceed");
-                    skipHelper.current = false;
+
                   }
                 }}
               />
               {
-                selectedHelperInfo && (<>
+                selectedCarInfo && (<>
                   <Divider sx={divStyle} />
-                  <Box className="w-full flex flex-col gap-1 mt-4">
+                  {/* Plate Number & Vehicle Model */}
+                  <Box className="w-full flex flex-col gap-1">
                     <Box className="flex w-full">
                       <Box className="flex-1">
-                        <Typography sx={infoStyle}>Email&#58;</Typography>
+                        <Typography sx={infoStyle}>Plate Number:</Typography>
                       </Box>
                       <Box className="flex-1">
-                        <Typography sx={infoStyle}>Contact Number&#58;</Typography>
+                        <Typography sx={infoStyle}>Vehicle Model:</Typography>
                       </Box>
                     </Box>
                     <Box className="flex w-full">
                       <Box className="flex-1">
-                        <Typography sx={dataStyle}>{selectedHelperInfo?.email}</Typography>
+                        <Typography sx={dataStyle}>{selectedCarInfo?.plateNumber}</Typography>
                       </Box>
-                      <Box className="flex-1 text-center">
-                        <Typography sx={dataStyle}>{selectedHelperInfo?.contactNumber}</Typography>
+                      <Box className="flex-1 text-left">
+                        <Typography sx={dataStyle}>{selectedCarInfo?.model}</Typography>
+                      </Box>
+                    </Box>
+                    {/* Serial Number & Vehicle Type */}
+                    <Box className="flex w-full mt-2">
+                      <Box className="flex-1">
+                        <Typography sx={infoStyle}>Serial Number:</Typography>
+                      </Box>
+                      <Box className="flex-1">
+                        <Typography sx={infoStyle}>Vehicle Type:</Typography>
+                      </Box>
+                    </Box>
+                    <Box className="flex w-full">
+                      <Box className="flex-1">
+                        <Typography sx={dataStyle}>{selectedCarInfo?.serialNumber}</Typography>
+                      </Box>
+                      <Box className="flex-1 text-left">
+                        <Typography sx={dataStyle}>{selectedCarInfo?.type}</Typography>
                       </Box>
                     </Box>
                   </Box>
@@ -167,7 +179,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
               }
             </Box>
           </Card>
-          <ProceedButton text={nextBtnTxt} onClick={handleNext} disabled={!isValid} />
+          <ProceedButton onClick={handleNext} disabled={!isValid} />
         </Box>
       </div>
     </Box>

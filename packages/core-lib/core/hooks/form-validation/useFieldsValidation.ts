@@ -89,6 +89,7 @@ export function useFieldsValidation<TFieldValues extends FieldValues>(
     isValid,
     validating,
     validateNow,
+    setIsValid,
     fields,
   };
 }

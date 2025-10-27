@@ -7,11 +7,13 @@ import {
 } from "../../../../../../../../form/SelectField";
 import { ProceedButton } from "../../../../../../../../buttons";
 import { useCreateBookingFormContext } from "../../CreateBookingContext";
-import { useApi } from "../../../../../../../../../core/hooks";
+import { fieldsOf, useApi, useFieldsValidation } from "../../../../../../../../../core/hooks";
 import { dataStyle, divStyle, infoStyle } from "./styles";
+import { useWatch } from "react-hook-form";
+import { CreateBookingType } from "../../validation";
 
 interface Props {
-  nextStep({}): void;
+  nextStep({ }): void;
   next(): void;
 }
 
@@ -35,24 +37,39 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
         licenseNumber: driver.licenseNumber,
       },
     })) ?? [];
+  const driverFields = fieldsOf<CreateBookingType>()("driverId");
+  const { isValid, validateNow } = useFieldsValidation<CreateBookingType>(
+    form,
+    driverFields,
+    {
+      enabled: true,
+      debounceMs: 200,
+      validateOnMount: false,
+      shouldFocus: false,
+    }
+  );
 
   const handleNext = () => {
     next();
     nextStep("HelperSelection");
   };
 
+  const selectedDriverId = useWatch({
+    control: form.control,
+    name: "driverId",
+  });
 
   useEffect(() => {
-    const selectedDriverId = form.watch("driverId");
     const selectedOption = driverSelectOptions?.find(
-    (opt) => opt.value === selectedDriverId
+      (opt) => opt.value === selectedDriverId
     );
 
     if (selectedOption?.driver) {
-    setSelectedDriverInfo(selectedOption.driver);
+      setSelectedDriverInfo(selectedOption.driver);
+      validateNow();
     }
-  }, [form.watch("helperId"), driverSelectOptions]);
-  
+    
+  }, [validateNow, selectedDriverId, driverSelectOptions]);
 
   return (
     <Box
@@ -80,12 +97,8 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
                   marginBottom: 4,
                   fontSize: "clamp(1.2rem, 2.5vw, 1.5rem)",
                 }}
-              >
-                Kindly select driver
-              </Typography>
-              <Divider
-                sx={divStyle}
-              />
+              >Kindly select driver</Typography>
+              <Divider sx={divStyle} />
               <SelectField
                 name="driverId"
                 control={form.control}
@@ -94,31 +107,29 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
                 onSelectOption={(option) => {
                   if (option.driver) {
                     setSelectedDriverInfo(option.driver);
+                    form.setValue("driverId", option.value);
+                    validateNow();
                   }
                 }}
               />
-              <Divider
-                sx={divStyle}
-              />
-              <Box className="w-full flex items-center justify-between mt-4">
-                <Typography sx={infoStyle}>Email&#58; </Typography>
-                <Typography sx={infoStyle}>Contact Number&#58; </Typography>
-                <Typography sx={infoStyle}>License Number&#58; </Typography>
-              </Box>
-              <Box className="flex items-center justify-between">
-                <Typography sx={dataStyle}>
-                  {selectedDriverInfo?.email}{" "}
-                </Typography>
-                <Typography sx={dataStyle}>
-                  {selectedDriverInfo?.contactNumber}
-                </Typography>
-                <Typography sx={dataStyle}>
-                  {selectedDriverInfo?.licenseNumber}
-                </Typography>
-              </Box>
+              {
+                selectedDriverInfo && (<>
+                  <Divider sx={divStyle} />
+                  <Box className="w-full flex items-center justify-between mt-4">
+                    <Typography sx={infoStyle}>Email&#58;</Typography>
+                    <Typography sx={infoStyle}>Contact Number&#58;</Typography>
+                    <Typography sx={infoStyle}>License Number&#58;</Typography>
+                  </Box>
+                  <Box className="flex items-center justify-between">
+                    <Typography sx={dataStyle}>{selectedDriverInfo?.email}</Typography>
+                    <Typography sx={dataStyle}>{selectedDriverInfo?.contactNumber}</Typography>
+                    <Typography sx={dataStyle}>{selectedDriverInfo?.licenseNumber}</Typography>
+                  </Box>
+                </>)
+              }
             </Box>
           </Card>
-          <ProceedButton onClick={handleNext} disabled={!isDirty} />
+          <ProceedButton onClick={handleNext} disabled={!isValid} />
         </Box>
       </div>
     </Box>

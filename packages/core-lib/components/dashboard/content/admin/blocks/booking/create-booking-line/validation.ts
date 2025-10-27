@@ -4,7 +4,6 @@ export const createBookingSchema = yup.object({
   driverId: yup.string().required("Kindly select driver"),
   helperId: yup.string().required("Kindly select helper"),
   vehicleId: yup.string().required("Kindly select vehicle"),
-  chassisId: yup.string().required("Kindly select chassis"),
   location: yup.object({
     start: yup.string().required("Kindly fill start route"),
     stop: yup.string().required("Kindly fill stop route"),
