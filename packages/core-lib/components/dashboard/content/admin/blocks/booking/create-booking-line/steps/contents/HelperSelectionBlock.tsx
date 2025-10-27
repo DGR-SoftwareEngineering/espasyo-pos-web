@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useMemo } from "react";
 import { Card } from "../../../../../../../../Card";
 import { Box, Divider, Typography } from "@mui/material";
 import {
@@ -12,16 +12,15 @@ import {
   useApi,
   useFieldsValidation,
 } from "../../../../../../../../../core/hooks";
-import { dataStyle, divStyle, infoStyle } from "./styles";
-import { CreateBookingType } from "../../validation";
+import { divStyle } from "./styles";
 import { useWatch } from "react-hook-form";
+import { Props } from "./types";
+import { SelectionDetail } from "./SelectionDetail";
+import { CreateBookingType } from "../../validation";
+import { SelectionBlock } from "./SelectionBlock";
+import { HelperSelectionOptions } from "../../../../../../../../form/selection-types";
 
-interface Props {
-  previousStep({}): void;
-  nextStep({}): void;
-  next(): void;
-  previous(): void;
-}
+type Helper = HelperSelectionOptions | null;
 
 export const HelperSelectionBlock: React.FC<Props> = ({
   previousStep,
@@ -29,24 +28,21 @@ export const HelperSelectionBlock: React.FC<Props> = ({
   nextStep,
   next,
 }) => {
-  const { form, isDirty } = useCreateBookingFormContext();
+  const { form } = useCreateBookingFormContext();
   const helperOptions = useApi((api) => api.commons.getAllHelpers());
-  const helperFields = fieldsOf<CreateBookingType>()("helperId");
+
+  const helperField = fieldsOf<CreateBookingType>()("helperId");
+
   const { isValid } = useFieldsValidation<CreateBookingType>(
     form,
-    helperFields,
+    helperField,
     {
       enabled: true,
       debounceMs: 200,
       validateOnMount: true,
-      shouldFocus: false,
+      shouldFocus: true,
     }
   );
-
-  const [selectedHelperInfo, setselectedHelperInfo] = React.useState<{
-    email: string;
-    contactNumber: string;
-  } | null>(null);
 
   const helperSelectOptions: SelectOption[] =
     helperOptions.result?.data.response?.map((e) => ({
@@ -60,8 +56,9 @@ export const HelperSelectionBlock: React.FC<Props> = ({
 
   const handleNext = () => {
     next();
-    nextStep("HelperSelection");
+    nextStep("VehicleSelection");
   };
+
   const handlePrevious = () => {
     previous();
     previousStep("DriverSelection");
@@ -70,36 +67,23 @@ export const HelperSelectionBlock: React.FC<Props> = ({
   const selectedHelperId = useWatch({
     control: form.control,
     name: "helperId",
+    defaultValue: "",
   });
-  useEffect(() => {
-    const selectedOption = helperSelectOptions?.find(
-      (opt) => opt.value === selectedHelperId
-    );
 
-    if (selectedOption?.helper) {
-      setselectedHelperInfo(selectedOption.helper);
-    }
-  }, [selectedHelperId, helperSelectOptions]);
+  const selectedHelperInfo: Helper = useMemo(
+    () =>
+      helperSelectOptions.find((opt) => opt.value === selectedHelperId)
+        ?.helper ?? null,
+    [selectedHelperId, helperSelectOptions]
+  );
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginTop: 2,
-      }}
-    >
-      <div className="w-full lg:w-[800px]">
-        <BackButton
-          onClick={handlePrevious}
-          disabled={!isDirty}
-          loading={false}
-        />
+    <>
+      <SelectionBlock>
+        <BackButton onClick={handlePrevious} loading={false} />
         <Box sx={{ width: "100%" }}>
           <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
-            Helper Selection
+            Helper Selection (Optional)
           </h1>
           <Card sx={{ padding: 5, width: "100%" }} elevation={4}>
             <Box sx={{ width: "100%" }}>
@@ -112,46 +96,23 @@ export const HelperSelectionBlock: React.FC<Props> = ({
                   fontSize: "clamp(1.2rem, 2.5vw, 1.5rem)",
                 }}
               >
-                Kindly select helper
+                Kindly select a Helper
               </Typography>
               <Divider sx={divStyle} />
               <SelectField
                 name="helperId"
                 control={form.control}
                 options={helperSelectOptions}
-                label="Select Helpers"
-                onSelectOption={(option) => {
-                  if (option.helper) {
-                    setselectedHelperInfo(option.helper);
-                  }
-                }}
+                label="Select a Helper"
               />
-              <Divider sx={divStyle} />
-              <Box className="w-full flex items-center mt-4">
-                <Box className="flex-1 flex justify-start">
-                  <Typography sx={infoStyle}>Email:</Typography>
-                </Box>
-                <Box className="flex-1 flex justify-start">
-                  <Typography sx={infoStyle}>Contact Number:</Typography>
-                </Box>
-              </Box>
-              <Box className="w-full flex items-start">
-                <Box className="flex-1 flex justify-start">
-                  <Typography sx={dataStyle}>
-                    {selectedHelperInfo?.email}{" "}
-                  </Typography>
-                </Box>
-                <Box className="flex-1 flex justify-center">
-                  <Typography sx={dataStyle}>
-                    {selectedHelperInfo?.contactNumber}
-                  </Typography>
-                </Box>
-              </Box>
+              {selectedHelperInfo && (
+                <SelectionDetail data={selectedHelperInfo} />
+              )}
             </Box>
           </Card>
           <ProceedButton onClick={handleNext} disabled={!isValid} />
         </Box>
-      </div>
-    </Box>
+      </SelectionBlock>
+    </>
   );
 };

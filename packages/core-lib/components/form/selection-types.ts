@@ -9,3 +9,10 @@ export interface DriverSelectionOptions extends ContactInfo {
 licenseNumber: string;
 }
 
+export interface CarSelectionOptions {
+    model: string;
+    plateNumber: string;
+    type: string;
+    serialNumber: string;
+}
+

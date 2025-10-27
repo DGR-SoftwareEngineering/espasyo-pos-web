@@ -1,14 +1,9 @@
 import * as React from "react";
-import type {
-  FieldPath,
-  FieldValues,
-  Path,
-  UseFormReturn,
-} from "react-hook-form";
+import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form";
 
 /**
  * Validates a subset of RHF fields and exposes a boolean validity state.
- * - Strongly typed: `fields` are Path<TFieldValues>[] (supports nested/array paths).
+ * - Strongly typed: `fields` are FieldPath<TFieldValues>[] (supports nested/array paths).
  * - Watches only those fields; debounced revalidation.
  * - Provides validateNow() for manual checks (e.g., on our custom button).
  */
@@ -34,10 +29,13 @@ export function useFieldsValidation<TFieldValues extends FieldValues>(
   const [isValid, setIsValid] = React.useState(false);
   const [validating, setValidating] = React.useState(false);
 
-  const mutablePaths = React.useMemo(
-    () => Array.from(fields) as FieldPath<TFieldValues>[],
-    [fields]
-  );
+  const fieldsKey = React.useMemo(() => JSON.stringify(fields), [fields]);
+
+  const pathsRef = React.useRef<FieldPath<TFieldValues>[]>([]);
+  React.useEffect(() => {
+    // Update when the *content* (fieldsKey) changes.
+    pathsRef.current = Array.from(fields) as FieldPath<TFieldValues>[];
+  }, [fieldsKey, fields]);
 
   const validateNow = React.useCallback(async () => {
     if (!enabled) {
@@ -50,13 +48,13 @@ export function useFieldsValidation<TFieldValues extends FieldValues>(
     }
     setValidating(true);
     try {
-      const ok = await form.trigger(mutablePaths, { shouldFocus });
+      const ok = await form.trigger(pathsRef.current, { shouldFocus });
       setIsValid(ok);
       return ok;
     } finally {
       setValidating(false);
     }
-  }, [enabled, when, form, mutablePaths, shouldFocus]);
+  }, [enabled, when, form, shouldFocus]);
 
   React.useEffect(() => {
     if (!enabled) {
@@ -65,9 +63,10 @@ export function useFieldsValidation<TFieldValues extends FieldValues>(
     }
 
     let timer: ReturnType<typeof setTimeout> | undefined;
+
     const subscription = form.watch((_values, { name }) => {
       if (!name) return;
-      if (!mutablePaths.includes(name as FieldPath<TFieldValues>)) return;
+      if (!pathsRef.current.includes(name as FieldPath<TFieldValues>)) return;
 
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
@@ -83,7 +82,7 @@ export function useFieldsValidation<TFieldValues extends FieldValues>(
       subscription.unsubscribe();
       if (timer) clearTimeout(timer);
     };
-  }, [form, mutablePaths, enabled, debounceMs, validateOnMount, validateNow]);
+  }, [form, enabled, debounceMs, validateOnMount, validateNow, fieldsKey]);
 
   return {
     isValid,
@@ -91,4 +90,4 @@ export function useFieldsValidation<TFieldValues extends FieldValues>(
     validateNow,
     fields,
   };
-}
+};

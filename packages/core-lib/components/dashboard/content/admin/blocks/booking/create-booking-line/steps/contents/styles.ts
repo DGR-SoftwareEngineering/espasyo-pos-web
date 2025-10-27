@@ -12,4 +12,4 @@ export const dataStyle = {
   fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
 };
 
-export const divStyle = { borderColor: "#0F2A7180", borderWidth: "1px", mb: 5 }
+export const divStyle = { borderColor: "#0F2A7180", borderWidth: "1px", mb: 2, mt: 4 }

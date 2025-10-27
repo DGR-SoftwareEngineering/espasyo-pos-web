@@ -39,3 +39,13 @@ export interface PaginationData {
   hasNextPage: boolean;
   hasPreviousPage: boolean;
 }
+
+export type Car = {
+  model: string;
+  plateNumber: string;
+  chassis: {
+    type: string;
+    serialNumber: string;
+  },
+  vehicleID: string;
+}
