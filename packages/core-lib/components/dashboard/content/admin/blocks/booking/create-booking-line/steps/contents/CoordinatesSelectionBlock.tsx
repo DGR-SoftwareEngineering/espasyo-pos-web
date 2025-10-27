@@ -1,6 +1,6 @@
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Button, Divider, Typography } from "@mui/material";
 import { SelectOption } from "../../../../../../../../form/SelectField";
-import { Props } from "./types";
+import { Props, Stop } from "./types";
 import React, { useState, useEffect } from "react";
 import { useCreateBookingFormContext } from "../../CreateBookingContext";
 import { fieldsOf, useApi, useFieldsValidation } from "../../../../../../../../../core/hooks";
@@ -8,8 +8,72 @@ import { CreateBookingType } from "../../validation";
 import { BackButton, ProceedButton } from "../../../../../../../../buttons";
 import { Card } from "../../../../../../../../Card";
 import { divStyle } from "./styles";
+import { StopOverManager } from "./StopOverManager";
+import { sampleStops } from "./mockStops";
 
-export const CoordinateSelectionBlock: React.FC<Props> = ({ previous, next, nextStep, previousStep }) => {
+export const CoordinatesBlock: React.FC<Props> = ({ previous, next, nextStep, previousStep }) => {
+    const { form, isDirty } = useCreateBookingFormContext();
+    // const helperFields = fieldsOf<CreateBookingType>()("location");
+    // const { isValid, validateNow, setIsValid } = useFieldsValidation<CreateBookingType>(
+    //     form,
+    //     helperFields,
+    //     {
+    //         enabled: true,
+    //         debounceMs: 200,
+    //         validateOnMount: false,
+    //         shouldFocus: false,
+    //     }
+    // );
+    const [stopOver, setStopOver] = React.useState<Stop[] | null>(null);
+
+    const handleNext = () => {
+        next();
+        nextStep("SummaryView");
+    };
+    const handlePrevious = () => {
+        previous();
+        previousStep("VehicleAndChassisSelection");
+    };
+
+    const handleMapPinLocaton = () => {
+      //  setIsValid(true);
+    }
+
+    useEffect(() => {
+        setStopOver(sampleStops);
+    }, [])
+
+    return  (
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: 2,
+          }}
+        >
+          <div className="w-full lg:w-[800px]">
+            <BackButton
+              onClick={handlePrevious}
+              disabled={!isDirty}
+              loading={false}
+            />
+            <Box sx={{ width: "100%" }}>
+              <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">Adding Location on Map</h1>
+              <Card sx={{ padding: 5, width: "100%" }} elevation={4}>
+                <Box sx={{ width: "100%", backgroundColor: "red"}}>
+
+                </Box>
+              </Card>
+              <ProceedButton onClick={handleNext} disabled={!false} />
+            </Box>
+          </div>
+        </Box>
+      );
+}
+
+export const Block: React.FC<Props> = ({ previous, next, nextStep, previousStep }) => {
     const { form, isDirty } = useCreateBookingFormContext();
     const helperFields = fieldsOf<CreateBookingType>()("location");
     const { isValid, validateNow, setIsValid } = useFieldsValidation<CreateBookingType>(
@@ -22,11 +86,7 @@ export const CoordinateSelectionBlock: React.FC<Props> = ({ previous, next, next
             shouldFocus: false,
         }
     );
-
-    const [selectedLocation, setSelectedLocation] = React.useState<{
-        start: string;
-        stop: string;
-    } | null>(null);
+    const [stopOver, setStopOver] = React.useState<Stop[] | null>(null);
 
     const handleNext = () => {
         next();
@@ -36,10 +96,16 @@ export const CoordinateSelectionBlock: React.FC<Props> = ({ previous, next, next
         previous();
         previousStep("VehicleAndChassisSelection");
     };
-    useEffect(() => {
+
+    const handleMapPinLocaton = () => {
         setIsValid(true);
-    }, [setIsValid])
-    return (<>
+    }
+
+    useEffect(() => {
+        setStopOver(sampleStops);
+    }, [])
+
+    return (
         <Box
             sx={{
                 width: "100%",
@@ -58,7 +124,7 @@ export const CoordinateSelectionBlock: React.FC<Props> = ({ previous, next, next
                 />
                 <Box sx={{ width: "100%" }}>
                     <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
-                        Driver Selection
+                        Adding Location on Map
                     </h1>
                     <Card sx={{ padding: 5, width: "100%" }} elevation={4}>
                         <Box sx={{ width: "100%" }}>
@@ -72,13 +138,12 @@ export const CoordinateSelectionBlock: React.FC<Props> = ({ previous, next, next
                                 }}
                             >Kindly select Location</Typography>
                             <Divider sx={divStyle} />
-                            { }
+                            <StopOverManager stops={stopOver} setStops={setStopOver}/>
                         </Box>
                     </Card>
                     <ProceedButton onClick={handleNext} disabled={!isValid} />
                 </Box>
             </div>
-
         </Box>
-    </>);
+    );
 }
