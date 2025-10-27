@@ -25,8 +25,17 @@ export type User = {
   userID: string;
   email: string;
   contactNumber: string;
-}
+};
 
 export type Driver = User & {
   licenseNumber: string;
 };
+
+export interface PaginationData {
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  totalItems: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}

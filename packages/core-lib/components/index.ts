@@ -12,3 +12,5 @@ export * from "./PageLoader";
 export * from "./Stepper";
 export * from "./Card";
 export * from "./tabs";
+export * from "./Checkbox";
+export * from "./table/PaginatedTable";
