@@ -11,6 +11,7 @@ import {
   FormSubmissionContextProvider,
   HeaderTitleContextProvider,
   TabContextProvider,
+  DialogContextProvider,
 } from "../core/contexts";
 import LinearProgress, {
   linearProgressClasses,
@@ -60,44 +61,49 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <ThemeProvider>
-        <HeaderTitleContextProvider>
-          <ToastContextProvider>
-            <Toastify autoClose={5000} hideProgressBar={false} />
-            <PageLoaderContextProvider
-              isAuthenticated={isAuthenticated}
-              loading={loading}
-            >
-              <ErrorBoundary errorMessage="Application Error">
-                <NotificationsContextProvider>
-                  <FormSubmissionContextProvider>
-                    <Box
-                      minHeight="100vh"
-                      display="flex"
-                      flexDirection="column"
-                    >
-                      {/* set loading to false by default for now. */}
-                      <TabContextProvider>
-                        <LoadablePageContent loading={false}>
-                          {isAuthenticated ? (
-                            <DashboardLayout logout={logout} loading={loading}>
+        <DialogContextProvider>
+          <HeaderTitleContextProvider>
+            <ToastContextProvider>
+              <Toastify autoClose={5000} hideProgressBar={false} />
+              <PageLoaderContextProvider
+                isAuthenticated={isAuthenticated}
+                loading={loading}
+              >
+                <ErrorBoundary errorMessage="Application Error">
+                  <NotificationsContextProvider>
+                    <FormSubmissionContextProvider>
+                      <Box
+                        minHeight="100vh"
+                        display="flex"
+                        flexDirection="column"
+                      >
+                        {/* set loading to false by default for now. */}
+                        <TabContextProvider>
+                          <LoadablePageContent loading={false}>
+                            {isAuthenticated ? (
+                              <DashboardLayout
+                                logout={logout}
+                                loading={loading}
+                              >
+                                <Suspense fallback={renderFallback()}>
+                                  {children}
+                                </Suspense>
+                              </DashboardLayout>
+                            ) : (
                               <Suspense fallback={renderFallback()}>
                                 {children}
                               </Suspense>
-                            </DashboardLayout>
-                          ) : (
-                            <Suspense fallback={renderFallback()}>
-                              {children}
-                            </Suspense>
-                          )}
-                        </LoadablePageContent>
-                      </TabContextProvider>
-                    </Box>
-                  </FormSubmissionContextProvider>
-                </NotificationsContextProvider>
-              </ErrorBoundary>
-            </PageLoaderContextProvider>
-          </ToastContextProvider>
-        </HeaderTitleContextProvider>
+                            )}
+                          </LoadablePageContent>
+                        </TabContextProvider>
+                      </Box>
+                    </FormSubmissionContextProvider>
+                  </NotificationsContextProvider>
+                </ErrorBoundary>
+              </PageLoaderContextProvider>
+            </ToastContextProvider>
+          </HeaderTitleContextProvider>
+        </DialogContextProvider>
       </ThemeProvider>
     </LocalizationProvider>
   );
