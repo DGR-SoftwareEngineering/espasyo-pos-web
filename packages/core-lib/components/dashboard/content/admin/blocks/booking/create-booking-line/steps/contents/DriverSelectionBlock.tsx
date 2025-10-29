@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Card } from "../../../../../../../../Card";
 import { Box, Divider, Typography } from "@mui/material";
 import {
@@ -9,6 +9,7 @@ import { ProceedButton } from "../../../../../../../../buttons";
 import { useCreateBookingFormContext } from "../../CreateBookingContext";
 import { useApi } from "../../../../../../../../../core/hooks";
 import { dataStyle, divStyle, infoStyle } from "./styles";
+import { useWatch } from "react-hook-form";
 
 interface Props {
   nextStep({}): void;
@@ -18,12 +19,6 @@ interface Props {
 export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
   const { form, isDirty } = useCreateBookingFormContext();
   const driverOptions = useApi((api) => api.commons.getAllDrivers());
-
-  const [selectedDriverInfo, setSelectedDriverInfo] = React.useState<{
-    email: string;
-    contactNumber: string;
-    licenseNumber: string;
-  } | null>(null);
 
   const driverSelectOptions: SelectOption[] =
     driverOptions.result?.data.response?.map((driver) => ({
@@ -41,18 +36,17 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
     nextStep("HelperSelection");
   };
 
+  const selectedDriverId = useWatch({
+    control: form.control,
+    name: "driverId",
+  });
 
-  useEffect(() => {
-    const selectedDriverId = form.watch("driverId");
-    const selectedOption = driverSelectOptions?.find(
-    (opt) => opt.value === selectedDriverId
+  const selectedDriverInfo = useMemo(() => {
+    const selectedOption = driverSelectOptions.find(
+      (opt) => opt.value === selectedDriverId
     );
-
-    if (selectedOption?.driver) {
-    setSelectedDriverInfo(selectedOption.driver);
-    }
-  }, [form.watch("helperId"), driverSelectOptions]);
-  
+    return selectedOption?.driver ?? null;
+  }, [selectedDriverId, driverSelectOptions]);
 
   return (
     <Box
@@ -83,23 +77,14 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
               >
                 Kindly select driver
               </Typography>
-              <Divider
-                sx={divStyle}
-              />
+              <Divider sx={divStyle} />
               <SelectField
                 name="driverId"
                 control={form.control}
                 options={driverSelectOptions}
                 label="Select Drivers"
-                onSelectOption={(option) => {
-                  if (option.driver) {
-                    setSelectedDriverInfo(option.driver);
-                  }
-                }}
               />
-              <Divider
-                sx={divStyle}
-              />
+              <Divider sx={divStyle} />
               <Box className="w-full flex items-center justify-between mt-4">
                 <Typography sx={infoStyle}>Email&#58; </Typography>
                 <Typography sx={infoStyle}>Contact Number&#58; </Typography>

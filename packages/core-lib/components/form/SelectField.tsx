@@ -12,7 +12,10 @@ import {
 } from "react-hook-form";
 import { FieldError } from "./FieldError";
 import { InputLoader } from "../loaders/InputLoader";
-import { DriverSelectionOptions, HelperSelectionOptions } from "./selection-types";
+import {
+  DriverSelectionOptions,
+  HelperSelectionOptions,
+} from "./selection-types";
 
 export interface SelectOption {
   value: string;
@@ -57,6 +60,7 @@ const SelectComponent = <T extends FieldValues>({
   fieldState,
   label,
   options = [],
+  onSelectOption,
   ...props
 }: ComponentProps<T>) => {
   const [ref, setRef] = useState<HTMLInputElement | null>(null);
@@ -81,6 +85,7 @@ const SelectComponent = <T extends FieldValues>({
               {...field}
               fullWidth
               ref={setRef}
+              inputRef={setRef}
               color="primary"
               value={field.value ?? ""}
               data-testid={props["data-testid"] || `${field.name}-field`}
@@ -91,9 +96,10 @@ const SelectComponent = <T extends FieldValues>({
                   (opt) => opt.value === selectedValue
                 );
 
-                if (selectedOption && props.onSelectOption) {
-                  props.onSelectOption(selectedOption);
+                if (selectedOption && onSelectOption) {
+                  onSelectOption(selectedOption);
                 }
+
                 field.onChange(selectedValue);
               }}
             >
