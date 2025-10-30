@@ -12,8 +12,6 @@ const SECURITY_HEADERS = {
   "Content-Type": "application/json",
 } as const;
 
-const PUBLIC_ROUTES = ["/login"]; //add more if needed.
-
 const BLOCKED_USER_AGENTS = [
   "curl",
   "PostmanRuntime",
@@ -49,6 +47,82 @@ const SENSITIVE_QUERY_PARAMS = [
   "password",
 ];
 
+function extractRoleFromJwt(token: string | null | undefined): string | null {
+  if (!token) return null;
+  try {
+    const [, payloadB64] = token.split(".");
+    if (!payloadB64) return null;
+
+    const json = base64UrlDecode(payloadB64);
+    const payload = JSON.parse(json) as Record<string, unknown>;
+
+    const ROLE_CLAIM =
+      process.env.NEXT_PUBLIC_CLAIMS_IDENTITY_URL + "/claims/role";
+
+    const raw = payload[ROLE_CLAIM];
+    if (typeof raw !== "string") return null;
+
+    return raw.trim().toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function base64UrlDecode(b64url: string): string {
+  const b64 = b64url
+    .replace(/-/g, "+")
+    .replace(/_/g, "/")
+    .padEnd(Math.ceil(b64url.length / 4) * 4, "=");
+
+  if (typeof atob === "function") {
+    const binary = atob(b64);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    return new TextDecoder("utf-8").decode(bytes);
+  }
+
+  return Buffer.from(b64, "base64").toString("utf-8");
+}
+
+function getAllowedPrefixesByRole(role: string | null): string[] {
+  switch (role ?? "") {
+    case "admin":
+      return ["/hub"];
+    case "driver":
+      return ["/driver-hub"];
+    default:
+      return [];
+  }
+}
+
+function getHomePathByRole(role: string | null): string {
+  switch (role ?? "") {
+    case "admin":
+      return "/hub";
+    case "driver":
+      return "/driver-hub";
+    default:
+      return "/";
+  }
+}
+
+function isPathUnderAny(pathname: string, prefixes: string[]): boolean {
+  return prefixes.some((p) => pathname.startsWith(p));
+}
+
+function isRoleValid(role: string | null): boolean {
+  return ["admin", "super admin", "driver"].includes(role ?? "");
+}
+
+function safeRedirect(
+  request: NextRequest,
+  targetPath: string
+): NextResponse | null {
+  const currentPath = request.nextUrl.pathname.replace(/\/+$/, "") || "/";
+  const target = targetPath.replace(/\/+$/, "") || "/";
+  if (currentPath === target) return NextResponse.next();
+  return NextResponse.redirect(new URL(targetPath, request.url));
+}
+
 export async function middleware(request: NextRequest) {
   const startTime = Date.now();
   try {
@@ -63,10 +137,7 @@ export async function middleware(request: NextRequest) {
 
     if (security) return security;
 
-    const redirection = await handleRouteProtection(
-      request,
-      authState.isAuthenticated
-    );
+    const redirection = await handleRouteProtection(request, authState);
     if (redirection) return redirection;
     const response = applyFinalSecurityHeaders(NextResponse.next());
     return response;
@@ -148,35 +219,53 @@ function handleSensitiveParams(request: NextRequest): NextResponse | null {
   return null;
 }
 
+type AuthState = {
+  isAuthenticated: boolean;
+  role: string | null;
+};
+
 async function handleRouteProtection(
   request: NextRequest,
-  isAuthenticated: boolean
+  authState: AuthState
 ): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl;
+  const PROTECTED_PREFIXES = ["/hub", "/driver-hub"];
 
   const sensitiveRedirect = handleSensitiveParams(request);
   if (sensitiveRedirect) return sensitiveRedirect;
 
-  if (PUBLIC_ROUTES.includes(pathname)) {
-    if (isAuthenticated) {
-      const response = NextResponse.redirect(new URL("/hub", request.url));
-      response.headers.set("Cache-Control", "no-store, no-cache");
-      return response;
+  if (authState.isAuthenticated && !isRoleValid(authState.role)) {
+    const res = safeRedirect(request, "/") ?? NextResponse.next();
+    res.cookies.delete("ac");
+    res.cookies.delete("auth_valid");
+    return res;
+  }
+
+  if (pathname === "/") {
+    if (authState.isAuthenticated && isRoleValid(authState.role)) {
+      const home = getHomePathByRole(authState.role);
+      return safeRedirect(request, home);
     }
     return null;
   }
 
-  if (pathname.startsWith("/hub")) {
-    if (!isAuthenticated) {
-      const response = NextResponse.redirect(new URL("/", request.url));
-      response.cookies.delete("ac");
-      return response;
-    }
-    return NextResponse.next();
-  }
+  const isProtected = isPathUnderAny(pathname, PROTECTED_PREFIXES);
 
-  if (pathname === "/" && isAuthenticated) {
-    return NextResponse.redirect(new URL("/hub", request.url));
+  if (isProtected) {
+    if (!authState.isAuthenticated) {
+      const res = safeRedirect(request, "/") ?? NextResponse.next();
+      res.cookies.delete("ac");
+      res.cookies.delete("auth_valid");
+      return res;
+    }
+
+    const allowed = getAllowedPrefixesByRole(authState.role);
+    if (!isPathUnderAny(pathname, allowed)) {
+      const home = getHomePathByRole(authState.role);
+      return NextResponse.redirect(new URL(home, request.url));
+    }
+
+    return null;
   }
 
   return null;
@@ -185,9 +274,10 @@ async function handleRouteProtection(
 async function getAuthState(request: NextRequest) {
   const token = request.cookies.get("ac")?.value;
   const cachedAuth = request.cookies.get("auth_valid")?.value;
+  const role = extractRoleFromJwt(token);
 
   if (cachedAuth === "true") {
-    return { isAuthenticated: true };
+    return { isAuthenticated: true, role };
   }
 
   const isAuthenticated = token ? await validateToken(token) : false;
@@ -200,10 +290,10 @@ async function getAuthState(request: NextRequest) {
       httpOnly: true,
       secure: ENV === "production",
     });
-    return { isAuthenticated };
+    return { isAuthenticated, role };
   }
 
-  return { isAuthenticated };
+  return { isAuthenticated, role: null };
 }
 
 async function validateToken(token: string): Promise<boolean> {
@@ -240,6 +330,6 @@ async function validateToken(token: string): Promise<boolean> {
 }
 
 export const config = {
-  matcher: ["/hub/:path*", "/"],
+  matcher: ["/", "/hub/:path*", "/driver-hub/:path*"],
   runtime: "experimental-edge",
 };
