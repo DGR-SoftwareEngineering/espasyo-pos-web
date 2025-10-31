@@ -14,3 +14,4 @@ export * from "./tabs";
 export * from "./Checkbox";
 export * from "./table/PaginatedTable";
 export * from "./dialog";
+export * from "./Modal";
