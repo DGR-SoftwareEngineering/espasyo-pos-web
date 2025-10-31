@@ -13,6 +13,6 @@ export * from "./useLogout";
 export * from "./useFormSubmissionBindingHooks";
 export * from "./useFormDirtyState";
 export * from "./form-validation/useFieldsValidation";
-
+export * from "./useStepNavigator";
 /* non-hook */
 export * from "./form-validation/field";
