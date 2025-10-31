@@ -31,8 +31,7 @@ export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
         previousStep: "DriverSelection",
       },
       VehicleAndChassisSelection: {
-        content: (props) => <>Select vehicle and chassis content here...
-        </>,
+        content: (props) => <>Select vehicle and chassis content here...</>,
         nextStep: "AddingLocation",
         previousStep: "HelperSelection",
       },
@@ -116,5 +115,6 @@ export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
         </div>
       </div>
     ),
+    reset,
   };
 };

@@ -14,5 +14,8 @@ export * from "./useFormSubmissionBindingHooks";
 export * from "./useFormDirtyState";
 export * from "./form-validation/useFieldsValidation";
 export * from "./useStepNavigator";
+export * from "./useBeforeUnload";
+export * from "./useDebounce";
+export * from "./useModal";
 /* non-hook */
 export * from "./form-validation/field";
