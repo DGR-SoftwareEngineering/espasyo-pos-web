@@ -20,7 +20,7 @@ import { CreateBookingType } from "../../validation";
 import { SelectionBlock } from "./SelectionBlock";
 import { HelperSelectionOptions } from "../../../../../../../../form/selection-types";
 
-type Helper = HelperSelectionOptions | null;
+type HelperProps = HelperSelectionOptions | null;
 
 export const HelperSelectionBlock: React.FC<Props> = ({
   previousStep,
@@ -44,16 +44,19 @@ export const HelperSelectionBlock: React.FC<Props> = ({
     }
   );
 
-  const helperSelectOptions: SelectOption[] =
-    helperOptions.result?.data.response?.map((e) => ({
-      value: e.userID,
-      label: e.fullName,
-      helper: {
-        email: e.email,
-        contactNumber: e.contactNumber,
-      },
-    })) ?? [];
-
+  const helperSelectOptions: SelectOption[] = useMemo(() => {
+    return (
+      helperOptions.result?.data.response?.map((e) => ({
+        value: e.userID,
+        label: e.fullName,
+        helper: {
+          email: e.email,
+          contactNumber: e.contactNumber,
+        },
+      })) ?? []
+    );
+  }, [helperOptions.result?.data.response]);
+   
   const handleNext = () => {
     next();
     nextStep("VehicleSelection");
@@ -70,7 +73,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
     defaultValue: "",
   });
 
-  const selectedHelperInfo: Helper = useMemo(
+  const selectedHelperInfo: HelperProps = useMemo(
     () =>
       helperSelectOptions.find((opt) => opt.value === selectedHelperId)
         ?.helper ?? null,
@@ -105,9 +108,7 @@ export const HelperSelectionBlock: React.FC<Props> = ({
                 options={helperSelectOptions}
                 label="Select a Helper"
               />
-              {selectedHelperInfo && (
-                <SelectionDetail data={selectedHelperInfo} />
-              )}
+              {selectedHelperInfo && <SelectionDetail data={selectedHelperInfo} />}
             </Box>
           </Card>
           <ProceedButton onClick={handleNext} disabled={!isValid} />

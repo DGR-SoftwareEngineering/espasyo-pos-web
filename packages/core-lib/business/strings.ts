@@ -1,5 +1,13 @@
+import {
+  REGEX_ALPHA,
+  REGEX_ALPHA_NUMBER,
+  REGEX_CHAR_DOT,
+  REGEX_NUMBER_BETWEEN,
+  REGEX_WORDS,
+} from "./regex";
+
 export function toTitleCase(text: string) {
-  return text?.toLowerCase().replace(/\b(\w)/g, (m) => m.toUpperCase()) ?? "";
+  return text?.toLowerCase().replace(REGEX_WORDS, (m) => m.toUpperCase()) ?? "";
 }
 
 export function parseDelimitedList(
@@ -13,11 +21,72 @@ export function parseDelimitedList(
     .filter(Boolean);
 }
 
+/**
+ * Replaces all dot characters (.) in the input string with spaces.
+ *
+ * @param {string} key - The input string to transform.
+ * @returns {string} The transformed string with dots replaced by spaces.
+ */
+export function replaceDotsWithSpaces(key: string): string {
+  return key.replace(REGEX_CHAR_DOT, " ") ?? key;
+}
+
+/**
+ * Inserts a space before each capital letter that follows a lowercase letter or digit.
+ * Useful for converting camelCase or PascalCase to space-separated words.
+ *
+ * @param {string} key - The input string to transform.
+ * @returns {string} The transformed string with spaces before capital letters.
+ */
+export function addSpaceBeforeCapital(key: string): string {
+  return key.replace(REGEX_ALPHA_NUMBER, "$1 $2") ?? key;
+}
+
+/**
+ * Inserts a space between acronyms and regular words in PascalCase strings.
+ * For example, "HTMLParser" becomes "HTML Parser".
+ *
+ * @param {string} key - The input string to transform.
+ * @returns {string} The transformed string with acronyms separated.
+ */
+export function toWordedAcronyms(key: string): string {
+  return key.replace(REGEX_ALPHA, "$1 $2") ?? key;
+}
+
+/**
+ * Finds standalone numbers in the string and increments each by 1.
+ *
+ * @param {string} key - The input string containing numbers.
+ * @returns {string} The transformed string with incremented numbers.
+ */
+export function incrementNumberInText(key: string): string {
+  return (
+    key.replace(REGEX_NUMBER_BETWEEN, (num) => `${parseInt(num) + 1}`) ?? key
+  );
+}
+
+/**
+ * Converts a property key into a human-readable label.
+ *
+ * The transformation includes:
+ * - Replacing dots with spaces
+ * - Adding spaces before capital letters
+ * - Separating acronyms from words
+ * - Incrementing standalone numbers
+ * - Converting to title case, preserving acronyms if detected
+ *
+ * @param {string} key - The property key to transform.
+ * @returns {string} A human-readable label.
+ */
 export function propertyToLabel(key: string): string {
-  return key
-    .replace(/\./g, " ") // replace periods with spaces
-    .replace(/([a-z0-9])([A-Z])/g, "$1 $2") // insert space before capital letters
-    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2") // handle consecutive capitals
-    .replace(/\b\d+\b/g, (num) => `${parseInt(num) + 1}`) // increment array indices
-    .replace(/\b\w/g, (char) => char.toUpperCase()); // capitalize first letter of each word
+  if (!key) {
+    return key;
+  }
+
+  const transformed = replaceDotsWithSpaces(key);
+  const spaced = addSpaceBeforeCapital(transformed);
+  const withAcronyms = toWordedAcronyms(spaced);
+  const incremented = incrementNumberInText(withAcronyms);
+
+  return toTitleCase(incremented);
 }

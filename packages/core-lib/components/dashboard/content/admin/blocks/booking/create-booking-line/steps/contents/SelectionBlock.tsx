@@ -13,6 +13,6 @@ export const SelectionBlock: React.FC<React.PropsWithChildren<{}>> = ({
       flexDirection: "column",
     }}
   >
-    <Box className="w-full p-2 lg:w-[800px] lg:p-0 mt-[40px]"><>{children}</></Box>
+    <Box className="w-full p-2 lg:w-[800px] lg:p-0 mt-[40px]">{children}</Box>
   </Box>
 );

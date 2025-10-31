@@ -20,22 +20,26 @@ import { SelectionDetail } from "./SelectionDetail";
 import { DriverSelectionOptions } from "../../../../../../../../form/selection-types";
 import { SelectionBlock } from "./SelectionBlock";
 
-type Driver = DriverSelectionOptions | null;
+type DriverProps = DriverSelectionOptions | null;
 
 export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
   const { form } = useCreateBookingFormContext();
   const driverOptions = useApi((api) => api.commons.getAllDrivers());
 
-  const driverSelectOptions: SelectOption[] =
-    driverOptions.result?.data.response?.map((driver) => ({
-      value: driver.userID,
-      label: driver.fullName,
-      driver: {
-        email: driver.email,
-        contactNumber: driver.contactNumber,
-        licenseNumber: driver.licenseNumber,
-      },
-    })) ?? [];
+  const driverSelectOptions: SelectOption[] = useMemo(() => {
+    return (
+      driverOptions.result?.data.response?.map((driver) => ({
+        value: driver.userID,
+        label: driver.fullName,
+        driver: {
+          email: driver.email,
+          contactNumber: driver.contactNumber,
+          licenseNumber: driver.licenseNumber,
+        },
+      })) ?? []
+    );
+  }, [driverOptions.result?.data.response]);
+   
 
   const handleNext = () => {
     next();
@@ -61,7 +65,7 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
     }
   );
 
-  const selectedDriverInfo: Driver = useMemo(
+  const selectedDriverInfo: DriverProps = useMemo(
     () =>
       driverSelectOptions.find((opt) => opt.value === selectedDriverId)
         ?.driver ?? null,
@@ -95,9 +99,7 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
                 options={driverSelectOptions}
                 label="Select a Driver"
               />
-              {selectedDriverInfo && (
-                <SelectionDetail data={selectedDriverInfo} />
-              )}
+              {selectedDriverInfo && <SelectionDetail data={selectedDriverInfo} />}
             </Box>
           </Card>
           <ProceedButton onClick={handleNext} disabled={!isValid} />

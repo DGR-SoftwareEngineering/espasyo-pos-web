@@ -20,7 +20,7 @@ import { CarSelectionOptions } from "../../../../../../../../form/selection-type
 import { SelectionDetail } from "./SelectionDetail";
 import { SelectionBlock } from "./SelectionBlock";
 
-type Car = CarSelectionOptions | null;
+type CarProps = CarSelectionOptions | null;
 
 export const CarSelectionBlock: React.FC<Props> = ({
   previousStep,
@@ -48,19 +48,22 @@ export const CarSelectionBlock: React.FC<Props> = ({
     defaultValue: "",
   });
 
-  const carSelectOptions: SelectOption[] =
-    carOptions.result?.data.response?.map((e) => ({
-      value: e.vehicleID,
-      label: `${e.plateNumber} | ${e.model}`,
-      vehicle: {
-        model: e.model,
-        plateNumber: e.plateNumber,
-        serialNumber: e.chassis.serialNumber,
-        type: e.chassis.type,
-      },
-    })) ?? [];
+  const carSelectOptions: SelectOption[] = useMemo(() => {
+    return (
+      carOptions.result?.data.response?.map((e) => ({
+        value: e.vehicleID,
+        label: `${e.plateNumber} | ${e.model}`,
+        vehicle: {
+          model: e.model,
+          plateNumber: e.plateNumber,
+          serialNumber: e.chassis.serialNumber,
+          type: e.chassis.type,
+        },
+      })) ?? []
+    );
+  }, [carOptions.result?.data.response]);
 
-  const selectedCarInfo: Car = useMemo(
+  const selectedCarInfo: CarProps = useMemo(
     () =>
       carSelectOptions.find((opt) => opt.value === selectedCarId)?.vehicle ??
       null,
