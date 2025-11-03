@@ -61,8 +61,12 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
 }) => {
   const { logout } = useLogout();
   const { isAuthenticated, loading } = useAuthContext();
-  usePreventDuplicateSession();
+  const { hasDuplicateSession } = usePreventDuplicateSession();
   useRefreshTokenHandler(logout);
+
+  if (hasDuplicateSession) {
+    return <DuplicationSessionBlock />;
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>

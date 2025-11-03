@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useAuthContext } from "../contexts";
-import { useRouter } from "../router";
 
 /**
  * Broadcasts a message to detect duplicate sessions.
@@ -10,8 +9,9 @@ import { useRouter } from "../router";
  * const { hasDuplicateSession } = usePreventDuplicateSession();
  */
 export function usePreventDuplicateSession() {
-  const router = useRouter();
   const { isAuthenticated, softLogout } = useAuthContext();
+  const [hasDuplicateSession, setHasDuplicateSession] =
+    useState<boolean>(false);
 
   useEffect(() => {
     const broadcast = new BroadcastChannel("preventDuplicate");
@@ -22,10 +22,6 @@ export function usePreventDuplicateSession() {
       broadcast.close();
       if (isAuthenticated) {
         await softLogout();
-      }
-
-      if (router.asPath !== router.staticRoutes.second_tab_redirect) {
-        await router.push(router.staticRoutes.second_tab_redirect);
       }
     };
 
@@ -38,11 +34,16 @@ export function usePreventDuplicateSession() {
 
       if (receivedData.type === "duplicate") {
         handleDuplicateSession();
+        setHasDuplicateSession(receivedData.type === "duplicate");
       }
     };
 
     return () => {
       broadcast.close();
     };
-  }, []);
+  }, [isAuthenticated]);
+
+  return {
+    hasDuplicateSession,
+  };
 }
