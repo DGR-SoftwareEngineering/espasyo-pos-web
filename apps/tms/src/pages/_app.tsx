@@ -4,13 +4,15 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "../styles/index.css";
 import "../styles/mui.css";
+import { CacheProvider } from "@emotion/react";
 import NProgress from "nprogress";
 import type { AppProps } from "next/app";
 import { Router } from "next/router";
 import { ReactElement, ReactNode, Suspense } from "react";
 import Head from "next/head";
-import Page from "./shared/Page";
+import Page from "../components/shared/Page";
 import { NextPage } from "next";
+import { useEmotionCache } from "core-lib/core/hooks";
 
 Router.events.on("routeChangeStart", () => NProgress.start());
 Router.events.on("routeChangeComplete", () => NProgress.done());
@@ -28,6 +30,8 @@ type AppPropsWithLayout = AppProps & {
 };
 
 export default function App({ Component, pageProps }: AppPropsWithLayout) {
+  const cache = useEmotionCache();
+
   const getLayout = Component.getLayout ?? ((page) => page);
   const renderApp = () => {
     const baseApp = (children: React.ReactNode) => {
@@ -44,7 +48,7 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   };
 
   return (
-    <>
+    <CacheProvider value={cache}>
       <Head>
         <meta
           name="viewport"
@@ -52,6 +56,6 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
         />
       </Head>
       <Page>{renderApp()}</Page>
-    </>
+    </CacheProvider>
   );
 }

@@ -305,6 +305,8 @@ async function validateToken(token: string): Promise<boolean> {
   try {
     const url = `${API_URL}/authentication-api/api/authentication/validate-access-token`;
 
+    var controller = new AbortController();
+
     const response = await fetch(url, {
       headers: {
         ...SECURITY_HEADERS,
@@ -312,6 +314,7 @@ async function validateToken(token: string): Promise<boolean> {
         "Cache-Control": "no-cache",
       },
       keepalive: true,
+      signal: controller.signal,
     });
 
     if (!response.ok) return false;

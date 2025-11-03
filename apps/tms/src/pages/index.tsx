@@ -1,6 +1,12 @@
-import { LoginFormBlock } from "core-lib";
+import { LoginFormBlock, SSRWithContentSecurityPolicy } from "core-lib";
+import { GetServerSideProps } from "next";
 import React from "react";
 
-export default function Home() {
+const Home: React.FC = () => {
   return <LoginFormBlock />;
-}
+};
+
+export const getServerSideProps: GetServerSideProps =
+  SSRWithContentSecurityPolicy();
+
+export default Home;
