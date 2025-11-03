@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Card } from "../../../../../../../../Card";
 import { Box, Divider, Typography } from "@mui/material";
 import {
@@ -7,59 +7,78 @@ import {
 } from "../../../../../../../../form/SelectField";
 import { ProceedButton } from "../../../../../../../../buttons";
 import { useCreateBookingFormContext } from "../../CreateBookingContext";
-import { useApi } from "../../../../../../../../../core/hooks";
-import { dataStyle, divStyle, infoStyle } from "./styles";
+import {
+  fieldsOf,
+  useApi,
+  useFieldsValidation,
+  useStepNavigator,
+} from "../../../../../../../../../core/hooks";
+import { divStyle } from "./styles";
 import { useWatch } from "react-hook-form";
+import { CreateBookingType } from "../../validation";
+import { Props } from "./types";
+import { SelectionDetail } from "./SelectionDetail";
+import { DriverSelectionOptions } from "../../../../../../../../form/selection-types";
+import { SelectionBlock } from "./SelectionBlock";
+import { CreationManagementSteps } from "../creation";
 
-interface Props {
-  nextStep({}): void;
-  next(): void;
-}
+type DriverProps = DriverSelectionOptions | null;
 
 export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
-  const { form, isDirty } = useCreateBookingFormContext();
+  const { goToNextStep } = useStepNavigator<CreationManagementSteps>(
+    next,
+    nextStep
+  );
+  const { form } = useCreateBookingFormContext();
   const driverOptions = useApi((api) => api.commons.getAllDrivers());
 
-  const driverSelectOptions: SelectOption[] =
-    driverOptions.result?.data.response?.map((driver) => ({
-      value: driver.userID,
-      label: driver.fullName,
-      driver: {
-        email: driver.email,
-        contactNumber: driver.contactNumber,
-        licenseNumber: driver.licenseNumber,
-      },
-    })) ?? [];
+  const driverSelectOptions: SelectOption[] = useMemo(() => {
+    return (
+      driverOptions.result?.data.response?.map((driver) => ({
+        value: driver.userID,
+        label: driver.fullName,
+        driver: {
+          email: driver.email,
+          contactNumber: driver.contactNumber,
+          licenseNumber: driver.licenseNumber,
+        },
+      })) ?? []
+    );
+  }, [driverOptions.result?.data.response]);
 
   const handleNext = () => {
-    next();
-    nextStep("HelperSelection");
+    goToNextStep("HelperSelection");
   };
 
   const selectedDriverId = useWatch({
     control: form.control,
     name: "driverId",
+    defaultValue: "",
   });
 
-  const selectedDriverInfo = useMemo(() => {
-    const selectedOption = driverSelectOptions.find(
-      (opt) => opt.value === selectedDriverId
-    );
-    return selectedOption?.driver ?? null;
-  }, [selectedDriverId, driverSelectOptions]);
+  const driverField = fieldsOf<CreateBookingType>()("driverId");
+
+  const { isValid } = useFieldsValidation<CreateBookingType>(
+    form,
+    driverField,
+    {
+      enabled: true,
+      debounceMs: 200,
+      validateOnMount: true,
+      shouldFocus: true,
+    }
+  );
+
+  const selectedDriverInfo: DriverProps = useMemo(
+    () =>
+      driverSelectOptions.find((opt) => opt.value === selectedDriverId)
+        ?.driver ?? null,
+    [selectedDriverId, driverSelectOptions]
+  );
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        height: "auto",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-      }}
-    >
-      <div className="w-full p-2 lg:w-[800px] lg:p-0 mt-[40px]">
+    <>
+      <SelectionBlock>
         <Box sx={{ width: "100%" }}>
           <h1 className="pt-sans-bold md:text-3xl text-2xl lg:text-4xl text-[#0F2A71] mb-4">
             Driver Selection
@@ -75,37 +94,21 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
                   fontSize: "clamp(1.2rem, 2.5vw, 1.5rem)",
                 }}
               >
-                Kindly select driver
+                Kindly select a Driver
               </Typography>
               <Divider sx={divStyle} />
               <SelectField
                 name="driverId"
                 control={form.control}
                 options={driverSelectOptions}
-                label="Select Drivers"
+                label="Select a Driver"
               />
-              <Divider sx={divStyle} />
-              <Box className="w-full flex items-center justify-between mt-4">
-                <Typography sx={infoStyle}>Email&#58; </Typography>
-                <Typography sx={infoStyle}>Contact Number&#58; </Typography>
-                <Typography sx={infoStyle}>License Number&#58; </Typography>
-              </Box>
-              <Box className="flex items-center justify-between">
-                <Typography sx={dataStyle}>
-                  {selectedDriverInfo?.email}{" "}
-                </Typography>
-                <Typography sx={dataStyle}>
-                  {selectedDriverInfo?.contactNumber}
-                </Typography>
-                <Typography sx={dataStyle}>
-                  {selectedDriverInfo?.licenseNumber}
-                </Typography>
-              </Box>
+              {selectedDriverInfo && <SelectionDetail data={selectedDriverInfo} />}
             </Box>
           </Card>
-          <ProceedButton onClick={handleNext} disabled={!isDirty} />
+          <ProceedButton onClick={handleNext} disabled={!isValid} />
         </Box>
-      </div>
-    </Box>
+      </SelectionBlock>
+    </>
   );
 };

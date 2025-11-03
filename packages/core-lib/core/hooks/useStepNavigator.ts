@@ -15,9 +15,9 @@ import { useCallback } from "react";
  * ```ts
  * const { goToNextStep, goToPreviousStep } = useStepNavigator<CreationManagementSteps>(
  *   next,
- *   previous,
  *   nextStep,
- *   previousStep
+ *   previous (optional),
+ *   previousStep (optional)
  * );
  *
  * goToNextStep("AddingLocation");
@@ -30,9 +30,9 @@ type StepHandler<T extends string> = {
 
 export function useStepNavigator<T extends string>(
   next: () => void,
-  previous: () => void,
   nextStep: (step: T) => void,
-  previousStep: (step: T) => void
+  previous?: () => void,
+  previousStep?: (step: T) => void
 ): StepHandler<T> {
   const goToNextStep = useCallback(
     (step: T) => {
@@ -44,8 +44,8 @@ export function useStepNavigator<T extends string>(
 
   const goToPreviousStep = useCallback(
     (step: T) => {
-      previous();
-      previousStep(step);
+      if (previous) previous();
+      if (previousStep) previousStep(step);
     },
     [previous, previousStep]
   );

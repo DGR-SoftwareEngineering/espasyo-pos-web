@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
 import qs from "query-string";
-import { ApiResponse, Driver, User } from "../types";
+import { ApiResponse, Car, Driver, User } from "../types";
 
 export class CommonsApi {
   constructor(
@@ -29,5 +29,10 @@ export class CommonsApi {
   
   public getAllHelpers() {
     return this.axios.get<ApiResponse<User[]>>(`/user-api/api/user/helpers`);
+  }
+  public getAllCars(includes: string[]) {
+    const params  = includes.map(s => `Includes=${encodeURIComponent(s)}`).join("&");
+    const path = `/vehicle-api/api/vehicle?${params}`;
+    return this.axios.get<ApiResponse<Car[]>>(path);
   }
 }

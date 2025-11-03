@@ -14,7 +14,7 @@ import DriveEtaIcon from "@mui/icons-material/DriveEta";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import AddLocationIcon from "@mui/icons-material/AddLocation";
 import SummarizeIcon from "@mui/icons-material/Summarize";
-import { DriverSelectionBlock, HelperSelectionBlock } from "./contents";
+import { DriverSelectionBlock, HelperSelectionBlock, CarSelectionBlock, LocationSelecionBlock} from "./contents";
 
 export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
   const { isMobile } = useResolution();
@@ -27,18 +27,18 @@ export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
       },
       HelperSelection: {
         content: (props) => <HelperSelectionBlock {...props} />,
-        nextStep: "VehicleAndChassisSelection",
+        nextStep: "VehicleSelection",
         previousStep: "DriverSelection",
       },
-      VehicleAndChassisSelection: {
-        content: (props) => <>Select vehicle and chassis content here...</>,
+      VehicleSelection: {
+        content: (props) => <CarSelectionBlock {...props} />,
         nextStep: "AddingLocation",
         previousStep: "HelperSelection",
       },
       AddingLocation: {
-        content: (props) => <>add start and stop location...</>,
+        content: (props) => <LocationSelecionBlock {...props} />,
         nextStep: "SummaryView",
-        previousStep: "VehicleAndChassisSelection",
+        previousStep: "VehicleSelection",
       },
       SummaryView: {},
     } as WizardFormMap<
@@ -80,7 +80,7 @@ export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
         return <DriveEtaIcon key={index} />;
       case "HelperSelection":
         return <AccessibilityIcon key={index} />;
-      case "VehicleAndChassisSelection":
+      case "VehicleSelection":
         return <DirectionsCarIcon key={index} />;
       case "AddingLocation":
         return <AddLocationIcon key={index} />;

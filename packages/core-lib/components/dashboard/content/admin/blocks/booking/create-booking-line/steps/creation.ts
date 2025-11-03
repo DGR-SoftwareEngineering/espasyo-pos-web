@@ -1,7 +1,7 @@
 export type CreationManagementSteps =
   | "DriverSelection"
   | "HelperSelection"
-  | "VehicleAndChassisSelection"
+  | "VehicleSelection"
   | "AddingLocation"
   | "SummaryView";
 
