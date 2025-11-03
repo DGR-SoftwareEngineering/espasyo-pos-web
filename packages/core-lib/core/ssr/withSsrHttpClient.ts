@@ -1,4 +1,4 @@
-import { AxiosError, AxiosInstance } from "axios";
+import axios, { AxiosError, AxiosInstance, CancelTokenSource } from "axios";
 import { IronSession, IronSessionOptions } from "iron-session";
 import { withIronSessionApiRoute } from "iron-session/next";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -8,6 +8,7 @@ import { config } from "../../config";
 import { httpSsrRefreshedClient } from "../hooks";
 import Http from "../http-client";
 
+const source: CancelTokenSource = axios.CancelToken.source();
 type Tokens = { accessToken?: string; refreshToken?: string };
 interface NextApiRequestWithSession extends NextApiRequest {
   session: IronSession & Tokens;
@@ -38,6 +39,7 @@ const client = (
           req.headers.Authorization = `Bearer ${session.accessToken}`;
         return req;
       },
+      cancelToken: source.token,
     },
     { onErrorHandler: handleRetry(session, req) }
   ).client;

@@ -1,4 +1,4 @@
-import { AxiosInstance } from "axios";
+import axios, { AxiosInstance, CancelTokenSource } from "axios";
 import { useAsync, useAsyncCallback } from "react-async-hook";
 import { stringify } from "qs";
 import { Api } from "../../api/api";
@@ -7,6 +7,8 @@ import { CommonsApi } from "../../api/commons/api";
 import Http, { HttpOptions } from "../http-client";
 import { getItem } from "../session-storage";
 import { config } from "../../config";
+
+const source: CancelTokenSource = axios.CancelToken.source();
 
 const HTTP_OPTIONS: HttpOptions = {
   headers: { ENV: config.value.NODE_ENV },
@@ -25,6 +27,7 @@ const HTTP_OPTIONS: HttpOptions = {
       )}`
     );
   },
+  cancelToken: source.token,
 };
 
 export const httpClient = new Http({
