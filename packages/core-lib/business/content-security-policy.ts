@@ -75,8 +75,10 @@ export const SSRWithContentSecurityPolicy = (
       }
 
       return {
-        generatedNonce,
-        data: {},
+        props: {
+          generatedNonce,
+          data: {},
+        },
       };
     } catch (error: any) {
       return {

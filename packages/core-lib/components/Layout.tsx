@@ -21,7 +21,12 @@ import { DashboardLayout } from "./dashboard";
 import { Suspense } from "react";
 import { ThemeProvider } from "../core/theme/custom";
 import { Toastify } from "./toast/Toastify";
-import { useRefreshTokenHandler, useLogout } from "../core/hooks";
+import {
+  useRefreshTokenHandler,
+  useLogout,
+  usePreventDuplicateSession,
+} from "../core/hooks";
+import { DuplicationSessionBlock } from "./blocks";
 
 interface Props {} //pass props from top-level to lower-level components.
 
@@ -56,8 +61,13 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
 }) => {
   const { logout } = useLogout();
   const { isAuthenticated, loading } = useAuthContext();
-
+  const { hasDuplicateSession } = usePreventDuplicateSession();
   useRefreshTokenHandler(logout);
+
+  if (hasDuplicateSession) {
+    return <DuplicationSessionBlock />;
+  }
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <ThemeProvider>
