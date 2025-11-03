@@ -31,7 +31,6 @@ export class CommonsApi {
     return this.axios.get<ApiResponse<User[]>>(`/user-api/api/user/helpers`);
   }
   public getAllCars(includes: string[]) {
-    // t?includes=string&includes=string' 
     const params  = includes.map(s => `Includes=${encodeURIComponent(s)}`).join("&");
     const path = `/vehicle-api/api/vehicle?${params}`;
     return this.axios.get<ApiResponse<Car[]>>(path);

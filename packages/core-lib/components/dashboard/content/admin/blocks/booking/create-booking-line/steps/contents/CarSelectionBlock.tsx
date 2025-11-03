@@ -11,6 +11,7 @@ import {
   fieldsOf,
   useApi,
   useFieldsValidation,
+  useStepNavigator,
 } from "../../../../../../../../../core/hooks";
 import { divStyle } from "./styles";
 import { CreateBookingType } from "../../validation";
@@ -19,6 +20,7 @@ import { Props } from "./types";
 import { CarSelectionOptions } from "../../../../../../../../form/selection-types";
 import { SelectionDetail } from "./SelectionDetail";
 import { SelectionBlock } from "./SelectionBlock";
+import { CreationManagementSteps } from "../creation";
 
 type CarProps = CarSelectionOptions | null;
 
@@ -28,6 +30,13 @@ export const CarSelectionBlock: React.FC<Props> = ({
   nextStep,
   next,
 }) => {
+  const { goToNextStep, goToPreviousStep } =
+    useStepNavigator<CreationManagementSteps>(
+      next,
+      nextStep,
+      previous,
+      previousStep
+    );
   const { form } = useCreateBookingFormContext();
   const carOptions = useApi((api) => api.commons.getAllCars(["Chassis"]));
   const vehicleField = fieldsOf<CreateBookingType>()("vehicleId");
@@ -71,13 +80,11 @@ export const CarSelectionBlock: React.FC<Props> = ({
   );
 
   const handleNext = () => {
-    next();
-    nextStep("AddingLocation");
+    goToNextStep("AddingLocation");
   };
 
   const handlePrevious = () => {
-    previous();
-    previousStep("HelperSelection");
+    goToPreviousStep("HelperSelection");
   };
 
   return (

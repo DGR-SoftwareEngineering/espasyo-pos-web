@@ -11,6 +11,7 @@ import {
   fieldsOf,
   useApi,
   useFieldsValidation,
+  useStepNavigator,
 } from "../../../../../../../../../core/hooks";
 import { divStyle } from "./styles";
 import { useWatch } from "react-hook-form";
@@ -19,10 +20,15 @@ import { Props } from "./types";
 import { SelectionDetail } from "./SelectionDetail";
 import { DriverSelectionOptions } from "../../../../../../../../form/selection-types";
 import { SelectionBlock } from "./SelectionBlock";
+import { CreationManagementSteps } from "../creation";
 
 type DriverProps = DriverSelectionOptions | null;
 
 export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
+  const { goToNextStep } = useStepNavigator<CreationManagementSteps>(
+    next,
+    nextStep
+  );
   const { form } = useCreateBookingFormContext();
   const driverOptions = useApi((api) => api.commons.getAllDrivers());
 
@@ -39,11 +45,9 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
       })) ?? []
     );
   }, [driverOptions.result?.data.response]);
-   
 
   const handleNext = () => {
-    next();
-    nextStep("HelperSelection");
+    goToNextStep("HelperSelection");
   };
 
   const selectedDriverId = useWatch({

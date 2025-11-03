@@ -11,6 +11,7 @@ import {
   fieldsOf,
   useApi,
   useFieldsValidation,
+  useStepNavigator,
 } from "../../../../../../../../../core/hooks";
 import { divStyle } from "./styles";
 import { useWatch } from "react-hook-form";
@@ -19,6 +20,7 @@ import { SelectionDetail } from "./SelectionDetail";
 import { CreateBookingType } from "../../validation";
 import { SelectionBlock } from "./SelectionBlock";
 import { HelperSelectionOptions } from "../../../../../../../../form/selection-types";
+import { CreationManagementSteps } from "../creation";
 
 type HelperProps = HelperSelectionOptions | null;
 
@@ -28,6 +30,13 @@ export const HelperSelectionBlock: React.FC<Props> = ({
   nextStep,
   next,
 }) => {
+  const { goToNextStep, goToPreviousStep } =
+    useStepNavigator<CreationManagementSteps>(
+      next,
+      nextStep,
+      previous,
+      previousStep
+    );
   const { form } = useCreateBookingFormContext();
   const helperOptions = useApi((api) => api.commons.getAllHelpers());
 
@@ -56,15 +65,13 @@ export const HelperSelectionBlock: React.FC<Props> = ({
       })) ?? []
     );
   }, [helperOptions.result?.data.response]);
-   
+
   const handleNext = () => {
-    next();
-    nextStep("VehicleSelection");
+    goToNextStep("VehicleSelection");
   };
 
   const handlePrevious = () => {
-    previous();
-    previousStep("DriverSelection");
+    goToPreviousStep("DriverSelection");
   };
 
   const selectedHelperId = useWatch({
