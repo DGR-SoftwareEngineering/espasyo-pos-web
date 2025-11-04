@@ -50,7 +50,7 @@ export function AuthHeader({
       disableElevation={disableElevation}
       className={mergeClasses([layoutClasses.header, className])}
       sx={[
-        (theme) => ({
+        (theme: { vars: { palette: { text: { primary: any } } } }) => ({
           ...(isOffset && {
             "--color": `var(--offset-color, ${theme.vars.palette.text.primary})`,
           }),

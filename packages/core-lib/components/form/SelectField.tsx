@@ -12,7 +12,11 @@ import {
 } from "react-hook-form";
 import { FieldError } from "./FieldError";
 import { InputLoader } from "../loaders/InputLoader";
-import { CarSelectionOptions, DriverSelectionOptions, HelperSelectionOptions } from "./selection-types";
+import {
+  CarSelectionOptions,
+  DriverSelectionOptions,
+  HelperSelectionOptions,
+} from "./selection-types";
 
 export interface SelectOption {
   value: string;
@@ -65,7 +69,7 @@ const SelectComponent = <T extends FieldValues>({
   return (
     <Grid container spacing={2} direction="column">
       <Grid>
-        {fieldState?.error?.message ? (
+        {!isLoading && fieldState?.error?.message ? (
           <FieldError message={fieldState.error.message} />
         ) : (
           <Typography component="label" htmlFor={field?.name}>

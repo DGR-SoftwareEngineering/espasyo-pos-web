@@ -28,9 +28,6 @@ export const baseTheme: ThemeOptions & { sizes?: unknown } = {
   sizes: {} as any,
 };
 
-export function createTheme(overrides?: ThemeOptions): Theme {
-  return extendTheme(
-    baseTheme as CssVarsThemeOptions,
-    (overrides ?? {}) as CssVarsThemeOptions
-  );
+export function createTheme(overrides?: CssVarsThemeOptions): Theme {
+  return extendTheme(baseTheme as CssVarsThemeOptions, overrides ?? {});
 }

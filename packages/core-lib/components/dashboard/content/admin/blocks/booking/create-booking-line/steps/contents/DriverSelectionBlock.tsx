@@ -103,7 +103,9 @@ export const DriverSelectionBlock: React.FC<Props> = ({ nextStep, next }) => {
                 options={driverSelectOptions}
                 label="Select a Driver"
               />
-              {selectedDriverInfo && <SelectionDetail data={selectedDriverInfo} />}
+              {selectedDriverInfo && (
+                <SelectionDetail data={selectedDriverInfo} />
+              )}
             </Box>
           </Card>
           <ProceedButton onClick={handleNext} disabled={!isValid} />
