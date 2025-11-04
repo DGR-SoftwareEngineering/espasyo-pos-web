@@ -93,59 +93,63 @@ export const theme = (tenant?: CmsTenant | null) => {
       numberFieldWidth: "353px",
       parentListPadding: "12px 16px",
     },
-    palette: {
-      appColors,
-      primary: {
-        light: primaryColors.lightenColor(80, 20),
-        main: appColors.primary,
-      },
-      background: {
-        default: "#FFFFFF",
-        paper,
-      },
-      error: {
-        main: appColors.ui_rag["Red.400"],
-        light: appColors.ui_rag["Red.025"],
-      },
-      warning: {
-        main: appColors.ui_rag["Amber.400"],
-        light: appColors.ui_rag["Amber.025"],
-      },
-      success: {
-        main: appColors.ui_rag["Green.400"],
-        light: appColors.ui_rag["Green.025"],
-      },
-      info: {
-        light: infoColors.lightenColor(80, 20),
-        main: info,
-      },
-      text: {
-        primary: "#161616",
-        secondary: "#525252",
-      },
-      email: {
-        header: "#f5f0e7",
-        footer: {
-          first: "#f19e00",
-          second: "#e9245c",
-          third: "#490c64",
-          fourth: "#6900b7",
+    colorSchemes: {
+      light: {
+        palette: {
+          appColors,
+          primary: {
+            light: primaryColors.lightenColor(80, 20),
+            main: appColors.primary,
+          },
+          background: {
+            default: "#FFFFFF",
+            paper,
+          },
+          error: {
+            main: appColors.ui_rag["Red.400"],
+            light: appColors.ui_rag["Red.025"],
+          },
+          warning: {
+            main: appColors.ui_rag["Amber.400"],
+            light: appColors.ui_rag["Amber.025"],
+          },
+          success: {
+            main: appColors.ui_rag["Green.400"],
+            light: appColors.ui_rag["Green.025"],
+          },
+          info: {
+            light: infoColors.lightenColor(80, 20),
+            main: info,
+          },
+          text: {
+            primary: "#161616",
+            secondary: "#525252",
+          },
+          email: {
+            header: "#f5f0e7",
+            footer: {
+              first: "#f19e00",
+              second: "#e9245c",
+              third: "#490c64",
+              fourth: "#6900b7",
+            },
+          },
+          footer: {
+            text: "#ffffff",
+            darkText: "#8E8E8E",
+            light: "#333333",
+            dark: "#000000",
+          },
+          radio: {
+            outer: appColors.essential[500],
+            focus: appColors.ui_rag["Amber.400"],
+          },
+          input: {
+            hoverBorder: appColors.ui_rag["Amber.400"],
+          },
+          divider,
         },
       },
-      footer: {
-        text: "#ffffff",
-        darkText: "#8E8E8E",
-        light: "#333333",
-        dark: "#000000",
-      },
-      radio: {
-        outer: appColors.essential[500],
-        focus: appColors.ui_rag["Amber.400"],
-      },
-      input: {
-        hoverBorder: appColors.ui_rag["Amber.400"],
-      },
-      divider,
     },
     typography: {
       // fontFamily: `Roboto, sans-serif`,
