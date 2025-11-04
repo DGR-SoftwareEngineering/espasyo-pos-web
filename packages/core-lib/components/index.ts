@@ -16,3 +16,4 @@ export * from "./table/PaginatedTable";
 export * from "./dialog";
 export * from "./Modal";
 export * from "./ErrorMapping";
+export * from "./ParseHtml";
