@@ -115,7 +115,9 @@ export const HelperSelectionBlock: React.FC<Props> = ({
                 options={helperSelectOptions}
                 label="Select a Helper"
               />
-              {selectedHelperInfo && <SelectionDetail data={selectedHelperInfo} />}
+              {selectedHelperInfo && (
+                <SelectionDetail data={selectedHelperInfo} />
+              )}
             </Box>
           </Card>
           <ProceedButton onClick={handleNext} disabled={!isValid} />
