@@ -14,7 +14,12 @@ import DriveEtaIcon from "@mui/icons-material/DriveEta";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import AddLocationIcon from "@mui/icons-material/AddLocation";
 import SummarizeIcon from "@mui/icons-material/Summarize";
-import { DriverSelectionBlock, HelperSelectionBlock, CarSelectionBlock, LocationSelecionBlock} from "./contents";
+import {
+  DriverSelectionBlock,
+  HelperSelectionBlock,
+  CarSelectionBlock,
+  LocationSelecionBlock,
+} from "./contents";
 
 export const useCreateBookingWizardSteps = (onSubmit: VoidFunction) => {
   const { isMobile } = useResolution();

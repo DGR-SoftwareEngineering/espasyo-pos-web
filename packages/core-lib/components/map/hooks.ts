@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Libraries, useJsApiLoader } from "@react-google-maps/api";
-import type { FitTarget, MarkerData } from "./types";
+import {
+  GOOGLE_MAPS_LIBRARIES,
+  type FitTarget,
+  type MarkerData,
+} from "./types";
 
 export type LatLngLiteral = google.maps.LatLngLiteral;
 
@@ -19,7 +23,7 @@ export interface RouteModel {
 export function useGoogleMapsLoader(apiKey: string, libraries?: Libraries) {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
-    libraries: libraries ?? ["places", "geometry", "visualization", "drawing"],
+    libraries: libraries ?? GOOGLE_MAPS_LIBRARIES,
     id: "google-map-pro-loader",
   });
   return { isLoaded, loadError };
@@ -37,18 +41,42 @@ export function useDirections(
   );
 
   useEffect(() => {
-    if (!enabled || !request || !window.google?.maps) {
+    let cancelled = false;
+
+    if (
+      !enabled ||
+      !request ||
+      typeof window === "undefined" ||
+      !window.google?.maps
+    ) {
       setResult(null);
       setStatus(null);
       return;
     }
 
-    const svc = new google.maps.DirectionsService();
-    svc.route(request, (res, st) => {
-      setStatus(st);
-      if (st === "OK") setResult(res);
-      else setResult(null);
-    });
+    (async () => {
+      try {
+        const lib = (await google.maps.importLibrary(
+          "routes"
+        )) as google.maps.RoutesLibrary;
+        const svc = new lib.DirectionsService();
+
+        const res = await svc.route(request);
+        if (cancelled) return;
+
+        setStatus("OK" as google.maps.DirectionsStatus);
+        setResult(res);
+      } catch (err: any) {
+        if (cancelled) return;
+
+        setStatus(err?.status ?? null);
+        setResult(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [enabled, request]);
 
   return { result, status };

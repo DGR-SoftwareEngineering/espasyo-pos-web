@@ -390,7 +390,7 @@ function AutocompleteComponent<
               }
               inputProps={{
                 ...params.inputProps,
-                endAdornment: (
+                endadornment: (
                   <>
                     {loadingProp ?? loading ? <InputLoader /> : null}
                     {params.InputProps.endAdornment}

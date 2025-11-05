@@ -11,6 +11,7 @@ import {
 import { JSX } from "react";
 
 export type LatLngLiteral = google.maps.LatLngLiteral;
+export type TravelModeLiteral = "DRIVING" | "WALKING" | "BICYCLING" | "TRANSIT";
 
 export interface MarkerData {
   id: string | number;
@@ -34,10 +35,11 @@ export interface DirectionsOptions {
 }
 
 export interface RouteOptions {
-  origin?: LatLngLiteral | null;
-  destination?: LatLngLiteral | null;
-  stops?: LatLngLiteral[];
-  travelMode?: google.maps.TravelMode;
+  origin: { lat: number; lng: number } | null;
+  destination: { lat: number; lng: number } | null;
+  stops: { lat: number; lng: number }[];
+
+  travelMode?: TravelModeLiteral;
 }
 
 export interface DrawingOptions
@@ -79,10 +81,17 @@ export interface GroundOverlayOptions
 
 export type FitTarget = "none" | "markers" | "shapes" | "all";
 
+export const GOOGLE_MAPS_LIBRARIES: Libraries = [
+  "places",
+  "geometry",
+  "visualization",
+  "drawing",
+  "marker",
+] as const;
+
 export interface Props
   extends Omit<GoogleMapProps, "onLoad" | "onUnmount" | "children"> {
   apiKey: string;
-  libraries?: Libraries;
   center: LatLngLiteral;
   zoom?: number;
   mapId?: string;
@@ -131,13 +140,37 @@ export interface MapOption {
   placeResult?: google.maps.places.PlaceResult;
 }
 
+function isFiniteNumber(n: unknown): n is number {
+  return typeof n === "number" && Number.isFinite(n);
+}
+
+function toFiniteNumber(n: unknown): number | null {
+  if (typeof n === "number" && Number.isFinite(n)) return n;
+  if (typeof n === "string" && n.trim().length) {
+    const parsed = Number(n);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
 export function optionToLatLng(
-  opt: MapOption
+  opt: MapOption | null | undefined
 ): google.maps.LatLngLiteral | null {
-  if (opt.position) return opt.position;
+  if (!opt) return null;
+
+  const p = opt.position;
+  if (p) {
+    const lat = toFiniteNumber((p as any).lat);
+    const lng = toFiniteNumber((p as any).lng);
+    if (lat !== null && lng !== null) return { lat, lng };
+  }
+
   const loc = opt.placeResult?.geometry?.location;
   if (loc && typeof loc.lat === "function" && typeof loc.lng === "function") {
-    return { lat: loc.lat(), lng: loc.lng() };
+    const lat = loc.lat();
+    const lng = loc.lng();
+    if (isFiniteNumber(lat) && isFiniteNumber(lng)) return { lat, lng };
   }
+
   return null;
 }

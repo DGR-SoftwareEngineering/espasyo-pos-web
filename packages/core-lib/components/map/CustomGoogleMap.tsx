@@ -23,8 +23,8 @@ import {
   circleBounds,
 } from "./hooks";
 import { themedMapStyles, ensurePadding, buildRequestFromRoute } from "./utils";
-import type { GoogleMapRef, Props } from "./types";
-import { SmartMarker } from "./markers/SmartMarker";
+import { GOOGLE_MAPS_LIBRARIES, type GoogleMapRef, type Props } from "./types";
+import { SmartAdvancedMarker } from "./markers/SmartAdvancedMarker";
 import { ClusteredMarkers } from "./overlays/ClusteredMarkers";
 
 const containerStyle: React.CSSProperties = { width: "100%", height: "100%" };
@@ -33,7 +33,6 @@ export const CustomGoogleMap = forwardRef<GoogleMapRef, Props>(
   function CustomGoogleMap(props, ref) {
     const {
       apiKey,
-      libraries,
       center,
       zoom = 10,
       mapId,
@@ -54,7 +53,10 @@ export const CustomGoogleMap = forwardRef<GoogleMapRef, Props>(
       onDirectionsResult,
     } = props;
 
-    const { isLoaded, loadError } = useGoogleMapsLoader(apiKey, libraries);
+    const { isLoaded, loadError } = useGoogleMapsLoader(
+      apiKey,
+      GOOGLE_MAPS_LIBRARIES
+    );
     const [map, setMap] = useState<google.maps.Map | null>(null);
 
     const shapesRef = useRef<
@@ -100,19 +102,19 @@ export const CustomGoogleMap = forwardRef<GoogleMapRef, Props>(
         : mapStyles ?? themedMapStyles({ darkMode });
     }, [mapStyles]);
 
-    const computedOptions = useMemo<google.maps.MapOptions>(
-      () => ({
-        mapId,
+    const computedOptions = useMemo<google.maps.MapOptions>(() => {
+      const base: google.maps.MapOptions = {
+        mapId: mapId ?? "DEMO_MAP_ID",
         clickableIcons: false,
         disableDefaultUI: false,
-        styles: defaultStyles,
         ...options,
-        ...(options?.styles
-          ? { styles: [...(defaultStyles || []), ...options.styles] }
-          : {}),
-      }),
-      [mapId, options, defaultStyles]
-    );
+      };
+      if (base.mapId) {
+        delete (base as any).styles;
+      }
+
+      return base;
+    }, [mapId, options]);
 
     const handleOnLoad = useCallback(
       (m: google.maps.Map) => {
@@ -232,14 +234,16 @@ export const CustomGoogleMap = forwardRef<GoogleMapRef, Props>(
         )}
 
         <ClusteredMarkers cluster={cluster}>
-          {(clusterer) => (
+          {() => (
             <>
               {(markers ?? []).map((m) => (
-                <SmartMarker
+                <SmartAdvancedMarker
                   key={m.id}
-                  data={m}
-                  onSelect={m.onClick}
-                  clusterer={clusterer}
+                  map={map}
+                  position={m.position}
+                  title={m.title}
+                  label={typeof m.label === "string" ? m.label : undefined}
+                  onClick={m.onClick ? () => m.onClick!(m) : undefined}
                 />
               ))}
             </>

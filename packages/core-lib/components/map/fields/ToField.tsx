@@ -1,6 +1,7 @@
 import { AutoCompleteField } from "../../form";
 import type { Control, FieldValues, Path } from "react-hook-form";
 import type { MapOption } from "../types";
+import { isOptionEqualToValue, safeGetOptionLabel } from "../utils";
 
 type Props<TForm extends FieldValues> = {
   name: Path<TForm>;
@@ -8,7 +9,7 @@ type Props<TForm extends FieldValues> = {
   options: MapOption[];
   loading?: boolean;
   placeholder?: string;
-  onSelect: (opt: MapOption | null) => void;
+  onSelect?: (opt: MapOption | null) => void;
 };
 
 export function ToField<TForm extends FieldValues>({
@@ -25,9 +26,12 @@ export function ToField<TForm extends FieldValues>({
       control={control}
       options={options}
       loading={loading}
-      getOptionLabel={(o) => o.label}
+      getOptionLabel={safeGetOptionLabel}
+      isOptionEqualToValue={isOptionEqualToValue}
       valueMode="option"
-      onSelectOption={(selected) => onSelect(selected as MapOption | null)}
+      onSelectOption={(selected) =>
+        onSelect && onSelect(selected as MapOption | null)
+      }
       placeholder={placeholder}
     />
   );
