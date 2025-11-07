@@ -1,5 +1,5 @@
 import React from "react";
-import { CreateBookingBlock } from "./admin";
+import { CreateBookingBlock, AccountManagementBlock } from "./admin";
 import type { ParseBlocksProps } from "./types";
 
 const ParseBlocks: React.FC<ParseBlocksProps> = (props) => {
@@ -10,6 +10,8 @@ const ParseBlocks: React.FC<ParseBlocksProps> = (props) => {
       return <>Hub</>;
     case "BookingBlock":
       return <CreateBookingBlock />;
+    case "AccountManagementBlock":
+      return <AccountManagementBlock />;
   }
 };
 

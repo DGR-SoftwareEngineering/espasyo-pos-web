@@ -253,7 +253,7 @@ async function handleRouteProtection(
 
   if (isProtected) {
     if (!authState.isAuthenticated) {
-      const res = safeRedirect(request, "/") ?? NextResponse.next();
+      const res = safeRedirect(request, "/404") ?? NextResponse.next();
       res.cookies.delete("ac");
       res.cookies.delete("auth_valid");
       return res;

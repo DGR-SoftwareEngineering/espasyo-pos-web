@@ -1,6 +1,7 @@
 import { Link, LinkProps, SxProps } from "@mui/material";
 import { Theme } from "@mui/material/styles";
 import React from "react";
+import { useCustomAction } from "./hooks/useCustomAction";
 
 interface Props extends Omit<LinkProps, "onClick"> {
   disabled?: boolean;
@@ -11,6 +12,8 @@ interface Props extends Omit<LinkProps, "onClick"> {
   onClick?: (
     e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>
   ) => void;
+  customActionParams?: string;
+  customActionKey?: string;
 }
 
 export const LinkButton: React.FC<Props> = ({
@@ -22,8 +25,14 @@ export const LinkButton: React.FC<Props> = ({
   text,
   sx,
   linkRef,
+  customActionParams,
+  customActionKey,
   ...props
 }) => {
+  const action = useCustomAction({
+    actionKey: customActionKey,
+    params: customActionParams,
+  });
   return (
     <>
       <Link
@@ -45,6 +54,7 @@ export const LinkButton: React.FC<Props> = ({
       >
         {text}
       </Link>
+      {action?.node}
     </>
   );
 
@@ -56,9 +66,7 @@ export const LinkButton: React.FC<Props> = ({
       return;
     }
 
-    if (onClick) {
-      e.preventDefault();
-      onClick(e);
-    }
+    action && (await action.execute());
+    !action?.disableFurtherActions && onClick && onClick(e);
   }
 };

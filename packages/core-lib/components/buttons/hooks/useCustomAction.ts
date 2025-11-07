@@ -3,6 +3,7 @@ import { CustomActionHook } from "./types";
 
 interface Props {
   actionKey?: string;
+  params?: string;
 }
 
 /**
@@ -10,6 +11,7 @@ interface Props {
  */
 export const useCustomAction = ({
   actionKey,
+  params,
 }: Props): ReturnType<CustomActionHook> | undefined => {
   const [actionName, actionParam] = actionKey?.split(":") || [];
 

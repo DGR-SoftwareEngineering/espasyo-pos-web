@@ -58,10 +58,11 @@ export const usePaginatedTable = <T extends object>(
             prev: Record<string, unknown>,
             curr: FilterValue
           ): Record<string, unknown> => {
-            const customFilterValue = filterModifiers[curr["id"] as keyof T];
+            const customFilterValue =
+              filterModifiers[curr["userID"] as keyof T];
             return customFilterValue
               ? { ...prev, ...customFilterValue(curr) }
-              : { ...prev, [curr["id"]]: curr.value };
+              : { ...prev, [curr["userID"]]: curr.value };
           },
           {}
         );

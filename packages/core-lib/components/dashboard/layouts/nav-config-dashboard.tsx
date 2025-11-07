@@ -66,6 +66,22 @@ export const authorizedNav: MenuItemsChildren[] = [
     menuId: "menu1",
     parentId: "booking",
   },
+  {
+    id: "uam",
+    label: "User Access Management",
+    path: "#",
+    icon: "briefcase-outline",
+    menuId: "menu2",
+    parentId: "",
+  },
+  {
+    id: "uam-user",
+    label: "Account Management",
+    path: "/hub/uam/account-management",
+    icon: "people-outline",
+    menuId: "menu2",
+    parentId: "uam",
+  },
 ];
 
 export const _account: AccountPopoverProps["data"] = [
