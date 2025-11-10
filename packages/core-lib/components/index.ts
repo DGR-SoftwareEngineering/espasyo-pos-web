@@ -19,3 +19,4 @@ export * from "./ErrorMapping";
 export * from "./ParseHtml";
 export * from "./Accordion";
 export * from "./map";
+export * from "./DataTableV2";
