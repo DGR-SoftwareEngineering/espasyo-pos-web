@@ -13,6 +13,7 @@ import { usePaginatedTable } from "../../../../../../table/hooks";
 import { formatDate } from "../../../../../../../business/dates";
 import { DefaultColumnFilter } from "../../../../../../table/filters/DefaultColumnFilter";
 import { DateRangeColumnFilter } from "../../../../../../table/filters/DateRangeColumnFilter";
+import { DataTableBlock } from "../../../../../../blocks";
 
 interface Props {
   tableData: UserListResponse["response"];
@@ -112,18 +113,20 @@ export const AccountList: React.FC<Props> = ({
     [tableData]
   );
 
-  return (
-    <PaginatedTable
-      columns={columns}
-      data={tableData}
-      noDataText="No data found"
-      noDataFoundText="No data found"
-      mobileFiltersConfig={{
-        alwaysOnFilters: ["userID"],
-        menuFilters: ["roleID", "userID"],
-      }}
-      hiddenColumns={["userID"]}
-      {...tableProps}
-    />
-  );
+  // return (
+  //   <PaginatedTable
+  //     columns={columns}
+  //     data={tableData}
+  //     noDataText="No data found"
+  //     noDataFoundText="No data found"
+  //     mobileFiltersConfig={{
+  //       alwaysOnFilters: ["userID"],
+  //       menuFilters: ["roleID", "userID"],
+  //     }}
+  //     hiddenColumns={["userID"]}
+  //     {...tableProps}
+  //   />
+  // );
+
+  return <></>;
 };

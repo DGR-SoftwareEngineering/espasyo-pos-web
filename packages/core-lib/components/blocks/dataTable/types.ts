@@ -50,6 +50,9 @@ export interface DataTableProps {
   columns?: DataTableColumn[];
   defaultOrderingColumn?: string;
   defaultOrderingOrder?: string;
+  selectableRows?: boolean;
+  buttons?: ParsedButtonProps[];
+  actionColumn?: ActionColumnProps;
 }
 
 export interface ActionColumnProps {
