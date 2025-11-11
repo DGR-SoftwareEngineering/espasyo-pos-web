@@ -163,7 +163,7 @@ export function PaginatedTable<T extends Record<string, unknown>>(
       defaultColumn: defaultColumn as Partial<Column<T>>,
       initialState: {
         hiddenColumns: [...hiddenColumns, additionalFilterColumn],
-        filters: [...filters, ...additionalFilter],
+        filters: [...(filters ?? []), ...additionalFilter],
         sortBy: sortBy || [],
       },
     },
@@ -258,10 +258,10 @@ export function PaginatedTable<T extends Record<string, unknown>>(
   }, [onRowSelect, tableInstance.selectedFlatRows]);
 
   useEffect(() => {
-    if (!filters.length) {
+    if (!filters?.length) {
       handleClearFilters();
     }
-  }, [filters.length]);
+  }, [filters?.length]);
 
   return (
     <>

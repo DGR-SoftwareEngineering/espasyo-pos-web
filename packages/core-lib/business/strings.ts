@@ -90,3 +90,8 @@ export function propertyToLabel(key: string): string {
 
   return toTitleCase(incremented);
 }
+
+export function caseInsensitiveEquals(a?: string, b?: string): boolean {
+  if (!a || !b) return false;
+  return a.toUpperCase() === b.toUpperCase();
+}

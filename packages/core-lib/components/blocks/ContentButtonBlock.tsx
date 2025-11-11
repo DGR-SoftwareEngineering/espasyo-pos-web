@@ -30,6 +30,8 @@ interface Props {
   buttonRef?: React.RefObject<HTMLAnchorElement | HTMLButtonElement>;
   sxProps?: SxProps<Theme>;
   loading?: boolean;
+  customActionParams?: string;
+  customActionKey?: string;
 }
 
 export const ContentButtonBlock: React.FC<Props> = ({
@@ -53,14 +55,16 @@ export const ContentButtonBlock: React.FC<Props> = ({
   largeIcon,
   buttonRef,
   sxProps,
+  customActionParams,
+  customActionKey,
 }) => {
   const router = useRouter();
   const { isMobile } = useResolution();
   const width = widthPercentage
     ? `${widthPercentage}%`
     : isMobile
-      ? " 100%"
-      : "unset";
+    ? " 100%"
+    : "unset";
   const href = "" + (getHrefLink(link) || link) + anchor;
   const hrefProp = href !== "undefined" && href ? { href } : {};
   const hasIcon = !!iconName;
@@ -75,7 +79,9 @@ export const ContentButtonBlock: React.FC<Props> = ({
         variant="body1"
         disabled={disabled}
         href={href}
-        onClick={() => {}}
+        onClick={onLinkClick}
+        customActionKey={customActionKey}
+        customActionParams={customActionParams}
         sx={
           hasIcon
             ? { display: "inline-flex", alignItems: "center", ...sxProps }
@@ -111,6 +117,8 @@ export const ContentButtonBlock: React.FC<Props> = ({
           width={width}
           variant="body1"
           disabled={disabled}
+          customActionKey={customActionKey}
+          customActionParams={customActionParams}
           href={href}
           onClick={onLinkClick}
           fontSize={linkFontSize}
@@ -139,6 +147,7 @@ export const ContentButtonBlock: React.FC<Props> = ({
       ref={buttonRef as React.RefObject<HTMLButtonElement>}
       data-testid="content-button-block"
       loading={loading || router.loading}
+      customActionKey={customActionKey}
       disabled={disabled}
       disabledReason={disabledReason}
       onClick={navigate}

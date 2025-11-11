@@ -56,9 +56,9 @@ export const useAuthentication = (): AuthService => {
   useEffect(() => {
     if (isAuthenticated) {
       console.log("authSessionIdleTimer.start() called");
-      authSessionIdleTimer.start();
+      return authSessionIdleTimer.start();
     } else {
-      authSessionIdleTimer.stop();
+      return authSessionIdleTimer.stop();
     }
   }, [isAuthenticated, accessToken]);
 
