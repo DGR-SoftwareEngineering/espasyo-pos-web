@@ -5,11 +5,9 @@ import {
   Controller,
   ControllerFieldState,
   ControllerRenderProps,
-  FieldPath,
-  FieldPathValue,
   FieldValues,
   Path,
-  UnpackNestedValue,
+  PathValue,
 } from "react-hook-form";
 import { Input } from "./Input";
 import { InputLoader } from "../loaders/InputLoader";
@@ -18,7 +16,7 @@ import { FieldError } from "./FieldError";
 interface Props<T extends object> {
   name: Path<T>;
   control: Control<T>;
-  defaultValue?: UnpackNestedValue<FieldPathValue<T, FieldPath<T>>>;
+  defaultValue?: PathValue<T, Path<T>>;
   label?: string | JSX.Element | null;
   color?: OutlinedInputProps["color"];
   type?: OutlinedInputProps["type"];
@@ -33,6 +31,8 @@ interface Props<T extends object> {
   disabled?: boolean;
   multiline?: boolean;
   rows?: number;
+  tailwindDesign?: boolean;
+  className?: string;
 }
 
 export const TextField = <T extends FieldValues>({
@@ -66,6 +66,7 @@ export const TextFieldComponent = <T extends object>({
   onBlur,
   onEnter,
   isLoading,
+  tailwindDesign = false,
   ...props
 }: ComponentProps<T>) => {
   const field = { ...rawField, inputRef: rawField?.ref, ref: undefined };
@@ -74,26 +75,51 @@ export const TextFieldComponent = <T extends object>({
   return (
     <Grid container spacing={2} direction="column">
       <Grid>
-        {fieldState?.error?.message
-          ? showErrorBelowLabelFn()
-          : label !== null && renderLabelFn()}
+        {!tailwindDesign ? (
+          fieldState?.error?.message ? (
+            showErrorBelowLabelFn()
+          ) : (
+            label !== null && renderLabelFn()
+          )
+        ) : (
+          <label
+            htmlFor="tenantid"
+            className="block text-sm/6 font-medium text-gray-100"
+          >
+            Tenant ID
+          </label>
+        )}
       </Grid>
       <Grid>
         {isLoading ? (
           <InputLoader />
         ) : (
           <>
-            <Input
-              {...props}
-              {...field}
-              id={field?.name}
-              data-testid={props["data-testid"] || `${field.name}-field`}
-              error={!!fieldState?.error?.message}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              value={field.value ?? ""}
-              onKeyDown={(e) => e.key === "Enter" && onEnter && onEnter()}
-            />
+            {!tailwindDesign ? (
+              <Input
+                {...props}
+                {...field}
+                id={field?.name}
+                data-testid={props["data-testid"] || `${field.name}-field`}
+                error={!!fieldState?.error?.message}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                value={field.value ?? ""}
+                onKeyDown={(e) => e.key === "Enter" && onEnter && onEnter()}
+              />
+            ) : (
+              <input
+                {...field}
+                {...props}
+                id={field.name}
+                data-testid={props["data-testid"] || `${field.name}-field`}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                value={field.value ?? ""}
+                onKeyDown={(e) => e.key === "Enter" && onEnter && onEnter()}
+              />
+            )}
+
             {fieldState?.error?.message && !showErrorBelowLabel && (
               <FieldError message={fieldState.error.message} />
             )}
