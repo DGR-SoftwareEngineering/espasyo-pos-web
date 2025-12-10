@@ -11,7 +11,7 @@ const Page: React.FC<React.PropsWithChildren> = ({ children }) => {
   //TODO: Add Authentication Context to this higher level code.
   return (
     <AuthProvider authMethod="STANDARD_AUTH">
-      <Layout children={children} />
+      <Layout framework="MUI" children={children} />
     </AuthProvider>
   );
 };

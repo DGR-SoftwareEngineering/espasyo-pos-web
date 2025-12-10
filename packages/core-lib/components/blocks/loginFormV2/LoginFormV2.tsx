@@ -53,12 +53,6 @@ export const LoginFormV2: React.FC<Props> = ({ onSubmit, submitLoading }) => {
             className="space-y-6"
           >
             <div>
-              <label
-                htmlFor="tenantid"
-                className="block text-sm/6 font-medium text-gray-100"
-              >
-                Tenant ID
-              </label>
               <div className="mt-2">
                 <TextField<LoginFormType>
                   data-testid="auth-tenant-id"
@@ -66,7 +60,9 @@ export const LoginFormV2: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                   control={control}
                   onBlur={() => clearErrors()}
                   tailwindDesign
-                  className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+                  label="Tenant ID"
+                  placeholder="123-456-789"
+                  className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
                 />
               </div>
             </div>

@@ -83,10 +83,10 @@ export const TextFieldComponent = <T extends object>({
           )
         ) : (
           <label
-            htmlFor="tenantid"
+            htmlFor={label?.toString().toLowerCase()}
             className="block text-sm/6 font-medium text-gray-100"
           >
-            Tenant ID
+            {label}
           </label>
         )}
       </Grid>

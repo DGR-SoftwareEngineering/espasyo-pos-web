@@ -26,5 +26,11 @@
     "clsx": "workspace:*",
     "@mui/icons-material": "workspace:*",
     "next": "14.2.4"
+  },
+  "peerDependencies": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19"
   }
 }

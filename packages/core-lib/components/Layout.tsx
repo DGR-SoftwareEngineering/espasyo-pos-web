@@ -27,13 +27,14 @@ import {
   usePreventDuplicateSession,
 } from "../core/hooks";
 import { DuplicationSessionBlock } from "./blocks";
+import { MuiThemeFramework } from "./design/MuiThemeFramework";
+import { RadixThemeFramework } from "./design/RadixThemeFramework";
 
-interface Props {} //pass props from top-level to lower-level components.
+export type Framework = "Radix" | "MUI";
 
-/**
- * Remove `React.PropsWithChildren` if the application needs to be purely dynamic
- * Create PageContainer & PageContent for dynamic switching of components blocks.
- */
+interface Props {
+  framework: Framework;
+}
 
 const renderFallback = () => (
   <Box
@@ -57,6 +58,7 @@ const renderFallback = () => (
 );
 
 export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
+  framework,
   children,
 }) => {
   const { logout } = useLogout();
@@ -68,53 +70,39 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
     return <DuplicationSessionBlock />;
   }
 
+  const renderWithFramework = () => {
+    switch (framework) {
+      case "MUI":
+        return (
+          <Suspense fallback={renderFallback()}>
+            <MuiThemeFramework
+              isAuthenticated={isAuthenticated}
+              loading={loading}
+              logout={logout}
+              children={children}
+            />
+          </Suspense>
+        );
+      case "Radix":
+        return (
+          <Suspense fallback={renderFallback()}>
+            <RadixThemeFramework
+              isAuthenticated={isAuthenticated}
+              loading={loading}
+              appearance="light"
+              logout={logout}
+              children={children}
+            />
+          </Suspense>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <ThemeProvider>
-        <DialogContextProvider>
-          <HeaderTitleContextProvider>
-            <ToastContextProvider>
-              <Toastify autoClose={5000} hideProgressBar={false} />
-              <PageLoaderContextProvider
-                isAuthenticated={isAuthenticated}
-                loading={loading}
-              >
-                <ErrorBoundary errorMessage="Application Error">
-                  <NotificationsContextProvider>
-                    <FormSubmissionContextProvider>
-                      <Box
-                        minHeight="100vh"
-                        display="flex"
-                        flexDirection="column"
-                      >
-                        {/* set loading to false by default for now. */}
-                        <TabContextProvider>
-                          <LoadablePageContent loading={false}>
-                            {isAuthenticated ? (
-                              <DashboardLayout
-                                logout={logout}
-                                loading={loading}
-                              >
-                                <Suspense fallback={renderFallback()}>
-                                  {children}
-                                </Suspense>
-                              </DashboardLayout>
-                            ) : (
-                              <Suspense fallback={renderFallback()}>
-                                {children}
-                              </Suspense>
-                            )}
-                          </LoadablePageContent>
-                        </TabContextProvider>
-                      </Box>
-                    </FormSubmissionContextProvider>
-                  </NotificationsContextProvider>
-                </ErrorBoundary>
-              </PageLoaderContextProvider>
-            </ToastContextProvider>
-          </HeaderTitleContextProvider>
-        </DialogContextProvider>
-      </ThemeProvider>
+      {renderWithFramework()}
     </LocalizationProvider>
   );
 };
