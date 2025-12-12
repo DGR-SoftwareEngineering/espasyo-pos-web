@@ -1,26 +1,12 @@
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Box } from "@mui/material";
-import { ErrorBoundary } from "./ErrorBoundary";
-import { LoadablePageContent } from "./page/LoadablePageContent";
-import {
-  NotificationsContextProvider,
-  PageLoaderContextProvider,
-  ToastContextProvider,
-  useAuthContext,
-  FormSubmissionContextProvider,
-  HeaderTitleContextProvider,
-  TabContextProvider,
-  DialogContextProvider,
-} from "../core/contexts";
+import { useAuthContext } from "../core/contexts";
 import LinearProgress, {
   linearProgressClasses,
 } from "@mui/material/LinearProgress";
 import { varAlpha } from "minimal-shared/utils";
-import { DashboardLayout } from "./dashboard";
 import { Suspense } from "react";
-import { ThemeProvider } from "../core/theme/custom";
-import { Toastify } from "./toast/Toastify";
 import {
   useRefreshTokenHandler,
   useLogout,
