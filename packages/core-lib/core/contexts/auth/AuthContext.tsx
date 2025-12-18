@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, ReactNode, useContext, useMemo } from "react";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { AUTH_METHODS, AuthMethod, AuthService } from "./types";
 
@@ -22,17 +22,20 @@ const AuthenticationProvider: React.FC<{ children: React.ReactNode }> = ({
   return <context.Provider value={value}>{children}</context.Provider>;
 };
 
-export const AuthProvider: React.FC<{
-  children: React.ReactNode;
+interface AuthProviderProps {
+  children: ReactNode;
   authMethod?: AuthMethod;
-}> = ({ children, authMethod = AUTH_METHODS.STANDARD_AUTH }) => {
-  if (authMethod === AUTH_METHODS.AUTH0) {
-    // Return Auth0 provider or reuse the existing
-    return <></>;
-  }
+}
 
+export function AuthProvider({
+  children,
+  authMethod = AUTH_METHODS.STANDARD_AUTH,
+}: AuthProviderProps) {
+  if (authMethod === AUTH_METHODS.AUTH0) {
+    return <>{/* Auth0 provider logic */}</>;
+  }
   return <AuthenticationProvider>{children}</AuthenticationProvider>;
-};
+}
 
 export const useAuthContext = () => {
   const authContext = useContext(context);

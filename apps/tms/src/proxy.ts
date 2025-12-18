@@ -123,7 +123,7 @@ function safeRedirect(
   return NextResponse.redirect(new URL(targetPath, request.url));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const startTime = Date.now();
   try {
     if (shouldSkipMiddleware(request)) {
@@ -332,7 +332,7 @@ async function validateToken(token: string): Promise<boolean> {
   }
 }
 
+export const runtime = "nodejs";
 export const config = {
   matcher: ["/", "/hub/:path*", "/driver-hub/:path*"],
-  runtime: "experimental-edge",
 };

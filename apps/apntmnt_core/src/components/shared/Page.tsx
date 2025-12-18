@@ -4,14 +4,14 @@ import { AuthProvider, Layout as LayoutComponent } from "core-lib";
 interface Props {}
 
 const Page: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const Layout = dynamic<React.ComponentProps<typeof LayoutComponent>>(() =>
+  const Layout = dynamic(() =>
     import("core-lib/components/Layout").then((c) => c.Layout)
-  );
+  ) as React.FC<React.PropsWithChildren<{ framework: "Radix" | "MUI" }>>;
 
   //TODO: Add Authentication Context to this higher level code.
   return (
     <AuthProvider authMethod="STANDARD_AUTH">
-      <Layout framework="MUI" children={children} />
+      <Layout framework="Radix">{children}</Layout>
     </AuthProvider>
   );
 };
