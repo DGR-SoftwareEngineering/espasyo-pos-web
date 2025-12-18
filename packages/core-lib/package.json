@@ -22,7 +22,6 @@
     "qs": "workspace:*",
     "isomorphic-dompurify": "workspace:*",
     "query-string": "workspace:*",
-    "react-async-hook": "workspace:*",
     "clsx": "workspace:*",
     "@mui/icons-material": "workspace:*",
     "next": "14.2.4"
@@ -31,6 +30,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "@types/react": "^19",
-    "@types/react-dom": "^19"
+    "@types/react-dom": "^19",
+    "react-async-hook": "^4.0.0"
   }
 }
