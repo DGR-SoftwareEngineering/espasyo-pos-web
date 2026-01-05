@@ -3,16 +3,16 @@ import { parseDelimitedList } from "../business/strings";
 
 export const config = {
   get value() {
-    const { processEnv } = getRuntimeConfig();
+    const { processEnv: env } = getRuntimeConfig();
 
     return {
-      NODE_ENV: process.env.NODE_ENV ?? "development",
+      NODE_ENV: env.NODE_ENV ?? "development",
       WHITELISTED_COOKIES: parseDelimitedList(
-        processEnv.NEXT_PRIVATE_WHITELISTED_COOKIES,
+        env.NEXT_PRIVATE_WHITELISTED_COOKIES,
         ";"
       ),
-      SSO_COOKIE: processEnv.NEXT_PRIVATE_SSO_COOKIE,
-      APIURL: processEnv.NEXT_PRIVATE_API_URL,
+      SSO_COOKIE: env.NEXT_PRIVATE_SSO_COOKIE,
+      APIURL: env.NEXT_PRIVATE_API_URL,
     };
   },
 };

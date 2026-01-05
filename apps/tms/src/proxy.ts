@@ -332,7 +332,6 @@ async function validateToken(token: string): Promise<boolean> {
   }
 }
 
-export const runtime = "nodejs";
 export const config = {
   matcher: ["/", "/hub/:path*", "/driver-hub/:path*"],
 };

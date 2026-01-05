@@ -10,10 +10,10 @@ export function setRuntimeConfig(cfg: RuntimeConfig) {
 }
 
 export function getRuntimeConfig(): RuntimeConfig {
-  if (_config) return _config;
-
-  return {
-    processEnv: process.env as Record<string, string | undefined>,
-    serverRuntime: undefined,
-  };
+  return (
+    _config ?? {
+      processEnv: process.env as Record<string, string | undefined>,
+      serverRuntime: undefined,
+    }
+  );
 }
