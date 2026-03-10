@@ -18,5 +18,7 @@ export const useCustomAction = ({
   switch (actionName) {
     case "sign-in": //example only.
       return useFormSubmissionAction();
+    case "espasyo-sign-in-submission":
+      return useFormSubmissionAction();
   }
 };

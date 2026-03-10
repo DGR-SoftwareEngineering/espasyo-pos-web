@@ -68,7 +68,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const action = useCustomAction({
       actionKey: customActionKey,
     });
-    const isDisabledOrLoading = loading || disabled;
+    const isDisabledOrLoading = loading || disabled || action?.loading;
     const disabledReasonId = `disabledReason-${Math.random()
       .toString(36)
       .substring(2, 15)}`;

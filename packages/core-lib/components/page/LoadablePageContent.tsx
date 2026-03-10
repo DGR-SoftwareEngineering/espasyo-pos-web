@@ -12,10 +12,9 @@ export const LoadablePageContent: React.FC<React.PropsWithChildren<Props>> = ({
   loading,
   children,
 }) => {
-  const { isLoading } = usePageLoaderContext();
   const router = useRouter();
   const calculationsLoading = router.asPath === router.staticRoutes.hub;
-  const isPageLoading = (loading || isLoading) && !calculationsLoading;
+  const isPageLoading = loading && !calculationsLoading;
 
   return (
     <>

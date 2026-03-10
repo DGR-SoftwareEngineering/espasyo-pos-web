@@ -8,6 +8,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "dev:tms": "turbo run dev --filter=tms",
     "dev:appointment": "turbo run dev --filter=apntmnt_core",
+    "dev:espasyo": "turbo run dev --filter=espasyo-pos",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch"
   },
@@ -62,6 +63,7 @@
     "dompurify": "^3.1.5",
     "es-toolkit": "1.34.1",
     "eva-icons": "1.1.3",
+    "framer-motion": "^12.35.1",
     "html-react-parser": "5.1.10",
     "iron-session": "6.3.1",
     "isomorphic-dompurify": "^2.13.0",
@@ -102,6 +104,7 @@
     "@babel/preset-env": "^7.25.4",
     "@babel/preset-react": "^7.24.7",
     "@babel/preset-typescript": "^7.24.7",
+    "@tailwindcss/postcss": "^4.2.1",
     "@types/dompurify": "^3.0.5",
     "@types/fingerprintjs": "^0.5.28",
     "@types/google.maps": "^3.58.1",

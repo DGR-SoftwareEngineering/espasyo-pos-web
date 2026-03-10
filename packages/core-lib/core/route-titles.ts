@@ -12,7 +12,7 @@ type RouteTitleEntry = {
 };
 
 export const ROUTE_TITLES: RouteTitleEntry[] = [
-  { pattern: "/", title: "Welcome to Escreen" },
+  { pattern: "/", title: "Welcome to Espasyo POS" },
   { pattern: "/hub", title: "Hub Dashboard" },
 ];
 

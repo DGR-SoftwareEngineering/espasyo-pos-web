@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Box, Stack, Typography } from "@mui/material";
 import { useResolution } from "../../core/hooks";
-import { DuplicateSession, AbbottLogo } from "../../assets";
+import { DuplicateSession, EspasyoLogo } from "../../assets";
 import Image from "next/image";
 
 export const DuplicationSessionBlock: React.FC = () => {
@@ -137,7 +137,7 @@ export const DuplicationSessionBlock: React.FC = () => {
       >
         <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
           <Image
-            src={AbbottLogo}
+            src={EspasyoLogo}
             width={isMobile ? 32 : 52}
             height={isMobile ? 32 : 52}
             alt="Escreen"

@@ -7,6 +7,7 @@ import { RefreshTokenResponse } from "../../api/authentication/types";
 import { config } from "../../config";
 import { httpSsrRefreshedClient } from "../hooks";
 import Http from "../http-client";
+import https from "https";
 
 const source: CancelTokenSource = axios.CancelToken.source();
 type Tokens = { accessToken?: string; refreshToken?: string };
@@ -25,13 +26,15 @@ type SsrApiHandler = (client: SsrHttpClient) => NextIronApiHandler;
 const client = (
   session: NextApiRequestWithSession["session"],
   req: NextApiRequest
-): Http["client"] =>
-  new Http(
+): Http["client"] => {
+  const isDev = process.env.NODE_ENV !== "production";
+
+  return new Http(
     {
       baseURL: config.value.APIURL,
-      headers: {},
+      headers: { ENV: config.value.NODE_ENV },
       paramsSerializer: (params) =>
-        stringify(params, { encode: true, arrayFormat: "brackets" }),
+        stringify(params, { encode: true, arrayFormat: "repeat" }),
       onError: (error) =>
         console.error(`Error on response: ${JSON.stringify(error)}`),
       onRequest: (req) => {
@@ -40,9 +43,16 @@ const client = (
         return req;
       },
       cancelToken: source.token,
+      // Add these options for self-signed certificates in development
+      ...(isDev && {
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false,
+        }),
+      }),
     },
     { onErrorHandler: handleRetry(session, req) }
   ).client;
+};
 
 export const sessionOptions: IronSessionOptions = {
   cookieName: "session",

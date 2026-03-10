@@ -40,7 +40,6 @@ export function AccountPopover({
 }: AccountPopoverProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { setIsLoading } = usePageLoaderContext();
 
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(
     null
@@ -163,11 +162,11 @@ export function AccountPopover({
   );
 
   async function onLogout() {
-    setIsLoading(true);
+    // setIsLoading(true);
     await logout?.();
     if (!loading) {
       await router.push((router) => router.home);
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   }
 }
