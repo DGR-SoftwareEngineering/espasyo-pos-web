@@ -74,7 +74,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
   const pathname = usePathname();
   return (
     <>
-      <Logo />
+      {/* <Logo /> */}
       {slots?.topArea}
       <WorkspacesPopover data={workspaces} sx={{ my: 2 }} />
 

@@ -170,7 +170,7 @@ export function WorkspacesPopover({
             </Popover>
           </>
         ) : (
-          <>Super admin</>
+          <>No specified user role</>
         )}
       </Box>
     </>

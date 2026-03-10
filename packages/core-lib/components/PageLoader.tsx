@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import Image from "next/image";
-import { AbbottLogo } from "../assets";
+import { EspasyoLogo } from "../assets";
 
 const messages = [
   "Please wait, we are preparing everything just for you!",
@@ -56,7 +56,7 @@ export const PageLoader: React.FC = () => {
           width: 100,
           height: 100,
         }}
-        src={AbbottLogo}
+        src={EspasyoLogo}
         alt="Logo"
       />
       <Typography

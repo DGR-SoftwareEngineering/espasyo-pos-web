@@ -40,10 +40,9 @@ export const NotificationsContextProvider: React.FC<
 > = ({ children }) => {
   const router = useRouter();
   const scroll = useScroll();
-  const { isLoading } = usePageLoaderContext();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const isDataLoading = isLoading || router.asPath === router.staticRoutes.hub;
+  const isDataLoading = router.asPath === router.staticRoutes.hub;
 
   const hideNotifications = useCallback(() => setNotifications([]), []);
 

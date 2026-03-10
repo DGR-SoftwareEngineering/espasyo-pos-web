@@ -13,20 +13,18 @@ import {
 import { Toastify } from "../toast/Toastify";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Box } from "@mui/material";
-import { LoadablePageContent } from "../page/LoadablePageContent";
-import { DashboardLayout } from "../dashboard";
-
+import { MuiDashboard } from "../shared-theme/templates/dashboard/Dashboard";
 interface Props {
   isAuthenticated: boolean;
-  loading: boolean;
   logout: () => Promise<void>;
   children: ReactNode;
+  loading?: boolean;
 }
 
 export const MuiThemeFramework: React.FC<Props> = ({
   isAuthenticated,
-  loading,
   logout,
+  loading,
   children,
 }) => {
   return (
@@ -35,10 +33,7 @@ export const MuiThemeFramework: React.FC<Props> = ({
         <HeaderTitleContextProvider>
           <ToastContextProvider>
             <Toastify autoClose={5000} hideProgressBar={false} />
-            <PageLoaderContextProvider
-              isAuthenticated={isAuthenticated}
-              loading={loading}
-            >
+            <PageLoaderContextProvider isAuthenticated={isAuthenticated}>
               <ErrorBoundary errorMessage="Application Error">
                 <NotificationsContextProvider>
                   <FormSubmissionContextProvider>
@@ -49,15 +44,13 @@ export const MuiThemeFramework: React.FC<Props> = ({
                     >
                       {/* set loading to false by default for now. */}
                       <TabContextProvider>
-                        <LoadablePageContent loading={false}>
-                          {isAuthenticated ? (
-                            <DashboardLayout logout={logout} loading={loading}>
-                              {children}
-                            </DashboardLayout>
-                          ) : (
-                            <>{children}</>
-                          )}
-                        </LoadablePageContent>
+                        {isAuthenticated ? (
+                          <MuiDashboard logout={logout}>
+                            {children}
+                          </MuiDashboard>
+                        ) : (
+                          <>{children}</>
+                        )}
                       </TabContextProvider>
                     </Box>
                   </FormSubmissionContextProvider>

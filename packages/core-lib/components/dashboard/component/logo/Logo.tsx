@@ -3,7 +3,7 @@ import type { LinkProps } from "@mui/material/Link";
 import { mergeClasses } from "minimal-shared/utils";
 import Link from "@mui/material/Link";
 import { styled, useTheme } from "@mui/material/styles";
-import { AbbottLogo } from "../../../../assets";
+import { EspasyoLogo } from "../../../../assets";
 import { Box } from "@mui/material";
 import Image from "next/image";
 import { externalImageLoader } from "../../../../business/images";
@@ -42,11 +42,11 @@ export function Logo({
     >
       <Image
         data-testid="header_logo_image"
-        src={AbbottLogo || ""}
+        src={EspasyoLogo || ""}
         loader={externalImageLoader}
         key="desktop-logo"
         height={46}
-        width={120}
+        width={46}
         alt="logo-alt"
         style={{
           objectFit: "contain",
@@ -70,7 +70,7 @@ export function Logo({
     >
       <Image
         data-testid="header_logo_image"
-        src={AbbottLogo || ""}
+        src={EspasyoLogo || ""}
         loader={externalImageLoader}
         key="desktop-logo"
         height={46}

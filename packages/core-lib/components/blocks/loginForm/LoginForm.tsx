@@ -9,7 +9,7 @@ import {
   useKeyDown,
 } from "../../../core/hooks";
 import Image from "next/image";
-import { AbbottBackground, AbbottLogo } from "../../../assets";
+// import { AbbottBackground, AbbottLogo } from "../../../assets";
 
 interface Props {
   onSubmit: (values: LoginFormType) => void;
@@ -39,7 +39,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
         <div className="hidden xl:flex lg:flex">
           <Box
             component={Image}
-            src={AbbottBackground}
+            src={""}
             priority
             alt="Escreen-tms"
             sx={{
@@ -81,7 +81,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                 }}
               >
                 <Image
-                  src={AbbottLogo}
+                  src={""}
                   className=""
                   alt="Abbott"
                   style={{

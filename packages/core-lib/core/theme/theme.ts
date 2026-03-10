@@ -313,7 +313,7 @@ export const theme = (tenant?: CmsTenant | null) => {
             outline: "2px solid transparent",
             boxSizing: "border-box",
             "&.Mui-focused": {
-              boxShadow: `0 0 0 2px ${appColors.essential["1000"]}`,
+              // boxShadow: `0 0 0 2px ${appColors.essential["1000"]}`,
               outline: `2px solid ${appColors.ui_rag["Amber.400"]}`,
               backgroundColor: appColors.incidental["000"],
             },
@@ -321,7 +321,7 @@ export const theme = (tenant?: CmsTenant | null) => {
               borderColor: "transparent",
             },
             fieldset: {
-              borderColor: appColors.essential[500],
+              borderColor: appColors.essential[300],
             },
             input: {
               "&::placeholder": { color: appColors.essential[300], opacity: 1 },

@@ -57,7 +57,8 @@ function extractRoleFromJwt(token: string | null | undefined): string | null {
     const payload = JSON.parse(json) as Record<string, unknown>;
 
     const ROLE_CLAIM =
-      process.env.NEXT_PUBLIC_CLAIMS_IDENTITY_URL + "/claims/role";
+      process.env.NEXT_PUBLIC_CLAIMS_IDENTITY_URL +
+      "/ws/2008/06/identity/claims/role";
 
     const raw = payload[ROLE_CLAIM];
     if (typeof raw !== "string") return null;

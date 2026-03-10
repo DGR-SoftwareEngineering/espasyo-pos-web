@@ -162,7 +162,7 @@ function navigate(
 
       const stringifiedPath = qs.stringifyUrl({
         url: resolvedUrl,
-        query: path.query,
+        query: {}, //path.query
       });
 
       return await fn(stringifiedPath, options);

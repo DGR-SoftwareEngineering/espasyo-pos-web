@@ -99,6 +99,7 @@ export const TextFieldComponent = <T extends object>({
               <Input
                 {...props}
                 {...field}
+                disabled={props.disabled}
                 id={field?.name}
                 data-testid={props["data-testid"] || `${field.name}-field`}
                 error={!!fieldState?.error?.message}
@@ -111,6 +112,7 @@ export const TextFieldComponent = <T extends object>({
               <input
                 {...field}
                 {...props}
+                disabled={props.disabled}
                 id={field.name}
                 data-testid={props["data-testid"] || `${field.name}-field`}
                 onFocus={handleFocus}
@@ -150,7 +152,7 @@ export const TextFieldComponent = <T extends object>({
         htmlFor={field?.name}
         color={fieldState?.error && "error"}
       >
-        {label ?? "[[label_name]]"}
+        {label}
       </Typography>
     );
   }
