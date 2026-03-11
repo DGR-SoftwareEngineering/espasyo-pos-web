@@ -13,6 +13,8 @@ import ReceiptRoundedIcon from "@mui/icons-material/ReceiptRounded";
 import PointOfSaleRoundedIcon from "@mui/icons-material/PointOfSaleRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
+import CategoryIcon from "@mui/icons-material/Category";
+import AddIcon from "@mui/icons-material/Add";
 import { JSX } from "react";
 
 export interface MenuItem {
@@ -73,6 +75,21 @@ export const menuItems: MenuItem[] = [
         icon: <InventoryRoundedIcon />,
         path: "/inventory/list",
         permissionKey: "inventory.nested.list",
+      },
+    ],
+  },
+  {
+    id: "category",
+    text: "Category",
+    icon: <CategoryIcon />,
+    permissionKey: "category",
+    nestedItems: [
+      {
+        id: "category-new",
+        text: "New Category",
+        icon: <AddIcon />,
+        permissionKey: "category.nested.new",
+        path: "/hub/category/add-new",
       },
     ],
   },

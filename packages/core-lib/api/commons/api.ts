@@ -1,12 +1,12 @@
 import { AxiosInstance } from "axios";
 import qs from "query-string";
 import { ApiResponse, Car, Driver, User } from "../types";
-import { UserInfoResponse } from "./types";
+import { CreateCategoryParams, UserInfoResponse } from "./types";
 
 export class CommonsApi {
   constructor(
     private readonly axios: AxiosInstance,
-    private readonly ssrAxios: AxiosInstance
+    private readonly ssrAxios: AxiosInstance,
   ) {} //axios = client-side, ssrAxios = server-side (next)
 
   public getByUrl<T = unknown>(url: string) {
@@ -19,7 +19,7 @@ export class CommonsApi {
 
   public dataSummary<T = Record<string, object>>(
     url: string,
-    params: Record<string, any> = {}
+    params: Record<string, any> = {},
   ) {
     return this.axios.get<T>(`${url}?${qs.stringify(params)}`);
   }
@@ -38,7 +38,14 @@ export class CommonsApi {
 
   public getRoleById(roleId?: string) {
     return this.axios.get<ApiResponse<{ roleName: string }>>(
-      `/api/v1/role-api/role/${roleId}`
+      `/api/v1/role-api/role/${roleId}`,
+    );
+  }
+
+  public createNewCategory(params: CreateCategoryParams) {
+    return this.axios.post<ApiResponse>(
+      `/api/v1/category-api/category`,
+      params,
     );
   }
 }

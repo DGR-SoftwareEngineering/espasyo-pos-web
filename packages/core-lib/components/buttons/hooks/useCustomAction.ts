@@ -20,5 +20,7 @@ export const useCustomAction = ({
       return useFormSubmissionAction();
     case "espasyo-sign-in-submission":
       return useFormSubmissionAction();
+    case "create-category-submission":
+      return useFormSubmissionAction();
   }
 };

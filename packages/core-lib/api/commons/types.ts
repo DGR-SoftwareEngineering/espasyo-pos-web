@@ -9,5 +9,11 @@ export interface UserInformations {
     email: string;
   };
 }
+export interface CreateCategoryParams {
+  name: string;
+  description: string;
+  type: number;
+  displayOrder: number;
+}
 
 export type UserInfoResponse = ApiResponse<UserInformations>;
