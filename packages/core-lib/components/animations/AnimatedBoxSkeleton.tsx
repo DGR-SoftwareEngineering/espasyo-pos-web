@@ -33,7 +33,7 @@ export const AnimatedBoxSkeleton = styled(Box, {
     backgroundRepeat: "no-repeat",
     backgroundImage: `
       linear-gradient(to right, transparent 10%, ${
-        light ? "white" : theme.palette.appColors.support80.light
+        light ? "white" : theme.palette.appColors?.support80.light
       }, transparent)
     `,
     transform: "translateX(-100%)",

@@ -1,7 +1,11 @@
 import { AxiosInstance } from "axios";
 import qs from "query-string";
-import { ApiResponse, Car, Driver, User } from "../types";
-import { CreateCategoryParams, UserInfoResponse } from "./types";
+import { ApiResponse, Car } from "../types";
+import {
+  CategoryListResponse,
+  CreateCategoryParams,
+  UserInfoResponse,
+} from "./types";
 
 export class CommonsApi {
   constructor(
@@ -47,5 +51,21 @@ export class CommonsApi {
       `/api/v1/category-api/category`,
       params,
     );
+  }
+
+  public categoryList() {
+    return this.axios.get<CategoryListResponse>(
+      `/api/v1/category-api/category`,
+    );
+  }
+
+  public updateCategory(params: CreateCategoryParams) {
+    return this.axios.put<ApiResponse>(`/api/v1/category-api/category`, params);
+  }
+
+  public deleteCategory(id: string[]) {
+    return this.axios.delete<ApiResponse>(`/api/v1/category-api/category`, {
+      data: { id: id },
+    });
   }
 }

@@ -29,6 +29,9 @@ interface Props {
   onSubmit: (values: CategoryFormType) => void;
   submitLoading: boolean;
   resetForm?: boolean;
+  initialValues?: Partial<CategoryFormType>;
+  isEdit?: boolean;
+  isInDialog: boolean;
 }
 
 const categoryTypes = [
@@ -41,6 +44,9 @@ export const CategoryForm: React.FC<Props> = ({
   onSubmit,
   submitLoading,
   resetForm,
+  initialValues,
+  isEdit = false,
+  isInDialog = false,
 }) => {
   const theme = useTheme();
   const {
@@ -54,8 +60,22 @@ export const CategoryForm: React.FC<Props> = ({
   } = useForm<CategoryFormType>({
     resolver: yupResolver(categoryFormSchema),
     mode: "onChange",
-    defaultValues: categoryFormSchema.getDefault(),
+    defaultValues: {
+      ...categoryFormSchema.getDefault(),
+      ...initialValues,
+    },
   });
+
+  const isDirty = formState.isDirty || isEdit;
+
+  useEffect(() => {
+    if (initialValues) {
+      reset({
+        ...categoryFormSchema.getDefault(),
+        ...initialValues,
+      });
+    }
+  }, [initialValues, reset]);
 
   useEffect(() => {
     if (resetForm) {
@@ -69,12 +89,25 @@ export const CategoryForm: React.FC<Props> = ({
 
   useFormFocusOnError<CategoryFormType>(formState.errors, setFocus);
   useKeyDown("Enter", () => handleSubmit(onSubmit)());
-  useFormSubmissionBindingHooks({
-    key: "create-category-submission",
-    isValid: formState.isValid,
-    isDirty: formState.isDirty,
-    cb: () => handleSubmit(onSubmit)(),
-  });
+
+  const submissionKey = isEdit
+    ? "edit-category-submission"
+    : "create-category-submission";
+
+  if (!isInDialog) {
+    useFormSubmissionBindingHooks({
+      key: submissionKey,
+      isValid: formState.isValid,
+      isDirty: isDirty,
+      cb: () => handleSubmit(onSubmit)(),
+    });
+  }
+
+  const handleButtonClick = () => {
+    if (formState.isValid && (formState.isDirty || isEdit)) {
+      handleSubmit(onSubmit)();
+    }
+  };
 
   return (
     <Card
@@ -111,10 +144,12 @@ export const CategoryForm: React.FC<Props> = ({
         </Avatar>
         <Box>
           <Typography variant="h5" fontWeight={600}>
-            Create New Category
+            {isEdit ? "Edit Category" : "Create New Category"}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Fill in the details below to create a new category
+            {isEdit
+              ? "Update the category details below"
+              : "Fill in the details below to create a new category"}
           </Typography>
         </Box>
       </Box>
@@ -190,7 +225,10 @@ export const CategoryForm: React.FC<Props> = ({
               name="type"
               control={control}
               label="Category Type"
-              options={categoryTypes}
+              options={categoryTypes.map((type) => ({
+                ...type,
+                value: type.value.toString(),
+              }))}
               onBlur={() => clearErrors()}
             />
           </Grid>
@@ -241,15 +279,17 @@ export const CategoryForm: React.FC<Props> = ({
         <Button
           type="Primary"
           loading={submitLoading}
-          disabled={!formState.isValid || !formState.isDirty}
-          customActionKey="create-category-submission"
+          disabled={!formState.isValid || (!formState.isDirty && !isEdit)}
+          {...(isInDialog
+            ? { onClick: handleButtonClick }
+            : { customActionKey: submissionKey })}
           sx={{
             minWidth: 160,
             borderRadius: 2,
             background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
           }}
         >
-          Create Category
+          {isEdit ? "Update Category" : "Create Category"}
         </Button>
       </CardActions>
     </Card>

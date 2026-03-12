@@ -15,6 +15,7 @@ import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import CategoryIcon from "@mui/icons-material/Category";
 import AddIcon from "@mui/icons-material/Add";
+import ListIcon from "@mui/icons-material/List";
 import { JSX } from "react";
 
 export interface MenuItem {
@@ -90,6 +91,13 @@ export const menuItems: MenuItem[] = [
         icon: <AddIcon />,
         permissionKey: "category.nested.new",
         path: "/hub/category/add-new",
+      },
+      {
+        id: "category-list",
+        text: "Category List",
+        icon: <ListIcon />,
+        path: "/hub/category/category-list",
+        permissionKey: "category.nested.list",
       },
     ],
   },

@@ -4,4 +4,6 @@ export * from "./QuickActions";
 export * from "./StatsGrid";
 export * from "./WelcomeHeader";
 export * from "./animation/AnimatedStatsCard";
-export * from "./category/CategoryFormBlock";
+export * from "core-lib/components/blocks/category/CategoryFormBlock";
+export * from "core-lib/components/blocks/category/list/CategoryListBlock";
+export * from "core-lib/components/blocks/category/dialogs/CategoryDialogs";

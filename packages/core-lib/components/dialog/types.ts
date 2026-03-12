@@ -1,1 +1,6 @@
-export type DialogContentType = "UserAccessManagement"; //add more here.
+export type DialogContentType =
+  | "UserAccessManagement"
+  | "CategoryView"
+  | "CategoryEdit"
+  | "CategoryDelete"
+  | "CategoryCreate";
