@@ -29,9 +29,9 @@ export const MuiThemeFramework: React.FC<Props> = ({
 }) => {
   return (
     <ThemeProvider>
-      <DialogContextProvider>
-        <HeaderTitleContextProvider>
-          <ToastContextProvider>
+      <ToastContextProvider>
+        <DialogContextProvider>
+          <HeaderTitleContextProvider>
             <Toastify autoClose={5000} hideProgressBar={false} />
             <PageLoaderContextProvider isAuthenticated={isAuthenticated}>
               <ErrorBoundary errorMessage="Application Error">
@@ -57,9 +57,9 @@ export const MuiThemeFramework: React.FC<Props> = ({
                 </NotificationsContextProvider>
               </ErrorBoundary>
             </PageLoaderContextProvider>
-          </ToastContextProvider>
-        </HeaderTitleContextProvider>
-      </DialogContextProvider>
+          </HeaderTitleContextProvider>
+        </DialogContextProvider>
+      </ToastContextProvider>
     </ThemeProvider>
   );
 };

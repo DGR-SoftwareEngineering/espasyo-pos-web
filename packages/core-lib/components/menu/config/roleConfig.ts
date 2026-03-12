@@ -23,6 +23,7 @@ const permissions: Record<UserRole, MenuPermissions> = {
       delete: true,
       nested: {
         new: { view: true, create: true, edit: false, delete: false },
+        list: { view: true, create: false, edit: true, delete: true },
       },
     },
     clients: { view: false, create: false, edit: false, delete: false },

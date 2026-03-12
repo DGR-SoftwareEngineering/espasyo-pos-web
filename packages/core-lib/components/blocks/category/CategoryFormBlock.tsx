@@ -18,6 +18,7 @@ export const CategoryFormBlock: React.FC = () => {
       submitLoading={loading || categoryCb.loading}
       resetForm={resetForm}
       onSubmit={handleSubmit}
+      isInDialog={false}
     />
   );
 

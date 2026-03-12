@@ -1,3 +1,5 @@
+import { CategoryDataList } from "../../commons/types";
+
 export type CMSValue = { elementType?: string | { [key: string]: string } };
 
 export interface MixedValue<T> extends CMSValue {
@@ -97,6 +99,17 @@ export interface FileValue {
   value?: string;
 }
 
+export type DialogDataType = {
+  CategoryView: CategoryDataList;
+  CategoryEdit: CategoryDataList;
+  CategoryDelete: CategoryDataList;
+  CategoryCreate: undefined; // No data needed for create
+  UserAccessManagement: undefined;
+};
+
+// Dialog content type as a union
+export type DialogContentType = keyof DialogDataType;
+
 export interface DialogElement {
   value?: {
     elements?: {
@@ -111,7 +124,18 @@ export interface DialogElement {
     };
     type: "Dialog";
   };
+  title?: string;
+  dialogContentType?: DialogContentType;
+  data?: DialogDataType[DialogContentType];
+  onSuccess?: () => void;
+  onClose?: () => void;
 }
+
+export type CustomDialogElement = DialogElement & {
+  customOnClick?: AsyncFunction | VoidFunction;
+  customOnClose?: AsyncFunction | VoidFunction;
+  loading?: boolean;
+};
 
 export interface CallToAction {
   values: {

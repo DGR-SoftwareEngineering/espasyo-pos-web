@@ -1,27 +1,18 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { DialogElement } from "../../../api/content/types/common";
-import { openInNewTab } from "../../../business/navigation";
-import { useRouter } from "../../router";
 import {
-  DialogBox,
-  DialogContentType,
-  DialogContextModal,
-} from "../../../components";
-
-export type CustomDialogElement = DialogElement & {
-  customOnClick?: AsyncFunction | VoidFunction;
-  customOnClose?: AsyncFunction | VoidFunction;
-  title?: string;
-  loading?: boolean;
-  dialogContentType?: DialogContentType;
-};
-
-const context = createContext<{
+  DialogElement,
+  CustomDialogElement,
+} from "../../../api/content/types/common";
+import { useRouter } from "../../router";
+import { DialogBox, DialogContextModal } from "../../../components";
+interface DialogContextType {
   isDialogOpen: boolean;
-  openDialog(element: CustomDialogElement): void;
-  closeDialog(): void;
+  openDialog: (element: CustomDialogElement) => void;
+  closeDialog: () => void;
   loading: boolean;
-}>(undefined as any);
+}
+
+const context = createContext<DialogContextType>(undefined as any);
 
 interface Props {
   loading?: boolean;
@@ -29,10 +20,11 @@ interface Props {
 }
 
 export const useDialogContext = () => {
-  if (!context) {
+  const ctx = useContext(context);
+  if (!ctx) {
     throw new Error("DialogContextProvider should be used");
   }
-  return useContext(context);
+  return ctx;
 };
 
 export const DialogContextProvider: React.FC<
@@ -44,11 +36,9 @@ export const DialogContextProvider: React.FC<
   const router = useRouter();
   const isAlternateStyle =
     !!dialogElement?.value?.elements?.showInAlternateStyle?.value;
-  const hideCloseInAlternateStyle =
-    !!dialogElement?.value?.elements?.hideCloseInAlternateStyle?.value;
-  const isButtonLoading = router.loading || actionLoading;
   const hideCloseButton =
     !!dialogElement?.value?.elements?.hideModalCloseButton?.value;
+  const isButtonLoading = router.loading || actionLoading;
 
   useEffect(() => {
     if (loading) {
@@ -56,14 +46,16 @@ export const DialogContextProvider: React.FC<
       return;
     }
     if (dialogOnLoad?.value?.elements) {
-      handleOpen(dialogOnLoad);
+      handleOpen(dialogOnLoad as CustomDialogElement);
       return;
     }
     handleForcedClose();
-    return () => {
-      handleForcedClose();
-    };
   }, [dialogOnLoad?.value?.elements, router.asPath, loading]);
+
+  const handleSuccess = () => {
+    dialogElement?.onSuccess?.();
+    handleClose();
+  };
 
   return (
     <context.Provider
@@ -74,7 +66,7 @@ export const DialogContextProvider: React.FC<
           openDialog: handleOpen,
           closeDialog: handleClose,
         }),
-        [isOpen, actionLoading]
+        [isOpen, actionLoading],
       )}
     >
       {children}
@@ -82,7 +74,7 @@ export const DialogContextProvider: React.FC<
         <DialogBox
           open={isOpen && !!dialogElement && !loading}
           onClose={handleClose}
-          loading={router.loading || loading || isButtonLoading} //best to for content loading.
+          loading={router.loading || loading || isButtonLoading}
           hideCloseButton={hideCloseButton}
           title={dialogElement?.title}
           disableDismiss={loading}
@@ -91,6 +83,9 @@ export const DialogContextProvider: React.FC<
         >
           <DialogContextModal
             dialogFormType={dialogElement?.dialogContentType}
+            dialogData={dialogElement?.data}
+            onSuccess={handleSuccess}
+            onClose={handleClose}
           />
         </DialogBox>
       )}
@@ -116,6 +111,6 @@ export const DialogContextProvider: React.FC<
 
   function handleOpen(element: CustomDialogElement) {
     setDialogElement(element);
-    setIsOpen(true || element.loading);
+    setIsOpen(true);
   }
 };
