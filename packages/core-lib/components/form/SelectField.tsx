@@ -12,18 +12,12 @@ import {
 } from "react-hook-form";
 import { FieldError } from "./FieldError";
 import { InputLoader } from "../loaders/InputLoader";
-import {
-  CarSelectionOptions,
-  DriverSelectionOptions,
-  HelperSelectionOptions,
-} from "./selection-types";
+import { CategorySelectionOptions } from "./selection-types";
 
 export interface SelectOption {
   value: string;
   label: string;
-  driver?: DriverSelectionOptions;
-  helper?: HelperSelectionOptions;
-  vehicle?: CarSelectionOptions;
+  category?: CategorySelectionOptions;
 }
 
 type Props<T extends object> = SelectProps & {
@@ -50,8 +44,10 @@ export const SelectField = <T extends FieldValues>({
   />
 );
 
-interface ComponentProps<T extends FieldValues>
-  extends Omit<Props<T>, "name" | "control" | "defaultValue"> {
+interface ComponentProps<T extends FieldValues> extends Omit<
+  Props<T>,
+  "name" | "control" | "defaultValue"
+> {
   field: ControllerRenderProps<T, Path<T>>;
   fieldState?: ControllerFieldState;
 }
@@ -95,7 +91,7 @@ const SelectComponent = <T extends FieldValues>({
               onChange={(e) => {
                 const selectedValue = e.target.value;
                 const selectedOption = options.find(
-                  (opt) => opt.value === selectedValue
+                  (opt) => opt.value === selectedValue,
                 );
 
                 if (selectedOption && onSelectOption) {

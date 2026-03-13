@@ -16,6 +16,7 @@ import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import CategoryIcon from "@mui/icons-material/Category";
 import AddIcon from "@mui/icons-material/Add";
 import ListIcon from "@mui/icons-material/List";
+import ProductionQuantityLimitsIcon from "@mui/icons-material/ProductionQuantityLimits";
 import { JSX } from "react";
 
 export interface MenuItem {
@@ -98,6 +99,28 @@ export const menuItems: MenuItem[] = [
         icon: <ListIcon />,
         path: "/hub/category/category-list",
         permissionKey: "category.nested.list",
+      },
+    ],
+  },
+  {
+    id: "products",
+    text: "Products",
+    icon: <ProductionQuantityLimitsIcon />,
+    permissionKey: "products",
+    nestedItems: [
+      {
+        id: "product-new",
+        text: "New Product",
+        icon: <AddIcon />,
+        permissionKey: "products.nested.new",
+        path: "/hub/product/add-new",
+      },
+      {
+        id: "product-list",
+        text: "Product List",
+        icon: <ListIcon />,
+        path: "/hub/product/product-list",
+        permissionKey: "products.nested.list",
       },
     ],
   },

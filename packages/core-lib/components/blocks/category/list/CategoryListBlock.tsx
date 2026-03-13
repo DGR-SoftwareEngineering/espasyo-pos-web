@@ -16,12 +16,10 @@ import {
 import { CategoryOutlined, RefreshOutlined } from "@mui/icons-material";
 import { CategoryList } from "./CategoryList";
 import { useApi } from "core-lib/core/hooks";
-import { useToastContext } from "core-lib";
 import { CategoryDataList } from "core-lib/api/commons/types";
 
 export const CategoryListBlock: React.FC = () => {
   const theme = useTheme();
-  const { showToast } = useToastContext();
   const [categories, setCategories] = useState<CategoryDataList[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
