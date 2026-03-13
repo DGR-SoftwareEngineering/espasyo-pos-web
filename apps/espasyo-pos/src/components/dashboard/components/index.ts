@@ -7,3 +7,5 @@ export * from "./animation/AnimatedStatsCard";
 export * from "core-lib/components/blocks/category/CategoryFormBlock";
 export * from "core-lib/components/blocks/category/list/CategoryListBlock";
 export * from "core-lib/components/blocks/category/dialogs/CategoryDialogs";
+export * from "core-lib/components/blocks/products/create/ProductFormBlock";
+export * from "core-lib/components/blocks/products/list/ProductListBlock";

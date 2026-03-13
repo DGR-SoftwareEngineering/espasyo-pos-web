@@ -24,5 +24,9 @@ export const useCustomAction = ({
       return useFormSubmissionAction();
     case "edit-category-submission":
       return useFormSubmissionAction();
+    case "create-product-submission":
+      return useFormSubmissionAction();
+    case "edit-product-submission":
+      return useFormSubmissionAction();
   }
 };

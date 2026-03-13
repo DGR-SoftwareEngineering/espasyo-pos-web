@@ -4,6 +4,8 @@ import { ApiResponse, Car } from "../types";
 import {
   CategoryListResponse,
   CreateCategoryParams,
+  CreateProductParams,
+  ProductListResponse,
   UserInfoResponse,
 } from "./types";
 
@@ -65,6 +67,24 @@ export class CommonsApi {
 
   public deleteCategory(id: string[]) {
     return this.axios.delete<ApiResponse>(`/api/v1/category-api/category`, {
+      data: { id: id },
+    });
+  }
+
+  public createNewProduct(params: CreateProductParams) {
+    return this.axios.post<ApiResponse>(`/api/v1/product-api/product`, params);
+  }
+
+  public productList() {
+    return this.axios.get<ProductListResponse>(`/api/v1/product-api/product`);
+  }
+
+  public updateProduct(params: CreateProductParams) {
+    return this.axios.put<ApiResponse>(`/api/v1/product-api/product`, params);
+  }
+
+  public deleteProduct(id: string[]) {
+    return this.axios.delete<ApiResponse>(`/api/v1/product-api/product`, {
       data: { id: id },
     });
   }

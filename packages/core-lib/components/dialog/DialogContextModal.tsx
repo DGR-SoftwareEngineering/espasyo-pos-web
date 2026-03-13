@@ -8,7 +8,12 @@ import {
   CategoryDeleteDialog,
   CategoryEditDialog,
 } from "../blocks/category/dialogs/CategoryDialogs";
-import { CategoryDataList } from "../../api/commons/types";
+import { CategoryDataList, ProductDataList } from "../../api/commons/types";
+import {
+  ProductDeleteDialog,
+  ProductEditDialog,
+  ProductViewDialog,
+} from "../blocks/products/list/dialogs/ProductDialogs";
 
 interface Props {
   dialogFormType?: DialogContentType;
@@ -29,9 +34,9 @@ export const DialogContextModal: React.FC<Props> = ({
     case "UserAccessManagement":
       return <>Dialog for user access management</>;
 
+    // Category dialogs
     case "CategoryView":
       return <CategoryViewDialog category={dialogData as CategoryDataList} />;
-
     case "CategoryEdit":
       return (
         <CategoryEditDialog
@@ -41,7 +46,6 @@ export const DialogContextModal: React.FC<Props> = ({
           isInDialog={true}
         />
       );
-
     case "CategoryDelete":
       return (
         <CategoryDeleteDialog
@@ -50,6 +54,30 @@ export const DialogContextModal: React.FC<Props> = ({
           onClose={onClose!}
         />
       );
+
+    // Product dialogs
+    case "ProductView":
+      return <ProductViewDialog product={dialogData as ProductDataList} />;
+    case "ProductEdit":
+      return (
+        <ProductEditDialog
+          product={dialogData as ProductDataList}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "ProductDelete":
+      return (
+        <ProductDeleteDialog
+          product={dialogData as ProductDataList}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "ProductCreate":
+      // You'll create this later
+      return <div>Product Create Form (Coming Soon)</div>;
+
     default:
       return null;
   }
