@@ -50,6 +50,18 @@ export interface ProductDataList {
   isActive: boolean;
 }
 
+export interface RecipeParams {
+  menuItemProductID: string;
+  notes: string | null;
+  recipeItems: {
+    notes?: string | null | undefined;
+    ingredientProductID: string;
+    quantityRequired: number;
+    unitID: string;
+    displayOrder: number;
+  }[];
+}
+
 export type UserInfoResponse = ApiResponse<UserInformations>;
 export type CategoryListResponse = ApiResponse<CategoryDataList[]>;
 export type ProductListResponse = ApiResponse<ProductDataList[]>;

@@ -6,6 +6,7 @@ import {
   CreateCategoryParams,
   CreateProductParams,
   ProductListResponse,
+  RecipeParams,
   UserInfoResponse,
 } from "./types";
 
@@ -87,5 +88,18 @@ export class CommonsApi {
     return this.axios.delete<ApiResponse>(`/api/v1/product-api/product`, {
       data: { id: id },
     });
+  }
+
+  public getProductByIngredientsOrMenu(isMenuItem: boolean) {
+    return this.axios.get<ProductListResponse>(
+      `/api/v1/product-api/product/product-by-menuitem?isMenuItem=${isMenuItem}`,
+    );
+  }
+
+  public createRecipe(params: RecipeParams) {
+    return this.axios.post<ApiResponse>(
+      `/api/v1/product/recipe-api/recipe`,
+      params,
+    );
   }
 }

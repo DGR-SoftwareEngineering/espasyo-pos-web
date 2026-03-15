@@ -106,14 +106,14 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
               <div className="flex items-center"></div>
 
               <div className="text-sm">
-                <Link
+                {/* <Link
                   href={{
                     pathname: "/",
                   }}
                   className="font-medium text-[#8B255B] text-[13px] hover:text-[#5e2855]"
                 >
                   Forgot Password?
-                </Link>
+                </Link> */}
               </div>
             </div>
             <div className="mb-5">

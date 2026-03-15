@@ -21,6 +21,7 @@ interface Props<T extends object> {
   color?: OutlinedInputProps["color"];
   type?: OutlinedInputProps["type"];
   startAdornment?: OutlinedInputProps["startAdornment"];
+  endAdornment?: OutlinedInputProps["endAdornment"];
   placeholder?: OutlinedInputProps["placeholder"];
   showErrorBelowLabel?: boolean;
   isLoading?: boolean;
@@ -51,8 +52,10 @@ export const TextField = <T extends FieldValues>({
   />
 );
 
-interface ComponentProps<T extends object>
-  extends Omit<Props<T>, "name" | "control" | "defaultValue"> {
+interface ComponentProps<T extends object> extends Omit<
+  Props<T>,
+  "name" | "control" | "defaultValue"
+> {
   field?: ControllerRenderProps<T, Path<T>>;
   fieldState?: ControllerFieldState;
 }
@@ -132,14 +135,14 @@ export const TextFieldComponent = <T extends object>({
   );
 
   function handleFocus(
-    e: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>
+    e: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>,
   ) {
     setIsFocus(true);
     onFocus?.(e);
   }
 
   function handleBlur(
-    e: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>
+    e: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>,
   ) {
     setIsFocus(false);
     onBlur?.(e);

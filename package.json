@@ -6,8 +6,6 @@
     "dev": "turbo run dev --parallel",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "dev:tms": "turbo run dev --filter=tms",
-    "dev:appointment": "turbo run dev --filter=apntmnt_core",
     "dev:espasyo": "turbo run dev --filter=espasyo-pos",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch"
