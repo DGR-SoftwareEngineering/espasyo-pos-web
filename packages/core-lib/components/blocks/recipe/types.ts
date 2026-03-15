@@ -1,0 +1,22 @@
+import { CategoryDataList, ProductDataList } from "../../../api/commons/types";
+import { RecipeForm as RecipeFormType } from "./validation";
+
+export interface RecipeFormProps {
+  onSubmit: (values: RecipeFormType) => void;
+  submitLoading: boolean;
+  resetForm?: boolean;
+  initialValues?: Partial<RecipeFormType>;
+  isEdit?: boolean;
+  isInDialog: boolean;
+  menuItems: ProductDataList[];
+  ingredients: ProductDataList[];
+  units: CategoryDataList[];
+}
+
+export interface NewIngredient {
+  ingredientProductID: string;
+  quantityRequired: number;
+  unitID: string;
+  displayOrder: number;
+  notes: string;
+}

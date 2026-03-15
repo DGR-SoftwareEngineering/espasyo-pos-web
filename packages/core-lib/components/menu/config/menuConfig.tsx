@@ -17,6 +17,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import AddIcon from "@mui/icons-material/Add";
 import ListIcon from "@mui/icons-material/List";
 import ProductionQuantityLimitsIcon from "@mui/icons-material/ProductionQuantityLimits";
+import FoodBankIcon from "@mui/icons-material/FoodBank";
 import { JSX } from "react";
 
 export interface MenuItem {
@@ -121,6 +122,21 @@ export const menuItems: MenuItem[] = [
         icon: <ListIcon />,
         path: "/hub/product/product-list",
         permissionKey: "products.nested.list",
+      },
+    ],
+  },
+  {
+    id: "recipe",
+    text: "Recipe",
+    icon: <FoodBankIcon />,
+    permissionKey: "recipe",
+    nestedItems: [
+      {
+        id: "recipe-new",
+        text: "New Recipe",
+        icon: <AddIcon />,
+        permissionKey: "recipe.nested.new",
+        path: "/hub/product/recipe/add-new-recipe",
       },
     ],
   },

@@ -7,10 +7,18 @@ import {
   alpha,
   Typography,
 } from "@mui/material";
-import { Card, TextField, SelectField } from "core-lib";
+import {
+  Card,
+  TextField,
+  SelectField,
+  FormHeader,
+  FormSection,
+  FormActions,
+} from "core-lib";
 import {
   DescriptionOutlined,
   InfoOutlined,
+  InventoryOutlined,
   KitchenOutlined,
   RestaurantMenuOutlined,
 } from "@mui/icons-material";
@@ -18,12 +26,7 @@ import {
 import { useProductForm } from "./hooks";
 import { toSelectOptions, formatPrice } from "./utils";
 import { PLACEHOLDERS, SUBMISSION_KEYS } from "./constants";
-import {
-  FormHeader,
-  FormSection,
-  PreviewBanner,
-  FormActions,
-} from "./components";
+import { PreviewBanner } from "./components";
 import { ProductFormProps } from "./types";
 import { ProductTypeToggle } from "./components/ProductTypeToggle";
 
@@ -41,8 +44,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const {
     control,
     handleSubmit,
-    formState: { isValid, errors },
-    setFocus,
+    formState: { isValid },
     watchedValues,
     isDirty,
   } = useProductForm({
@@ -51,7 +53,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     isEdit,
     isInDialog,
     onSubmit,
-    submissionKey,
   });
 
   const categoryOptions = React.useMemo(
@@ -69,7 +70,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
-  // Check if product is menu item or ingredient
   const isMenuItem = watchedValues.isMenuItem;
 
   return (
@@ -84,7 +84,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           `0 8px 24px ${alpha(theme.palette.common.black, 0.05)}`,
       }}
     >
-      <FormHeader isEdit={isEdit} />
+      <FormHeader
+        isEdit={isEdit}
+        title="Product"
+        editTitle="Edit Product"
+        subtitle="Add a new product to your inventory catalog"
+        editSubtitle="Update product details"
+        icon={InventoryOutlined}
+      />
 
       {watchedValues.name && (
         <PreviewBanner
@@ -131,9 +138,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </FormSection>
           </Grid>
 
-          {/* Pricing - CONDITIONAL based on product type */}
           {isMenuItem ? (
-            /* MENU ITEM PRICING - Only Unit Price */
             <Grid size={{ xs: 12 }}>
               <FormSection
                 icon={<RestaurantMenuOutlined color="success" />}

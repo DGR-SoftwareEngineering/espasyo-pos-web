@@ -3,7 +3,7 @@ import type { ParsedUrlQuery } from "querystring";
 
 type TitleResolver = (
   params: Record<string, string>,
-  query: ParsedUrlQuery
+  query: ParsedUrlQuery,
 ) => string;
 
 type RouteTitleEntry = {
@@ -27,11 +27,11 @@ export function resolveTitle(pathname: string, query: ParsedUrlQuery): string {
       if (typeof entry.title === "function") {
         return entry.title(
           (result.params ?? {}) as Record<string, string>,
-          query
+          query,
         );
       }
       return entry.title;
     }
   }
-  return "Escreen";
+  return "Espasyo Coffee House";
 }

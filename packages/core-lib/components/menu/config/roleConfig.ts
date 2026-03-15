@@ -36,6 +36,15 @@ const permissions: Record<UserRole, MenuPermissions> = {
         list: { view: true, create: false, edit: true, delete: true },
       },
     },
+    recipe: {
+      view: true,
+      create: false,
+      edit: false,
+      delete: false,
+      nested: {
+        new: { view: true, create: true, edit: false, delete: false },
+      },
+    },
     clients: { view: false, create: false, edit: false, delete: false },
     tasks: { view: false, create: false, edit: false, delete: false },
     settings: { view: false, create: false, edit: false, delete: false },
