@@ -39,14 +39,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   isInDialog = false,
   categories,
 }) => {
-  const submissionKey = isEdit ? SUBMISSION_KEYS.edit : SUBMISSION_KEYS.create;
-
   const {
     control,
     handleSubmit,
     formState: { isValid },
     watchedValues,
     isDirty,
+    submissionKey,
   } = useProductForm({
     initialValues,
     resetForm,
@@ -256,6 +255,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         isInDialog={isInDialog}
         submissionKey={submissionKey}
         onButtonClick={handleButtonClick}
+        buttonText={isEdit ? "Update Product" : "Create Product"}
       />
     </Card>
   );

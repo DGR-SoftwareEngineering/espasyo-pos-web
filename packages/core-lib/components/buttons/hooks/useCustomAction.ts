@@ -16,7 +16,7 @@ export const useCustomAction = ({
   const [actionName, actionParam] = actionKey?.split(":") || [];
 
   switch (actionName) {
-    case "sign-in": //example only.
+    case "sign-in":
       return useFormSubmissionAction();
     case "espasyo-sign-in-submission":
       return useFormSubmissionAction();
@@ -27,6 +27,8 @@ export const useCustomAction = ({
     case "create-product-submission":
       return useFormSubmissionAction();
     case "edit-product-submission":
+      return useFormSubmissionAction();
+    case "create-recipe-submission":
       return useFormSubmissionAction();
   }
 };

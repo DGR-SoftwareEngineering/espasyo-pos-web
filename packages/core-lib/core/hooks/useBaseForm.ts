@@ -66,19 +66,30 @@ export const useBaseForm = <T extends FieldValues>({
     onSubmit(data);
   };
 
+  const asyncSubmit = async () => {
+    console.log("Submission hook triggered");
+    return new Promise<void>((resolve) => {
+      rhfHandleSubmit(handleFormSubmit)();
+      resolve();
+    });
+  };
+
   if (!isInDialog) {
     useFormSubmissionBindingHooks({
       key: submissionKey,
       isValid: formState.isValid,
       isDirty: isDirty,
-      cb: () => rhfHandleSubmit(handleFormSubmit)(),
+      cb: asyncSubmit,
     });
   }
 
   return {
     ...form,
     isDirty,
-    submitForm: rhfHandleSubmit(handleFormSubmit),
+    submitForm: () => {
+      console.log("Direct submit called");
+      rhfHandleSubmit(handleFormSubmit)();
+    },
     handleSubmit: rhfHandleSubmit,
   };
 };

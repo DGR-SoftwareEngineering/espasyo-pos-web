@@ -45,5 +45,6 @@ export const useRecipeForm = ({
   return {
     ...form,
     watchedValues,
+    submissionKey,
   };
 };
