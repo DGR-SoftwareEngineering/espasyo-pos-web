@@ -61,7 +61,7 @@ export const RecipeFormBlock: React.FC = () => {
       setLoading(true);
       const result = await recipeCb.execute(data);
 
-      if (result.status === 200 && result.data.success) {
+      if (result.data.success) {
         showToast("Recipe created successfully", "success");
         setResetForm(true);
         setTimeout(() => setResetForm(false), 100);

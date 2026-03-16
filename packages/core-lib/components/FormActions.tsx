@@ -10,6 +10,7 @@ interface FormActionsProps {
   isInDialog: boolean;
   submissionKey?: string;
   onButtonClick: () => void;
+  buttonText: string;
 }
 
 export const FormActions: React.FC<FormActionsProps> = ({
@@ -20,6 +21,7 @@ export const FormActions: React.FC<FormActionsProps> = ({
   isInDialog,
   submissionKey,
   onButtonClick,
+  buttonText,
 }) => (
   <CardActions
     sx={{
@@ -50,7 +52,7 @@ export const FormActions: React.FC<FormActionsProps> = ({
         },
       }}
     >
-      {isEdit ? "Update Product" : "Create Product"}
+      {buttonText}
     </Button>
   </CardActions>
 );

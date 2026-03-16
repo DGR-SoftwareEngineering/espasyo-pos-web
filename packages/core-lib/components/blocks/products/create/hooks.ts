@@ -65,5 +65,6 @@ export const useProductForm = ({
   return {
     ...form,
     watchedValues,
+    submissionKey,
   };
 };

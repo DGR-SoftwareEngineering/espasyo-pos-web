@@ -22,6 +22,7 @@ import {
   NotesOutlined,
   AddCircleOutlineOutlined,
   FastfoodOutlined,
+  InfoOutlined,
 } from "@mui/icons-material";
 import { useFieldArray } from "react-hook-form";
 import { RecipeFormProps } from "./types";
@@ -52,6 +53,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     handleSubmit,
     formState: { isValid, errors },
     isDirty,
+    submissionKey,
   } = useRecipeForm({
     initialValues,
     resetForm,
@@ -198,6 +200,28 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
               />
             )}
 
+            {/* Display duplicate ingredient error */}
+            {errors.recipeItems?.message && (
+              <Box
+                sx={{
+                  p: 2,
+                  mb: 2,
+                  bgcolor: (theme) => alpha(theme.palette.error.main, 0.05),
+                  border: (theme) =>
+                    `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <InfoOutlined sx={{ color: theme.palette.error.main }} />
+                <Typography variant="body2" color="error">
+                  {errors.recipeItems.message}
+                </Typography>
+              </Box>
+            )}
+
             {fields.length === 0 ? (
               <Box
                 sx={{
@@ -273,6 +297,8 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
         submitLoading={submitLoading}
         onButtonClick={handleButtonClick}
         isInDialog={isInDialog}
+        buttonText={isEdit ? "Update Recipe" : "Create Recipe"}
+        submissionKey={submissionKey}
       />
     </Card>
   );
