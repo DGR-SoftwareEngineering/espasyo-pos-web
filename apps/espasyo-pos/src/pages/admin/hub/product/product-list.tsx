@@ -1,4 +1,4 @@
-import { ProductListBlock } from "../../../components/dashboard/components";
+import { ProductListBlock } from "../../../../components/dashboard/components";
 import React from "react";
 
 const ProductList = () => {

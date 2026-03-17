@@ -12,6 +12,9 @@ const mapAuthService = (authService: AuthService) => ({
   logout: authService.logout,
   softLogout: authService.softLogout,
   setIsAuthenticated: authService.setIsAuthenticated,
+  role: authService.role,
+  initials: authService.initials,
+  email: authService.email,
 });
 
 const AuthenticationProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -56,6 +59,9 @@ export const useSafeAuthContext = () => {
       logout: async () => {},
       softLogout: async () => {},
       setIsAuthenticated: () => {},
+      role: "",
+      initials: "",
+      email: "",
     };
   }
   return authContext;

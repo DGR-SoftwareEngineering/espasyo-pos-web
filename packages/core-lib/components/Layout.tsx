@@ -48,7 +48,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
   children,
 }) => {
   const { logout } = useLogout();
-  const { isAuthenticated, loading } = useAuthContext();
+  const { isAuthenticated, loading, email, role, initials } = useAuthContext();
   const { hasDuplicateSession } = usePreventDuplicateSession();
   useRefreshTokenHandler(logout);
 
@@ -66,6 +66,9 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
               loading={loading}
               logout={logout}
               children={children}
+              email={email}
+              role={role}
+              initials={initials}
             />
           </Suspense>
         );

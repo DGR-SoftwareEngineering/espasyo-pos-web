@@ -12,6 +12,9 @@ interface Props {
   logout: () => Promise<void>;
   loading?: boolean;
   disableCustomTheme?: boolean;
+  role: string;
+  initials: string;
+  email: string;
 }
 
 export const MuiDashboard: React.FC<React.PropsWithChildren<Props>> = ({
@@ -25,7 +28,7 @@ export const MuiDashboard: React.FC<React.PropsWithChildren<Props>> = ({
     <AppTheme {...others}>
       <CssBaseline enableColorScheme />
       <Box sx={{ display: "flex" }}>
-        <SideMenu logout={logout} />
+        <SideMenu logout={logout} {...others} />
         <AppNavbar />
         {/* Main content */}
         <Box

@@ -1,10 +1,7 @@
 import { RoleConfig, MenuPermissions, UserRole } from "../permissions";
 
-// Define permissions structure with proper typing
 const permissions: Record<UserRole, MenuPermissions> = {
   cashier: {
-    dashboard: { view: true, create: false, edit: false, delete: false },
-    inventory: { view: true, create: true, edit: true, delete: true },
     sales: {
       view: true,
       create: true,
@@ -14,6 +11,23 @@ const permissions: Record<UserRole, MenuPermissions> = {
         new: { view: true, create: true, edit: false, delete: false },
         history: { view: true, create: false, edit: false, delete: false },
         returns: { view: true, create: false, edit: false, delete: false },
+      },
+    },
+    about: { view: true, create: false, edit: false, delete: false },
+    feedback: { view: true, create: false, edit: false, delete: false },
+  },
+  admin: {
+    dashboard: { view: true, create: false, edit: false, delete: false },
+    inventory: {
+      view: true,
+      create: true,
+      edit: true,
+      delete: true,
+      nested: {
+        add: { view: true, create: true, edit: true, delete: true },
+        edit: { view: true, create: true, edit: true, delete: true },
+        delete: { view: true, create: true, edit: true, delete: true },
+        list: { view: true, create: true, edit: true, delete: true },
       },
     },
     category: {
@@ -28,9 +42,9 @@ const permissions: Record<UserRole, MenuPermissions> = {
     },
     products: {
       view: true,
-      create: false,
-      edit: false,
-      delete: false,
+      create: true,
+      edit: true,
+      delete: true,
       nested: {
         new: { view: true, create: true, edit: false, delete: false },
         list: { view: true, create: false, edit: true, delete: true },
@@ -38,18 +52,18 @@ const permissions: Record<UserRole, MenuPermissions> = {
     },
     recipe: {
       view: true,
-      create: false,
-      edit: false,
-      delete: false,
+      create: true,
+      edit: true,
+      delete: true,
       nested: {
         new: { view: true, create: true, edit: false, delete: false },
       },
     },
-    clients: { view: false, create: false, edit: false, delete: false },
-    tasks: { view: false, create: false, edit: false, delete: false },
-    settings: { view: false, create: false, edit: false, delete: false },
-    about: { view: true, create: false, edit: false, delete: false },
-    feedback: { view: true, create: false, edit: false, delete: false },
+    clients: { view: true, create: true, edit: true, delete: true },
+    tasks: { view: true, create: true, edit: true, delete: true },
+    settings: { view: true, create: true, edit: true, delete: true },
+    about: { view: true, create: true, edit: true, delete: true },
+    feedback: { view: true, create: true, edit: true, delete: true },
   },
 };
 
@@ -59,7 +73,9 @@ export const roleConfig: Record<string, RoleConfig> = {
     level: 50,
     permissions: permissions.cashier,
   },
+  admin: {
+    name: "admin",
+    level: 100,
+    permissions: permissions.admin,
+  },
 };
-
-// Also export permissions for debugging
-export const defaultPermissions = permissions;
