@@ -31,6 +31,9 @@ export type AuthService = {
   loading: boolean;
   isAuthenticating: boolean;
   isAuthenticated: boolean;
+  role: string;
+  initials: string;
+  email: string;
   login: (options: LoginOptions) => Promise<void>;
   logout: (options?: LogoutOptions) => Promise<void>;
   softLogout: () => Promise<void>;

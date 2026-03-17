@@ -116,6 +116,8 @@ function getAllowedPrefixesByRole(role: string | null): string[] {
   switch (role ?? "") {
     case "cashier":
       return ["/hub"];
+    case "admin":
+      return ["/admin/hub"];
     default:
       return [];
   }
@@ -125,6 +127,8 @@ function getHomePathByRole(role: string | null): string {
   switch (role ?? "") {
     case "cashier":
       return "/hub";
+    case "admin":
+      return "/admin/hub";
     default:
       return "/";
   }
@@ -135,12 +139,12 @@ function isPathUnderAny(pathname: string, prefixes: string[]): boolean {
 }
 
 function isRoleValid(role: string | null): boolean {
-  return ["cashier"].includes(role ?? "");
+  return ["cashier", "admin"].includes(role ?? "");
 }
 
 function safeRedirect(
   request: NextRequest,
-  targetPath: string
+  targetPath: string,
 ): NextResponse | null {
   const currentPath = request.nextUrl.pathname.replace(/\/+$/, "") || "/";
   const target = targetPath.replace(/\/+$/, "") || "/";
@@ -181,7 +185,7 @@ export async function proxy(request: NextRequest) {
   } catch (error) {
     console.error(
       `Middleware failed after ${Date.now() - startTime}ms:`,
-      error
+      error,
     );
     return fallbackResponse(request);
   }
@@ -249,7 +253,7 @@ function handleSensitiveParams(request: NextRequest): NextResponse | null {
   if (SENSITIVE_QUERY_PARAMS.some((param) => searchParams.has(param))) {
     const cleanUrl = request.nextUrl.clone();
     SENSITIVE_QUERY_PARAMS.forEach((param) =>
-      cleanUrl.searchParams.delete(param)
+      cleanUrl.searchParams.delete(param),
     );
     return NextResponse.redirect(cleanUrl);
   }
@@ -258,7 +262,7 @@ function handleSensitiveParams(request: NextRequest): NextResponse | null {
 
 async function handleRouteProtection(
   request: NextRequest,
-  authState: AuthState
+  authState: AuthState,
 ): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl;
   const PROTECTED_PREFIXES = ["/hub"];

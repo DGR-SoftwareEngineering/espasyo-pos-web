@@ -16,18 +16,13 @@ const PermissionContext = createContext<PermissionContextType | undefined>(
 interface PermissionProviderProps {
   children: ReactNode;
   roleName: string | null;
-  roleData?: any;
 }
 
 export const PermissionProvider = ({
   children,
   roleName,
-  roleData,
 }: PermissionProviderProps) => {
-  const { canView, canCreate, canEdit, canDelete } = usePermissions(
-    roleName,
-    roleData,
-  );
+  const { canView, canCreate, canEdit, canDelete } = usePermissions(roleName);
 
   return (
     <PermissionContext.Provider

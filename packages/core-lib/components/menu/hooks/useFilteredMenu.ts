@@ -2,13 +2,12 @@ import { useMemo } from "react";
 import {
   menuItems,
   secondaryMenuItems,
-  MenuItem,
   NestedMenuItem,
 } from "../config/menuConfig";
 import { usePermissions } from "./usePermissions";
 
-export const useFilteredMenu = (roleName: string | null, roleData?: any) => {
-  const { canView, permissions } = usePermissions(roleName, roleData);
+export const useFilteredMenu = (roleName: string | null) => {
+  const { canView } = usePermissions(roleName);
 
   const filterNestedItems = (
     nestedItems?: NestedMenuItem[],
@@ -16,7 +15,8 @@ export const useFilteredMenu = (roleName: string | null, roleData?: any) => {
     if (!nestedItems) return undefined;
 
     return nestedItems.filter((item) => {
-      return canView(item.permissionKey);
+      const hasPermission = canView(item.permissionKey);
+      return hasPermission;
     });
   };
 
@@ -29,21 +29,24 @@ export const useFilteredMenu = (roleName: string | null, roleData?: any) => {
           : undefined,
       }))
       .filter((item) => {
-        // Check if parent has view permission
         const hasParentPermission = canView(item.permissionKey);
-        // Check if it has visible nested items
         const hasVisibleNested =
           item.nestedItems && item.nestedItems.length > 0;
-        // Show if either parent has permission OR has visible nested items
+
         return hasParentPermission || hasVisibleNested;
       });
 
     return filtered;
-  }, [canView]);
+  }, [canView, roleName]);
 
   const filteredSecondaryMenu = useMemo(() => {
-    return secondaryMenuItems.filter((item) => canView(item.permissionKey));
-  }, [canView]);
+    const filtered = secondaryMenuItems.filter((item) => {
+      const hasPermission = canView(item.permissionKey);
+      return hasPermission;
+    });
+
+    return filtered;
+  }, [canView, roleName]);
 
   return {
     mainMenu: filteredMainMenu,

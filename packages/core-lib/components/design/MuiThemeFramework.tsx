@@ -14,11 +14,15 @@ import { Toastify } from "../toast/Toastify";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Box } from "@mui/material";
 import { MuiDashboard } from "../shared-theme/templates/dashboard/Dashboard";
+import { PermissionProvider } from "../menu/contexts/PermissionContext";
 interface Props {
   isAuthenticated: boolean;
   logout: () => Promise<void>;
   children: ReactNode;
   loading?: boolean;
+  role: string;
+  initials: string;
+  email: string;
 }
 
 export const MuiThemeFramework: React.FC<Props> = ({
@@ -26,6 +30,8 @@ export const MuiThemeFramework: React.FC<Props> = ({
   logout,
   loading,
   children,
+  role,
+  ...rest
 }) => {
   return (
     <ThemeProvider>
@@ -45,9 +51,16 @@ export const MuiThemeFramework: React.FC<Props> = ({
                       {/* set loading to false by default for now. */}
                       <TabContextProvider>
                         {isAuthenticated ? (
-                          <MuiDashboard logout={logout}>
-                            {children}
-                          </MuiDashboard>
+                          <PermissionProvider roleName={role}>
+                            <MuiDashboard
+                              logout={logout}
+                              loading={loading}
+                              role={role}
+                              {...rest}
+                            >
+                              {children}
+                            </MuiDashboard>
+                          </PermissionProvider>
                         ) : (
                           <>{children}</>
                         )}

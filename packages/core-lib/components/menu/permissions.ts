@@ -1,4 +1,4 @@
-export type UserRole = "cashier";
+export type UserRole = "cashier" | "admin";
 
 export interface Permission {
   view: boolean;

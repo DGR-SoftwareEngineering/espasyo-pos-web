@@ -1,4 +1,4 @@
-import { JSX, useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "../core/router";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -154,34 +154,18 @@ const NestedMenuItem = ({
 };
 
 interface MenuContentProps {
-  userInfoResult?: any;
-  roleResult?: any;
+  roleName: string;
   loading?: boolean;
 }
 
-export default function MenuContent({
-  userInfoResult,
-  roleResult,
-  loading,
-}: MenuContentProps) {
+export default function MenuContent({ roleName, loading }: MenuContentProps) {
   const router = useRouter();
   const theme = useTheme();
   const [selectedPath, setSelectedPath] = useState<string>("");
   const [openStates, setOpenStates] = useState<{ [key: string]: boolean }>({});
   const { startContentTransition } = usePageLoaderContext();
 
-  const roleName = useMemo(
-    () =>
-      roleResult?.data?.response?.roleName ||
-      userInfoResult?.data?.response?.role ||
-      "cashier",
-    [roleResult, userInfoResult],
-  );
-
-  const { mainMenu, secondaryMenu } = useFilteredMenu(
-    roleName,
-    roleResult?.data?.response,
-  );
+  const { mainMenu, secondaryMenu } = useFilteredMenu(roleName);
 
   const mainMenuString = useMemo(() => JSON.stringify(mainMenu), [mainMenu]);
 
@@ -227,7 +211,6 @@ export default function MenuContent({
     }));
   }, []);
 
-  // Show loading state
   if (loading) {
     return (
       <Box
@@ -243,7 +226,6 @@ export default function MenuContent({
     );
   }
 
-  // Show role badge
   const RoleBadge = useCallback(
     () => (
       <Box
