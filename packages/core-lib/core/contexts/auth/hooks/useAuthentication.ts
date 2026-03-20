@@ -19,7 +19,7 @@ export const useAuthentication = (): AuthService => {
   const [ssoCookie, setSsoCookie, clearSsoCookie] = useSSOCookie();
   const [accessToken, setAccessToken, clearAccessToken] = useAccessToken();
   const [refreshToken, setRefreshToken, clearRefreshToken] = useRefreshToken();
-  const [isAuthenticated, setIsAuthenticated] = useState(!!accessToken);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userInitials, setUserInitials] = useState("");
   const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
@@ -37,13 +37,22 @@ export const useAuthentication = (): AuthService => {
   const createSessionCb = useApiCallback((api, p: SsoSessionParams) =>
     api.authentication.createSession(p),
   );
+  const validateTokenCb = useApi(
+    async (api) =>
+      accessToken ? await api.authentication.validateToken() : null,
+    [accessToken],
+  );
   const userInfoCb = useApi(
-    async (api) => (isAuthenticated ? await api.commons.getUserById() : null),
-    [isAuthenticated],
+    async (api) =>
+      isAuthenticated && accessToken ? await api.commons.getUserById() : null,
+    [isAuthenticated, accessToken],
   );
 
   const roleCb = useApi(
-    async (api) => (roleID ? await api.commons.getRoleById(roleID) : null),
+    async (api) => {
+      if (!roleID) return null;
+      return await api.commons.getRoleById(roleID);
+    },
     [roleID],
   );
 
@@ -52,7 +61,9 @@ export const useAuthentication = (): AuthService => {
       await logout();
       await goToExpiredSessionPage();
     },
-    sessionId: accessToken ? parseTokenId(accessToken) : accessToken,
+    sessionId: accessToken
+      ? (parseTokenId(accessToken) ?? undefined)
+      : undefined,
   });
 
   const loading =
@@ -60,21 +71,30 @@ export const useAuthentication = (): AuthService => {
     logoutCb.loading ||
     createSessionCb.loading ||
     userInfoCb.loading ||
-    roleCb.loading;
-
-  useEffect(() => {
-    setIsAuthenticated(!!accessToken);
-  }, [accessToken]);
+    roleCb.loading ||
+    validateTokenCb.loading;
 
   useEffect(() => {
     if (!isAuthenticated) return;
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (userInfoCb.result?.data?.response?.roleID) {
+    if (validateTokenCb.result?.data.success !== undefined) {
+      setIsAuthenticated(
+        !!(accessToken && validateTokenCb.result.data.success),
+      );
+    }
+  }, [accessToken, validateTokenCb.result]);
+
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      accessToken &&
+      userInfoCb.result?.data?.response?.roleID
+    ) {
       setRoleID(userInfoCb.result.data.response.roleID);
     }
-  }, [userInfoCb.result]);
+  }, [userInfoCb.result, isAuthenticated, accessToken]);
 
   useEffect(() => {
     if (isAuthenticated) {

@@ -11,7 +11,7 @@ import { config } from "../../config";
 const source: CancelTokenSource = axios.CancelToken.source();
 
 const HTTP_OPTIONS: HttpOptions = {
-  headers: { ENV: config.value.NODE_ENV },
+  headers: { ENV: config.value.NODE_ENV, "ngrok-skip-browser-warning": "true" },
   paramsSerializer: (params) =>
     stringify(params, { encode: true, arrayFormat: "brackets" }),
   onRequest: (req) => {
@@ -23,11 +23,16 @@ const HTTP_OPTIONS: HttpOptions = {
     const user = getItem<string | undefined>("user");
     console.error(
       `Error on response: ${JSON.stringify(error)}. User: ${JSON.stringify(
-        user
-      )}`
+        user,
+      )}`,
     );
   },
   cancelToken: source.token,
+  ...(process.env.NODE_ENV === "development" && {
+    httpsAgent: new (require("https").Agent)({
+      rejectUnauthorized: false,
+    }),
+  }),
 };
 
 export const httpClient = new Http({
@@ -41,8 +46,8 @@ export const httpSsrClient = new Http({
     process.env.NODE_ENV === "development"
       ? "http://localhost:3000"
       : typeof window !== "undefined"
-      ? window.location.origin
-      : undefined,
+        ? window.location.origin
+        : undefined,
 });
 
 export const httpSsrRefreshedClient = (url: string) =>
@@ -63,7 +68,7 @@ const updateHttpClient = () => {
 
 export const useApi = <R, D extends unknown[]>(
   asyncFn: (api: Api) => Promise<R>,
-  deps?: D
+  deps?: D,
 ) => {
   updateHttpClient();
   return useAsync(async () => {
@@ -77,7 +82,7 @@ export const useApi = <R, D extends unknown[]>(
 };
 
 export const useApiCallback = <R, A extends unknown>(
-  asyncFn: (api: Api, args: A) => Promise<R>
+  asyncFn: (api: Api, args: A) => Promise<R>,
 ) => {
   updateHttpClient();
   return useAsyncCallback(async (args?: A) => {
@@ -93,7 +98,7 @@ export const useApiCallback = <R, A extends unknown>(
 function createApi(client: AxiosInstance, httpSsrClient: AxiosInstance) {
   return new Api(
     new AuthenticationApi(client, httpSsrClient),
-    new CommonsApi(client, httpSsrClient)
+    new CommonsApi(client, httpSsrClient),
   );
 }
 

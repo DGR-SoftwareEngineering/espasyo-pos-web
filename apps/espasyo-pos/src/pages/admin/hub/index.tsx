@@ -20,16 +20,19 @@ const DashboardHome = () => {
   const { timeOfDay } = useGreeting();
   const { currentMessage, isVisible, nextMessage } = useMotivation();
   const { result, loading } = useApi((api) => api.commons.getUserById());
+  const roleID = result?.data?.response?.roleID;
   const roleCb = useApi(
-    (api) => api.commons.getRoleById(result?.data?.response?.roleID),
-    [result?.data?.response?.roleID],
+    async (api) => {
+      if (!roleID) return null;
+      return await api.commons.getRoleById(roleID);
+    },
+    [roleID],
   );
 
   const userData = result?.data?.response?.userInfo;
-  const role =
-    result?.data?.response?.roleID && roleCb.result?.data.response.roleName;
+  const role = roleCb.result?.data?.response?.roleName;
 
-  if (loading) return <Container>Loading...</Container>;
+  if (loading || roleCb.loading) return <Container>Loading...</Container>;
 
   return (
     <Box sx={{ p: 3, minHeight: "100vh", bgcolor: "grey.50" }}>

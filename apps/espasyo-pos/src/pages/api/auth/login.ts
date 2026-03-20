@@ -10,14 +10,14 @@ const handler: NextApiHandler = withSsrHttpClient(
     try {
       const result = await client.post<LoginResponse>(
         `/authentication-api/api/authentication/login`,
-        req.body
+        req.body,
       );
       req.session.accessToken = result.data.response.accessToken;
       req.session.refreshToken = result.data.response.refreshToken;
       res.setHeader("Set-Cookie", [
         serialize("ac", result.data.response.accessToken, {
           secure: isProd,
-          sameSite: "strict",
+          sameSite: "lax",
           path: "/",
           httpOnly: true,
         }),
@@ -27,7 +27,7 @@ const handler: NextApiHandler = withSsrHttpClient(
     } catch (error) {
       errorResponse(error, res);
     }
-  }
+  },
 );
 
 export default handler;

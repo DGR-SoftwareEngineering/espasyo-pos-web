@@ -6,7 +6,10 @@ import {
   CreateCategoryParams,
   CreateProductParams,
   ProductListResponse,
+  RecipeListResponse,
   RecipeParams,
+  RecipeResponse,
+  UpdateRecipeParams,
   UserInfoResponse,
 } from "./types";
 
@@ -43,8 +46,8 @@ export class CommonsApi {
     return this.ssrAxios.get<UserInfoResponse>(`/api/commons/get-user-info`);
   }
 
-  public getRoleById(roleId?: string) {
-    return this.axios.get<ApiResponse<{ roleName: string }>>(
+  public async getRoleById(roleId?: string) {
+    return await this.axios.get<ApiResponse<{ roleName: string }>>(
       `/api/v1/role-api/role/${roleId}`,
     );
   }
@@ -100,6 +103,25 @@ export class CommonsApi {
     return this.axios.post<ApiResponse>(
       `/api/v1/product/recipe-api/recipe`,
       params,
+    );
+  }
+
+  public getRecipe() {
+    return this.axios.get<RecipeListResponse>(
+      `/api/v1/product/recipe-api/recipe?pageNumber=1&pageSize=10`, //static for now
+    );
+  }
+
+  public updateRecipe(params: UpdateRecipeParams) {
+    return this.axios.put<ApiResponse<RecipeResponse>>(
+      `/api/v1/product/recipe-api/recipe`,
+      params,
+    );
+  }
+
+  public async softDeleteRecipe(recipeId: string) {
+    return await this.axios.delete<ApiResponse>(
+      `/api/v1/product/recipe-api/recipe?recipeId=${recipeId}`,
     );
   }
 }
