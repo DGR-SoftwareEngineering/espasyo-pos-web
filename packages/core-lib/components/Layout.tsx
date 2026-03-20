@@ -15,6 +15,7 @@ import {
 import { DuplicationSessionBlock } from "./blocks";
 import { MuiThemeFramework } from "./design/MuiThemeFramework";
 import { RadixThemeFramework } from "./design/RadixThemeFramework";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 export type Framework = "Radix" | "MUI";
 
@@ -61,15 +62,17 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
       case "MUI":
         return (
           <Suspense fallback={renderFallback()}>
-            <MuiThemeFramework
-              isAuthenticated={isAuthenticated}
-              loading={loading}
-              logout={logout}
-              children={children}
-              email={email}
-              role={role}
-              initials={initials}
-            />
+            <ErrorBoundary errorMessage="MUI Framework Error">
+              <MuiThemeFramework
+                isAuthenticated={isAuthenticated}
+                loading={loading}
+                logout={logout}
+                children={children}
+                email={email}
+                role={role}
+                initials={initials}
+              />
+            </ErrorBoundary>
           </Suspense>
         );
       case "Radix":
@@ -91,7 +94,9 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      {renderWithFramework()}
+      <ErrorBoundary errorMessage="Layout Error">
+        {renderWithFramework()}
+      </ErrorBoundary>
     </LocalizationProvider>
   );
 };

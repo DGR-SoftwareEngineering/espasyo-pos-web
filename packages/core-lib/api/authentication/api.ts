@@ -7,11 +7,12 @@ import {
   RefreshParams,
   RefreshTokenResponse,
 } from "./types";
+import { ApiResponse } from "../types";
 
 export class AuthenticationApi {
   constructor(
     private readonly axios: AxiosInstance,
-    private readonly ssrAxios: AxiosInstance
+    private readonly ssrAxios: AxiosInstance,
   ) {}
 
   public login(params: LoginParams) {
@@ -25,7 +26,7 @@ export class AuthenticationApi {
   public logout(params: LogoutParams) {
     return this.axios.post(
       `/authentication-api/api/authentication/logout`,
-      params
+      params,
     );
   }
 
@@ -36,7 +37,7 @@ export class AuthenticationApi {
   public createSession(params: SsoSessionParams) {
     return this.axios.post(
       `/authentication-api/api/sso/session/create-session`,
-      params
+      params,
     );
   }
 
@@ -47,7 +48,13 @@ export class AuthenticationApi {
   public refreshToken(params: RefreshParams) {
     return this.axios.post<RefreshTokenResponse>(
       `/authentication-api/api/authentication/refresh-token`,
-      params
+      params,
+    );
+  }
+
+  public validateToken() {
+    return this.axios.get<ApiResponse>(
+      `/authentication-api/api/authentication/validate-token`,
     );
   }
 }

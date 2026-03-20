@@ -12,7 +12,7 @@ export function toTitleCase(text: string) {
 
 export function parseDelimitedList(
   value: string | undefined,
-  delimiter = ";"
+  delimiter = ";",
 ): string[] {
   if (!value) return [];
   return value
@@ -95,3 +95,10 @@ export function caseInsensitiveEquals(a?: string, b?: string): boolean {
   if (!a || !b) return false;
   return a.toUpperCase() === b.toUpperCase();
 }
+
+export const formatCurrency = (amount: number | null): string => {
+  if (!amount) return "₱0.00";
+  return `₱${amount.toFixed(2)}`;
+};
+export const truncateId = (id: string, length: number = 6): string =>
+  `${id.substring(0, length)}...`;

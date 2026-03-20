@@ -138,6 +138,13 @@ export const menuItems: MenuItem[] = [
         permissionKey: "recipe.nested.new",
         path: "/admin/hub/product/recipe/add-new-recipe",
       },
+      {
+        id: "recipe-list",
+        text: "Recipe List",
+        icon: <ListIcon />,
+        path: "/admin/hub/product/recipe/recipe-list",
+        permissionKey: "recipe.nested.list",
+      },
     ],
   },
   {

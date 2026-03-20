@@ -6,7 +6,6 @@ import {
   CategoryOutlined,
 } from "@mui/icons-material";
 
-// Keep only category-related functions
 export const getCategoryInfo = (type: number | null) => {
   switch (type) {
     case 1:
@@ -39,10 +38,3 @@ export const truncateDescription = (
 export const formatProductId = (id: string): string => {
   return `${id.substring(0, 8)}...`;
 };
-
-export const formatCurrency = (amount: number | null): string => {
-  if (!amount) return "₱0.00";
-  return `₱${amount.toFixed(2)}`;
-};
-
-// REMOVED: getStatusInfo, calculateStockPercentage, isLowStock

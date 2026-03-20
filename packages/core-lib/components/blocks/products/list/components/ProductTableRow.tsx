@@ -25,9 +25,9 @@ import {
   getCategoryInfo,
   truncateDescription,
   formatProductId,
-  formatCurrency,
 } from "../utils";
 import { DIALOG_TITLES } from "../constants";
+import { formatCurrency } from "../../../../../business/strings";
 
 interface ProductTableRowProps {
   row: ProductDataList;
@@ -108,7 +108,6 @@ export const ProductTableRow: React.FC<ProductTableRowProps> = ({
         </Stack>
       </TableCell>
 
-      {/* Price - Conditional based on product type */}
       <TableCell align="center">
         <Stack direction="column" alignItems="center" spacing={0.5}>
           {isMenuItem ? (

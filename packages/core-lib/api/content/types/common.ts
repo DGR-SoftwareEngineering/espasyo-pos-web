@@ -1,4 +1,8 @@
-import { CategoryDataList, ProductDataList } from "../../commons/types";
+import {
+  CategoryDataList,
+  ProductDataList,
+  RecipeResponse,
+} from "../../commons/types";
 
 export type CMSValue = { elementType?: string | { [key: string]: string } };
 
@@ -110,6 +114,11 @@ export type DialogDataType = {
   ProductEdit: ProductDataList;
   ProductDelete: ProductDataList;
   ProductCreate: undefined;
+
+  RecipeView: RecipeResponse;
+  RecipeEdit: RecipeResponse;
+  RecipeDelete: RecipeResponse;
+  RecipeCreate: undefined;
 };
 
 // Dialog content type as a union

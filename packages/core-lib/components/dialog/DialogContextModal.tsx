@@ -8,12 +8,21 @@ import {
   CategoryDeleteDialog,
   CategoryEditDialog,
 } from "../blocks/category/dialogs/CategoryDialogs";
-import { CategoryDataList, ProductDataList } from "../../api/commons/types";
+import {
+  CategoryDataList,
+  ProductDataList,
+  RecipeResponse,
+} from "../../api/commons/types";
 import {
   ProductDeleteDialog,
   ProductEditDialog,
   ProductViewDialog,
 } from "../blocks/products/list/dialogs/ProductDialogs";
+import {
+  RecipeDeleteDialog,
+  RecipeEditDialog,
+  RecipeViewDialog,
+} from "../blocks/recipe/list/components/RecipeDialog";
 
 interface Props {
   dialogFormType?: DialogContentType;
@@ -70,6 +79,25 @@ export const DialogContextModal: React.FC<Props> = ({
       return (
         <ProductDeleteDialog
           product={dialogData as ProductDataList}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    // Recipe dialogs
+    case "RecipeView":
+      return <RecipeViewDialog recipe={dialogData as RecipeResponse} />;
+    case "RecipeEdit":
+      return (
+        <RecipeEditDialog
+          recipe={dialogData as RecipeResponse}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "RecipeDelete":
+      return (
+        <RecipeDeleteDialog
+          recipe={dialogData as RecipeResponse}
           onSuccess={onSuccess!}
           onClose={onClose!}
         />

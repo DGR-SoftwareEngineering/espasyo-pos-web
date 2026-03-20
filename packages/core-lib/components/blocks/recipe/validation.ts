@@ -1,6 +1,19 @@
 import * as yup from "yup";
 
 const recipeItemSchema = yup.object({
+  recipeItemID: yup
+    .string()
+    .optional()
+    .nullable()
+    .test(
+      "is-valid-uuid",
+      "Invalid recipe item ID format",
+      (value) =>
+        !value ||
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          value,
+        ),
+    ),
   ingredientProductID: yup
     .string()
     .required("Ingredient is required")

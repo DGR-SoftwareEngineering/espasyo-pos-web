@@ -265,7 +265,7 @@ async function handleRouteProtection(
   authState: AuthState,
 ): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl;
-  const PROTECTED_PREFIXES = ["/hub"];
+  const PROTECTED_PREFIXES = ["/hub", "/admin/hub"];
 
   const sensitiveRedirect = handleSensitiveParams(request);
   if (sensitiveRedirect) return sensitiveRedirect;

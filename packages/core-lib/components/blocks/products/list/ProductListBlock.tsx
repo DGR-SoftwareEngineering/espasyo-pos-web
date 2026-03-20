@@ -13,11 +13,11 @@ import { useApi } from "../../../../core/hooks";
 import { useDialogContext } from "../../../../core/contexts";
 import { ProductDataList } from "core-lib/api/commons/types";
 import { ProductList } from "./ProductList";
-import { Header } from "./components/Header";
-import { StatsCard } from "./components/StatsCard";
-import { FilterBar } from "./components/FilterBar";
+import { HeaderV2 } from "../../../header/HeaderV2";
 import { useProductFilters } from "./hooks/useProductFilter";
 import { DIALOG_TITLES, DIALOG_TYPES } from "./constants";
+import { StatsCard } from "../../../StatsCard";
+import { FilterBar } from "../../../FilterBar";
 
 export const ProductListBlock: React.FC = () => {
   const theme = useTheme();
@@ -80,7 +80,7 @@ export const ProductListBlock: React.FC = () => {
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
         }}
       >
-        <Header onCreate={handleCreate} />
+        <HeaderV2 onCreate={handleCreate} />
 
         <Stack
           direction="row"
