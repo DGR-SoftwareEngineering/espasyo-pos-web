@@ -1,6 +1,7 @@
 import {
   CategoryDataList,
   ProductDataList,
+  ProductionCapacity,
   RecipeResponse,
 } from "../../commons/types";
 
@@ -115,7 +116,10 @@ export type DialogDataType = {
   ProductDelete: ProductDataList;
   ProductCreate: undefined;
 
-  RecipeView: RecipeResponse;
+  RecipeView: {
+    recipe: RecipeResponse;
+    productionCapacity?: ProductionCapacity;
+  };
   RecipeEdit: RecipeResponse;
   RecipeDelete: RecipeResponse;
   RecipeCreate: undefined;

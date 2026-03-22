@@ -20,7 +20,7 @@ import {
   TrendingUp,
   Whatshot,
 } from "@mui/icons-material";
-import { useApi } from "../../../../core/hooks";
+import { useApi, useApiCallback } from "../../../../core/hooks";
 import { useDialogContext } from "../../../../core/contexts";
 import { RecipeList } from "./RecipeList";
 import { HeaderV2 } from "../../../header/HeaderV2";
@@ -32,7 +32,11 @@ import {
   DIALOG_TYPES,
   RecipeFilterState,
 } from "../constants";
-import { RecipeResponse } from "../../../../api/commons/types";
+import {
+  ProductionCapacity,
+  ProductionCapacityResponse,
+  RecipeResponse,
+} from "../../../../api/commons/types";
 import { useRecipeStats } from "./hooks";
 
 const sortOptions = [
@@ -47,9 +51,6 @@ const sortOptions = [
 export const RecipeListBlock: React.FC = () => {
   const theme = useTheme();
   const { openDialog } = useDialogContext();
-  const [selectedRecipe, setSelectedRecipe] = useState<
-    RecipeResponse | undefined
-  >();
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -59,6 +60,10 @@ export const RecipeListBlock: React.FC = () => {
     sortBy: "name",
   });
 
+  const calcCb = useApiCallback(
+    async (api, menuItemProductId: string) =>
+      await api.commons.calculateMaxProduction(menuItemProductId),
+  );
   const data = useApi((api) => api.commons.getRecipe());
   const response = data.result?.data.response;
 
@@ -131,14 +136,33 @@ export const RecipeListBlock: React.FC = () => {
   }, [data]);
 
   const handleView = useCallback(
-    (recipe: RecipeResponse) => {
-      openDialog({
-        title: DIALOG_TITLES.view,
-        dialogContentType: DIALOG_TYPES.view,
-        data: recipe,
-      });
+    async (recipe: RecipeResponse) => {
+      try {
+        const result = await calcCb.execute(recipe.menuItemProductID);
+        if (!calcCb.loading && result.data.success) {
+          openDialog({
+            title: DIALOG_TITLES.view,
+            dialogContentType: DIALOG_TYPES.view,
+            data: {
+              recipe: recipe,
+              productionCapacity: result.data.response,
+            },
+            loading: calcCb.loading,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch production capacity:", error);
+        openDialog({
+          title: DIALOG_TITLES.view,
+          dialogContentType: DIALOG_TYPES.view,
+          data: {
+            recipe: recipe,
+            productionCapacity: undefined,
+          },
+        });
+      }
     },
-    [openDialog],
+    [openDialog, calcCb],
   );
 
   const handleEdit = useCallback(

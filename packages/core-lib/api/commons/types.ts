@@ -104,6 +104,32 @@ export interface PaginatedResponse<T> {
   hasPreviousPage: boolean;
 }
 
+export type ProductionStatus = "InStock" | "LowStock" | "OutOfStock";
+export interface ProductionConstraint {
+  ingredientName: string;
+  requiredPerUnit: number;
+  availableQuantity: number;
+  maxUnitsFromThisIngredient: number;
+  unitName: string;
+  status: ProductionStatus;
+  isBottleneck: boolean;
+  costPerUnit: number;
+  totalCostForMaxProduction: number;
+}
+
+export interface ProductionCapacity {
+  menuItemProductId: string;
+  menuItemName: string;
+  maxUnitsCanProduce: number;
+  constraints: ProductionConstraint[];
+  requiredIngredients: Record<string, number>;
+  overallStatus: ProductionStatus;
+  bottleneckIngredients: string[];
+  totalCostPerUnit: number;
+  totalCostMaxProduction: number;
+}
+
+export type ProductionCapacityResponse = ApiResponse<ProductionCapacity>;
 export type RecipeListResponse = ApiResponse<PaginatedResponse<RecipeResponse>>;
 export type UserInfoResponse = ApiResponse<UserInformations>;
 export type CategoryListResponse = ApiResponse<CategoryDataList[]>;

@@ -5,6 +5,7 @@ import {
   CategoryListResponse,
   CreateCategoryParams,
   CreateProductParams,
+  ProductionCapacityResponse,
   ProductListResponse,
   RecipeListResponse,
   RecipeParams,
@@ -122,6 +123,12 @@ export class CommonsApi {
   public async softDeleteRecipe(recipeId: string) {
     return await this.axios.delete<ApiResponse>(
       `/api/v1/product/recipe-api/recipe?recipeId=${recipeId}`,
+    );
+  }
+
+  public calculateMaxProduction(menuItemProductId: string) {
+    return this.axios.get<ProductionCapacityResponse>(
+      `/api/v1/product/recipe-api/recipe/calculate-max-production?menuItemProductId=${menuItemProductId}`,
     );
   }
 }
