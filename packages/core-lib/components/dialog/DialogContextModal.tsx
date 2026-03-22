@@ -11,6 +11,7 @@ import {
 import {
   CategoryDataList,
   ProductDataList,
+  ProductionCapacity,
   RecipeResponse,
 } from "../../api/commons/types";
 import {
@@ -85,7 +86,16 @@ export const DialogContextModal: React.FC<Props> = ({
       );
     // Recipe dialogs
     case "RecipeView":
-      return <RecipeViewDialog recipe={dialogData as RecipeResponse} />;
+      const viewData = dialogData as {
+        recipe: RecipeResponse;
+        productionCapacity?: ProductionCapacity;
+      };
+      return (
+        <RecipeViewDialog
+          recipe={viewData.recipe}
+          productionCapacity={viewData.productionCapacity}
+        />
+      );
     case "RecipeEdit":
       return (
         <RecipeEditDialog
