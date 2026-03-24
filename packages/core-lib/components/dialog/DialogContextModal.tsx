@@ -15,15 +15,15 @@ import {
   RecipeResponse,
 } from "../../api/commons/types";
 import {
-  ProductDeleteDialog,
-  ProductEditDialog,
-  ProductViewDialog,
-} from "../blocks/products/list/dialogs/ProductDialogs";
+  ProductViewDialogContent,
+  ProductEditDialogContent,
+  ProductDeleteDialogContent,
+} from "./contents";
 import {
-  RecipeDeleteDialog,
-  RecipeEditDialog,
-  RecipeViewDialog,
-} from "../blocks/recipe/list/components/RecipeDialog";
+  RecipeViewDialogContent,
+  RecipeDeleteDialogContent,
+  RecipeEditDialogContent,
+} from "./contents/recipe";
 
 interface Props {
   dialogFormType?: DialogContentType;
@@ -67,10 +67,12 @@ export const DialogContextModal: React.FC<Props> = ({
 
     // Product dialogs
     case "ProductView":
-      return <ProductViewDialog product={dialogData as ProductDataList} />;
+      return (
+        <ProductViewDialogContent product={dialogData as ProductDataList} />
+      );
     case "ProductEdit":
       return (
-        <ProductEditDialog
+        <ProductEditDialogContent
           product={dialogData as ProductDataList}
           onSuccess={onSuccess!}
           onClose={onClose!}
@@ -78,7 +80,7 @@ export const DialogContextModal: React.FC<Props> = ({
       );
     case "ProductDelete":
       return (
-        <ProductDeleteDialog
+        <ProductDeleteDialogContent
           product={dialogData as ProductDataList}
           onSuccess={onSuccess!}
           onClose={onClose!}
@@ -91,14 +93,14 @@ export const DialogContextModal: React.FC<Props> = ({
         productionCapacity?: ProductionCapacity;
       };
       return (
-        <RecipeViewDialog
+        <RecipeViewDialogContent
           recipe={viewData.recipe}
           productionCapacity={viewData.productionCapacity}
         />
       );
     case "RecipeEdit":
       return (
-        <RecipeEditDialog
+        <RecipeEditDialogContent
           recipe={dialogData as RecipeResponse}
           onSuccess={onSuccess!}
           onClose={onClose!}
@@ -106,7 +108,7 @@ export const DialogContextModal: React.FC<Props> = ({
       );
     case "RecipeDelete":
       return (
-        <RecipeDeleteDialog
+        <RecipeDeleteDialogContent
           recipe={dialogData as RecipeResponse}
           onSuccess={onSuccess!}
           onClose={onClose!}

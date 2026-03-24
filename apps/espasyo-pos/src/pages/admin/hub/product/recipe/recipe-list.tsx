@@ -1,4 +1,4 @@
-import { RecipeListBlock } from "../../../../../components/dashboard/components";
+import { RecipeListBlock } from "../../../../../components";
 
 const RecipeList = () => {
   return <RecipeListBlock />;
