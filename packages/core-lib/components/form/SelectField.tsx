@@ -12,12 +12,16 @@ import {
 } from "react-hook-form";
 import { FieldError } from "./FieldError";
 import { InputLoader } from "../loaders/InputLoader";
-import { CategorySelectionOptions } from "./selection-types";
+import {
+  CategorySelectionOptions,
+  ProductSelectionOptions,
+} from "./selection-types";
 
 export interface SelectOption {
   value: string;
   label: string;
   category?: CategorySelectionOptions;
+  product?: ProductSelectionOptions;
 }
 
 type Props<T extends object> = SelectProps & {

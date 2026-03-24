@@ -10,3 +10,28 @@ export const calculateIngredientStats = (
   max: Math.max(...items.map((item) => item.cost)),
   avg: totalCost / ingredientCount,
 });
+
+export const toNumeric = (value: any): number | null => {
+  if (value === undefined || value === null || value === "") return null;
+  const num = Number(value);
+  return isNaN(num) ? null : num;
+};
+
+export const calculateProfitMargin = (
+  unitPrice: number,
+  costPrice: number,
+) => ({
+  amount: unitPrice - costPrice,
+  percentage: ((unitPrice - costPrice) / unitPrice) * 100,
+});
+
+//TODO: Change to generic function name
+export const getStockStatus = (
+  current: number,
+  reorder: number,
+  minimum: number,
+) => ({
+  isNormal: current > reorder,
+  isLow: current > minimum && current <= reorder,
+  isCritical: current <= minimum,
+});

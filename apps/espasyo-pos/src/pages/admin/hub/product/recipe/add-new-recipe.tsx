@@ -1,5 +1,4 @@
-import React from "react";
-import { RecipeFormBlock } from "../../../../../components/dashboard/components";
+import { RecipeFormBlock } from "../../../../../components";
 
 const AddNewRecipe = () => {
   return <RecipeFormBlock />;

@@ -8,7 +8,6 @@ import {
   Stack,
   Box,
 } from "@mui/material";
-import { RestaurantMenuOutlined } from "@mui/icons-material";
 
 interface StatsCardProps {
   label: string;

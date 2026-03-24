@@ -1,5 +1,4 @@
-import React from "react";
-import { ProductFormBlock } from "../../../../components/dashboard/components";
+import { ProductFormBlock } from "../../../../components";
 const AddNewProduct = () => {
   return <ProductFormBlock />;
 };

@@ -1,23 +1,26 @@
-import { Box, Stack, Typography, useTheme } from "@mui/material";
+import React from "react";
+import { Box, Stack, Typography, Tooltip as MuiTooltip } from "@mui/material";
 
-export const MetricDisplay: React.FC<{
+interface Props {
   label: string;
   value: string;
   icon?: React.ReactNode;
   iconColor?: string;
   valueColor?: string;
-  tooltip?: boolean;
-}> = ({
+  tooltip?: React.ReactNode;
+  showTooltip?: boolean;
+}
+
+export const MetricDisplay: React.FC<Props> = ({
   label,
   value,
   icon,
   iconColor,
   valueColor = "text.primary",
   tooltip,
+  showTooltip = false,
 }) => {
-  const theme = useTheme();
-
-  return (
+  const content = (
     <Stack spacing={0.5}>
       <Typography variant="caption" color="text.secondary">
         {label}
@@ -32,11 +35,21 @@ export const MetricDisplay: React.FC<{
           variant="body2"
           fontWeight={600}
           color={valueColor}
-          sx={tooltip ? { cursor: "help" } : {}}
+          sx={showTooltip ? { cursor: "help" } : {}}
         >
           {value}
         </Typography>
       </Stack>
     </Stack>
   );
+
+  if (showTooltip && tooltip) {
+    return (
+      <MuiTooltip title={tooltip} arrow>
+        {content}
+      </MuiTooltip>
+    );
+  }
+
+  return content;
 };

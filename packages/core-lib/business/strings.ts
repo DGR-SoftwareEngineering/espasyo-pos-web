@@ -102,3 +102,24 @@ export const formatCurrency = (amount: number | null): string => {
 };
 export const truncateId = (id: string, length: number = 6): string =>
   `${id.substring(0, length)}...`;
+
+export const formatPrice = (price: unknown): string => {
+  if (!price && price !== 0) return "0.00";
+  const numericPrice =
+    typeof price === "string" ? parseFloat(price) : Number(price);
+  return Number.isNaN(numericPrice) ? "0.00" : numericPrice.toFixed(2);
+};
+
+export const formatId = (id: string): string => {
+  return `${id.substring(0, 8)}...`;
+};
+
+export const truncateDescription = (
+  description: string | null,
+  maxLength: number = 50,
+): string => {
+  if (!description) return "No description";
+  return description.length > maxLength
+    ? `${description.substring(0, maxLength)}...`
+    : description;
+};
