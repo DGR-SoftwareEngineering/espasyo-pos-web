@@ -19,7 +19,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
     useForm<LoginFormType>({
       resolver: yupResolver(loginFormSchema),
       mode: "onChange",
-      defaultValues: loginFormSchema.getDefault(),
+      defaultValues: { userName: '', password: '' },
     });
 
   useFormFocusOnError<LoginFormType>(formState.errors, setFocus);
@@ -31,117 +31,120 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
     cb: () => handleSubmit(onSubmit)(),
   });
 
+  const inputStyle = {
+    borderRadius: "12px",
+    height: "56px",
+    backgroundColor: "#F9FAFB",
+    "& fieldset": {
+      borderRadius: "12px",
+      borderColor: "#E5E7EB",
+    },
+    "&:hover fieldset": {
+      borderColor: "#7F5100",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#7F5100",
+    },
+    "& .MuiInputBase-input": {
+      paddingLeft: "20px", 
+    },
+  };
+
   return (
-    <div
-      style={{
-        margin: 0,
-        padding: 0,
-        overflow: "hidden",
-      }}
-      className="rounded-sm h-screen border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark"
-    >
-      <div className="flex h-screen flex-wrap items-center">
-        <div className="hidden w-full h-screen xl:block xl:w-1/2">
-          <div className="py-2 px-26 text-center">
-            <Link className="mb-5.5 inline-block" href="/">
-              <img
-                src="/new-espasyo.png"
-                alt="logo"
-                style={{
-                  borderRadius: "10px",
-                  width: "120px",
-                  height: "120px",
-                }}
-              />
-            </Link>
-            <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
-              Point of Sales & Inventory System
-            </h2>
-            <p className="2xl:px-20">
-              Fueling Smarter Operations at Espasyo Coffee through a Unified POS
-              and Inventory Solution.
-            </p>
-            <span className="mt-15 inline-block">
-              <LoginSVG />
-            </span>
+    <div className="min-h-screen w-full bg-[#FFFFFF]">
+      <div className="flex min-h-screen w-full">
+        <div className="relative hidden min-h-screen w-1/2 border-r-4 border-[#7F5100] xl:block">
+          <img
+            src="coffee_bg.jpg"
+            alt="Espasyo Coffee Interior"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/45 p-12">
+            <div className="rounded-2xl border border-white/20 bg-black/40 p-10 backdrop-blur-md">
+              <h2 className="mb-4 text-5xl font-bold leading-tight text-[#D3A970]">
+                Point of Sales & <br /> Inventory System
+              </h2>
+              <p className="text-xl leading-relaxed text-white/90">
+                Fueling Smarter Operations at Espasyo Coffee through a <br />
+                Unified POS and Inventory Solution.
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="w-full border-stroke dark:border-strokedark xl:w-1/2 xl:border-l-2">
-          <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-            <span className="mb-1.5 block font-medium">Welcome</span>
-            <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
-              Sign In to Espasyo Coffee | POS System
-            </h2>
-            <div className="mb-4">
-              <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Username
-              </label>
-              <div className="relative">
+  
+        <div className="flex min-h-screen w-full flex-col items-center justify-center px-4 py-12 sm:px-12.5 xl:w-1/2 xl:px-24">
+          <div className="w-full max-w-[450px]">
+            <div className="mb-10 text-center">
+              <Link href="/">
+                <img
+                  src="new-espasyo.png"
+                  alt="Espasyo Logo"
+                  className="mx-auto h-[150px] w-[150px] rounded-full object-contain drop-shadow-lg sm:h-[230px] sm:w-[230px]"
+                
+                />
+              </Link>
+              <h2 className="mt-6 text-xl font-bold text-gray-900 sm:text-2xl">
+                Espasyo Coffee | POS System
+              </h2>
+            </div>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Username Field */}
+              <div>
                 <TextField<LoginFormType>
                   data-testid="auth-username"
                   name="userName"
                   control={control}
-                  placeholder="(e.g., JohnDoe)"
-                  onBlur={() => clearErrors()}
+                  label="Username"
+                  placeholder="Enter username"
+                  type="text"
+                  fullWidth
+                  {...({ sx: inputStyle } as any)}
                 />
               </div>
-            </div>
 
-            <div className="mb-6">
-              <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Password
-              </label>
-              <div className="relative">
+              {/* Password Field */}
+            
                 <TextField<LoginFormType>
                   data-testid="auth-password"
                   name="password"
                   control={control}
+                  label="Password"
                   type="password"
+                  placeholder="Enter password"
                   onBlur={() => clearErrors()}
+                  {...({ sx: inputStyle } as any)}
                 />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center"></div>
+             
 
-              <div className="text-sm">
-                {/* <Link
-                  href={{
-                    pathname: "/",
-                  }}
-                  className="font-medium text-[#8B255B] text-[13px] hover:text-[#5e2855]"
-                >
-                  Forgot Password?
-                </Link> */}
-              </div>
-            </div>
-            <div className="mb-5">
+              {/* Login Button */}
               <Button
                 disabled={submitLoading}
                 loading={submitLoading}
                 variant="contained"
-                customActionKey="espasyo-sign-in-submission"
+                type={"submit" as any}
                 fullWidth
                 sx={{
-                  px: 4,
-                  py: 2,
-                  backgroundColor: "#0F2A71",
-                  borderRadius: "10px",
+                  py: 1.75,
+                  backgroundColor: "#7F5100",
+                  borderRadius: "12px", // Matching the rounded style of inputs
+                  fontSize: "1rem",
+                  fontWeight: "bold",
+                  textTransform: "none",
                   "&:hover": {
-                    backgroundColor: "#00173F",
+                    backgroundColor: "#603d00",
                   },
-                  mt: "15px",
                 }}
               >
-                <span className="font-ptSansNarrow font-bold text-[18px] lg:text-[20px] normal-case">
-                  Sign In
-                </span>
+                Sign In
               </Button>
-            </div>
+            </form>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+export default LoginForm;
