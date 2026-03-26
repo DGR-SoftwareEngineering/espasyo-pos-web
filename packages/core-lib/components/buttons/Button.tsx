@@ -91,16 +91,41 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           sx={{
             position: "relative",
             width: fullWidth ? "100%" : width,
-            minWidth: 140,
-            height: "fit-content",
-            borderRadius: 0,
-            fontWeight: "unset",
-            fontSize: "body1",
+            minWidth: 160,
+            height: 48,
+            borderRadius: 12,
+            fontWeight: 600,
+            fontSize: "0.95rem",
+            textTransform: "none",
+
+            boxShadow: "none",
+            backgroundImage: "none",
+
+            "&:hover": {
+              backgroundColor: "rgba(0,0,0,0.85)",
+             boxShadow: "none",
+            },
+
+            "&:active": {
+              backgroundColor: "rgba(0,0,0,0.75)",
+            },
+
+
+           "&.Mui-disabled": {
+             opacity: 0.45,
+             boxShadow: "none",
+             
+           },
+
+
             "& #loader": {
               position: "absolute",
               left: `calc(50% - ${LOADER_SIZE / 2}px)`,
               top: `calc(50% - ${LOADER_SIZE / 2}px)`,
             },
+
+            transition: "background-color 0.2s ease",
+
             ...sx,
           }}
           fullWidth={fullWidth}
