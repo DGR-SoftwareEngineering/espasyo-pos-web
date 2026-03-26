@@ -19,7 +19,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
     useForm<LoginFormType>({
       resolver: yupResolver(loginFormSchema),
       mode: "onChange",
-      defaultValues: { userName: '', password: '' },
+      defaultValues: loginFormSchema.getDefault(),
     });
 
   useFormFocusOnError<LoginFormType>(formState.errors, setFocus);
@@ -31,28 +31,10 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
     cb: () => handleSubmit(onSubmit)(),
   });
 
-  const inputStyle = {
-    borderRadius: "12px",
-    height: "56px",
-    backgroundColor: "#F9FAFB",
-    "& fieldset": {
-      borderRadius: "12px",
-      borderColor: "#E5E7EB",
-    },
-    "&:hover fieldset": {
-      borderColor: "#7F5100",
-    },
-    "&.Mui-focused fieldset": {
-      borderColor: "#7F5100",
-    },
-    "& .MuiInputBase-input": {
-      paddingLeft: "20px", 
-    },
-  };
-
   return (
     <div className="h-screen w-full overflow-hidden bg-[#FFFFFF]">
       <div className="flex h-full w-full">
+        {/* Left Side: Branding/Image */}
         <div className="relative hidden h-full w-1/2 border-r-4 border-[#7F5100] xl:block">
           <img
             src="espasyo_bg.jpg"
@@ -72,7 +54,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
           </div>
         </div>
 
-  
+
         <div className="flex h-full w-full flex-col items-center justify-center px-8 sm:px-12.5 xl:w-1/2 xl:px-24">
           <div className="w-full max-w-[450px]">
             <div className="mb-10 text-center">
@@ -81,7 +63,6 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                   src="new-espasyo.png"
                   alt="Espasyo Logo"
                   className="mx-auto h-[230px] w-[230px] rounded-full object-contain drop-shadow-lg"
-                
                 />
               </Link>
               <h2 className="mt-6 text-2xl font-bold text-gray-900">
@@ -89,57 +70,41 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
               </h2>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Username Field */}
-              <div>
-                <TextField<LoginFormType>
-                  data-testid="auth-username"
-                  name="userName"
-                  control={control}
-                  label="Username"
-                  placeholder="Enter username"
-                  type="text"
-                  fullWidth
-                  {...({ sx: inputStyle } as any)}
-                />
-              </div>
-
-              {/* Password Field */}
+            <div className="space-y-6">
             
-                <TextField<LoginFormType>
-                  data-testid="auth-password"
-                  name="password"
-                  control={control}
-                  label="Password"
-                  type="password"
-                  placeholder="Enter password"
-                  onBlur={() => clearErrors()}
-                  {...({ sx: inputStyle } as any)}
-                />
-             
+              <TextField<LoginFormType>
+                data-testid="auth-username"
+                name="userName"
+                control={control}
+                label="Username"
+                placeholder="Enter username"
+                fullWidth 
+                className="h-[56px] rounded-[12px] bg-[#F9FAFB]"
+                
+              />
 
-              {/* Login Button */}
+              <TextField<LoginFormType>
+                data-testid="auth-password"
+                name="password"
+                control={control}
+                label="Password"
+                placeholder="Enter password"
+                fullWidth
+                showPasswordToggle={true}
+                onBlur={() => clearErrors()}
+                className="h-[56px] rounded-[12px] bg-[#F9FAFB]"
+              />
+
               <Button
                 disabled={submitLoading}
                 loading={submitLoading}
+                onClick={() => handleSubmit(onSubmit)()}
                 variant="contained"
-                type={"submit" as any}
                 fullWidth
-                sx={{
-                  py: 1.75,
-                  backgroundColor: "#7F5100",
-                  borderRadius: "12px", // Matching the rounded style of inputs
-                  fontSize: "1rem",
-                  fontWeight: "bold",
-                  textTransform: "none",
-                  "&:hover": {
-                    backgroundColor: "#603d00",
-                  },
-                }}
               >
                 Sign In
               </Button>
-            </form>
+            </div>
           </div>
         </div>
       </div>

@@ -16,6 +16,8 @@ import { FieldError } from "./FieldError";
 interface Props<T extends object> {
   name: Path<T>;
   control: Control<T>;
+  fullWidth?: boolean;
+  loading?: boolean;
   defaultValue?: PathValue<T, Path<T>>;
   label?: string | JSX.Element | null;
   color?: OutlinedInputProps["color"];
@@ -25,6 +27,7 @@ interface Props<T extends object> {
   placeholder?: OutlinedInputProps["placeholder"];
   showErrorBelowLabel?: boolean;
   isLoading?: boolean;
+  showPasswordToggle?: boolean;
   "data-testid"?: string;
   onFocus?: OutlinedInputProps["onFocus"];
   onBlur?: OutlinedInputProps["onBlur"];
@@ -34,6 +37,7 @@ interface Props<T extends object> {
   rows?: number;
   tailwindDesign?: boolean;
   className?: string;
+  sx?: OutlinedInputProps["sx"];
 }
 
 export const TextField = <T extends FieldValues>({
