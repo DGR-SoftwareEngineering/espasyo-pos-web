@@ -91,6 +91,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                 placeholder="Enter password"
                 fullWidth
                 showPasswordToggle={true}
+                type="password"
                 onBlur={() => clearErrors()}
                 className="h-[56px] rounded-[12px] bg-[#F9FAFB]"
               />
