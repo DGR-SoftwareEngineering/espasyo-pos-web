@@ -4,6 +4,7 @@ import {
   StraightenOutlined,
   CategoryOutlined,
 } from "@mui/icons-material";
+import { ToggleOption } from "core-lib";
 
 export const STATUS_CONFIG = {
   1: { label: "Active", color: "success" as const, showIcon: false },
@@ -70,6 +71,11 @@ export const SUBMISSION_KEYS = {
   edit: "edit-product-submission",
 } as const;
 
+export const UNIT_CONVERSION_SUBMISSION_KEYS = {
+  create: "create-unit-conversion-submission",
+  edit: "edit-unit-conversion-submission",
+} as const;
+
 export const PLACEHOLDERS = {
   productName: "e.g., Arabica Coffee Beans, White Sugar, Fresh Milk",
   description: "Provide a detailed description of the product...",
@@ -77,3 +83,19 @@ export const PLACEHOLDERS = {
   reorderLevel: "e.g., 20",
   minimumStock: "e.g., 5",
 } as const;
+
+export const APPROXIMATE_OPTIONS: ToggleOption<boolean>[] = [
+  {
+    value: true,
+    label: "Approximate",
+    description:
+      "Conversion may vary (e.g., kg to pieces depends on item size)",
+    selectedColor: "warning",
+  },
+  {
+    value: false,
+    label: "Exact",
+    description: "Conversion is exact (e.g., kg to grams, liter to ml)",
+    selectedColor: "success",
+  },
+];

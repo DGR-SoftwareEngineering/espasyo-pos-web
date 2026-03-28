@@ -41,7 +41,13 @@ export const RecipeList: React.FC<Props> = ({
   const theme = useTheme();
 
   const calculateTotalCost = (recipe: RecipeResponse): number => {
-    return recipe.recipeItems.reduce((sum, item) => sum + item.cost, 0);
+    if (recipe.totalCost !== undefined && recipe.totalCost > 0) {
+      return recipe.totalCost;
+    }
+    return recipe.recipeItems.reduce(
+      (sum, item) => sum + (item.calculatedCost || item.cost),
+      0,
+    );
   };
 
   const tableData = useMemo((): TableRecipe[] => {

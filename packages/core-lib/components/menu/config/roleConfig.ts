@@ -19,7 +19,7 @@ const permissions: Record<UserRole, MenuPermissions> = {
   admin: {
     dashboard: { view: true, create: false, edit: false, delete: false },
     inventory: {
-      view: true,
+      view: false,
       create: true,
       edit: true,
       delete: true,
@@ -60,6 +60,7 @@ const permissions: Record<UserRole, MenuPermissions> = {
         list: { view: true, create: false, edit: true, delete: true },
       },
     },
+    unitConversion: { view: true, create: true, edit: true, delete: true },
     clients: { view: true, create: true, edit: true, delete: true },
     tasks: { view: true, create: true, edit: true, delete: true },
     settings: { view: true, create: true, edit: true, delete: true },

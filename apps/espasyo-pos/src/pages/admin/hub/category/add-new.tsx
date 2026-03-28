@@ -1,5 +1,5 @@
+import { CategoryFormBlock } from "core-lib";
 import React from "react";
-import { CategoryFormBlock } from "../../../../components/dashboard/components";
 const CategoryAddNew = () => {
   return <CategoryFormBlock />;
 };

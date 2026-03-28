@@ -1,5 +1,4 @@
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
-import AnalyticsRoundedIcon from "@mui/icons-material/AnalyticsRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
@@ -18,6 +17,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ListIcon from "@mui/icons-material/List";
 import ProductionQuantityLimitsIcon from "@mui/icons-material/ProductionQuantityLimits";
 import FoodBankIcon from "@mui/icons-material/FoodBank";
+import CycloneIcon from "@mui/icons-material/Cyclone";
 import { JSX } from "react";
 
 export interface MenuItem {
@@ -146,6 +146,13 @@ export const menuItems: MenuItem[] = [
         permissionKey: "recipe.nested.list",
       },
     ],
+  },
+  {
+    id: "unit-conversion",
+    text: "Unit Conversion",
+    icon: <CycloneIcon />,
+    path: "/admin/hub/unit-conversion",
+    permissionKey: "unitConversion",
   },
   {
     id: "sales",

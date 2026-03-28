@@ -23,9 +23,12 @@ import {
   InfoOutlined,
   InventoryOutlined,
   KitchenOutlined,
+  LocalShippingOutlined,
   RestaurantMenuOutlined,
+  ScaleOutlined,
+  SwapHorizOutlined,
 } from "@mui/icons-material";
-import { useProductForm } from "./hooks";
+import { useProductForm } from "../hooks";
 import { toSelectOptionsWithField } from "core-lib/business/array";
 import { formatPrice } from "core-lib/business/strings";
 import { PLACEHOLDERS } from "../constants";
@@ -72,10 +75,25 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     onSubmit,
   });
 
+  const productCategories = React.useMemo(() => {
+    return categories?.filter((cat) => cat.type === 2) ?? [];
+  }, [categories]);
+
   const categoryOptions = React.useMemo(
-    () => toSelectOptionsWithField(categories ?? [], "categoryID", "name"),
-    [categories],
+    () =>
+      toSelectOptionsWithField(productCategories ?? [], "categoryID", "name"),
+    [productCategories],
   );
+
+  const unitCategories = React.useMemo(() => {
+    return categories?.filter((cat) => cat.type === 3) ?? [];
+  }, [categories]);
+
+  const unitOptions = React.useMemo(
+    () => toSelectOptionsWithField(unitCategories ?? [], "categoryID", "name"),
+    [unitCategories],
+  );
+
   const selectedCategory = categories?.find(
     (c) => c.categoryID === watchedValues.categoryId,
   );
@@ -212,34 +230,126 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               </FormSection>
             </Grid>
           ) : (
-            <Grid size={{ xs: 12 }}>
-              <FormSection
-                icon={<KitchenOutlined color="success" />}
-                title="Ingredient Cost"
-              >
-                <Grid container spacing={3}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      name="costPrice"
-                      control={control}
-                      label="Cost Price"
-                      type="number"
-                      placeholder={PLACEHOLDERS.price}
-                      startAdornment={
-                        <InputAdornment position="start">₱</InputAdornment>
-                      }
-                    />
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ mt: 0.5, display: "block" }}
-                    >
-                      How much you pay for this ingredient
-                    </Typography>
+            <>
+              <Grid size={{ xs: 12 }}>
+                <FormSection
+                  icon={<LocalShippingOutlined color="warning" />}
+                  title="Purchase Information"
+                >
+                  <Grid container spacing={3}>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        name="costPrice"
+                        control={control}
+                        label="Total Purchase Cost"
+                        type="number"
+                        placeholder="2300"
+                        startAdornment={
+                          <InputAdornment position="start">₱</InputAdornment>
+                        }
+                      />
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 0.5, display: "block" }}
+                      >
+                        Total amount paid to supplier (e.g., ₱2,300 for 15 kg)
+                      </Typography>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        name="purchaseQuantity"
+                        control={control}
+                        label="Purchase Quantity"
+                        type="number"
+                        placeholder="15"
+                      />
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 0.5, display: "block" }}
+                      >
+                        How many units you bought (e.g., 15)
+                      </Typography>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <SelectField
+                        name="purchaseUnitID"
+                        control={control}
+                        options={unitOptions}
+                        label="Purchase Unit"
+                      />
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 0.5, display: "block" }}
+                      >
+                        Unit you buy from supplier (e.g., kg)
+                      </Typography>
+                    </Grid>
                   </Grid>
-                </Grid>
-              </FormSection>
-            </Grid>
+                </FormSection>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <FormSection
+                  icon={<ScaleOutlined color="info" />}
+                  title="Stock Information"
+                >
+                  <Grid container spacing={3}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <SelectField
+                        name="stockUnitID"
+                        control={control}
+                        options={unitOptions}
+                        label="Stock Unit"
+                      />
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 0.5, display: "block" }}
+                      >
+                        Unit you use in recipes and inventory (e.g., pcs)
+                      </Typography>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          bgcolor: (theme) =>
+                            alpha(theme.palette.info.main, 0.05),
+                          border: (theme) =>
+                            `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
+                          height: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <SwapHorizOutlined
+                          sx={{
+                            color: (theme) => theme.palette.info.main,
+                            mr: 1.5,
+                            fontSize: 20,
+                          }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Example:</strong> If you buy 15 kg for ₱2,300
+                          and use pieces in recipes:
+                          <br />• Purchase Unit: <strong>kg</strong>
+                          <br />• Stock Unit: <strong>pcs</strong>
+                          <br />• The system will automatically convert using
+                          unit conversion
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </FormSection>
+              </Grid>
+            </>
           )}
 
           <Grid size={{ xs: 12 }}>

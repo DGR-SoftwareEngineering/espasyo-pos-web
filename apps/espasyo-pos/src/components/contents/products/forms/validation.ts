@@ -70,6 +70,51 @@ export const productFormSchema = yup.object({
       otherwise: (schema) => schema.optional().nullable().default(null),
     }),
 
+  purchaseQuantity: yup
+    .number()
+    .transform((value) => {
+      if (value === undefined || value === null || value === "")
+        return undefined;
+      const parsed = Number(value);
+      return isNaN(parsed) ? undefined : parsed;
+    })
+    .when("isMenuItem", {
+      is: false,
+      then: (schema) =>
+        schema
+          .required("Purchase quantity is required for ingredients")
+          .typeError("Purchase quantity must be a number")
+          .positive("Purchase quantity must be greater than 0")
+          .max(1000000, "Purchase quantity cannot exceed 1,000,000"),
+      otherwise: (schema) => schema.optional().nullable().default(null),
+    }),
+
+  purchaseUnitID: yup.string().when("isMenuItem", {
+    is: false,
+    then: (schema) =>
+      schema
+        .required("Purchase unit is required for ingredients")
+        .test("is-valid-uuid", "Invalid purchase unit", (value) =>
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            value || "",
+          ),
+        ),
+    otherwise: (schema) => schema.optional().nullable().default(null),
+  }),
+
+  stockUnitID: yup.string().when("isMenuItem", {
+    is: false,
+    then: (schema) =>
+      schema
+        .required("Stock unit is required for ingredients")
+        .test("is-valid-uuid", "Invalid stock unit", (value) =>
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            value || "",
+          ),
+        ),
+    otherwise: (schema) => schema.optional().nullable().default(null),
+  }),
+
   isMenuItem: yup.boolean().required("Product type is required").default(true),
 
   categoryID: yup

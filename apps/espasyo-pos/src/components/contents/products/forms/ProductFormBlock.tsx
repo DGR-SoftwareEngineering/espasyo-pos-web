@@ -39,6 +39,9 @@ export const ProductFormBlock: React.FC = () => {
         payload.unitPrice = formData.unitPrice!;
       } else {
         payload.costPrice = formData.costPrice!;
+        payload.purchaseQuantity = formData.purchaseQuantity;
+        payload.purchaseUnitID = formData.purchaseUnitID!;
+        payload.stockUnitID = formData.stockUnitID!;
       }
 
       const result = await productCb.execute(payload);

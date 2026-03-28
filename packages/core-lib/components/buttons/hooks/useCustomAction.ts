@@ -17,18 +17,14 @@ export const useCustomAction = ({
 
   switch (actionName) {
     case "sign-in":
-      return useFormSubmissionAction();
     case "espasyo-sign-in-submission":
-      return useFormSubmissionAction();
     case "create-category-submission":
-      return useFormSubmissionAction();
     case "edit-category-submission":
-      return useFormSubmissionAction();
     case "create-product-submission":
-      return useFormSubmissionAction();
     case "edit-product-submission":
-      return useFormSubmissionAction();
     case "create-recipe-submission":
+    case "create-unit-conversion-submission":
+    case "edit-unit-conversion-submission":
       return useFormSubmissionAction();
   }
 };
