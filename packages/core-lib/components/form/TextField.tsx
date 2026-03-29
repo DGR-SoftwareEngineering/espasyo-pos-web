@@ -1,4 +1,11 @@
-import { Grid, OutlinedInputProps, Typography } from "@mui/material";
+import {
+  Grid,
+  OutlinedInputProps,
+  Typography,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { FocusEvent, JSX, useState } from "react";
 import {
   Control,
@@ -19,6 +26,7 @@ interface Props<T extends object> {
   defaultValue?: PathValue<T, Path<T>>;
   label?: string | JSX.Element | null;
   color?: OutlinedInputProps["color"];
+  fullWidth?: boolean;
   type?: OutlinedInputProps["type"];
   startAdornment?: OutlinedInputProps["startAdornment"];
   endAdornment?: OutlinedInputProps["endAdornment"];
@@ -34,6 +42,7 @@ interface Props<T extends object> {
   rows?: number;
   tailwindDesign?: boolean;
   className?: string;
+  showPasswordToggle?: boolean;
 }
 
 export const TextField = <T extends FieldValues>({
@@ -70,10 +79,21 @@ export const TextFieldComponent = <T extends object>({
   onEnter,
   isLoading,
   tailwindDesign = false,
+  type = "text",
+  showPasswordToggle = false,
   ...props
 }: ComponentProps<T>) => {
   const field = { ...rawField, inputRef: rawField?.ref, ref: undefined };
-  const [, setIsFocus] = useState(false); //add state if error tooltip is ready.
+  const [, setIsFocus] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const inputType = showPasswordToggle
+    ? showPassword
+      ? "text"
+      : "password"
+    : type;
+
+  const handleTogglePassword = () => setShowPassword(!showPassword);
 
   return (
     <Grid container spacing={2} direction="column">
@@ -93,6 +113,7 @@ export const TextFieldComponent = <T extends object>({
           </label>
         )}
       </Grid>
+
       <Grid>
         {isLoading ? (
           <InputLoader />
@@ -103,26 +124,59 @@ export const TextFieldComponent = <T extends object>({
                 {...props}
                 {...field}
                 disabled={props.disabled}
-                id={field?.name}
-                data-testid={props["data-testid"] || `${field.name}-field`}
+                id="{field?.name}"
+                type={inputType}
+                data-testid={props["data-testid"] || "${field.name}-field"}
                 error={!!fieldState?.error?.message}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 value={field.value ?? ""}
                 onKeyDown={(e) => e.key === "Enter" && onEnter && onEnter()}
+                endAdornment={
+                  showPasswordToggle && type === "password" ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleTogglePassword}
+                        edge="end"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ) : (
+                    props.endAdornment
+                  )
+                }
               />
             ) : (
-              <input
-                {...field}
-                {...props}
-                disabled={props.disabled}
-                id={field.name}
-                data-testid={props["data-testid"] || `${field.name}-field`}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                value={field.value ?? ""}
-                onKeyDown={(e) => e.key === "Enter" && onEnter && onEnter()}
-              />
+              <div className="relative">
+                <input
+                  {...field}
+                  {...props}
+                  disabled={props.disabled}
+                  id={field.name}
+                  type={inputType}
+                  data-testid={props["data-testid"] || "${field.name}-field"}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  value={field.value ?? ""}
+                  onKeyDown={(e) => e.key === "Enter" && onEnter && onEnter()}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    showPasswordToggle && type === "password" ? "pr-10" : ""
+                  }`}
+                />
+
+                {showPasswordToggle && type === "password" && (
+                  <button
+                    type="button"
+                    onClick={handleTogglePassword}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                )}
+              </div>
             )}
 
             {fieldState?.error?.message && !showErrorBelowLabel && (
@@ -138,6 +192,7 @@ export const TextFieldComponent = <T extends object>({
     e: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>,
   ) {
     setIsFocus(true);
+
     onFocus?.(e);
   }
 
@@ -145,6 +200,7 @@ export const TextFieldComponent = <T extends object>({
     e: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>,
   ) {
     setIsFocus(false);
+
     onBlur?.(e);
   }
 
@@ -165,6 +221,7 @@ export const TextFieldComponent = <T extends object>({
       return (
         <>
           {renderLabelFn()}
+
           <FieldError message={fieldState?.error?.message!} />
         </>
       );

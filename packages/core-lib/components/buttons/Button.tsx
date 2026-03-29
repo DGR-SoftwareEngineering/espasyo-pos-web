@@ -6,7 +6,6 @@ import {
 import React, { forwardRef } from "react";
 import { ButtonType } from "../../api/content/types/common";
 import { useCustomAction } from "./hooks/useCustomAction";
-
 export interface ButtonProps
   extends Pick<
     MuiButtonProps,
@@ -92,10 +91,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             position: "relative",
             width: fullWidth ? "100%" : width,
             minWidth: 140,
+            backgroundColor: "#7F5100",
+            borderRadius: "12px",
             height: "fit-content",
-            borderRadius: 0,
-            fontWeight: "unset",
+            fontWeight: "bold",
             fontSize: "body1",
+            "&:hover": {
+              backgroundColor: "#603d00",
+            },
             "& #loader": {
               position: "absolute",
               left: `calc(50% - ${LOADER_SIZE / 2}px)`,
