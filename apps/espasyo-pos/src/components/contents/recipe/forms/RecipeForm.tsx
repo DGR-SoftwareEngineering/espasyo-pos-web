@@ -78,7 +78,14 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     [ingredients],
   );
 
-  const unitOptions = useMemo(() => toUnitOptions(units), [units]);
+  const sanitizedUnits = useMemo(() => {
+    return units.filter((unit) => unit.type === 3);
+  }, [units]);
+
+  const unitOptions = useMemo(
+    () => toUnitOptions(sanitizedUnits),
+    [sanitizedUnits],
+  );
 
   const handleAddIngredient = () => {
     const values = addForm.getValues();

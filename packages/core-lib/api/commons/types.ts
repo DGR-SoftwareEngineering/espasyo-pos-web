@@ -19,10 +19,20 @@ export interface CreateCategoryParams {
 export interface CreateProductParams {
   name: string;
   description: string;
-  unitPrice?: number;
-  costPrice?: number;
   isMenuItem: boolean;
   categoryID?: string | null;
+  unitPrice?: number;
+  costPrice?: number;
+  purchaseQuantity?: number;
+  purchaseUnitID?: string;
+  stockUnitID?: string;
+}
+export interface CreateUnitConversionParams {
+  fromUnitID: string;
+  toUnitID: string;
+  conversionRate: number;
+  isApproximate: boolean;
+  notes?: string;
 }
 export interface CategoryDataList {
   categoryID: string;
@@ -79,12 +89,17 @@ export interface RecipeItemResponse {
   ingredientProductID: string;
   ingredientName: string;
   ingredientCost: number;
+  calculatedCost: number;
   quantityRequired: number;
   unitID: string;
   unitName: string;
   displayOrder: number;
   notes: string | null;
   cost: number;
+  purchaseQuantity?: number;
+  purchaseUnitName?: string;
+  stockUnitName?: string;
+  costPerStockUnit?: number;
 }
 
 export interface RecipeResponse {
@@ -92,6 +107,7 @@ export interface RecipeResponse {
   menuItemProductID: string;
   menuItemName: string;
   recipeItems: RecipeItemResponse[];
+  totalCost: number;
 }
 
 export interface PaginatedResponse<T> {

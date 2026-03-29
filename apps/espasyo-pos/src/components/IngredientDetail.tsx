@@ -15,6 +15,8 @@ import {
   InventoryOutlined,
   NotesOutlined,
   ScaleOutlined,
+  SwapHorizOutlined,
+  AttachMoneyOutlined,
 } from "@mui/icons-material";
 import { IDChip, MetricDisplay } from "core-lib";
 import { formatCurrency } from "core-lib/business/strings";
@@ -23,6 +25,14 @@ export const IngredientDetail: React.FC<{ ingredient: RecipeItemResponse }> = ({
   ingredient,
 }) => {
   const theme = useTheme();
+  const hasUnitConversion =
+    ingredient.purchaseUnitName &&
+    ingredient.stockUnitName &&
+    ingredient.purchaseUnitName !== ingredient.stockUnitName;
+
+  const hasBatchPurchase =
+    ingredient.ingredientCost !== ingredient.calculatedCost;
+  const displayCost = ingredient.calculatedCost || ingredient.cost;
 
   return (
     <Paper
@@ -53,9 +63,29 @@ export const IngredientDetail: React.FC<{ ingredient: RecipeItemResponse }> = ({
               <InventoryOutlined />
             </Avatar>
             <Box>
-              <Typography variant="subtitle2" fontWeight={600}>
-                {ingredient.ingredientName}
-              </Typography>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                flexWrap="wrap"
+              >
+                <Typography variant="subtitle2" fontWeight={600}>
+                  {ingredient.ingredientName}
+                </Typography>
+                {hasUnitConversion && (
+                  <Chip
+                    icon={<SwapHorizOutlined sx={{ fontSize: 14 }} />}
+                    label={`${ingredient.purchaseUnitName} → ${ingredient.stockUnitName}`}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: "0.625rem",
+                      bgcolor: alpha(theme.palette.info.main, 0.1),
+                      color: theme.palette.info.main,
+                    }}
+                  />
+                )}
+              </Stack>
               <IDChip id={ingredient.ingredientProductID} label="ID" />
             </Box>
           </Stack>
@@ -67,30 +97,80 @@ export const IngredientDetail: React.FC<{ ingredient: RecipeItemResponse }> = ({
             value={`${ingredient.quantityRequired} ${ingredient.unitName}`}
             icon={<ScaleOutlined />}
             iconColor={theme.palette.primary.main}
+            tooltip={`Recipe requires ${ingredient.quantityRequired} ${ingredient.unitName}`}
           />
+          {hasUnitConversion &&
+            ingredient.quantityRequired &&
+            ingredient.costPerStockUnit && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 0.5, display: "block" }}
+              >
+                ≈ {formatCurrency(ingredient.costPerStockUnit)} per{" "}
+                {ingredient.stockUnitName}
+              </Typography>
+            )}
         </Grid>
 
         <Grid size={{ xs: 6, sm: 2 }}>
           <Tooltip
-            title={`${ingredient.quantityRequired} × ${formatCurrency(ingredient.ingredientCost)}`}
+            title={
+              <Box>
+                <Typography variant="caption" display="block">
+                  <strong>Calculated Cost:</strong>{" "}
+                  {formatCurrency(displayCost)}
+                </Typography>
+                {hasBatchPurchase && (
+                  <Typography variant="caption" display="block">
+                    <strong>Original Cost:</strong>{" "}
+                    {formatCurrency(ingredient.ingredientCost)} total
+                  </Typography>
+                )}
+                {ingredient.purchaseQuantity && ingredient.purchaseUnitName && (
+                  <Typography variant="caption" display="block">
+                    <strong>Purchase:</strong> {ingredient.purchaseQuantity}{" "}
+                    {ingredient.purchaseUnitName} @{" "}
+                    {formatCurrency(ingredient.ingredientCost)} total
+                  </Typography>
+                )}
+                {ingredient.costPerStockUnit && (
+                  <Typography variant="caption" display="block">
+                    <strong>Cost per {ingredient.stockUnitName}:</strong>{" "}
+                    {formatCurrency(ingredient.costPerStockUnit)}
+                  </Typography>
+                )}
+              </Box>
+            }
             arrow
           >
             <div>
               <MetricDisplay
                 label="Cost"
-                value={formatCurrency(ingredient.cost)}
+                value={formatCurrency(displayCost)}
                 valueColor="success.main"
+                icon={<AttachMoneyOutlined />}
                 tooltip
               />
             </div>
           </Tooltip>
+          {hasBatchPurchase && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 0.5, display: "block" }}
+            >
+              <em>Calculated from batch purchase</em>
+            </Typography>
+          )}
         </Grid>
 
         <Grid size={{ xs: 6, sm: 2 }}>
           <MetricDisplay
             label="Unit Cost"
-            value={`${formatCurrency(ingredient.ingredientCost)}/${ingredient.unitName}`}
+            value={`${formatCurrency(displayCost / ingredient.quantityRequired)}/${ingredient.unitName}`}
             valueColor="text.secondary"
+            tooltip={`Cost per ${ingredient.unitName}`}
           />
         </Grid>
 
@@ -119,6 +199,43 @@ export const IngredientDetail: React.FC<{ ingredient: RecipeItemResponse }> = ({
           )}
         </Grid>
       </Grid>
+
+      {(ingredient.purchaseQuantity || hasUnitConversion) && (
+        <Box
+          sx={{
+            mt: 1.5,
+            pt: 1.5,
+            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          }}
+        >
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            flexWrap="wrap"
+          >
+            {ingredient.purchaseQuantity && ingredient.purchaseUnitName && (
+              <Typography variant="caption" color="text.secondary">
+                📦 Purchased: {ingredient.purchaseQuantity}{" "}
+                {ingredient.purchaseUnitName} at{" "}
+                {formatCurrency(ingredient.ingredientCost)} total
+              </Typography>
+            )}
+            {ingredient.costPerStockUnit && ingredient.stockUnitName && (
+              <Typography variant="caption" color="text.secondary">
+                💰 Cost per {ingredient.stockUnitName}:{" "}
+                {formatCurrency(ingredient.costPerStockUnit)}
+              </Typography>
+            )}
+            {hasUnitConversion && (
+              <Typography variant="caption" color="text.secondary">
+                🔄 Unit conversion applied: {ingredient.purchaseUnitName} →{" "}
+                {ingredient.stockUnitName}
+              </Typography>
+            )}
+          </Stack>
+        </Box>
+      )}
     </Paper>
   );
 };

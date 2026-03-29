@@ -1,10 +1,11 @@
 import React from "react";
-import { useTabsContext } from "../../core/contexts";
+import { useTabsContext } from "./TabsContextProvider";
 
 interface Props {
   index: number;
   id?: string;
   "aria-labelledby"?: string;
+  children?: React.ReactNode;
 }
 
 export const TabPanel: React.FC<React.PropsWithChildren<Props>> = ({
@@ -12,11 +13,11 @@ export const TabPanel: React.FC<React.PropsWithChildren<Props>> = ({
   index,
   ...other
 }) => {
-  const {} = useTabsContext();
+  const { activeTabIndex } = useTabsContext();
 
   return (
-    <div role="tabpanel" hidden={0 !== index} {...other}>
-      {children}
+    <div role="tabpanel" hidden={activeTabIndex !== index} {...other}>
+      {activeTabIndex === index && children}
     </div>
   );
 };

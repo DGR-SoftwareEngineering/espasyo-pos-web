@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import {
   ProductForm as ProductFormType,
   productFormSchema,
-} from "./validation";
+} from "../forms/validation";
 import { toNumeric } from "core-lib/business/number";
 import { SUBMISSION_KEYS } from "../constants";
 import { useBaseForm } from "core-lib/core/hooks/useBaseForm";
@@ -22,6 +22,9 @@ const defaultValues: ProductFormType = {
   costPrice: undefined,
   isMenuItem: true,
   categoryID: null,
+  purchaseQuantity: 0,
+  purchaseUnitID: "",
+  stockUnitID: "",
 };
 
 export const useProductForm = ({
@@ -51,6 +54,9 @@ export const useProductForm = ({
     costPrice: toNumeric(watch("costPrice")),
     categoryId: watch("categoryID"),
     isMenuItem: watch("isMenuItem"),
+    purchaseQuantity: toNumeric(watch("purchaseQuantity")),
+    purchaseUnitID: watch("purchaseUnitID"),
+    stockUnitID: watch("stockUnitID"),
   };
 
   useEffect(() => {

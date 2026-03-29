@@ -1,8 +1,7 @@
 import { Tab } from "./Tab";
 import { Tabs, SxProps } from "@mui/material";
 import React, { JSX } from "react";
-
-export type TabOption = { key: string; content: JSX.Element };
+import { TabOption } from "./types";
 
 interface Props {
   id?: string;

@@ -6,8 +6,8 @@ export const calculateIngredientStats = (
   totalCost: number,
   ingredientCount: number,
 ): IngredientStats => ({
-  min: Math.min(...items.map((item) => item.cost)),
-  max: Math.max(...items.map((item) => item.cost)),
+  min: Math.min(...items.map((item) => item.calculatedCost || item.cost)),
+  max: Math.max(...items.map((item) => item.calculatedCost || item.cost)),
   avg: totalCost / ingredientCount,
 });
 

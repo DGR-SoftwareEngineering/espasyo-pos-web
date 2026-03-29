@@ -5,6 +5,7 @@ import {
   CategoryListResponse,
   CreateCategoryParams,
   CreateProductParams,
+  CreateUnitConversionParams,
   ProductionCapacityResponse,
   ProductListResponse,
   RecipeListResponse,
@@ -33,14 +34,6 @@ export class CommonsApi {
     params: Record<string, any> = {},
   ) {
     return this.axios.get<T>(`${url}?${qs.stringify(params)}`);
-  }
-
-  public getAllCars(includes: string[]) {
-    const params = includes
-      .map((s) => `Includes=${encodeURIComponent(s)}`)
-      .join("&");
-    const path = `/vehicle-api/api/vehicle?${params}`;
-    return this.axios.get<ApiResponse<Car[]>>(path);
   }
 
   public getUserById() {
@@ -129,6 +122,13 @@ export class CommonsApi {
   public calculateMaxProduction(menuItemProductId: string) {
     return this.axios.get<ProductionCapacityResponse>(
       `/api/v1/product/recipe-api/recipe/calculate-max-production?menuItemProductId=${menuItemProductId}`,
+    );
+  }
+
+  public createUnitConversion(params: CreateUnitConversionParams) {
+    return this.axios.post<ApiResponse>(
+      `/api/v1/unit-api/unitconversion`,
+      params,
     );
   }
 }
