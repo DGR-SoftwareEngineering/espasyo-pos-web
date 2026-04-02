@@ -1,6 +1,7 @@
-import { Paper, Typography, Avatar } from "@mui/material";
+import { Typography, Avatar } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmojiEmotions, Whatshot, Star, Spa, Bolt } from "@mui/icons-material";
+import { Card } from "../../../../../../packages/core-lib/components/Card";
 
 const iconMap = { EmojiEmotions, Whatshot, Star, Spa, Bolt };
 
@@ -22,23 +23,22 @@ export const MotivationMessage = ({ message, isVisible }: Props) => {
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.5 }}
         >
-          <Paper
+          <Card
             sx={{
-              p: 2,
               mb: 3,
               bgcolor: "primary.main",
               color: "white",
-              borderRadius: 2,
               display: "inline-flex",
               alignItems: "center",
               gap: 2,
+              p: 2,
             }}
           >
             <Avatar sx={{ bgcolor: "transparent", color: "white" }}>
               <Icon />
             </Avatar>
             <Typography variant="h6">{message.text}</Typography>
-          </Paper>
+          </Card>
         </motion.div>
       )}
     </AnimatePresence>
