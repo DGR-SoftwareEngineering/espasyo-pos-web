@@ -218,13 +218,13 @@ export const RecipeListBlock: React.FC = () => {
 
   return (
     <Fade in timeout={500}>
-      <Box sx={{ width: "100%", p: 3 }}>
+      <Box sx={{ width: "80vw", p: 3, }}>
         <Paper
           elevation={0}
           sx={{
             p: 3,
             mb: 3,
-            borderRadius: 4,
+            borderRadius: 3,
             background: `linear-gradient(135deg, ${alpha(
               theme.palette.primary.main,
               0.03,
@@ -339,7 +339,7 @@ export const RecipeListBlock: React.FC = () => {
         <Paper
           elevation={0}
           sx={{
-            borderRadius: 4,
+            borderRadius: 3,
             border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
             overflow: "hidden",
             bgcolor: theme.palette.background.paper,

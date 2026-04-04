@@ -73,7 +73,7 @@ export const RecipeList: React.FC<Props> = ({
 
   const transformedHeaders = useMemo(() => {
     return TABLE_HEADERS.map((header) => ({
-      name: header.id,
+      name: header.label,
       label: header.label,
       align: header.align as "left" | "center" | "right" | undefined,
       width: header.width,
@@ -84,11 +84,7 @@ export const RecipeList: React.FC<Props> = ({
   return (
     <Box
       sx={{
-        width: "100%",
-        overflowX: "auto",
-        minWidth: "100%",
-      }}
-    >
+        width: "100%"}}>
       <DataTableV2
         data-testid="recipe-list-table"
         data={tableData}
@@ -107,12 +103,13 @@ export const RecipeList: React.FC<Props> = ({
               fontWeight: 700,
               fontSize: "0.875rem",
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
+              letterSpacing: "1px",
+              whiteSpace: "normal",
             },
           },
           headerCell: {
             cell: {
-              py: 2.5,
+              py: 2,
               backgroundColor: "transparent",
             },
             typography: {
