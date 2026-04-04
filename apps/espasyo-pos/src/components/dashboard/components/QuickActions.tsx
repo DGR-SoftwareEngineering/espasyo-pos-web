@@ -1,4 +1,4 @@
-import { Box, Typography, Grid } from "@mui/material";
+import { Box, Typography, Grid, Paper } from "@mui/material";
 import { Assessment, Inventory2, People, Settings } from "@mui/icons-material";
 import { Card } from "../../../../../../packages/core-lib/components/Card";
 
@@ -31,7 +31,7 @@ const actions = [
 
 export const QuickActions = () => {
   return (
-    <Card sx={{ p: 0 }}>
+    <Paper sx={{ p: 3, borderRadius: 3, height: "100%" }}>
       <Box sx={{ p: 3 }}>
         <Typography variant="h6" fontWeight={600} mb={2}>
           Admin Actions
@@ -75,6 +75,6 @@ export const QuickActions = () => {
           ))}
         </Grid>
       </Box>
-    </Card>
+    </Paper>
   );
 };

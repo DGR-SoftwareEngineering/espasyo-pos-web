@@ -31,11 +31,12 @@ import {
 } from "../../../components/dashboard/components";
 
 import SalesChart from "@/components/dashboard/components/SalesChart";
-import { DashboardCard } from "@/components/dashboard/components/DashboardCard";
 import {
   DataTableV2,
   DataTableHeader,
 } from "../../../../../../packages/core-lib/components/DataTableV2";
+
+import { Card } from "../../../../../../packages/core-lib/components/Card";
 
 const MotionFab = motion(Fab);
 
@@ -185,7 +186,7 @@ const DashboardHome = () => {
             </Box>
 
             {/* data table v2 */}
-            <DashboardCard>
+            <Card>
               <Divider sx={{ my: 2 }} />
 
               <Box
@@ -198,7 +199,7 @@ const DashboardHome = () => {
 
               <Box
                 sx={{
-                  mt: -3, // move the table
+                  mt: 1, // move the table
                   borderRadius: 2,
                   overflow: "hidden",
                   boxShadow: 1,
@@ -265,7 +266,7 @@ const DashboardHome = () => {
                   }}
                 />
               </Box>
-            </DashboardCard>
+            </Card>
           </Paper>
 
           {/* Right Side: Quick Actions + Achievements */}
