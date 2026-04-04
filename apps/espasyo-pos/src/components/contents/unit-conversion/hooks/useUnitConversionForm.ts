@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import {
   UnitConversionForm as UnitConversionFormType,
   unitConversionFormSchema,
-} from "../forms/unit-conversion/validation";
+} from "../forms/validation";
 import { toNumeric } from "core-lib/business";
-import { UNIT_CONVERSION_SUBMISSION_KEYS } from "../constants";
+import { SUBMISSION_KEYS } from "../constants";
 import { useBaseForm } from "core-lib/core/hooks/useBaseForm";
 
 interface Props {
@@ -30,9 +30,7 @@ export const useUnitConversionForm = ({
   isInDialog,
   onSubmit,
 }: Props) => {
-  const submissionKey = isEdit
-    ? UNIT_CONVERSION_SUBMISSION_KEYS.edit
-    : UNIT_CONVERSION_SUBMISSION_KEYS.create;
+  const submissionKey = isEdit ? SUBMISSION_KEYS.edit : SUBMISSION_KEYS.create;
 
   const form = useBaseForm<UnitConversionFormType>({
     schema: unitConversionFormSchema,

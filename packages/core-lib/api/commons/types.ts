@@ -145,6 +145,26 @@ export interface ProductionCapacity {
   totalCostMaxProduction: number;
 }
 
+export interface UnitConversion {
+  unitConversionID: string;
+  fromUnitID: string;
+  fromUnitName: string;
+  toUnitID: string;
+  toUnitName: string;
+  conversionRate: number;
+  isApproximate: boolean;
+  notes: string | null;
+  isActive: boolean;
+}
+
+export interface ConversionRateResponse {
+  rate: number;
+  message: string;
+}
+
+export type UnitConversionListResponse = ApiResponse<
+  PaginatedResponse<UnitConversion>
+>;
 export type ProductionCapacityResponse = ApiResponse<ProductionCapacity>;
 export type RecipeListResponse = ApiResponse<PaginatedResponse<RecipeResponse>>;
 export type UserInfoResponse = ApiResponse<UserInformations>;

@@ -1,9 +1,6 @@
 import { RecipeResponse } from "core-lib/api/commons/types";
-
-export const SUBMISSION_KEYS = {
-  create: "create-recipe-submission",
-  edit: "edit-recipe-submission",
-} as const;
+import { FeatureConfigBuilder } from "core-lib/core/types/constants/feature-config.builder";
+import { commonSortStrategies } from "core-lib/core/types/constants/base.constants";
 
 export const PLACEHOLDERS = {
   menuItem: "Select a menu item...",
@@ -14,90 +11,67 @@ export const PLACEHOLDERS = {
   notes: "Add any special instructions...",
 } as const;
 
-export const TABLE_HEADERS = [
-  {
-    id: "menuItemName",
-    label: "Recipe Details",
-    width: "35%",
-    sortable: true,
-    align: "left" as const,
-  },
-  {
-    id: "ingredientCount",
-    label: "Ingredients",
-    align: "center" as const,
-    width: "15%",
-    sortable: true,
-  },
-  {
-    id: "totalCost",
-    label: "Total Cost",
-    align: "center" as const,
-    width: "20%",
-    sortable: true,
-  },
-  {
-    id: "actions",
-    label: "Actions",
-    align: "right" as const,
-    width: "30%",
-    sortable: false,
-  },
-];
+const config = new FeatureConfigBuilder<RecipeResponse>("Recipe")
+  .setTableHeaders([
+    {
+      id: "menuItemName",
+      label: "Recipe Details",
+      width: "35%",
+      sortable: true,
+      align: "left",
+    },
+    {
+      id: "ingredientCount",
+      label: "Ingredients",
+      align: "center",
+      width: "15%",
+      sortable: true,
+    },
+    {
+      id: "totalCost",
+      label: "Total Cost",
+      align: "center",
+      width: "20%",
+      sortable: true,
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      align: "right",
+      width: "30%",
+      sortable: false,
+    },
+  ])
+  .setSortOptions([
+    { value: "name", label: "Recipe Name" },
+    { value: "ingredients", label: "Most Ingredients" },
+    { value: "cost", label: "Highest Cost" },
+    { value: "costLow", label: "Lowest Cost" },
+    { value: "newest", label: "Newest First" },
+    { value: "oldest", label: "Oldest First" },
+  ])
+  .setSortStrategies({
+    name: (a, b) => a.menuItemName.localeCompare(b.menuItemName),
+    ingredients: (a, b) => b.recipeItems.length - a.recipeItems.length,
+    cost: (a, b) => {
+      const costA = a.recipeItems.reduce((sum, item) => sum + item.cost, 0);
+      const costB = b.recipeItems.reduce((sum, item) => sum + item.cost, 0);
+      return costB - costA;
+    },
+    costLow: (a, b) => {
+      const costA = a.recipeItems.reduce((sum, item) => sum + item.cost, 0);
+      const costB = b.recipeItems.reduce((sum, item) => sum + item.cost, 0);
+      return costA - costB;
+    },
+    newest: commonSortStrategies.newest as any,
+    oldest: commonSortStrategies.oldest as any,
+  })
+  .build();
 
-export const DIALOG_TITLES = {
-  view: "View Recipe",
-  create: "Create New Recipe",
-  edit: "Edit Recipe",
-  delete: "Delete Recipe",
-} as const;
-
-export const DIALOG_TYPES = {
-  view: "RecipeView",
-  edit: "RecipeEdit",
-  delete: "RecipeDelete",
-} as const;
-
-export interface RecipeFilterState {
-  searchQuery: string;
-  sortBy: string;
-}
-
-//TODO: Transfer this to array.ts
-export function applyRecipeSorting(
-  filtered: RecipeResponse[],
-  filters: RecipeFilterState,
-) {
-  filtered.sort((a, b) => {
-    const costA = a.recipeItems.reduce((sum, item) => sum + item.cost, 0);
-    const costB = b.recipeItems.reduce((sum, item) => sum + item.cost, 0);
-    const ingredientCountA = a.recipeItems.length;
-    const ingredientCountB = b.recipeItems.length;
-    switch (filters.sortBy) {
-      case "name":
-        return a.menuItemName.localeCompare(b.menuItemName);
-      case "ingredients":
-        return ingredientCountB - ingredientCountA;
-      case "cost":
-        return costB - costA;
-      case "costLow":
-        return costA - costB;
-      case "newest":
-        return b.recipeID.localeCompare(a.recipeID);
-      case "oldest":
-        return a.recipeID.localeCompare(b.recipeID);
-      default:
-        return 0;
-    }
-  });
-  return filtered;
-}
-
-export const sortOptions = [
-  { value: "name", label: "Recipe Name" },
-  { value: "ingredients", label: "Most Ingredients" },
-  { value: "cost", label: "Highest Cost" },
-  { value: "costLow", label: "Lowest Cost" },
-  { value: "newest", label: "Newest First" },
-  { value: "oldest", label: "Oldest First" },
-];
+export const SUBMISSION_KEYS = config.SUBMISSION_KEYS;
+export const TABLE_HEADERS = config.TABLE_HEADERS;
+export const DIALOG_TITLES = config.DIALOG_TITLES;
+export const DIALOG_TYPES = config.DIALOG_TYPES;
+export const sortOptions = config.sortOptions;
+export const applyRecipeSorting = config.applySorting;
+export type RecipeFilterState = typeof config.FilterState;

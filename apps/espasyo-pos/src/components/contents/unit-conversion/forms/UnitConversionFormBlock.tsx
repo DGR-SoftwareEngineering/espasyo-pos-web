@@ -14,6 +14,7 @@ import {
   TabsHeaderDesktop,
   TabPanel,
 } from "core-lib";
+import { UnitConversionListBlock } from "../list/UnitConversionListBlock";
 
 export const UnitConversionFormBlock: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,7 @@ export const UnitConversionFormBlock: React.FC = () => {
         key: "unit_conversion_creation",
         label: "Unit Conversion Creation Form",
         content: (
+          //we can transfer this to higher level if we want to make it more cleaner.
           <UnitConversionForm
             submitLoading={loading || data.loading}
             resetForm={resetForm}
@@ -50,10 +52,10 @@ export const UnitConversionFormBlock: React.FC = () => {
       {
         key: "unit_conversion_list",
         label: "Unit Conversion List",
-        content: <>test</>,
+        content: <UnitConversionListBlock />,
       },
     ],
-    [categories],
+    [],
   );
 
   return (

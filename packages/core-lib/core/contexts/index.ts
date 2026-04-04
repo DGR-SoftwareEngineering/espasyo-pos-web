@@ -6,4 +6,3 @@ export * from "./NotificationsContext";
 export * from "./ToastContext";
 export * from "./FormSubmissionContext";
 export * from "./HeaderTitleContext";
-export * from "./TabsContext";
