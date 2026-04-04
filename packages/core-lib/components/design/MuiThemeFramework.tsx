@@ -7,7 +7,6 @@ import {
   HeaderTitleContextProvider,
   NotificationsContextProvider,
   PageLoaderContextProvider,
-  TabContextProvider,
   ToastContextProvider,
 } from "../../core/contexts";
 import { Toastify } from "../toast/Toastify";
@@ -49,22 +48,20 @@ export const MuiThemeFramework: React.FC<Props> = ({
                       flexDirection="column"
                     >
                       {/* set loading to false by default for now. */}
-                      <TabContextProvider>
-                        {isAuthenticated ? (
-                          <PermissionProvider roleName={role}>
-                            <MuiDashboard
-                              logout={logout}
-                              loading={loading}
-                              role={role}
-                              {...rest}
-                            >
-                              {children}
-                            </MuiDashboard>
-                          </PermissionProvider>
-                        ) : (
-                          <>{children}</>
-                        )}
-                      </TabContextProvider>
+                      {isAuthenticated ? (
+                        <PermissionProvider roleName={role}>
+                          <MuiDashboard
+                            logout={logout}
+                            loading={loading}
+                            role={role}
+                            {...rest}
+                          >
+                            {children}
+                          </MuiDashboard>
+                        </PermissionProvider>
+                      ) : (
+                        <>{children}</>
+                      )}
                     </Box>
                   </FormSubmissionContextProvider>
                 </NotificationsContextProvider>

@@ -11,6 +11,7 @@ import {
   RecipeListResponse,
   RecipeParams,
   RecipeResponse,
+  UnitConversionListResponse,
   UpdateRecipeParams,
   UserInfoResponse,
 } from "./types";
@@ -103,6 +104,12 @@ export class CommonsApi {
   public getRecipe() {
     return this.axios.get<RecipeListResponse>(
       `/api/v1/product/recipe-api/recipe?pageNumber=1&pageSize=10`, //static for now
+    );
+  }
+
+  public getUnitConversions(pageNumber: number = 1, pageSize: number = 10) {
+    return this.axios.get<UnitConversionListResponse>(
+      `/api/v1/unit-api/unitconversion?pageNumber=${pageNumber}&pageSize=${pageSize}`,
     );
   }
 

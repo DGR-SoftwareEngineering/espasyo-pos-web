@@ -1,6 +1,10 @@
 import React from "react";
 
-export type FormKey = "product-form" | "recipe-form" | "category-form";
+export type FormKey =
+  | "product-form"
+  | "recipe-form"
+  | "category-form"
+  | "unit-conversion-form";
 
 const formRegistry: Partial<Record<FormKey, React.ComponentType<any>>> = {};
 

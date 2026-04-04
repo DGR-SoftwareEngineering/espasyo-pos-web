@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Grid, CardContent, Box, alpha, Typography } from "@mui/material";
 import {
   Card,
@@ -18,10 +18,10 @@ import {
   NotesOutlined,
   HelpOutlineOutlined,
 } from "@mui/icons-material";
-import { useUnitConversionForm } from "../../hooks";
 import { toSelectOptionsWithField } from "core-lib/business/array";
-import { UnitConversionFormProps } from "../types";
-import { APPROXIMATE_OPTIONS } from "../../constants";
+import { useUnitConversionForm } from "../hooks/useUnitConversionForm";
+import { UnitConversionFormProps } from "./types";
+import { APPROXIMATE_OPTIONS } from "../constants";
 
 export const UnitConversionForm: React.FC<UnitConversionFormProps> = ({
   onSubmit,
