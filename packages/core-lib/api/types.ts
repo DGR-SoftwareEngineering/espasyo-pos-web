@@ -46,6 +46,18 @@ export type Car = {
   chassis: {
     type: string;
     serialNumber: string;
-  },
+  };
   vehicleID: string;
+};
+
+export interface ChartData {
+  chart: Nullable<{
+    numberSuffix: string;
+    numberPrefix: string;
+  }>;
+  chartType: string;
+  data: ChartDataItem[] | null;
+  datasets: { name: string; data: ChartDataItem[] }[] | null;
 }
+
+type ChartDataItem = { label: string; value: string };

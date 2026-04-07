@@ -34,3 +34,17 @@ export const toUnitOptions = (units: CategoryDataList[]) =>
   units
     .filter((u) => u.type === 3)
     .map((unit) => ({ value: unit.categoryID, label: unit.name }));
+
+export function findLongestArrayInArray<T extends Array<any>>(arr: T[]): T {
+  let longest = 0;
+  let longestArr: T = [] as unknown as T;
+
+  arr.forEach((item) => {
+    if (item.length > longest) {
+      longest = item.length;
+      longestArr = item;
+    }
+  });
+
+  return longestArr;
+}
