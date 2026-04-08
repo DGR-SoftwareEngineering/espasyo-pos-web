@@ -72,3 +72,7 @@ export function formatNumber(
 
   return num.toFixed(decimals);
 }
+
+export const average = (arr: number[]) =>
+  arr.reduce((p, c) => p + c, 0) / arr.length;
+export const sum = (arr: number[]) => arr.reduce((p, c) => p + c, 0);

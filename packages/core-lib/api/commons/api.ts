@@ -1,11 +1,13 @@
 import { AxiosInstance } from "axios";
 import qs from "query-string";
-import { ApiResponse, Car } from "../types";
+import { ApiResponse } from "../types";
 import {
   CategoryListResponse,
+  ChartDataResponse,
   CreateCategoryParams,
   CreateProductParams,
   CreateUnitConversionParams,
+  EndpointRegistryResponse,
   ProductionCapacityResponse,
   ProductListResponse,
   RecipeListResponse,
@@ -37,8 +39,18 @@ export class CommonsApi {
     return this.axios.get<T>(`${url}?${qs.stringify(params)}`);
   }
 
+  public chartData(url: string, key?: string) {
+    return this.axios.get<ChartDataResponse>(`${url}${key}`);
+  }
+
   public getUserById() {
     return this.ssrAxios.get<UserInfoResponse>(`/api/commons/get-user-info`);
+  }
+
+  public findEndpointByKey(key: string) {
+    return this.axios.get<EndpointRegistryResponse>(
+      `/api/v1/endpoint-api/endpointregistry/get-sourceurl-by-key?key=${key}`,
+    );
   }
 
   public async getRoleById(roleId?: string) {

@@ -13,32 +13,35 @@ import {
   Achievements,
 } from "../../../components/dashboard/components";
 import { motion } from "framer-motion";
+import { Card, useAuthContext } from "core-lib";
+import { useEffect, useState } from "react";
+import { EndpointRegistry } from "core-lib/api/commons/types";
 
 const MotionFab = motion(Fab);
 
 const DashboardHome = () => {
+  const [state, setState] = useState<EndpointRegistry>();
   const { timeOfDay } = useGreeting();
   const { currentMessage, isVisible, nextMessage } = useMotivation();
-  const { result, loading } = useApi((api) => api.commons.getUserById());
-  const roleID = result?.data?.response?.roleID;
-  const roleCb = useApi(
-    async (api) => {
-      if (!roleID) return null;
-      return await api.commons.getRoleById(roleID);
-    },
-    [roleID],
+  const { role, loading, initials } = useAuthContext();
+  const endpointByKey = useApi((api) =>
+    api.commons.findEndpointByKey("sales-2026"),
   );
 
-  const userData = result?.data?.response?.userInfo;
-  const role = roleCb.result?.data?.response?.roleName;
+  useEffect(() => {
+    if (endpointByKey.result?.data) {
+      setState(endpointByKey.result.data.response);
+    }
+  }, [endpointByKey.result]);
 
-  if (loading || roleCb.loading) return <Container>Loading...</Container>;
+  if (loading || endpointByKey.loading)
+    return <Container>Loading...</Container>;
 
   return (
     <Box sx={{ p: 3, minHeight: "100vh", bgcolor: "grey.50" }}>
       <Container maxWidth="xl">
         <WelcomeHeader
-          name={userData?.firstName || "Cashier"}
+          name={initials}
           role={role ?? "Staff"}
           timeOfDay={timeOfDay}
         />
@@ -56,7 +59,22 @@ const DashboardHome = () => {
           <QuickActions />
           <Achievements />
         </Box>
-
+        {/* Example usage @rendy... */}
+        {/* <Card
+          elevation={3}
+          text="Monthly Sales"
+          showChart={true}
+          chartProps={{
+            id: "sales-chart",
+            chartKey: state?.keyUrl || "",
+            sourceUrl: state?.sourceUrl || "",
+            xAxisName: "Months",
+            yAxisName: "Sales Amount",
+            hideLegend: false,
+            heightToWidthRatio: 0.6,
+            customColors: ["#FF6B6B", "#4ECDC4", "#45B7D1"],
+          }}
+        /> */}
         <Tooltip title="New motivation">
           <MotionFab
             color="primary"

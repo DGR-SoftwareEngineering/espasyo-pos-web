@@ -8,16 +8,33 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
+import { ChartBlock } from "./blocks/chart/ChartBlock";
 
 interface Props extends CardProps {
   elevation?: CardProps["elevation"];
-  actionsNode?: ReactNode; // this can be improved.
+  actionsNode?: ReactNode;
   hasActionsNode?: boolean;
   sx?: CardProps["sx"];
   hoverEffect?: boolean;
   imageSrc?: string;
   text?: string;
   icon?: React.ReactElement;
+  showChart?: boolean;
+  chartProps?: {
+    id: string;
+    chartKey: string;
+    sourceUrl?: string;
+    type?: string;
+    hideLegend?: boolean;
+    xAxisName?: string;
+    yAxisName?: string;
+    fullHeight?: boolean;
+    heightToWidthRatio?: number;
+    customColors?: string[];
+    defaultColors?: string[];
+    lightLoader?: boolean;
+    labelLengthLimit?: number;
+  };
 }
 
 export const Card: React.FC<React.PropsWithChildren<Props>> = ({
@@ -29,6 +46,8 @@ export const Card: React.FC<React.PropsWithChildren<Props>> = ({
   imageSrc,
   text,
   icon,
+  showChart = false,
+  chartProps,
   ...rest
 }) => {
   const CardComponent = hoverEffect ? StyledCard : MuiCard;
@@ -57,6 +76,27 @@ export const Card: React.FC<React.PropsWithChildren<Props>> = ({
             {text}
           </Typography>
         )}
+
+        {showChart && chartProps && (
+          <div style={{ marginTop: "16px", width: "100%" }}>
+            <ChartBlock
+              id={chartProps.id}
+              chartKey={chartProps.chartKey}
+              sourceUrl={chartProps.sourceUrl}
+              type={chartProps.type}
+              hideLegend={chartProps.hideLegend}
+              xAxisName={chartProps.xAxisName}
+              yAxisName={chartProps.yAxisName}
+              fullHeight={chartProps.fullHeight}
+              heightToWidthRatio={chartProps.heightToWidthRatio}
+              customColors={chartProps.customColors}
+              defaultColors={chartProps.defaultColors}
+              lightLoader={chartProps.lightLoader}
+              labelLengthLimit={chartProps.labelLengthLimit}
+            />
+          </div>
+        )}
+
         {children}
       </CardContent>
       {actionsNode && <CardActions>{actionsNode}</CardActions>}

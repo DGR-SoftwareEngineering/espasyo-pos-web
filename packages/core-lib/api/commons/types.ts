@@ -1,4 +1,4 @@
-import { ApiResponse } from "../types";
+import { ApiResponse, ChartData } from "../types";
 
 export interface UserInformations {
   roleID: string;
@@ -162,11 +162,20 @@ export interface ConversionRateResponse {
   message: string;
 }
 
+export interface EndpointRegistry {
+  endpointId: string;
+  keyUrl: string;
+  sourceUrl: string;
+  isActive: boolean;
+}
+
 export type UnitConversionListResponse = ApiResponse<
   PaginatedResponse<UnitConversion>
 >;
+export type EndpointRegistryResponse = ApiResponse<EndpointRegistry>;
 export type ProductionCapacityResponse = ApiResponse<ProductionCapacity>;
 export type RecipeListResponse = ApiResponse<PaginatedResponse<RecipeResponse>>;
 export type UserInfoResponse = ApiResponse<UserInformations>;
 export type CategoryListResponse = ApiResponse<CategoryDataList[]>;
 export type ProductListResponse = ApiResponse<ProductDataList[]>;
+export type ChartDataResponse = ApiResponse<ChartData>;
