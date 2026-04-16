@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
+import { Link } from 'core-lib/components';
 
 const Custom404 = () => {
   return (
@@ -48,13 +48,13 @@ const Custom404 = () => {
             <div className="w-16 h-1 bg-amber-400 mx-auto mb-6 rounded-full" />
 
             <p className="text-stone-200 text-lg mb-10 leading-relaxed font-medium">
-              We're sorry, the page you're looking for could not be found. 
-              Please go back to the homepage.
+              We're sorry, the page you're looking for could not be found.
+              Please go back to the login page.
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link href="/" className="px-10 py-4 bg-amber-400 text-stone-950 font-bold rounded-full shadow-lg shadow-amber-950/20">
-                Return Home
+                Return to Login
               </Link>
             </div>
           </div>
