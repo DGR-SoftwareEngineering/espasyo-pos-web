@@ -14,7 +14,9 @@ import {
   RecipeParams,
   RecipeResponse,
   UnitConversionListResponse,
+  UnitConversionResponse,
   UpdateRecipeParams,
+  UpdateUnitConversionParams,
   UserInfoResponse,
 } from "./types";
 
@@ -150,4 +152,16 @@ export class CommonsApi {
       params,
     );
   }
+  public updateUnitConversion(params: UpdateUnitConversionParams){
+    return this.axios.put<ApiResponse<UnitConversionResponse>>(
+      `api/v1/unit-api/unitconversion`,
+      params,
+    );
+    }
+    public async DeleteUnitConversion(deleteId: string){
+      return await this.axios.delete<ApiResponse>(
+          `/api/v1/unit-api/unitconversion/${deleteId}`,
+      );
+    }
+  
 }

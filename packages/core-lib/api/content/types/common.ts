@@ -3,6 +3,7 @@ import {
   ProductDataList,
   ProductionCapacity,
   RecipeResponse,
+  UnitConversion,
 } from "../../commons/types";
 
 export type CMSValue = { elementType?: string | { [key: string]: string } };
@@ -123,6 +124,11 @@ export type DialogDataType = {
   RecipeEdit: RecipeResponse;
   RecipeDelete: RecipeResponse;
   RecipeCreate: undefined;
+
+  UnitConversionView: UnitConversion;
+  UnitConversionEdit: UnitConversion;
+  UnitConversionDelete: UnitConversion;
+  UnitConversionCreate: undefined;
 };
 
 // Dialog content type as a union

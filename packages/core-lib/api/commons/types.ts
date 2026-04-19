@@ -27,13 +27,7 @@ export interface CreateProductParams {
   purchaseUnitID?: string;
   stockUnitID?: string;
 }
-export interface CreateUnitConversionParams {
-  fromUnitID: string;
-  toUnitID: string;
-  conversionRate: number;
-  isApproximate: boolean;
-  notes?: string;
-}
+
 export interface CategoryDataList {
   categoryID: string;
   name: string;
@@ -144,8 +138,14 @@ export interface ProductionCapacity {
   totalCostPerUnit: number;
   totalCostMaxProduction: number;
 }
-
-export interface UnitConversion {
+export interface CreateUnitConversionParams {
+  fromUnitID: string;
+  toUnitID: string;
+  conversionRate: number;
+  isApproximate: boolean;
+  notes?: string | null;
+}
+export interface UnitConversionResponse {
   unitConversionID: string;
   fromUnitID: string;
   fromUnitName: string;
@@ -157,9 +157,23 @@ export interface UnitConversion {
   isActive: boolean;
 }
 
+
+export interface UpdateUnitConversionParams {
+  unitConversionID: string;
+  fromUnitID: string;
+  toUnitID: string;
+  conversionRate: number;
+  isApproximate: boolean;
+  notes: string | null;
+}
+
 export interface ConversionRateResponse {
   rate: number;
   message: string;
+}
+
+export interface DeleteUnitConversionParams{
+  unitConversionID: string;
 }
 
 export interface EndpointRegistry {
@@ -170,7 +184,7 @@ export interface EndpointRegistry {
 }
 
 export type UnitConversionListResponse = ApiResponse<
-  PaginatedResponse<UnitConversion>
+  PaginatedResponse<UnitConversionResponse>
 >;
 export type EndpointRegistryResponse = ApiResponse<EndpointRegistry>;
 export type ProductionCapacityResponse = ApiResponse<ProductionCapacity>;

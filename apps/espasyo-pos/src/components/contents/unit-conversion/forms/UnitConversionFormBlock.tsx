@@ -30,10 +30,11 @@ export const UnitConversionFormBlock: React.FC = () => {
   );
 
   useEffect(() => {
-    setCategories(data.result?.data.response ?? []);
-  }, [data.result?.data.response]);
+    setCategories(data.result?.data?.response ?? []);
+  }, [data.result?.data?.response]);
 
-  const tabs = useMemo<Array<TabOption>>(
+  
+    const tabs = useMemo<Array<TabOption>>(
     () => [
       {
         key: "unit_conversion_creation",
@@ -55,7 +56,7 @@ export const UnitConversionFormBlock: React.FC = () => {
         content: <UnitConversionListBlock />,
       },
     ],
-    [],
+    [loading, data.loading, resetForm, categories],
   );
 
   return (

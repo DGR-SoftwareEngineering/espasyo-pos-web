@@ -17,15 +17,15 @@ import {
   WarningAmberOutlined,
   CheckCircleOutline,
 } from "@mui/icons-material";
-import { UnitConversion } from "core-lib/api/commons/types";
+import { UnitConversionResponse } from "core-lib/api/commons/types";
 import { BaseTableRow, ActionButtons, IDChip, MetricDisplay } from "core-lib";
 import { formatNumber } from "core-lib/business";
 
 interface Props {
-  row: UnitConversion;
-  onView: (conversion: UnitConversion) => void;
-  onEdit: (conversion: UnitConversion) => void;
-  onDelete: (conversion: UnitConversion) => void;
+  row: UnitConversionResponse;
+  onView: (conversion: UnitConversionResponse) => void;
+  onEdit: (conversion: UnitConversionResponse) => void;
+  onDelete: (conversion: UnitConversionResponse) => void;
   isSelectable?: boolean;
   selectedRowKey?: string | number;
   onSelect?: (rowKey: string | number) => void;

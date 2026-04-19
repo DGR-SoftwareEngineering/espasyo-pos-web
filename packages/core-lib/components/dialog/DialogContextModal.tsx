@@ -13,6 +13,7 @@ import {
   ProductDataList,
   ProductionCapacity,
   RecipeResponse,
+  UnitConversionResponse,
 } from "../../api/commons/types";
 import {
   ProductViewDialogContent,
@@ -24,6 +25,12 @@ import {
   RecipeDeleteDialogContent,
   RecipeEditDialogContent,
 } from "./contents/recipe";
+
+import {
+  UnitConversionDeleteDialog,
+  UnitConversionEditDialog,
+  UnitConversionViewDialog,
+} from "./contents/unitconversion"
 
 interface Props {
   dialogFormType?: DialogContentType;
@@ -120,5 +127,29 @@ export const DialogContextModal: React.FC<Props> = ({
 
     default:
       return null;
+    
+    case "UnitConversionView":
+    return(
+      <UnitConversionViewDialog
+      conversion={dialogData as UnitConversionResponse}
+      />
+    );
+    case "UnitConversionEdit":
+      return(
+        <UnitConversionEditDialog
+        conversion={dialogData as UnitConversionResponse}
+        onSuccess={onSuccess!}
+        onClose={onClose!}
+        />
+      );
+    case "UnitConversionDelete":
+      return(
+        <UnitConversionDeleteDialog
+        conversion={dialogData as UnitConversionResponse}
+        onSuccess={onSuccess!}
+        onClose={onClose!}
+        />
+
+      );
   }
 };

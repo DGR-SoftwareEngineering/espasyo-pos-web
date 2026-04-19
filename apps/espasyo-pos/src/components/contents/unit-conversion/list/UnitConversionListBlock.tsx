@@ -35,11 +35,11 @@ import {
   sortOptions,
   UnitConversionFilterState,
 } from "../constants";
-import { UnitConversion } from "core-lib/api/commons/types";
+import { UnitConversionResponse } from "core-lib/api/commons/types";
 import { useUnitConversionStats } from "../hooks/useUnitConversionStats";
 import { UnitConversionForm } from "../forms/UnitConversionForm";
 import { formatNumber } from "core-lib/business";
-
+import { DialogContentType } from "core-lib/api/content/types/common";
 export const UnitConversionListBlock: React.FC = () => {
   const theme = useTheme();
   const { openDialog } = useDialogContext();
@@ -49,15 +49,16 @@ export const UnitConversionListBlock: React.FC = () => {
     searchQuery: "",
     sortBy: "fromUnit",
   });
-
+  const [refreshKey, setRefreshKey] = useState(0);
   registerForm("unit-conversion-form", UnitConversionForm);
 
   const data = useApi((api) =>
     api.commons.getUnitConversions(pageNumber, pageSize),
+  [pageNumber, pageSize, refreshKey]
   );
   const response = data.result?.data.response;
 
-  const conversions = useMemo((): UnitConversion[] => {
+  const conversions = useMemo((): UnitConversionResponse[] => {
     return response?.items ?? [];
   }, [response]);
 
@@ -159,7 +160,18 @@ export const UnitConversionListBlock: React.FC = () => {
             icon={<SwapHorizOutlined sx={{ fontSize: 28 }} />}
             actionButton={{
               label: "New Conversion",
-              onClick: () => {},
+              onClick: () => {
+                console.log("Create button clicked")
+                openDialog({
+                  dialogContentType: DIALOG_TYPES.create as DialogContentType,
+                  title: DIALOG_TITLES.create,
+                  data: undefined,
+                  onSuccess: () => {
+                    setRefreshKey((prev) => prev + 1);
+
+                  },
+                });
+              },
               variant: "contained",
               color: "primary",
             }}
@@ -283,9 +295,34 @@ export const UnitConversionListBlock: React.FC = () => {
             pagination={pagination}
             onNextPage={handleNextPage}
             onPreviousPage={handlePreviousPage}
-            onView={() => {}}
-            onEdit={() => {}}
-            onDelete={() => {}}
+            onView={(row) => {
+              openDialog({
+                dialogContentType: DIALOG_TYPES.view as DialogContentType,
+                title: DIALOG_TITLES.view,
+                data: row,
+              });
+            }}
+            onEdit={(row) => {
+              openDialog({
+               dialogContentType: DIALOG_TYPES.edit as DialogContentType,
+                title: DIALOG_TITLES.edit,
+                data: row,
+                onSuccess: () => {
+                  setRefreshKey((prev) => prev + 1);
+                },
+              });
+            }}
+            onDelete={(row) => {
+              openDialog({
+                dialogContentType: DIALOG_TYPES.delete as DialogContentType,
+                title: DIALOG_TITLES.delete,
+                data: row,
+                onSuccess: () => {
+                  setRefreshKey((prev) => prev + 1);
+                  data.execute();
+                }
+              });
+            }}
           />
         </Paper>
 
