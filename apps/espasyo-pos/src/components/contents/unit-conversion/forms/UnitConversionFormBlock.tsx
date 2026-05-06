@@ -56,7 +56,7 @@ export const UnitConversionFormBlock: React.FC = () => {
         content: <UnitConversionListBlock />,
       },
     ],
-    [loading, data.loading, resetForm, categories],
+[],
   );
 
   return (
@@ -104,7 +104,6 @@ export const UnitConversionFormBlock: React.FC = () => {
         );
       }
     } catch (error) {
-      console.error("Error creating unit conversion:", error);
       showToast("Failed to create unit conversion", "error");
     } finally {
       setLoading(false);

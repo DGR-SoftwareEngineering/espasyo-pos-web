@@ -11,7 +11,7 @@ export const PLACEHOLDERS = {
   notes: "Add any special instructions...",
 } as const;
 
-const config = new FeatureConfigBuilder<RecipeResponse>("Recipe")
+const config = new FeatureConfigBuilder<RecipeResponse, "Recipe">("Recipe")
   .setTableHeaders([
     {
       id: "menuItemName",

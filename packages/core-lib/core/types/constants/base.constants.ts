@@ -38,7 +38,9 @@ export const createDialogTitles = (featureName: string) =>
     delete: `Delete ${featureName}`,
   }) as const;
 
-export const createDialogTypes = (featureName: string) =>
+export const createDialogTypes = <TFeatuerName extends string>( 
+  featureName: TFeatuerName,
+) =>
   ({
     view: `${featureName}View`,
     edit: `${featureName}Edit`,

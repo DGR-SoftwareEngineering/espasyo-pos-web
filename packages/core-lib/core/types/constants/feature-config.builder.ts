@@ -17,10 +17,10 @@ export interface FeatureConfig<T = any> {
   customConstants?: Record<string, any>;
 }
 
-export class FeatureConfigBuilder<T> {
+export class FeatureConfigBuilder<T, TFeatuerName extends string = string> {
   private config: Partial<FeatureConfig<T>> = {};
 
-  constructor(private featureName: string) {}
+  constructor(private featureName: TFeatuerName) {}
 
   setTableHeaders(headers: TableHeader[]) {
     this.config.tableHeaders = headers;
@@ -55,7 +55,7 @@ export class FeatureConfigBuilder<T> {
         featureName.toLowerCase().replace(/\s/g, "-"),
       ),
       DIALOG_TITLES: createDialogTitles(featureName),
-      DIALOG_TYPES: createDialogTypes(featureName.replace(/\s/g, "")),
+      DIALOG_TYPES: createDialogTypes(featureName),
 
       TABLE_HEADERS: this.config.tableHeaders || [],
       sortOptions: this.config.sortOptions || [],

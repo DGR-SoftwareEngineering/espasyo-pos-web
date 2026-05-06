@@ -1,5 +1,5 @@
 import { ToggleOption } from "core-lib";
-import { UnitConversion } from "core-lib/api/commons/types";
+import { UnitConversionResponse } from "core-lib/api/commons/types";
 import { FeatureConfigBuilder } from "core-lib/core/types/constants/feature-config.builder";
 import { commonSortStrategies } from "core-lib/core/types/constants/base.constants";
 
@@ -19,7 +19,7 @@ export const APPROXIMATE_OPTIONS: ToggleOption<boolean>[] = [
   },
 ];
 
-const config = new FeatureConfigBuilder<UnitConversion>("Unit Conversion")
+const config = new FeatureConfigBuilder<UnitConversionResponse, "UnitConversion">("UnitConversion")
   .setTableHeaders([
     {
       id: "conversion",

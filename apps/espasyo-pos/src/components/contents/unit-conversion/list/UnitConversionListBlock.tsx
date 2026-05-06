@@ -137,6 +137,34 @@ export const UnitConversionListBlock: React.FC = () => {
     setPageNumber(1);
   }, []);
 
+  const handleView = (row: UnitConversionResponse) => {
+    openDialog({
+      dialogContentType: DIALOG_TYPES.view,
+      title: DIALOG_TITLES.view,
+      data: row,
+    });
+  };
+  const handleEdit = (row: UnitConversionResponse) => {
+    openDialog({
+      dialogContentType: DIALOG_TYPES.edit,
+      title: DIALOG_TITLES.edit,
+      data: row,
+      onSuccess: () => {
+        setRefreshKey((prev) => prev + 1);
+      },
+    });
+  };
+  const handleDelete = (row: UnitConversionResponse) => {
+    openDialog({
+      dialogContentType: DIALOG_TYPES.delete,
+      title: DIALOG_TITLES.delete,
+      data: row,
+      onSuccess: () => {
+        setRefreshKey((prev) => prev + 1);
+      },
+    });
+  };
+
   return (
     <Fade in timeout={500}>
       <Box sx={{ width: "100%", p: 3 }}>
@@ -161,7 +189,6 @@ export const UnitConversionListBlock: React.FC = () => {
             actionButton={{
               label: "New Conversion",
               onClick: () => {
-                console.log("Create button clicked")
                 openDialog({
                   dialogContentType: DIALOG_TYPES.create as DialogContentType,
                   title: DIALOG_TITLES.create,
@@ -295,34 +322,9 @@ export const UnitConversionListBlock: React.FC = () => {
             pagination={pagination}
             onNextPage={handleNextPage}
             onPreviousPage={handlePreviousPage}
-            onView={(row) => {
-              openDialog({
-                dialogContentType: DIALOG_TYPES.view as DialogContentType,
-                title: DIALOG_TITLES.view,
-                data: row,
-              });
-            }}
-            onEdit={(row) => {
-              openDialog({
-               dialogContentType: DIALOG_TYPES.edit as DialogContentType,
-                title: DIALOG_TITLES.edit,
-                data: row,
-                onSuccess: () => {
-                  setRefreshKey((prev) => prev + 1);
-                },
-              });
-            }}
-            onDelete={(row) => {
-              openDialog({
-                dialogContentType: DIALOG_TYPES.delete as DialogContentType,
-                title: DIALOG_TITLES.delete,
-                data: row,
-                onSuccess: () => {
-                  setRefreshKey((prev) => prev + 1);
-                  data.execute();
-                }
-              });
-            }}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         </Paper>
 

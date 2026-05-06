@@ -53,7 +53,7 @@ export const PLACEHOLDERS = {
   minimumStock: "e.g., 5",
 } as const;
 
-const config = new FeatureConfigBuilder<ProductDataList>("Product")
+const config = new FeatureConfigBuilder<ProductDataList, "Product">("Product")
   .setTableHeaders([
     {
       id: "name",

@@ -125,9 +125,7 @@ export const DialogContextModal: React.FC<Props> = ({
       // You'll create this later
       return <div>Product Create Form (Coming Soon)</div>;
 
-    default:
-      return null;
-    
+    //Unit Conversion Dialog
     case "UnitConversionView":
     return(
       <UnitConversionViewDialog
@@ -151,5 +149,7 @@ export const DialogContextModal: React.FC<Props> = ({
         />
 
       );
+      default:
+      return null;
   }
 };

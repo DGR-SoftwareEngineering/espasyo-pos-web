@@ -29,8 +29,6 @@ export const UnitConversionDeleteDialog: React.FC<{
             setLoading(true);
 
             const result = await deleteCb.execute(conversion.unitConversionID);
-            console.log("Delete result", result);
-            console.log("Deleting ID:", conversion.unitConversionID);
 
             if (result?.data?.success){
                 showToast("Unit conversion deleted successfully", "success");
@@ -44,7 +42,6 @@ export const UnitConversionDeleteDialog: React.FC<{
                 );
             }
         } catch (error: any) {
-            console.error("Error deleting unit conversion:", "error");
             showToast(
                 error?.response?.data?.message ??
                 (error?.response?.data?.errors as string[] | undefined)?.[0] ??
