@@ -42,10 +42,11 @@ export const MuiDashboard: React.FC<React.PropsWithChildren<Props>> = ({
           })}
         >
           <Stack
+            //enable full width here to allow content to use the full width of the page. The ContentArea component will handle the maxWidth and centering.
             spacing={2}
             sx={{
-              alignItems: "center",
-              mx: 3,
+              width: "100%",
+              px: 3,
               pb: 5,
               mt: { xs: 8, md: 0 },
             }}
