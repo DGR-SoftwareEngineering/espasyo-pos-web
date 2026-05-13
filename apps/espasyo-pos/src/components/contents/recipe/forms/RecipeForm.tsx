@@ -28,10 +28,7 @@ import {
 import { useFieldArray } from "react-hook-form";
 import { RecipeFormProps } from "./types";
 import { useRecipeForm, useIngredientForm } from "../hooks";
-import {
-  toSelectOptionsWithField,
-  toUnitOptions,
-} from "core-lib/business/array";
+import { toSelectOptionsWithField } from "core-lib/business/array";
 import { IngredientAddForm, IngredientListItem } from "../../../../components";
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({
@@ -78,13 +75,13 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     [ingredients],
   );
 
-  const sanitizedUnits = useMemo(() => {
-    return units.filter((unit) => unit.type === 3);
-  }, [units]);
-
   const unitOptions = useMemo(
-    () => toUnitOptions(sanitizedUnits),
-    [sanitizedUnits],
+    () =>
+      toSelectOptionsWithField(units ?? [], "unitID", "name").map((opt) => ({
+        value: opt.value,
+        label: opt.label,
+      })),
+    [units],
   );
 
   const handleAddIngredient = () => {
@@ -111,9 +108,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
 
   const handleFormSubmit = handleSubmit(onSubmit);
   const handleButtonClick = () => {
-    if (isValid && (isDirty || isEdit)) {
-      handleFormSubmit();
-    }
+    handleFormSubmit();
   };
 
   return (

@@ -104,9 +104,7 @@ export const CategoryForm: React.FC<Props> = ({
   }
 
   const handleButtonClick = () => {
-    if (formState.isValid && (formState.isDirty || isEdit)) {
-      handleSubmit(onSubmit)();
-    }
+    handleSubmit(onSubmit)();
   };
 
   return (

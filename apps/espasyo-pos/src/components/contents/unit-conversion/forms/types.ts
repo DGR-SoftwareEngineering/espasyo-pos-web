@@ -1,4 +1,4 @@
-import { CategoryDataList } from "core-lib/api/commons/types";
+import { UnitDto } from "core-lib/api/commons/types";
 import { UnitConversionForm as UnitConversionFormType } from "./validation";
 
 export interface UnitConversionFormProps {
@@ -8,5 +8,5 @@ export interface UnitConversionFormProps {
   initialValues?: Partial<UnitConversionFormType>;
   isEdit?: boolean;
   isInDialog: boolean;
-  categories?: CategoryDataList[];
+  units?: UnitDto[];
 }

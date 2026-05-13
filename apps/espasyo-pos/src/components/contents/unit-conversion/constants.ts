@@ -23,28 +23,28 @@ const config = new FeatureConfigBuilder<UnitConversion>("Unit Conversion")
   .setTableHeaders([
     {
       id: "conversion",
-      label: "Unit Conversion",
+      name: "Unit Conversion",
       width: "40%",
       sortable: true,
       align: "left",
     },
     {
       id: "rate",
-      label: "Conversion Rate",
+      name: "Conversion Rate",
       align: "center",
       width: "25%",
       sortable: true,
     },
     {
       id: "type",
-      label: "Type",
+      name: "Type",
       align: "center",
       width: "15%",
       sortable: true,
     },
     {
       id: "actions",
-      label: "Actions",
+      name: "Actions",
       align: "right",
       width: "20%",
       sortable: false,

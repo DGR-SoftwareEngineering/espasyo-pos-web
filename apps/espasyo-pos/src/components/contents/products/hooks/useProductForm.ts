@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback } from "react";
 import {
   ProductForm as ProductFormType,
   productFormSchema,
@@ -18,11 +18,11 @@ interface UseProductFormProps {
 const defaultValues: ProductFormType = {
   name: "",
   description: "",
-  unitPrice: 0.01,
+  unitPrice: undefined,
   costPrice: undefined,
   isMenuItem: true,
   categoryID: null,
-  purchaseQuantity: 0,
+  purchaseQuantity: undefined,
   purchaseUnitID: "",
   stockUnitID: "",
 };
@@ -47,7 +47,7 @@ export const useProductForm = ({
     submissionKey,
   });
 
-  const { watch, setValue } = form;
+  const { watch, setValue, trigger } = form;
   const watchedValues = {
     name: watch("name"),
     unitPrice: toNumeric(watch("unitPrice")),
@@ -59,18 +59,25 @@ export const useProductForm = ({
     stockUnitID: watch("stockUnitID"),
   };
 
-  useEffect(() => {
-    const isMenuItem = watchedValues.isMenuItem;
-    if (isMenuItem) {
-      setValue("costPrice", undefined);
-    } else {
-      setValue("unitPrice", undefined);
-    }
-  }, [watchedValues.isMenuItem, setValue]);
+  const handleProductTypeChange = useCallback(
+    (isMenuItem: boolean) => {
+      if (isMenuItem) {
+        setValue("costPrice", undefined, { shouldValidate: true });
+        setValue("purchaseQuantity", undefined, { shouldValidate: true });
+        setValue("purchaseUnitID", "", { shouldValidate: true });
+        setValue("stockUnitID", "", { shouldValidate: true });
+      } else {
+        setValue("unitPrice", undefined, { shouldValidate: true });
+      }
+      void trigger();
+    },
+    [setValue, trigger],
+  );
 
   return {
     ...form,
     watchedValues,
     submissionKey,
+    handleProductTypeChange,
   };
 };

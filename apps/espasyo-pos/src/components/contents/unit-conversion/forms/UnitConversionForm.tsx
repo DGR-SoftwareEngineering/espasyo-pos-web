@@ -30,7 +30,7 @@ export const UnitConversionForm: React.FC<UnitConversionFormProps> = ({
   initialValues,
   isEdit = false,
   isInDialog = false,
-  categories,
+  units,
 }) => {
   const {
     control,
@@ -47,28 +47,18 @@ export const UnitConversionForm: React.FC<UnitConversionFormProps> = ({
     onSubmit,
   });
 
-  const unitCategories = React.useMemo(() => {
-    return categories?.filter((cat) => cat.type === 3) ?? [];
-  }, [categories]);
-
   const unitOptions = React.useMemo(
-    () => toSelectOptionsWithField(unitCategories ?? [], "categoryID", "name"),
-    [unitCategories],
+    () => toSelectOptionsWithField(units ?? [], "unitID", "name"),
+    [units],
   );
 
   const handleFormSubmit = handleSubmit(onSubmit);
   const handleButtonClick = () => {
-    if (isValid && (isDirty || isEdit)) {
-      handleFormSubmit();
-    }
+    handleFormSubmit();
   };
 
-  const fromUnit = unitCategories?.find(
-    (u) => u.categoryID === watchedValues.fromUnitID,
-  );
-  const toUnit = unitCategories?.find(
-    (u) => u.categoryID === watchedValues.toUnitID,
-  );
+  const fromUnit = units?.find((u) => u.unitID === watchedValues.fromUnitID);
+  const toUnit = units?.find((u) => u.unitID === watchedValues.toUnitID);
   const conversionRate = watchedValues.conversionRate;
   const isApproximate = watchedValues.isApproximate;
 

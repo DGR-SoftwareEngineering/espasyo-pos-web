@@ -22,6 +22,8 @@ export * from "./DataTableV2";
 export * from "./FormHeader";
 export * from "./FormSection";
 export * from "./FormActions";
+export * from "./FormErrorSummary";
+export * from "./LookupPicker";
 export * from "./InfoBox";
 export * from "./banner/PreviewBanner";
 export * from "./toggle/ToggleField";

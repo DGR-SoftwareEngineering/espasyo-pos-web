@@ -1,5 +1,9 @@
+import {
+  IngredientCategoryDto,
+  ProductCategoryDto,
+  UnitDto,
+} from "core-lib/api/commons/types";
 import { ProductForm as ProductFormType } from "./validation";
-import { CategoryDataList } from "core-lib/api/commons/types";
 
 export interface ProductFormProps {
   onSubmit: (values: ProductFormType) => void;
@@ -8,6 +12,9 @@ export interface ProductFormProps {
   initialValues?: Partial<ProductFormType>;
   isEdit?: boolean;
   isInDialog: boolean;
-  categories?: CategoryDataList[];
+  productCategories: ProductCategoryDto[];
+  ingredientCategories: IngredientCategoryDto[];
+  units: UnitDto[];
+  lookupsLoading?: boolean;
   isMenuItems?: boolean;
 }

@@ -40,6 +40,8 @@ import { useUnitConversionStats } from "../hooks/useUnitConversionStats";
 import { UnitConversionForm } from "../forms/UnitConversionForm";
 import { formatNumber } from "core-lib/business";
 
+registerForm("unit-conversion-form", UnitConversionForm);
+
 export const UnitConversionListBlock: React.FC = () => {
   const theme = useTheme();
   const { openDialog } = useDialogContext();
@@ -49,8 +51,6 @@ export const UnitConversionListBlock: React.FC = () => {
     searchQuery: "",
     sortBy: "fromUnit",
   });
-
-  registerForm("unit-conversion-form", UnitConversionForm);
 
   const data = useApi((api) =>
     api.commons.getUnitConversions(pageNumber, pageSize),

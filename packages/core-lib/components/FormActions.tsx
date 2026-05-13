@@ -15,11 +15,8 @@ interface FormActionsProps {
 
 export const FormActions: React.FC<FormActionsProps> = ({
   isEdit,
-  isValid,
   isDirty,
   submitLoading,
-  isInDialog,
-  submissionKey,
   onButtonClick,
   buttonText,
 }) => (
@@ -35,10 +32,8 @@ export const FormActions: React.FC<FormActionsProps> = ({
     <Button
       type="Primary"
       loading={submitLoading}
-      disabled={!isValid || (!isDirty && !isEdit)}
-      {...(isInDialog
-        ? { onClick: onButtonClick }
-        : { customActionKey: submissionKey })}
+      disabled={!isDirty && !isEdit}
+      onClick={onButtonClick}
       sx={{
         minWidth: 180,
         borderRadius: 2,

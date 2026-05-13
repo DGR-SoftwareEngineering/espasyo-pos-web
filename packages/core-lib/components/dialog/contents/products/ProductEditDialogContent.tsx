@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import {
-  CategoryDataList,
   CreateProductParams,
+  IngredientCategoryDto,
+  ProductCategoryDto,
   ProductDataList,
+  UnitDto,
 } from "../../../../api/commons/types";
 import { useToastContext } from "../../../../core/contexts";
 import { useApi, useApiCallback } from "../../../../core/hooks";
@@ -15,13 +17,32 @@ export const ProductEditDialogContent: React.FC<{
   onClose: () => void;
 }> = ({ product, onSuccess, onClose }) => {
   const { showToast } = useToastContext();
-  const [categories, setCategories] = useState<CategoryDataList[]>([]);
+  const [productCategories, setProductCategories] = useState<
+    ProductCategoryDto[]
+  >([]);
+  const [ingredientCategories, setIngredientCategories] = useState<
+    IngredientCategoryDto[]
+  >([]);
+  const [units, setUnits] = useState<UnitDto[]>([]);
 
-  const categoriesData = useApi((api) => api.commons.categoryList());
+  const productCategoryData = useApi((api) => api.commons.productCategoryList());
+  const ingredientCategoryData = useApi((api) =>
+    api.commons.ingredientCategoryList(),
+  );
+  const unitData = useApi((api) => api.commons.unitList());
 
   useEffect(() => {
-    setCategories(categoriesData.result?.data.response ?? []);
-  }, [categoriesData.result?.data.response]);
+    setProductCategories(productCategoryData.result?.data.response ?? []);
+  }, [productCategoryData.result?.data.response]);
+
+  useEffect(() => {
+    setIngredientCategories(ingredientCategoryData.result?.data.response ?? []);
+  }, [ingredientCategoryData.result?.data.response]);
+
+  useEffect(() => {
+    setUnits(unitData.result?.data.response ?? []);
+  }, [unitData.result?.data.response]);
+
   const updateProductCb = useApiCallback(
     async (api, args: CreateProductParams & { productID: string }) =>
       await api.commons.updateProduct(args),
@@ -68,14 +89,22 @@ export const ProductEditDialogContent: React.FC<{
     categoryID: product.categoryID || null,
   };
 
+  const lookupsLoading =
+    productCategoryData.loading ||
+    ingredientCategoryData.loading ||
+    unitData.loading;
+
   return (
     <Box sx={{ p: 2 }}>
       <FormRenderer
-        formKey="product-form" //TODO: we can pass this as a prop
+        formKey="product-form"
         onSubmit={handleSubmit}
         submitLoading={updateProductCb.loading}
         initialValues={initialValues}
-        categories={categories}
+        productCategories={productCategories}
+        ingredientCategories={ingredientCategories}
+        units={units}
+        lookupsLoading={lookupsLoading}
         isInDialog={true}
         isEdit={true}
       />

@@ -169,6 +169,248 @@ export interface EndpointRegistry {
   isActive: boolean;
 }
 
+// ===== Lookups (typed taxonomy tables that replaced the legacy polymorphic Category) =====
+
+export interface UnitDto {
+  unitID: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  parentUnitID: string | null;
+  parentUnitName: string | null;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+  isActive: boolean;
+}
+
+export interface CreateUnitParams {
+  name: string;
+  description?: string | null;
+  displayOrder?: number;
+  parentUnitID?: string | null;
+}
+
+export interface UpdateUnitParams {
+  unitID: string;
+  name?: string | null;
+  description?: string | null;
+  displayOrder?: number | null;
+  parentUnitID?: string | null;
+}
+
+export interface ProductCategoryDto {
+  productCategoryID: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  parentProductCategoryID: string | null;
+  parentProductCategoryName: string | null;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+  isActive: boolean;
+}
+
+export interface CreateProductCategoryParams {
+  name: string;
+  description?: string | null;
+  displayOrder?: number;
+  parentProductCategoryID?: string | null;
+}
+
+export interface UpdateProductCategoryParams {
+  productCategoryID: string;
+  name?: string | null;
+  description?: string | null;
+  displayOrder?: number | null;
+  parentProductCategoryID?: string | null;
+}
+
+export interface IngredientCategoryDto {
+  ingredientCategoryID: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  parentIngredientCategoryID: string | null;
+  parentIngredientCategoryName: string | null;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+  isActive: boolean;
+}
+
+export interface CreateIngredientCategoryParams {
+  name: string;
+  description?: string | null;
+  displayOrder?: number;
+  parentIngredientCategoryID?: string | null;
+}
+
+export interface UpdateIngredientCategoryParams {
+  ingredientCategoryID: string;
+  name?: string | null;
+  description?: string | null;
+  displayOrder?: number | null;
+  parentIngredientCategoryID?: string | null;
+}
+
+export interface LocationDto {
+  locationID: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  parentLocationID: string | null;
+  parentLocationName: string | null;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+  isActive: boolean;
+}
+
+export interface CreateLocationParams {
+  name: string;
+  description?: string | null;
+  displayOrder?: number;
+  parentLocationID?: string | null;
+}
+
+export interface UpdateLocationParams {
+  locationID: string;
+  name?: string | null;
+  description?: string | null;
+  displayOrder?: number | null;
+  parentLocationID?: string | null;
+}
+
+export interface BrandDto {
+  brandID: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  parentBrandID: string | null;
+  parentBrandName: string | null;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+  isActive: boolean;
+}
+
+export interface CreateBrandParams {
+  name: string;
+  description?: string | null;
+  displayOrder?: number;
+  parentBrandID?: string | null;
+}
+
+export interface UpdateBrandParams {
+  brandID: string;
+  name?: string | null;
+  description?: string | null;
+  displayOrder?: number | null;
+  parentBrandID?: string | null;
+}
+
+export type UnitResponse = ApiResponse<UnitDto>;
+export type UnitListResponse = ApiResponse<UnitDto[]>;
+export type ProductCategoryResponse = ApiResponse<ProductCategoryDto>;
+export type ProductCategoryListResponse = ApiResponse<ProductCategoryDto[]>;
+export type IngredientCategoryResponse = ApiResponse<IngredientCategoryDto>;
+export type IngredientCategoryListResponse = ApiResponse<IngredientCategoryDto[]>;
+export type LocationResponse = ApiResponse<LocationDto>;
+export type LocationListResponse = ApiResponse<LocationDto[]>;
+export type BrandResponse = ApiResponse<BrandDto>;
+export type BrandListResponse = ApiResponse<BrandDto[]>;
+
+// ===== Inventory =====
+
+export enum InventoryStatus {
+  InStock = 1,
+  LowStock = 2,
+  Critical = 3,
+  OutOfStock = 4,
+}
+
+export enum StockMovementType {
+  Sale = 1,
+  Return = 2,
+  Received = 3,
+  Wastage = 4,
+  Adjustment = 5,
+  Transfer = 6,
+  Production = 7,
+}
+
+export interface InventoryDto {
+  inventoryID: string;
+  productID: string;
+  productName: string | null;
+  currentQuantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  stockUnitID: string | null;
+  stockUnitName: string | null;
+  status: InventoryStatus;
+  statusName: string;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+  isActive: boolean;
+}
+
+export interface CreateInventoryParams {
+  productID: string;
+  currentQuantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+}
+
+export interface UpdateInventoryParams {
+  inventoryID: string;
+  reorderLevel?: number;
+  minimumStockLevel?: number;
+}
+
+export interface AdjustStockParams {
+  inventoryID: string;
+  delta: number;
+  reason: string;
+}
+
+export interface StockMovementDto {
+  stockMovementID: string;
+  inventoryID: string;
+  productID: string;
+  productName: string | null;
+  movementType: StockMovementType;
+  movementTypeName: string;
+  quantity: number;
+  unitID: string;
+  unitName: string | null;
+  reason: string | null;
+  referenceType: string | null;
+  referenceID: string | null;
+  unitCost: number | null;
+  balanceAfter: number;
+  createdBy: string | null;
+  createdAt: string | null;
+}
+
+export type InventoryResponse = ApiResponse<InventoryDto>;
+export type InventoryListResponse = ApiResponse<PaginatedResponse<InventoryDto>>;
+export type LowStockResponse = ApiResponse<InventoryDto[]>;
+export type StockMovementResponse = ApiResponse<StockMovementDto>;
+export type StockMovementListResponse = ApiResponse<
+  PaginatedResponse<StockMovementDto>
+>;
+export type StockMovementArrayResponse = ApiResponse<StockMovementDto[]>;
+
 export type UnitConversionListResponse = ApiResponse<
   PaginatedResponse<UnitConversion>
 >;

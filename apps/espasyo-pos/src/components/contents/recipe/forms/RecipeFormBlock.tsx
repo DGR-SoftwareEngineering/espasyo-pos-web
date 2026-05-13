@@ -3,14 +3,14 @@ import React, { useEffect, useState } from "react";
 import { RecipeForm as RecipeFormType } from "./validation";
 import { useApiCallback, useApi } from "core-lib/core/hooks";
 import { RecipeForm } from "./RecipeForm";
-import { CategoryDataList, ProductDataList } from "core-lib/api/commons/types";
+import { ProductDataList, UnitDto } from "core-lib/api/commons/types";
 
 export const RecipeFormBlock: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [resetForm, setResetForm] = useState(false);
   const [ingredients, setIngredients] = useState<ProductDataList[]>([]);
   const [menuItems, setMenuItems] = useState<ProductDataList[]>([]);
-  const [categories, setCategories] = useState<CategoryDataList[]>([]);
+  const [units, setUnits] = useState<UnitDto[]>([]);
   const { showToast } = useToastContext();
 
   const recipeCb = useApiCallback(
@@ -23,7 +23,7 @@ export const RecipeFormBlock: React.FC = () => {
   const getIngredients = useApi((api) =>
     api.commons.getProductByIngredientsOrMenu(false),
   );
-  const data = useApi((api) => api.commons.categoryList());
+  const unitData = useApi((api) => api.commons.unitList());
 
   useEffect(() => {
     setIngredients(getIngredients.result?.data.response ?? []);
@@ -34,8 +34,8 @@ export const RecipeFormBlock: React.FC = () => {
   }, [getMenuItems.result?.data.response]);
 
   useEffect(() => {
-    setCategories(data.result?.data.response ?? []);
-  }, [data.result?.data.response]);
+    setUnits(unitData.result?.data.response ?? []);
+  }, [unitData.result?.data.response]);
 
   return (
     <RecipeForm
@@ -44,7 +44,7 @@ export const RecipeFormBlock: React.FC = () => {
         recipeCb.loading ||
         getMenuItems.loading ||
         getIngredients.loading ||
-        data.loading ||
+        unitData.loading ||
         loading
       }
       resetForm={resetForm}
@@ -52,7 +52,7 @@ export const RecipeFormBlock: React.FC = () => {
       isInDialog={false}
       ingredients={ingredients}
       menuItems={menuItems}
-      units={categories}
+      units={units}
     />
   );
 

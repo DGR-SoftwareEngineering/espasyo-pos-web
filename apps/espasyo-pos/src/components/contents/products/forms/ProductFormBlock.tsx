@@ -4,25 +4,46 @@ import { ProductForm } from "./ProductForm";
 import { ProductForm as ProductFormType } from "./validation";
 import { useApiCallback, useApi } from "core-lib/core/hooks";
 import {
-  CategoryDataList,
   CreateProductParams,
+  IngredientCategoryDto,
+  ProductCategoryDto,
+  UnitDto,
 } from "core-lib/api/commons/types";
 
 export const ProductFormBlock: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [resetForm, setResetForm] = useState(false);
-  const [categories, setCategories] = useState<CategoryDataList[]>([]);
+  const [productCategories, setProductCategories] = useState<
+    ProductCategoryDto[]
+  >([]);
+  const [ingredientCategories, setIngredientCategories] = useState<
+    IngredientCategoryDto[]
+  >([]);
+  const [units, setUnits] = useState<UnitDto[]>([]);
   const { showToast } = useToastContext();
 
-  const data = useApi((api) => api.commons.categoryList());
+  const productCategoryData = useApi((api) => api.commons.productCategoryList());
+  const ingredientCategoryData = useApi((api) =>
+    api.commons.ingredientCategoryList(),
+  );
+  const unitData = useApi((api) => api.commons.unitList());
+
   const productCb = useApiCallback(
     async (api, args: CreateProductParams) =>
       await api.commons.createNewProduct(args),
   );
 
   useEffect(() => {
-    setCategories(data.result?.data.response ?? []);
-  }, [data.result?.data.response]);
+    setProductCategories(productCategoryData.result?.data.response ?? []);
+  }, [productCategoryData.result?.data.response]);
+
+  useEffect(() => {
+    setIngredientCategories(ingredientCategoryData.result?.data.response ?? []);
+  }, [ingredientCategoryData.result?.data.response]);
+
+  useEffect(() => {
+    setUnits(unitData.result?.data.response ?? []);
+  }, [unitData.result?.data.response]);
 
   const handleSubmit = async (formData: ProductFormType) => {
     try {
@@ -61,13 +82,21 @@ export const ProductFormBlock: React.FC = () => {
     }
   };
 
+  const lookupsLoading =
+    productCategoryData.loading ||
+    ingredientCategoryData.loading ||
+    unitData.loading;
+
   return (
     <ProductForm
-      submitLoading={loading || data.loading}
+      submitLoading={loading || lookupsLoading}
       resetForm={resetForm}
       onSubmit={handleSubmit}
       isInDialog={false}
-      categories={categories}
+      productCategories={productCategories}
+      ingredientCategories={ingredientCategories}
+      units={units}
+      lookupsLoading={lookupsLoading}
     />
   );
 };

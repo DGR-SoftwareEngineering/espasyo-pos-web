@@ -11,7 +11,7 @@ export interface BaseFilterState {
 
 export interface TableHeader {
   id: string;
-  label: string;
+  name: string;
   align: "left" | "center" | "right";
   width?: string;
   sortable: boolean;
@@ -24,10 +24,10 @@ export interface SortOption {
 
 export const createSubmissionKeys = (featureName: string) =>
   ({
-    view: `View ${featureName}`,
-    create: `Create ${featureName}`,
-    edit: `Edit ${featureName}`,
-    delete: `Delete ${featureName}`,
+    view: `view-${featureName}-submission`,
+    create: `create-${featureName}-submission`,
+    edit: `edit-${featureName}-submission`,
+    delete: `delete-${featureName}-submission`,
   }) as const;
 
 export const createDialogTitles = (featureName: string) =>
