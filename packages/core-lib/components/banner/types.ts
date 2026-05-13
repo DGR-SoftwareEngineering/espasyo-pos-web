@@ -1,5 +1,4 @@
 import { SvgIconComponent } from "@mui/icons-material";
-import { CategoryDataList } from "../../api/commons/types";
 
 export interface PreviewBannerConfig {
   bgOpacity?: number;
@@ -18,10 +17,14 @@ export interface BannerTypeConfig {
   showCategory?: boolean;
 }
 
+export interface PreviewBannerCategory {
+  name: string;
+}
+
 export interface PreviewBannerItem {
   id?: string;
   name: string;
-  category?: CategoryDataList;
+  category?: PreviewBannerCategory;
   formattedPrice?: string;
   priceValue?: number | null;
   metadata?: Record<string, any>;

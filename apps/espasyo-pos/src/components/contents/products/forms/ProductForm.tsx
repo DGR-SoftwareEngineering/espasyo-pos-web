@@ -14,6 +14,7 @@ import {
   FormHeader,
   FormSection,
   FormActions,
+  FormErrorSummary,
   PreviewBanner,
   ToggleField,
   ToggleOption,
@@ -33,6 +34,18 @@ import { toSelectOptionsWithField } from "core-lib/business/array";
 import { formatPrice } from "core-lib/business/strings";
 import { PLACEHOLDERS } from "../constants";
 import { ProductFormProps } from "./types";
+
+const FIELD_LABELS: Record<string, string> = {
+  name: "Product Name",
+  description: "Description",
+  unitPrice: "Selling Price",
+  costPrice: "Cost Price",
+  purchaseQuantity: "Purchase Quantity",
+  purchaseUnitID: "Purchase Unit",
+  stockUnitID: "Stock Unit",
+  categoryID: "Category",
+  isMenuItem: "Product Type",
+};
 
 const PRODUCT_TYPE_OPTIONS: ToggleOption<boolean>[] = [
   {
@@ -58,15 +71,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   initialValues,
   isEdit = false,
   isInDialog = false,
-  categories,
+  productCategories,
+  ingredientCategories,
+  units,
+  lookupsLoading,
 }) => {
   const {
     control,
     handleSubmit,
-    formState: { isValid },
+    formState: { isValid, errors },
     watchedValues,
     isDirty,
     submissionKey,
+    handleProductTypeChange,
   } = useProductForm({
     initialValues,
     resetForm,
@@ -75,37 +92,55 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     onSubmit,
   });
 
-  const productCategories = React.useMemo(() => {
-    return categories?.filter((cat) => cat.type === 2) ?? [];
-  }, [categories]);
+  const isMenuItem = watchedValues.isMenuItem;
 
-  const categoryOptions = React.useMemo(
-    () =>
-      toSelectOptionsWithField(productCategories ?? [], "categoryID", "name"),
-    [productCategories],
-  );
-
-  const unitCategories = React.useMemo(() => {
-    return categories?.filter((cat) => cat.type === 3) ?? [];
-  }, [categories]);
+  const categoryOptions = React.useMemo(() => {
+    if (isMenuItem) {
+      return toSelectOptionsWithField(
+        productCategories ?? [],
+        "productCategoryID",
+        "name",
+      );
+    }
+    return toSelectOptionsWithField(
+      ingredientCategories ?? [],
+      "ingredientCategoryID",
+      "name",
+    );
+  }, [isMenuItem, productCategories, ingredientCategories]);
 
   const unitOptions = React.useMemo(
-    () => toSelectOptionsWithField(unitCategories ?? [], "categoryID", "name"),
-    [unitCategories],
+    () => toSelectOptionsWithField(units ?? [], "unitID", "name"),
+    [units],
   );
 
-  const selectedCategory = categories?.find(
-    (c) => c.categoryID === watchedValues.categoryId,
-  );
+  const selectedCategory = React.useMemo(() => {
+    if (!watchedValues.categoryId) return undefined;
+    if (isMenuItem) {
+      const cat = productCategories?.find(
+        (c) => c.productCategoryID === watchedValues.categoryId,
+      );
+      return cat
+        ? { categoryID: cat.productCategoryID, name: cat.name }
+        : undefined;
+    }
+    const cat = ingredientCategories?.find(
+      (c) => c.ingredientCategoryID === watchedValues.categoryId,
+    );
+    return cat
+      ? { categoryID: cat.ingredientCategoryID, name: cat.name }
+      : undefined;
+  }, [
+    isMenuItem,
+    productCategories,
+    ingredientCategories,
+    watchedValues.categoryId,
+  ]);
 
   const handleFormSubmit = handleSubmit(onSubmit);
   const handleButtonClick = () => {
-    if (isValid && (isDirty || isEdit)) {
-      handleFormSubmit();
-    }
+    handleFormSubmit();
   };
-
-  const isMenuItem = watchedValues.isMenuItem;
 
   const previewItem = React.useMemo(() => {
     const price = isMenuItem
@@ -159,6 +194,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
       <CardContent sx={{ p: 4 }}>
         <Grid container spacing={3}>
+          <Grid size={{ xs: 12 }}>
+            <FormErrorSummary errors={errors} fieldLabels={FIELD_LABELS} />
+          </Grid>
+
           {/* Basic Information */}
           <Grid size={{ xs: 12 }}>
             <FormSection
@@ -195,6 +234,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   required
                   orientation="horizontal"
                   spacing={2}
+                  onChange={handleProductTypeChange}
                 />
               </Grid>
             </FormSection>

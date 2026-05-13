@@ -10,6 +10,7 @@ import {
 } from "../blocks/category/dialogs/CategoryDialogs";
 import {
   CategoryDataList,
+  InventoryDto,
   ProductDataList,
   ProductionCapacity,
   RecipeResponse,
@@ -24,6 +25,13 @@ import {
   RecipeDeleteDialogContent,
   RecipeEditDialogContent,
 } from "./contents/recipe";
+import {
+  InventoryViewDialogContent,
+  AdjustStockDialogContent,
+  ThresholdsDialogContent,
+  InventoryDeleteDialogContent,
+  MovementHistoryDialogContent,
+} from "./contents/inventory";
 
 interface Props {
   dialogFormType?: DialogContentType;
@@ -117,6 +125,42 @@ export const DialogContextModal: React.FC<Props> = ({
     case "ProductCreate":
       // You'll create this later
       return <div>Product Create Form (Coming Soon)</div>;
+
+    // Inventory dialogs
+    case "InventoryView":
+      return (
+        <InventoryViewDialogContent inventory={dialogData as InventoryDto} />
+      );
+    case "InventoryAdjust":
+      return (
+        <AdjustStockDialogContent
+          inventory={dialogData as InventoryDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "InventoryThresholds":
+      return (
+        <ThresholdsDialogContent
+          inventory={dialogData as InventoryDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "InventoryDelete":
+      return (
+        <InventoryDeleteDialogContent
+          inventory={dialogData as InventoryDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "InventoryHistory":
+      return (
+        <MovementHistoryDialogContent
+          inventory={dialogData as InventoryDto}
+        />
+      );
 
     default:
       return null;

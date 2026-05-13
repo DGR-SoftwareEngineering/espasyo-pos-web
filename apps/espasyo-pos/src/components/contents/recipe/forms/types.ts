@@ -1,4 +1,4 @@
-import { CategoryDataList, ProductDataList } from "core-lib/api/commons/types";
+import { ProductDataList, UnitDto } from "core-lib/api/commons/types";
 import { RecipeForm as RecipeFormType } from "./validation";
 
 export interface RecipeFormProps {
@@ -10,7 +10,7 @@ export interface RecipeFormProps {
   isInDialog: boolean;
   menuItems: ProductDataList[];
   ingredients: ProductDataList[];
-  units: CategoryDataList[];
+  units: UnitDto[];
 }
 
 export interface NewIngredient {

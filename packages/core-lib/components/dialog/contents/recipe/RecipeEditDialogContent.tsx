@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import {
-  CategoryDataList,
   ProductDataList,
   RecipeResponse,
+  UnitDto,
   UpdateRecipeParams,
 } from "../../../../api/commons/types";
 import { useToastContext } from "../../../../core/contexts";
@@ -23,7 +23,7 @@ export const RecipeEditDialogContent: React.FC<{
   const getIngredients = useApi((api) =>
     api.commons.getProductByIngredientsOrMenu(false),
   );
-  const categoriesData = useApi((api) => api.commons.categoryList());
+  const unitData = useApi((api) => api.commons.unitList());
   const updateRecipeCb = useApiCallback(
     async (api, args: UpdateRecipeParams) =>
       await api.commons.updateRecipe(args),
@@ -31,7 +31,7 @@ export const RecipeEditDialogContent: React.FC<{
 
   const [menuItems, setMenuItems] = useState<ProductDataList[]>([]);
   const [ingredients, setIngredients] = useState<ProductDataList[]>([]);
-  const [categories, setCategories] = useState<CategoryDataList[]>([]);
+  const [units, setUnits] = useState<UnitDto[]>([]);
 
   useEffect(() => {
     if (getMenuItems.result?.data.response) {
@@ -46,10 +46,10 @@ export const RecipeEditDialogContent: React.FC<{
   }, [getIngredients.result?.data.response]);
 
   useEffect(() => {
-    if (categoriesData.result?.data.response) {
-      setCategories(categoriesData.result.data.response);
+    if (unitData.result?.data.response) {
+      setUnits(unitData.result.data.response);
     }
-  }, [categoriesData.result?.data.response]);
+  }, [unitData.result?.data.response]);
 
   const initialValues = {
     menuItemProductID: recipe.menuItemProductID,
@@ -64,7 +64,7 @@ export const RecipeEditDialogContent: React.FC<{
   };
 
   const loading =
-    getMenuItems.loading || getIngredients.loading || categoriesData.loading;
+    getMenuItems.loading || getIngredients.loading || unitData.loading;
 
   return (
     <Box sx={{ p: 2 }}>
@@ -79,7 +79,7 @@ export const RecipeEditDialogContent: React.FC<{
           submitLoading={updateRecipeCb.loading}
           menuItems={menuItems}
           ingredients={ingredients}
-          units={categories}
+          units={units}
           initialValues={initialValues}
           isInDialog={true}
           isEdit={true}

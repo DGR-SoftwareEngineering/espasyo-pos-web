@@ -6,9 +6,8 @@ import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import ReceiptRoundedIcon from "@mui/icons-material/ReceiptRounded";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import PointOfSaleRoundedIcon from "@mui/icons-material/PointOfSaleRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
@@ -18,6 +17,11 @@ import ListIcon from "@mui/icons-material/List";
 import ProductionQuantityLimitsIcon from "@mui/icons-material/ProductionQuantityLimits";
 import FoodBankIcon from "@mui/icons-material/FoodBank";
 import CycloneIcon from "@mui/icons-material/Cyclone";
+import ScaleRoundedIcon from "@mui/icons-material/ScaleRounded";
+import KitchenRoundedIcon from "@mui/icons-material/KitchenRounded";
+import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
+import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { JSX } from "react";
 
 export interface MenuItem {
@@ -55,51 +59,65 @@ export const menuItems: MenuItem[] = [
         id: "inventory-add",
         text: "Add New Inventory",
         icon: <AddCircleRoundedIcon />,
-        path: "/inventory/add",
+        path: "/admin/hub/inventory/add-new",
         permissionKey: "inventory.nested.add",
-      },
-      {
-        id: "inventory-edit",
-        text: "Edit Inventory",
-        icon: <EditRoundedIcon />,
-        path: "/inventory/edit",
-        permissionKey: "inventory.nested.edit",
-      },
-      {
-        id: "inventory-delete",
-        text: "Delete Inventory",
-        icon: <DeleteRoundedIcon />,
-        path: "/inventory/delete",
-        permissionKey: "inventory.nested.delete",
       },
       {
         id: "inventory-list",
         text: "Inventory List",
-        icon: <InventoryRoundedIcon />,
-        path: "/inventory/list",
+        icon: <ListIcon />,
+        path: "/admin/hub/inventory/inventory-list",
         permissionKey: "inventory.nested.list",
+      },
+      {
+        id: "inventory-movements",
+        text: "Stock Movements",
+        icon: <ReceiptLongRoundedIcon />,
+        path: "/admin/hub/inventory/movements",
+        permissionKey: "inventory.nested.movements",
       },
     ],
   },
   {
-    id: "category",
-    text: "Category",
-    icon: <CategoryIcon />,
-    permissionKey: "category",
+    id: "categories",
+    text: "Categories",
+    icon: <TuneRoundedIcon />,
+    permissionKey: "categories",
     nestedItems: [
       {
-        id: "category-new",
-        text: "New Category",
-        icon: <AddIcon />,
-        permissionKey: "category.nested.new",
-        path: "/admin/hub/category/add-new",
+        id: "categories-units",
+        text: "Units",
+        icon: <ScaleRoundedIcon />,
+        path: "/admin/hub/categories/units",
+        permissionKey: "categories.nested.units",
       },
       {
-        id: "category-list",
-        text: "Category List",
-        icon: <ListIcon />,
-        path: "/admin/hub/category/category-list",
-        permissionKey: "category.nested.list",
+        id: "categories-product-categories",
+        text: "Product Categories",
+        icon: <CategoryIcon />,
+        path: "/admin/hub/categories/product-categories",
+        permissionKey: "categories.nested.productCategories",
+      },
+      {
+        id: "categories-ingredient-categories",
+        text: "Ingredient Categories",
+        icon: <KitchenRoundedIcon />,
+        path: "/admin/hub/categories/ingredient-categories",
+        permissionKey: "categories.nested.ingredientCategories",
+      },
+      {
+        id: "categories-locations",
+        text: "Locations",
+        icon: <PlaceRoundedIcon />,
+        path: "/admin/hub/categories/locations",
+        permissionKey: "categories.nested.locations",
+      },
+      {
+        id: "categories-brands",
+        text: "Brands",
+        icon: <StorefrontRoundedIcon />,
+        path: "/admin/hub/categories/brands",
+        permissionKey: "categories.nested.brands",
       },
     ],
   },

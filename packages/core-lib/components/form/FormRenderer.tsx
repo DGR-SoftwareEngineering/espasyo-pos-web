@@ -4,7 +4,10 @@ export type FormKey =
   | "product-form"
   | "recipe-form"
   | "category-form"
-  | "unit-conversion-form";
+  | "unit-conversion-form"
+  | "inventory-form"
+  | "adjust-stock-form"
+  | "thresholds-form";
 
 const formRegistry: Partial<Record<FormKey, React.ComponentType<any>>> = {};
 

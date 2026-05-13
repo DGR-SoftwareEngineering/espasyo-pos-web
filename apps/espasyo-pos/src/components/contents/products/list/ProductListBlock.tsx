@@ -20,14 +20,14 @@ import { StatsCard } from "core-lib/components/StatsCard";
 import { FilterBar } from "core-lib/components/FilterBar";
 import { ProductForm } from "../forms/ProductForm";
 
+registerForm("product-form", ProductForm);
+
 export const ProductListBlock: React.FC = () => {
   const theme = useTheme();
   const { openDialog } = useDialogContext();
   const [products, setProducts] = useState<ProductDataList[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
-  registerForm("product-form", ProductForm);
 
   const data = useApi((api) => api.commons.productList());
 

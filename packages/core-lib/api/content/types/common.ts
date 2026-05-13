@@ -1,5 +1,6 @@
 import {
   CategoryDataList,
+  InventoryDto,
   ProductDataList,
   ProductionCapacity,
   RecipeResponse,
@@ -123,6 +124,12 @@ export type DialogDataType = {
   RecipeEdit: RecipeResponse;
   RecipeDelete: RecipeResponse;
   RecipeCreate: undefined;
+
+  InventoryView: InventoryDto;
+  InventoryAdjust: InventoryDto;
+  InventoryThresholds: InventoryDto;
+  InventoryDelete: InventoryDto;
+  InventoryHistory: InventoryDto;
 };
 
 // Dialog content type as a union

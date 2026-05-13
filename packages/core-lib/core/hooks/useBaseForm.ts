@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
   useForm,
   UseFormProps,
@@ -6,7 +6,10 @@ import {
   DefaultValues,
 } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useFormSubmissionBindingHooks } from "core-lib/core/hooks";
+import {
+  useFormSubmissionBindingHooks,
+  useFormFocusOnError,
+} from "core-lib/core/hooks";
 import { AnyObjectSchema } from "yup";
 
 interface UseBaseFormProps<T extends FieldValues> {
@@ -47,6 +50,13 @@ export const useBaseForm = <T extends FieldValues>({
   const { reset, formState, handleSubmit: rhfHandleSubmit } = form;
   const isDirty = formState.isDirty || isEdit;
 
+  // Stable serialized key — only fires reset when the actual values change,
+  // not when the parent recreates the `initialValues` object on every render.
+  const initialValuesKey = useMemo(
+    () => (initialValues ? JSON.stringify(initialValues) : ""),
+    [initialValues],
+  );
+
   useEffect(() => {
     if (initialValues && Object.keys(initialValues).length > 0) {
       reset({
@@ -54,13 +64,15 @@ export const useBaseForm = <T extends FieldValues>({
         ...initialValues,
       } as T);
     }
-  }, [initialValues, reset, defaultValues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValuesKey]);
 
   useEffect(() => {
     if (resetForm) {
       reset(defaultValues as T);
     }
-  }, [resetForm, reset, defaultValues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetForm]);
 
   const handleFormSubmit = (data: T) => {
     onSubmit(data);
@@ -82,6 +94,8 @@ export const useBaseForm = <T extends FieldValues>({
       cb: asyncSubmit,
     });
   }
+
+  useFormFocusOnError<T>(formState.errors, form.setFocus);
 
   return {
     ...form,

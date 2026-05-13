@@ -17,6 +17,40 @@ import {
   UpdateRecipeParams,
   UserInfoResponse,
 } from "./types";
+import {
+  AdjustStockParams,
+  CreateInventoryParams,
+  InventoryListResponse,
+  InventoryResponse,
+  LowStockResponse,
+  StockMovementArrayResponse,
+  StockMovementListResponse,
+  StockMovementResponse,
+  StockMovementType,
+  UpdateInventoryParams,
+} from "./types";
+import {
+  BrandListResponse,
+  BrandResponse,
+  CreateBrandParams,
+  CreateIngredientCategoryParams,
+  CreateLocationParams,
+  CreateProductCategoryParams,
+  CreateUnitParams,
+  IngredientCategoryListResponse,
+  IngredientCategoryResponse,
+  LocationListResponse,
+  LocationResponse,
+  ProductCategoryListResponse,
+  ProductCategoryResponse,
+  UnitListResponse,
+  UnitResponse,
+  UpdateBrandParams,
+  UpdateIngredientCategoryParams,
+  UpdateLocationParams,
+  UpdateProductCategoryParams,
+  UpdateUnitParams,
+} from "./types";
 
 export class CommonsApi {
   constructor(
@@ -148,6 +182,261 @@ export class CommonsApi {
     return this.axios.post<ApiResponse>(
       `/api/v1/unit-api/unitconversion`,
       params,
+    );
+  }
+
+  // ===== Lookups (Unit / ProductCategory / IngredientCategory / Location / Brand) =====
+
+  // Unit
+  public unitGetById(id: string) {
+    return this.axios.get<UnitResponse>(`/api/v1/unit-api/unit/${id}`);
+  }
+  public unitList() {
+    return this.axios.get<UnitListResponse>(`/api/v1/unit-api/unit`);
+  }
+  public createUnit(params: CreateUnitParams) {
+    return this.axios.post<ApiResponse<string>>(`/api/v1/unit-api/unit`, params);
+  }
+  public updateUnit(params: UpdateUnitParams) {
+    return this.axios.put<ApiResponse<string>>(`/api/v1/unit-api/unit`, params);
+  }
+  public deleteUnits(ids: string[]) {
+    return this.axios.delete<ApiResponse<string>>(`/api/v1/unit-api/unit`, {
+      data: { id: ids },
+    });
+  }
+
+  // ProductCategory
+  public productCategoryGetById(id: string) {
+    return this.axios.get<ProductCategoryResponse>(
+      `/api/v1/productcategory-api/productcategory/${id}`,
+    );
+  }
+  public productCategoryList() {
+    return this.axios.get<ProductCategoryListResponse>(
+      `/api/v1/productcategory-api/productcategory`,
+    );
+  }
+  public createProductCategory(params: CreateProductCategoryParams) {
+    return this.axios.post<ApiResponse<string>>(
+      `/api/v1/productcategory-api/productcategory`,
+      params,
+    );
+  }
+  public updateProductCategory(params: UpdateProductCategoryParams) {
+    return this.axios.put<ApiResponse<string>>(
+      `/api/v1/productcategory-api/productcategory`,
+      params,
+    );
+  }
+  public deleteProductCategories(ids: string[]) {
+    return this.axios.delete<ApiResponse<string>>(
+      `/api/v1/productcategory-api/productcategory`,
+      { data: { id: ids } },
+    );
+  }
+
+  // IngredientCategory
+  public ingredientCategoryGetById(id: string) {
+    return this.axios.get<IngredientCategoryResponse>(
+      `/api/v1/ingredientcategory-api/ingredientcategory/${id}`,
+    );
+  }
+  public ingredientCategoryList() {
+    return this.axios.get<IngredientCategoryListResponse>(
+      `/api/v1/ingredientcategory-api/ingredientcategory`,
+    );
+  }
+  public createIngredientCategory(params: CreateIngredientCategoryParams) {
+    return this.axios.post<ApiResponse<string>>(
+      `/api/v1/ingredientcategory-api/ingredientcategory`,
+      params,
+    );
+  }
+  public updateIngredientCategory(params: UpdateIngredientCategoryParams) {
+    return this.axios.put<ApiResponse<string>>(
+      `/api/v1/ingredientcategory-api/ingredientcategory`,
+      params,
+    );
+  }
+  public deleteIngredientCategories(ids: string[]) {
+    return this.axios.delete<ApiResponse<string>>(
+      `/api/v1/ingredientcategory-api/ingredientcategory`,
+      { data: { id: ids } },
+    );
+  }
+
+  // Location
+  public locationGetById(id: string) {
+    return this.axios.get<LocationResponse>(
+      `/api/v1/location-api/location/${id}`,
+    );
+  }
+  public locationList() {
+    return this.axios.get<LocationListResponse>(
+      `/api/v1/location-api/location`,
+    );
+  }
+  public createLocation(params: CreateLocationParams) {
+    return this.axios.post<ApiResponse<string>>(
+      `/api/v1/location-api/location`,
+      params,
+    );
+  }
+  public updateLocation(params: UpdateLocationParams) {
+    return this.axios.put<ApiResponse<string>>(
+      `/api/v1/location-api/location`,
+      params,
+    );
+  }
+  public deleteLocations(ids: string[]) {
+    return this.axios.delete<ApiResponse<string>>(
+      `/api/v1/location-api/location`,
+      { data: { id: ids } },
+    );
+  }
+
+  // Brand
+  public brandGetById(id: string) {
+    return this.axios.get<BrandResponse>(`/api/v1/brand-api/brand/${id}`);
+  }
+  public brandList() {
+    return this.axios.get<BrandListResponse>(`/api/v1/brand-api/brand`);
+  }
+  public createBrand(params: CreateBrandParams) {
+    return this.axios.post<ApiResponse<string>>(
+      `/api/v1/brand-api/brand`,
+      params,
+    );
+  }
+  public updateBrand(params: UpdateBrandParams) {
+    return this.axios.put<ApiResponse<string>>(
+      `/api/v1/brand-api/brand`,
+      params,
+    );
+  }
+  public deleteBrands(ids: string[]) {
+    return this.axios.delete<ApiResponse<string>>(`/api/v1/brand-api/brand`, {
+      data: { id: ids },
+    });
+  }
+
+  // ===== Inventory =====
+
+  public inventoryGetById(id: string) {
+    return this.axios.get<InventoryResponse>(
+      `/api/v1/inventory-api/inventory/${id}`,
+    );
+  }
+
+  public inventoryList(pageNumber: number = 1, pageSize: number = 10) {
+    return this.axios.get<InventoryListResponse>(
+      `/api/v1/inventory-api/inventory?${qs.stringify({ pageNumber, pageSize })}`,
+    );
+  }
+
+  public inventoryByProduct(productId: string) {
+    return this.axios.get<InventoryResponse>(
+      `/api/v1/inventory-api/inventory/by-product/${productId}`,
+    );
+  }
+
+  public inventoryLowStock() {
+    return this.axios.get<LowStockResponse>(
+      `/api/v1/inventory-api/inventory/low-stock`,
+    );
+  }
+
+  public createInventory(params: CreateInventoryParams) {
+    return this.axios.post<InventoryResponse>(
+      `/api/v1/inventory-api/inventory`,
+      params,
+    );
+  }
+
+  public updateInventoryThresholds(params: UpdateInventoryParams) {
+    return this.axios.put<InventoryResponse>(
+      `/api/v1/inventory-api/inventory`,
+      params,
+    );
+  }
+
+  public adjustInventoryStock(params: AdjustStockParams) {
+    return this.axios.post<InventoryResponse>(
+      `/api/v1/inventory-api/inventory/adjust`,
+      params,
+    );
+  }
+
+  public softDeleteInventory(id: string) {
+    return this.axios.delete<ApiResponse<boolean>>(
+      `/api/v1/inventory-api/inventory/${id}`,
+    );
+  }
+
+  // ===== Stock Movement =====
+
+  public stockMovementGetById(id: string) {
+    return this.axios.get<StockMovementResponse>(
+      `/api/v1/inventory-api/stockmovement/${id}`,
+    );
+  }
+
+  public stockMovementByInventory(
+    inventoryId: string,
+    pageNumber: number = 1,
+    pageSize: number = 20,
+  ) {
+    return this.axios.get<StockMovementListResponse>(
+      `/api/v1/inventory-api/stockmovement/by-inventory/${inventoryId}?${qs.stringify(
+        { pageNumber, pageSize },
+      )}`,
+    );
+  }
+
+  public stockMovementByProduct(
+    productId: string,
+    pageNumber: number = 1,
+    pageSize: number = 20,
+  ) {
+    return this.axios.get<StockMovementListResponse>(
+      `/api/v1/inventory-api/stockmovement/by-product/${productId}?${qs.stringify(
+        { pageNumber, pageSize },
+      )}`,
+    );
+  }
+
+  public stockMovementByReference(referenceType: string, referenceId: string) {
+    return this.axios.get<StockMovementArrayResponse>(
+      `/api/v1/inventory-api/stockmovement/by-reference?${qs.stringify({
+        referenceType,
+        referenceId,
+      })}`,
+    );
+  }
+
+  public stockMovementByDateRange(args: {
+    fromDate: string;
+    toDate: string;
+    pageNumber?: number;
+    pageSize?: number;
+    movementType?: StockMovementType;
+  }) {
+    const {
+      fromDate,
+      toDate,
+      pageNumber = 1,
+      pageSize = 20,
+      movementType,
+    } = args;
+    return this.axios.get<StockMovementListResponse>(
+      `/api/v1/inventory-api/stockmovement/by-date-range?${qs.stringify({
+        fromDate,
+        toDate,
+        pageNumber,
+        pageSize,
+        ...(movementType !== undefined ? { movementType } : {}),
+      })}`,
     );
   }
 }

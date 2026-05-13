@@ -4,8 +4,8 @@ import { UnitConversionForm } from "./UnitConversionForm";
 import { UnitConversionForm as UnitConversionFormType } from "./validation";
 import { useApiCallback, useApi, useResolution } from "core-lib/core/hooks";
 import {
-  CategoryDataList,
   CreateUnitConversionParams,
+  UnitDto,
 } from "core-lib/api/commons/types";
 import { TabOption } from "core-lib/components/tabs/types";
 import {
@@ -19,19 +19,19 @@ import { UnitConversionListBlock } from "../list/UnitConversionListBlock";
 export const UnitConversionFormBlock: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [resetForm, setResetForm] = useState(false);
-  const [categories, setCategories] = useState<CategoryDataList[]>([]);
+  const [units, setUnits] = useState<UnitDto[]>([]);
   const { showToast } = useToastContext();
   const { isMobile } = useResolution();
 
-  const data = useApi((api) => api.commons.categoryList());
+  const unitData = useApi((api) => api.commons.unitList());
   const conversionCb = useApiCallback(
     async (api, args: CreateUnitConversionParams) =>
       await api.commons.createUnitConversion(args),
   );
 
   useEffect(() => {
-    setCategories(data.result?.data.response ?? []);
-  }, [data.result?.data.response]);
+    setUnits(unitData.result?.data.response ?? []);
+  }, [unitData.result?.data.response]);
 
   const tabs = useMemo<Array<TabOption>>(
     () => [
@@ -39,13 +39,12 @@ export const UnitConversionFormBlock: React.FC = () => {
         key: "unit_conversion_creation",
         label: "Unit Conversion Creation Form",
         content: (
-          //we can transfer this to higher level if we want to make it more cleaner.
           <UnitConversionForm
-            submitLoading={loading || data.loading}
+            submitLoading={loading || unitData.loading}
             resetForm={resetForm}
             onSubmit={handleSubmit}
             isInDialog={false}
-            categories={categories}
+            units={units}
           />
         ),
       },
@@ -55,7 +54,7 @@ export const UnitConversionFormBlock: React.FC = () => {
         content: <UnitConversionListBlock />,
       },
     ],
-    [],
+    [units],
   );
 
   return (

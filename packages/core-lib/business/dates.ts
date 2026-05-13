@@ -104,3 +104,18 @@ export const isoTimeToText = (
 export function isValidDate(date?: Date): boolean {
   return (date && !isNaN(date.getTime())) || false;
 }
+
+/**
+ * Locale-aware date-time formatter for table rows / audit displays.
+ * Returns "—" for null / undefined / invalid input so callers don't have to
+ * special-case it. Use this everywhere instead of inlining `new Date(...).toLocaleString()`.
+ */
+export const formatDateTime = (
+  iso: string | null | undefined,
+  fallback: string = "—",
+): string => {
+  if (!iso) return fallback;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return fallback;
+  return d.toLocaleString();
+};

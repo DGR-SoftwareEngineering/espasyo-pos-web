@@ -41,14 +41,14 @@ import { useRecipeStats } from "../hooks";
 import { RecipeForm } from "../forms/RecipeForm";
 import { formatCurrency } from "core-lib/business";
 
+registerForm("recipe-form", RecipeForm);
+
 export const RecipeListBlock: React.FC = () => {
   const theme = useTheme();
   const { openDialog } = useDialogContext();
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
-  registerForm("recipe-form", RecipeForm);
 
   const [filters, setFilters] = useState<RecipeFilterState>({
     searchQuery: "",

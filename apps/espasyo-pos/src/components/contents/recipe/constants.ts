@@ -15,28 +15,28 @@ const config = new FeatureConfigBuilder<RecipeResponse>("Recipe")
   .setTableHeaders([
     {
       id: "menuItemName",
-      label: "Recipe Details",
+      name: "Recipe Details",
       width: "35%",
       sortable: true,
       align: "left",
     },
     {
       id: "ingredientCount",
-      label: "Ingredients",
+      name: "Ingredients",
       align: "center",
       width: "15%",
       sortable: true,
     },
     {
       id: "totalCost",
-      label: "Total Cost",
+      name: "Total Cost",
       align: "center",
       width: "20%",
       sortable: true,
     },
     {
       id: "actions",
-      label: "Actions",
+      name: "Actions",
       align: "right",
       width: "30%",
       sortable: false,
