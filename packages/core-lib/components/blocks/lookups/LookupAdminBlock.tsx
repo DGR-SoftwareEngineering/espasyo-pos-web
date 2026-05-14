@@ -1,23 +1,15 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { Box, Card, Flex, TextField as RadixTextField } from "@radix-ui/themes";
 import {
-  Box,
-  Button,
-  Paper,
-  Stack,
-  alpha,
-  useTheme,
-  TextField as MuiTextField,
-  InputAdornment,
-} from "@mui/material";
-import {
-  AddOutlined,
-  RefreshOutlined,
-  SearchOutlined,
-} from "@mui/icons-material";
+  MagnifyingGlassIcon,
+  PlusIcon,
+  ReloadIcon,
+} from "@radix-ui/react-icons";
 import { useApi } from "../../../core/hooks";
-import { DataTableV2 } from "../../DataTableV2";
-import { StatsCard } from "../../StatsCard";
-import { HeaderV2 } from "../../header/HeaderV2";
+import { DataTableV2 } from "../../radix/table/DataTableV2";
+import { StatsCard } from "../../radix/StatsCard";
+import { HeaderV2 } from "../../radix/header/HeaderV2";
+import { Button } from "../../radix/buttons/Button";
 import { LookupTableRow } from "./LookupTableRow";
 import { LookupFormDialog } from "./LookupFormDialog";
 import { LookupDeleteDialog } from "./LookupDeleteDialog";
@@ -28,7 +20,13 @@ interface Props<TDto extends LookupDtoBase> {
 }
 
 const TABLE_HEADERS = [
-  { id: "name", name: "Name", align: "left" as const, sortable: false, width: "30%" },
+  {
+    id: "name",
+    name: "Name",
+    align: "left" as const,
+    sortable: false,
+    width: "30%",
+  },
   {
     id: "description",
     name: "Description",
@@ -69,7 +67,6 @@ const TABLE_HEADERS = [
 export function LookupAdminBlock<TDto extends LookupDtoBase>({
   config,
 }: Props<TDto>) {
-  const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editRow, setEditRow] = useState<TDto | undefined>(undefined);
@@ -128,16 +125,8 @@ export function LookupAdminBlock<TDto extends LookupDtoBase>({
   );
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}
-      >
+    <Box style={{ width: "100%" }}>
+      <Card variant="surface" size="3" mb="4">
         <HeaderV2
           title={config.entityNamePlural}
           subtitle={config.description}
@@ -145,17 +134,13 @@ export function LookupAdminBlock<TDto extends LookupDtoBase>({
           actionButton={{
             label: `New ${config.entityName}`,
             onClick: () => setCreateOpen(true),
-            icon: <AddOutlined />,
+            icon: <PlusIcon />,
             variant: "contained",
             color: "primary",
           }}
         />
 
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{ mt: 3, flexWrap: "wrap", gap: 2 }}
-        >
+        <Flex mt="4" gap="3" wrap="wrap">
           <StatsCard label="Total" value={stats.total} color="primary" />
           <StatsCard label="Active" value={stats.active} color="success" />
           {config.parentIdField && (
@@ -165,74 +150,51 @@ export function LookupAdminBlock<TDto extends LookupDtoBase>({
               color="info"
             />
           )}
-        </Stack>
+        </Flex>
 
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "stretch", md: "center" }}
-          spacing={2}
-          sx={{ mt: 3 }}
+        <Flex
+          direction={{ initial: "column", md: "row" }}
+          justify="between"
+          align={{ initial: "stretch", md: "center" }}
+          gap="3"
+          mt="4"
         >
-          <MuiTextField
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            size="small"
-            placeholder={`Search ${config.entityNamePlural.toLowerCase()}…`}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlined fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ minWidth: { xs: "100%", md: 320 } }}
-          />
-          <Stack direction="row" spacing={1.5}>
+          <Box style={{ minWidth: 280, flex: 1, maxWidth: 420 }}>
+            <RadixTextField.Root
+              size="2"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={`Search ${config.entityNamePlural.toLowerCase()}…`}
+            >
+              <RadixTextField.Slot>
+                <MagnifyingGlassIcon height={16} width={16} />
+              </RadixTextField.Slot>
+            </RadixTextField.Root>
+          </Box>
+
+          <Flex direction="row" gap="2" align="center">
             <Button
-              variant="outlined"
-              startIcon={<RefreshOutlined />}
+              type="Secondary"
               onClick={handleRefresh}
               disabled={data.loading}
-              sx={{ borderRadius: 2 }}
             >
-              Refresh
+              <Flex align="center" gap="2">
+                <ReloadIcon />
+                Refresh
+              </Flex>
             </Button>
-          </Stack>
-        </Stack>
-      </Paper>
+          </Flex>
+        </Flex>
+      </Card>
 
-      <Paper
-        elevation={0}
-        sx={{
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          overflow: "hidden",
-        }}
-      >
+      <Card variant="surface" size="2" style={{ overflow: "hidden" }}>
         <DataTableV2
           data={filteredRows}
           loading={data.loading}
           tableHeaders={TABLE_HEADERS}
           bodyRowComponent={bodyRowComponent}
-          sx={{
-            tableHead: {
-              bgcolor: alpha(theme.palette.primary.main, 0.02),
-              borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-            },
-            headerCell: {
-              cell: { py: 2, fontWeight: 600 },
-              typography: {
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              },
-            },
-            bodyCell: { cell: { py: 1.5 } },
-          }}
         />
-      </Paper>
+      </Card>
 
       <LookupFormDialog
         open={createOpen}

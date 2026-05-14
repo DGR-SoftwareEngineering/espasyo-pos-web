@@ -1,14 +1,14 @@
 import React from "react";
-import { Grid, CardContent, Box, alpha, Typography } from "@mui/material";
 import {
+  Badge,
+  Box,
+  Callout,
   Card,
-  TextField,
-  SelectField,
-  FormHeader,
-  FormSection,
-  FormActions,
-  ToggleField,
-} from "core-lib";
+  Flex,
+  Grid,
+  Heading,
+  Text,
+} from "@radix-ui/themes";
 import {
   SwapHorizOutlined,
   InfoOutlined,
@@ -18,6 +18,12 @@ import {
   NotesOutlined,
   HelpOutlineOutlined,
 } from "@mui/icons-material";
+import { TextField } from "core-lib/components/radix/form/TextField";
+import { SelectField } from "core-lib/components/radix/form/SelectField";
+import { ToggleField } from "core-lib/components/radix/toggle/ToggleField";
+import { FormHeader } from "core-lib/components/radix/FormHeader";
+import { FormSection } from "core-lib/components/radix/FormSection";
+import { FormActions } from "core-lib/components/radix/FormActions";
 import { toSelectOptionsWithField } from "core-lib/business/array";
 import { useUnitConversionForm } from "../hooks/useUnitConversionForm";
 import { UnitConversionFormProps } from "./types";
@@ -63,20 +69,14 @@ export const UnitConversionForm: React.FC<UnitConversionFormProps> = ({
   const isApproximate = watchedValues.isApproximate;
 
   const showPreview =
-    fromUnit?.name && toUnit?.name && conversionRate && conversionRate > 0;
+    !!fromUnit?.name && !!toUnit?.name && !!conversionRate && conversionRate > 0;
+
+  const isSameUnit =
+    !!watchedValues.fromUnitID &&
+    watchedValues.fromUnitID === watchedValues.toUnitID;
 
   return (
-    <Card
-      hoverEffect={false}
-      sx={{
-        width: "100%",
-        borderRadius: 3,
-        overflow: "hidden",
-        border: (theme) => `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        boxShadow: (theme) =>
-          `0 8px 24px ${alpha(theme.palette.common.black, 0.05)}`,
-      }}
-    >
+    <Card variant="surface" size="3" style={{ width: "100%" }}>
       <FormHeader
         isEdit={isEdit}
         title="Unit Conversion"
@@ -88,468 +88,238 @@ export const UnitConversionForm: React.FC<UnitConversionFormProps> = ({
 
       {showPreview && (
         <Box
-          sx={{
-            mx: 4,
-            mt: 2,
-            mb: 0,
-            p: 2,
-            borderRadius: 2,
-            bgcolor: (theme) => alpha(theme.palette.success.main, 0.05),
-            border: (theme) =>
-              `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
-            flexWrap: "wrap",
+          mx="4"
+          mt="3"
+          p="3"
+          style={{
+            background: "var(--green-a3)",
+            border: "1px solid var(--green-a5)",
+            borderRadius: "var(--radius-3)",
           }}
         >
-          <Typography variant="body1" fontWeight={500}>
-            1 {fromUnit.name}
-          </Typography>
-          <Typography variant="h6" color="success.main">
-            =
-          </Typography>
-          <Typography variant="body1" fontWeight={700} color="success.main">
-            {conversionRate}
-          </Typography>
-          <Typography variant="body1" fontWeight={500}>
-            {toUnit.name}
-          </Typography>
-          {isApproximate && (
-            <Typography
-              variant="caption"
-              sx={{
-                bgcolor: (theme) => alpha(theme.palette.warning.main, 0.1),
-                color: "warning.main",
-                px: 1,
-                py: 0.5,
-                borderRadius: 1,
-              }}
-            >
-              Approximate
-            </Typography>
-          )}
+          <Flex align="center" justify="center" gap="3" wrap="wrap">
+            <Text size="3" weight="medium">
+              1 {fromUnit.name}
+            </Text>
+            <Heading size="5" style={{ color: "var(--green-11)" }}>
+              =
+            </Heading>
+            <Heading size="5" weight="bold" style={{ color: "var(--green-11)" }}>
+              {conversionRate}
+            </Heading>
+            <Text size="3" weight="medium">
+              {toUnit.name}
+            </Text>
+            {isApproximate && (
+              <Badge color="amber" variant="soft" radius="full">
+                Approximate
+              </Badge>
+            )}
+          </Flex>
         </Box>
       )}
 
-      <CardContent sx={{ p: 4 }}>
-        <Grid container spacing={3}>
-          {/* Unit Selection Section */}
-          <Grid size={{ xs: 12 }}>
-            <FormSection
-              icon={<ScaleOutlined color="primary" />}
-              title="1. Select Units to Convert"
-              description={
-                <Box sx={{ mt: 1, mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Choose the units you want to create a conversion for.
-                  </Typography>
-                  <Box
-                    sx={{
-                      mt: 1,
-                      p: 1.5,
-                      bgcolor: (theme) => alpha(theme.palette.info.main, 0.05),
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="info.main"
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <HelpOutlineOutlined sx={{ fontSize: 14 }} />
-                      <strong>Example:</strong> If you buy chicken wings by{" "}
-                      <strong>kg</strong> but use <strong>pieces</strong> in
-                      recipes, select:
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block", mt: 0.5 }}
-                    >
-                      • From Unit: <strong>kg</strong> (how you buy)
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block" }}
-                    >
-                      • To Unit: <strong>pcs</strong> (how you use)
-                    </Typography>
-                  </Box>
-                </Box>
-              }
-            >
-              <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 6 }}>
+      <Box p="4">
+        <Flex direction="column" gap="4">
+          <FormSection
+            icon={<ScaleOutlined style={{ color: "var(--accent-11)" }} />}
+            title="1. Select Units to Convert"
+            description="Choose the units you want to create a conversion for."
+          >
+            <Flex direction="column" gap="3">
+              <Box
+                p="3"
+                style={{
+                  background: "var(--blue-a3)",
+                  borderRadius: "var(--radius-3)",
+                }}
+              >
+                <Flex align="center" gap="1" mb="1">
+                  <HelpOutlineOutlined
+                    style={{ fontSize: 14, color: "var(--blue-11)" }}
+                  />
+                  <Text size="1" weight="medium" style={{ color: "var(--blue-11)" }}>
+                    Example:
+                  </Text>
+                  <Text size="1" color="gray">
+                    If you buy chicken wings by <strong>kg</strong> but use{" "}
+                    <strong>pieces</strong> in recipes, select:
+                  </Text>
+                </Flex>
+                <Text size="1" color="gray" as="div">
+                  • From Unit: <strong>kg</strong> (how you buy)
+                </Text>
+                <Text size="1" color="gray" as="div">
+                  • To Unit: <strong>pcs</strong> (how you use)
+                </Text>
+              </Box>
+
+              <Grid columns={{ initial: "1", md: "2" }} gap="3">
+                <Box>
                   <SelectField
                     name="fromUnitID"
                     control={control}
                     options={unitOptions}
                     label="From Unit"
                   />
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 0.5, display: "block" }}
-                  >
+                  <Text size="1" color="gray" as="div" mt="1">
                     The unit you purchase or have
-                  </Typography>
-                  {errors.fromUnitID && (
-                    <Typography
-                      variant="caption"
-                      color="error"
-                      sx={{ mt: 0.5, display: "block" }}
-                    >
-                      {errors.fromUnitID.message}
-                    </Typography>
-                  )}
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6 }}>
+                  </Text>
+                </Box>
+                <Box>
                   <SelectField
                     name="toUnitID"
                     control={control}
                     options={unitOptions}
                     label="To Unit"
                   />
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 0.5, display: "block" }}
-                  >
+                  <Text size="1" color="gray" as="div" mt="1">
                     The unit you use in recipes or inventory
-                  </Typography>
-                  {errors.toUnitID && (
-                    <Typography
-                      variant="caption"
-                      color="error"
-                      sx={{ mt: 0.5, display: "block" }}
-                    >
-                      {errors.toUnitID.message}
-                    </Typography>
-                  )}
-                </Grid>
+                  </Text>
+                </Box>
               </Grid>
 
-              {watchedValues.fromUnitID === watchedValues.toUnitID &&
-                watchedValues.fromUnitID && (
-                  <Box
-                    sx={{
-                      mt: 2,
-                      p: 1.5,
-                      borderRadius: 2,
-                      bgcolor: (theme) =>
-                        alpha(theme.palette.warning.main, 0.1),
-                      border: (theme) =>
-                        `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    <WarningAmberOutlined
-                      sx={{ color: (theme) => theme.palette.warning.main }}
-                    />
-                    <Typography variant="caption" color="warning.main">
-                      Cannot create conversion from a unit to itself. Please
-                      select different units.
-                    </Typography>
-                  </Box>
-                )}
-            </FormSection>
-          </Grid>
+              {isSameUnit && (
+                <Callout.Root color="amber" variant="soft">
+                  <Callout.Icon>
+                    <WarningAmberOutlined style={{ fontSize: 18 }} />
+                  </Callout.Icon>
+                  <Callout.Text>
+                    Cannot create conversion from a unit to itself. Please
+                    select different units.
+                  </Callout.Text>
+                </Callout.Root>
+              )}
+            </Flex>
+          </FormSection>
 
-          {/* Conversion Rate Section */}
-          <Grid size={{ xs: 12 }}>
-            <FormSection
-              icon={<TrendingUpOutlined color="success" />}
-              title="2. Set the Conversion Rate"
-              description={
-                <Box sx={{ mt: 1, mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Define how many "To Units" equal one "From Unit".
-                  </Typography>
-                  <Box
-                    sx={{
-                      mt: 1,
-                      p: 1.5,
-                      bgcolor: (theme) => alpha(theme.palette.info.main, 0.05),
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="info.main"
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <HelpOutlineOutlined sx={{ fontSize: 14 }} />
-                      <strong>Example:</strong>
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block", mt: 0.5 }}
-                    >
-                      • If 1 kg = 8 pieces, enter <strong>8</strong>
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block" }}
-                    >
-                      • If 1 kg = 1000 grams, enter <strong>1000</strong>
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block" }}
-                    >
-                      • If 1 liter = 1000 ml, enter <strong>1000</strong>
-                    </Typography>
-                  </Box>
-                </Box>
-              }
-            >
-              <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    name="conversionRate"
-                    control={control}
-                    label="Conversion Rate"
-                    type="number"
-                    placeholder="8"
+          <FormSection
+            icon={<TrendingUpOutlined style={{ color: "var(--green-11)" }} />}
+            title="2. Set the Conversion Rate"
+            description={'Define how many "To Units" equal one "From Unit".'}
+          >
+            <Grid columns={{ initial: "1", md: "2" }} gap="3">
+              <Box>
+                <TextField
+                  name="conversionRate"
+                  control={control}
+                  label="Conversion Rate"
+                  type="number"
+                  placeholder="8"
+                />
+                <Text size="1" color="gray" as="div" mt="1">
+                  1 {fromUnit?.name || "unit"} = ? {toUnit?.name || "unit"}
+                </Text>
+              </Box>
+              <Box
+                p="3"
+                style={{
+                  background: "var(--blue-a3)",
+                  border: "1px solid var(--blue-a5)",
+                  borderRadius: "var(--radius-3)",
+                }}
+              >
+                <Text size="2" weight="medium" as="div" mb="1">
+                  Quick Reference
+                </Text>
+                <Text size="1" color="gray" as="div">
+                  • <strong>kg → g:</strong> 1000
+                </Text>
+                <Text size="1" color="gray" as="div">
+                  • <strong>kg → pcs:</strong> varies (e.g., 8 for chicken
+                  wings)
+                </Text>
+                <Text size="1" color="gray" as="div">
+                  • <strong>liter → ml:</strong> 1000
+                </Text>
+                <Text size="1" color="gray" as="div">
+                  • <strong>kg → lb:</strong> 2.20462
+                </Text>
+              </Box>
+            </Grid>
+          </FormSection>
+
+          <FormSection
+            icon={<WarningAmberOutlined style={{ color: "var(--amber-11)" }} />}
+            title="3. Specify Accuracy"
+            description="Mark if this conversion is approximate or exact."
+          >
+            <Flex direction="column" gap="3">
+              <Box
+                p="3"
+                style={{
+                  background: "var(--amber-a3)",
+                  borderRadius: "var(--radius-3)",
+                }}
+              >
+                <Flex align="center" gap="1" mb="1">
+                  <HelpOutlineOutlined
+                    style={{ fontSize: 14, color: "var(--amber-11)" }}
                   />
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 0.5, display: "block" }}
-                  >
-                    1 {fromUnit?.name || "unit"} = ? {toUnit?.name || "unit"}
-                  </Typography>
-                  {errors.conversionRate && (
-                    <Typography
-                      variant="caption"
-                      color="error"
-                      sx={{ mt: 0.5, display: "block" }}
-                    >
-                      {errors.conversionRate.message}
-                    </Typography>
-                  )}
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      bgcolor: (theme) => alpha(theme.palette.info.main, 0.05),
-                      border: (theme) =>
-                        `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="body2" fontWeight={500} gutterBottom>
-                        Quick Reference
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                      >
-                        • <strong>kg → g:</strong> 1000
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                      >
-                        • <strong>kg → pcs:</strong> varies (e.g., 8 for chicken
-                        wings)
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                      >
-                        • <strong>liter → ml:</strong> 1000
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                      >
-                        • <strong>kg → lb:</strong> 2.20462
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-              </Grid>
-            </FormSection>
-          </Grid>
-
-          {/* Approximate Conversion Section */}
-          <Grid size={{ xs: 12 }}>
-            <FormSection
-              icon={<WarningAmberOutlined color="warning" />}
-              title="3. Specify Accuracy"
-              description={
-                <Box sx={{ mt: 1, mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Mark if this conversion is approximate or exact.
-                  </Typography>
-                  <Box
-                    sx={{
-                      mt: 1,
-                      p: 1.5,
-                      bgcolor: (theme) =>
-                        alpha(theme.palette.warning.main, 0.05),
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="warning.main"
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <HelpOutlineOutlined sx={{ fontSize: 14 }} />
-                      <strong>When to mark as "Approximate":</strong>
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block", mt: 0.5 }}
-                    >
-                      • Weight to pieces (e.g., 1 kg = 8 pieces, but pieces may
-                      vary in size)
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block" }}
-                    >
-                      • When the conversion depends on item size or type
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="success.main"
-                      sx={{ display: "block", mt: 1 }}
-                    >
-                      <strong>Mark as "Exact" for:</strong> kg → g, liter → ml,
-                      etc.
-                    </Typography>
-                  </Box>
-                </Box>
-              }
-            >
+                  <Text size="1" weight="medium" style={{ color: "var(--amber-11)" }}>
+                    When to mark as "Approximate":
+                  </Text>
+                </Flex>
+                <Text size="1" color="gray" as="div">
+                  • Weight to pieces (e.g., 1 kg = 8 pieces, but pieces may vary
+                  in size)
+                </Text>
+                <Text size="1" color="gray" as="div">
+                  • When the conversion depends on item size or type
+                </Text>
+                <Text size="1" as="div" mt="2" style={{ color: "var(--green-11)" }}>
+                  <strong>Mark as "Exact" for:</strong> kg → g, liter → ml, etc.
+                </Text>
+              </Box>
               <ToggleField
                 control={control}
                 name="isApproximate"
                 options={APPROXIMATE_OPTIONS}
-                orientation="horizontal"
-                spacing={2}
-                showErrorBelow={false}
               />
-            </FormSection>
-          </Grid>
+            </Flex>
+          </FormSection>
 
-          {/* Notes Section */}
-          <Grid size={{ xs: 12 }}>
-            <FormSection
-              icon={<NotesOutlined color="secondary" />}
-              title="4. Additional Notes (Optional)"
-              description="Add any notes or comments about this conversion for future reference"
-            >
-              <TextField
-                name="notes"
-                control={control}
-                label="Notes"
-                placeholder="e.g., 1 kg of chicken wings = approximately 8 pieces (varies by size)"
-                multiline
-                rows={3}
-              />
-              {errors.notes && (
-                <Typography
-                  variant="caption"
-                  color="error"
-                  sx={{ mt: 0.5, display: "block" }}
-                >
-                  {errors.notes.message}
-                </Typography>
-              )}
-            </FormSection>
-          </Grid>
+          <FormSection
+            icon={<NotesOutlined style={{ color: "var(--purple-11)" }} />}
+            title="4. Additional Notes (Optional)"
+            description="Add any notes or comments about this conversion for future reference"
+          >
+            <TextField
+              name="notes"
+              control={control}
+              label="Notes"
+              placeholder="e.g., 1 kg of chicken wings = approximately 8 pieces (varies by size)"
+              multiline
+              rows={3}
+            />
+            {errors.notes && (
+              <Text size="1" color="red" as="div" mt="1">
+                {errors.notes.message}
+              </Text>
+            )}
+          </FormSection>
 
-          {/* Info Box */}
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                bgcolor: (theme) => alpha(theme.palette.info.main, 0.03),
-                border: (theme) =>
-                  `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 1.5,
-              }}
-            >
-              <InfoOutlined
-                sx={{ color: (theme) => theme.palette.info.main, fontSize: 20 }}
-              />
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  <strong>How Unit Conversions Work</strong>
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                >
-                  • When you create a product, you'll specify:
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  sx={{ pl: 2 }}
-                >
-                  - <strong>Purchase Unit:</strong> How you buy (e.g., kg)
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  sx={{ pl: 2 }}
-                >
-                  - <strong>Stock Unit:</strong> How you track (e.g., pcs)
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  sx={{ mt: 1 }}
-                >
-                  • The system will automatically use this conversion to
-                  calculate costs
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                >
-                  • Example: 15 kg @ ₱2,300 = ₱153.33/kg → ÷ 8 = ₱19.17/piece →
-                  × 4 pieces = ₱76.67
-                </Typography>
-              </Box>
-            </Box>
-          </Grid>
-        </Grid>
-      </CardContent>
+          <Callout.Root color="blue" variant="soft">
+            <Callout.Icon>
+              <InfoOutlined style={{ fontSize: 18 }} />
+            </Callout.Icon>
+            <Callout.Text>
+              <strong>How Unit Conversions Work</strong>
+              <br />• When you create a product, you'll specify:
+              <br />
+              &nbsp;&nbsp;- <strong>Purchase Unit:</strong> How you buy (e.g.,
+              kg)
+              <br />
+              &nbsp;&nbsp;- <strong>Stock Unit:</strong> How you track (e.g.,
+              pcs)
+              <br />• The system will automatically use this conversion to
+              calculate costs
+              <br />• Example: 15 kg @ ₱2,300 = ₱153.33/kg → ÷ 8 = ₱19.17/piece →
+              × 4 pieces = ₱76.67
+            </Callout.Text>
+          </Callout.Root>
+        </Flex>
+      </Box>
 
       <FormActions
         isEdit={isEdit}

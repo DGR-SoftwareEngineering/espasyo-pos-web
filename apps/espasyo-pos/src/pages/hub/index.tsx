@@ -1,5 +1,13 @@
-import { Box, Container, Fab, Tooltip } from "@mui/material";
-import { AutoAwesome } from "@mui/icons-material";
+import {
+  Box,
+  Container,
+  Flex,
+  IconButton,
+  Text,
+  Tooltip,
+} from "@radix-ui/themes";
+import { MagicWandIcon } from "@radix-ui/react-icons";
+import { motion } from "framer-motion";
 import { useApi } from "core-lib/core/hooks";
 import { useGreeting, useMotivation } from "../../components/dashboard/hooks";
 import {
@@ -9,9 +17,8 @@ import {
   QuickActions,
   Achievements,
 } from "../../components/dashboard/components";
-import { motion } from "framer-motion";
 
-const MotionFab = motion(Fab);
+const MotionIconButton = motion(IconButton);
 
 const DashboardHome = () => {
   const { timeOfDay } = useGreeting();
@@ -21,11 +28,17 @@ const DashboardHome = () => {
   const userData = result?.data?.response?.userInfo;
   const role = result?.data?.response?.roleID ? "Cashier" : "Staff";
 
-  if (loading) return <Container>Loading...</Container>;
+  if (loading) {
+    return (
+      <Flex align="center" justify="center" style={{ minHeight: 240 }}>
+        <Text color="gray">Loading…</Text>
+      </Flex>
+    );
+  }
 
   return (
-    <Box sx={{ p: 3, minHeight: "100vh", bgcolor: "grey.50" }}>
-      <Container maxWidth="xl">
+    <Box style={{ minHeight: "100%", background: "var(--gray-2)" }}>
+      <Container size="4" px="4" py="4">
         <WelcomeHeader
           name={userData?.firstName || "Cashier"}
           role={role}
@@ -36,26 +49,34 @@ const DashboardHome = () => {
         <StatsGrid />
 
         <Box
-          sx={{
+          style={{
             display: "grid",
-            gridTemplateColumns: { md: "1fr 1fr" },
-            gap: 3,
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+            gap: 24,
           }}
         >
           <QuickActions />
           <Achievements />
         </Box>
 
-        <Tooltip title="New motivation">
-          <MotionFab
-            color="primary"
+        <Tooltip content="New motivation">
+          <MotionIconButton
+            size="4"
+            radius="full"
+            variant="solid"
+            color="indigo"
             onClick={nextMessage}
             whileHover={{ scale: 1.1, rotate: 180 }}
             whileTap={{ scale: 0.9 }}
-            sx={{ position: "fixed", bottom: 24, right: 24 }}
+            style={{
+              position: "fixed",
+              bottom: 28,
+              right: 28,
+              boxShadow: "0 8px 24px var(--accent-a8)",
+            }}
           >
-            <AutoAwesome />
-          </MotionFab>
+            <MagicWandIcon />
+          </MotionIconButton>
         </Tooltip>
       </Container>
     </Box>

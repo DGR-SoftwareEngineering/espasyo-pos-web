@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { roleConfig } from "../config/roleConfig";
 import { Permission } from "../permissions";
 
@@ -23,68 +23,76 @@ export const usePermissions = (roleName: string | null) => {
     return config.permissions || null;
   }, [roleName]);
 
-  const hasPermission = (
-    permissionKey: string,
-    action: keyof Permission = "view",
-  ): boolean => {
-    if (!permissions) {
-      return false;
-    }
+  const hasPermission = useCallback(
+    (permissionKey: string, action: keyof Permission = "view"): boolean => {
+      if (!permissions) {
+        return false;
+      }
 
-    if (permissionKey.includes(".")) {
-      const parts = permissionKey.split(".");
-      let current: any = permissions;
+      if (permissionKey.includes(".")) {
+        const parts = permissionKey.split(".");
+        let current: any = permissions;
 
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        if (!part) return false;
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          if (!part) return false;
 
-        if (!current || typeof current !== "object") {
-          return false;
-        }
-
-        if (i === parts.length - 1) {
-          return current[part]?.[action] || false;
-        }
-
-        if (part === "nested") {
-          continue;
-        }
-
-        const next = current[part];
-        if (next && typeof next === "object") {
-          if ("nested" in next) {
-            current = next.nested;
-          } else {
-            current = next;
+          if (!current || typeof current !== "object") {
+            return false;
           }
-        } else {
-          return false;
+
+          if (i === parts.length - 1) {
+            return current[part]?.[action] || false;
+          }
+
+          if (part === "nested") {
+            continue;
+          }
+
+          const next = current[part];
+          if (next && typeof next === "object") {
+            if ("nested" in next) {
+              current = next.nested;
+            } else {
+              current = next;
+            }
+          } else {
+            return false;
+          }
         }
       }
-    }
 
-    const permission = permissions[permissionKey];
+      const permission = permissions[permissionKey];
 
-    if (!permission) {
+      if (!permission) {
+        return false;
+      }
+
+      if (typeof permission === "object" && "view" in permission) {
+        return permission[action] || false;
+      }
+
       return false;
-    }
+    },
+    [permissions],
+  );
 
-    if (typeof permission === "object" && "view" in permission) {
-      return permission[action] || false;
-    }
-
-    return false;
-  };
-
-  const canView = (permissionKey: string) =>
-    hasPermission(permissionKey, "view");
-  const canCreate = (permissionKey: string) =>
-    hasPermission(permissionKey, "create");
-  const canEdit = (permissionKey: string) =>
-    hasPermission(permissionKey, "edit");
-  const canDelete = (permissionKey: string) =>
-    hasPermission(permissionKey, "delete");
+  const canView = useCallback(
+    (permissionKey: string) => hasPermission(permissionKey, "view"),
+    [hasPermission],
+  );
+  const canCreate = useCallback(
+    (permissionKey: string) => hasPermission(permissionKey, "create"),
+    [hasPermission],
+  );
+  const canEdit = useCallback(
+    (permissionKey: string) => hasPermission(permissionKey, "edit"),
+    [hasPermission],
+  );
+  const canDelete = useCallback(
+    (permissionKey: string) => hasPermission(permissionKey, "delete"),
+    [hasPermission],
+  );
 
   return {
     permissions,

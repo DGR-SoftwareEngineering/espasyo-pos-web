@@ -23,7 +23,8 @@ export const useAuthentication = (): AuthService => {
   const [userInitials, setUserInitials] = useState("");
   const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
-  const [roleID, setRoleID] = useState<string | null>(null);
+  const [userInfoLoading, setUserInfoLoading] = useState(false);
+  const [roleLoading, setRoleLoading] = useState(false);
 
   const loginCb = useApiCallback((api, p: LoginParams) =>
     api.authentication.login(p),
@@ -42,18 +43,11 @@ export const useAuthentication = (): AuthService => {
       accessToken ? await api.authentication.validateToken() : null,
     [accessToken],
   );
-  const userInfoCb = useApi(
-    async (api) =>
-      isAuthenticated && accessToken ? await api.commons.getUserById() : null,
-    [isAuthenticated, accessToken],
+  const userInfoCallback = useApiCallback(async (api) =>
+    api.commons.getUserById(),
   );
-
-  const roleCb = useApi(
-    async (api) => {
-      if (!roleID) return null;
-      return await api.commons.getRoleById(roleID);
-    },
-    [roleID],
+  const roleCallback = useApiCallback(async (api, roleID: string) =>
+    api.commons.getRoleById(roleID),
   );
 
   const authSessionIdleTimer = useSessionIdleTimer({
@@ -70,13 +64,9 @@ export const useAuthentication = (): AuthService => {
     loginCb.loading ||
     logoutCb.loading ||
     createSessionCb.loading ||
-    userInfoCb.loading ||
-    roleCb.loading ||
+    userInfoLoading ||
+    roleLoading ||
     validateTokenCb.loading;
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-  }, [isAuthenticated]);
 
   useEffect(() => {
     if (validateTokenCb.result?.data.success !== undefined) {
@@ -87,42 +77,55 @@ export const useAuthentication = (): AuthService => {
   }, [accessToken, validateTokenCb.result]);
 
   useEffect(() => {
-    if (
-      isAuthenticated &&
-      accessToken &&
-      userInfoCb.result?.data?.response?.roleID
-    ) {
-      setRoleID(userInfoCb.result.data.response.roleID);
-    }
-  }, [userInfoCb.result, isAuthenticated, accessToken]);
+    if (!isAuthenticated || !accessToken) return;
+    let cancelled = false;
+
+    const fetchUserAndRole = async () => {
+      setUserInfoLoading(true);
+      try {
+        const userResult = await userInfoCallback.execute();
+        if (cancelled) return;
+        const userInfoData = userResult?.data?.response;
+        if (userInfoData?.userInfo) {
+          const { firstName = "", lastName = "", email: userEmail = "" } =
+            userInfoData.userInfo;
+          const initials = `${firstName.charAt(0)}${lastName.charAt(
+            0,
+          )}`.toUpperCase();
+          setEmail(userEmail);
+          setUserInitials(initials);
+        }
+        const fetchedRoleID = userInfoData?.roleID;
+        if (!fetchedRoleID) return;
+        setRoleLoading(true);
+        try {
+          const roleResult = await roleCallback.execute(fetchedRoleID);
+          if (cancelled) return;
+          const roleName = roleResult?.data?.response?.roleName;
+          if (roleName) setRole(roleName);
+        } finally {
+          if (!cancelled) setRoleLoading(false);
+        }
+      } catch (error) {
+        console.error("Failed to load user/role after authentication", error);
+      } finally {
+        if (!cancelled) setUserInfoLoading(false);
+      }
+    };
+
+    fetchUserAndRole();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, accessToken]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      console.log("authSessionIdleTimer.start() called");
       return authSessionIdleTimer.start();
     } else {
       return authSessionIdleTimer.stop();
     }
   }, [isAuthenticated, accessToken]);
-
-  useEffect(() => {
-    if (roleCb.result?.data?.response?.roleName) {
-      setRole(roleCb.result.data.response.roleName);
-    }
-  }, [roleCb.result]);
-
-  useEffect(() => {
-    if (userInfoCb.result?.data?.response?.userInfo) {
-      const userData = userInfoCb.result.data.response.userInfo;
-      const firstName = userData.firstName || "";
-      const lastName = userData.lastName || "";
-      const initials = `${firstName.charAt(0)}${lastName.charAt(
-        0,
-      )}`.toUpperCase();
-      setEmail(userData.email || "");
-      setUserInitials(initials);
-    }
-  }, [userInfoCb.result]);
 
   const logout = useCallback(async () => {
     try {
@@ -158,9 +161,10 @@ export const useAuthentication = (): AuthService => {
       clearCookies!();
       clearSession();
       setIsAuthenticated(false);
-      setRoleID("");
+      setRole("");
+      setEmail("");
+      setUserInitials("");
       authSessionIdleTimer.stop();
-      console.log("authSessionIdleTimer.stop() called!");
     }
   }, [accessToken, refreshToken, createSessionCb, logoutCb]);
 

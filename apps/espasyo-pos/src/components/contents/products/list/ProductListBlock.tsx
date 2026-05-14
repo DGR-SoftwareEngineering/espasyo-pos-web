@@ -1,29 +1,23 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import {
-  Box,
-  Button,
-  Paper,
-  Stack,
-  Typography,
-  alpha,
-  useTheme,
-} from "@mui/material";
-import { RefreshOutlined } from "@mui/icons-material";
+import { Box, Card, Flex, Text } from "@radix-ui/themes";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import { useApi } from "core-lib/core/hooks";
-import { registerForm, useDialogContext } from "core-lib";
+import { useDialogContext } from "core-lib";
+import { registerForm } from "core-lib/components/form/FormRenderer";
 import { ProductDataList } from "core-lib/api/commons/types";
+import type { DialogContentType } from "core-lib/api/content/types/common";
+import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
+import { StatsCard } from "core-lib/components/radix/StatsCard";
+import { FilterBar } from "core-lib/components/radix/FilterBar";
+import { Button } from "core-lib/components/radix/buttons/Button";
 import { ProductList } from "./ProductList";
-import { HeaderV2 } from "core-lib/components/header/HeaderV2";
 import { useProductFilters } from "./hooks";
 import { DIALOG_TITLES, DIALOG_TYPES } from "../constants";
-import { StatsCard } from "core-lib/components/StatsCard";
-import { FilterBar } from "core-lib/components/FilterBar";
 import { ProductForm } from "../forms/ProductForm";
 
 registerForm("product-form", ProductForm);
 
 export const ProductListBlock: React.FC = () => {
-  const theme = useTheme();
   const { openDialog } = useDialogContext();
   const [products, setProducts] = useState<ProductDataList[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
@@ -32,19 +26,15 @@ export const ProductListBlock: React.FC = () => {
   const data = useApi((api) => api.commons.productList());
 
   useEffect(() => {
-    const productData = data.result?.data.response ?? [];
-    setProducts(productData);
+    setProducts(data.result?.data.response ?? []);
   }, [data.result?.data.response]);
 
   const { filters, filteredProducts, stats, updateFilter, resetFilters } =
-    useProductFilters({
-      products,
-    });
+    useProductFilters({ products });
 
   const paginatedData = useMemo(() => {
     const start = (pageNumber - 1) * pageSize;
-    const end = start + pageSize;
-    return filteredProducts.slice(start, end);
+    return filteredProducts.slice(start, start + pageSize);
   }, [filteredProducts, pageNumber, pageSize]);
 
   const pagination = useMemo(
@@ -67,7 +57,7 @@ export const ProductListBlock: React.FC = () => {
   const handleCreate = () => {
     openDialog({
       title: DIALOG_TITLES.create,
-      dialogContentType: DIALOG_TYPES.create,
+      dialogContentType: DIALOG_TYPES.create as unknown as DialogContentType,
       onSuccess: handleRefresh,
     });
   };
@@ -76,7 +66,7 @@ export const ProductListBlock: React.FC = () => {
     (product: ProductDataList) => {
       openDialog({
         title: DIALOG_TITLES.view,
-        dialogContentType: DIALOG_TYPES.view,
+        dialogContentType: DIALOG_TYPES.view as unknown as DialogContentType,
         data: product,
       });
     },
@@ -87,44 +77,32 @@ export const ProductListBlock: React.FC = () => {
     (product: ProductDataList) => {
       openDialog({
         title: DIALOG_TITLES.edit,
-        dialogContentType: DIALOG_TYPES.edit,
+        dialogContentType: DIALOG_TYPES.edit as unknown as DialogContentType,
         data: product,
         onSuccess: handleRefresh,
       });
     },
-    [openDialog, handleRefresh],
+    [openDialog],
   );
 
   const handleDelete = useCallback(
     (product: ProductDataList) => {
       openDialog({
         title: DIALOG_TITLES.delete,
-        dialogContentType: DIALOG_TYPES.delete,
+        dialogContentType: DIALOG_TYPES.delete as unknown as DialogContentType,
         data: product,
         onSuccess: handleRefresh,
       });
     },
-    [openDialog, handleRefresh],
+    [openDialog],
   );
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}
-      >
+    <Box style={{ width: "100%" }}>
+      <Card variant="surface" size="3" mb="4">
         <HeaderV2 onCreate={handleCreate} title="Product" />
 
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{ mt: 3, flexWrap: "wrap", gap: 2 }}
-        >
+        <Flex gap="3" mt="4" wrap="wrap">
           <StatsCard
             label="Total Products"
             value={stats.totalProducts}
@@ -141,59 +119,55 @@ export const ProductListBlock: React.FC = () => {
             value={stats.ingredients}
             color="primary"
           />
-        </Stack>
+        </Flex>
 
-        <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
+        <Flex justify="between" align="center" gap="3" mt="4" wrap="wrap">
           <FilterBar
-            filters={filters}
-            onFilterChange={updateFilter}
+            searchValue={filters.searchTerm}
+            onSearchChange={(value) => updateFilter("searchTerm", value)}
+            searchPlaceholder="Search products…"
             onPageSizeChange={(size) => {
               setPageSize(size);
               setPageNumber(1);
             }}
             resultCount={filteredProducts.length}
+            resultLabel="products"
             pageSize={pageSize}
           />
           <Button
-            variant="outlined"
-            startIcon={<RefreshOutlined />}
+            type="Secondary"
             onClick={handleRefresh}
             disabled={data.loading}
-            sx={{ borderRadius: 2, ml: 2 }}
           >
-            Refresh
+            <Flex align="center" gap="2">
+              <ReloadIcon />
+              Refresh
+            </Flex>
           </Button>
-        </Stack>
-      </Paper>
+        </Flex>
+      </Card>
 
-      <Paper
-        elevation={0}
-        sx={{
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          overflow: "hidden",
-        }}
-      >
+      <Card variant="surface" size="2" style={{ overflow: "hidden" }}>
         <ProductList
           data={paginatedData}
           loading={data.loading}
           pagination={pagination}
-          onNextPage={() => setPageNumber((prev) => prev + 1)}
-          onPreviousPage={() => setPageNumber((prev) => prev - 1)}
+          onNextPage={() => setPageNumber((p) => p + 1)}
+          onPreviousPage={() => setPageNumber((p) => p - 1)}
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </Paper>
+      </Card>
 
       {filteredProducts.length > 0 && (
-        <Box sx={{ mt: 2, display: "flex", justifyContent: "space-between" }}>
-          <Typography variant="body2" color="text.secondary">
+        <Flex justify="between" align="center" mt="3" px="2">
+          <Text size="2" color="gray">
             Showing {(pageNumber - 1) * pageSize + 1} to{" "}
             {Math.min(pageNumber * pageSize, filteredProducts.length)} of{" "}
             {filteredProducts.length} entries
-          </Typography>
-        </Box>
+          </Text>
+        </Flex>
       )}
     </Box>
   );

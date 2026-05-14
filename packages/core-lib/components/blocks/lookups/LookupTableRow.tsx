@@ -1,21 +1,19 @@
 import React from "react";
 import {
   Avatar,
+  Badge,
   Box,
-  Chip,
+  Flex,
   IconButton,
-  Stack,
+  Text,
   Tooltip,
-  Typography,
-  alpha,
-  useTheme,
-} from "@mui/material";
+} from "@radix-ui/themes";
 import {
-  EditOutlined,
-  DeleteOutlineOutlined,
-  AccountTreeOutlined,
-} from "@mui/icons-material";
-import { BaseTableRow } from "../../table/BaseTableRow";
+  Pencil1Icon,
+  TrashIcon,
+  Share1Icon,
+} from "@radix-ui/react-icons";
+import { BaseTableRow } from "../../radix/table/BaseTableRow";
 import { formatDateTime } from "../../../business/dates";
 import { formatId } from "../../../business/strings";
 import { LookupAdminConfig, LookupDtoBase } from "./types";
@@ -27,14 +25,18 @@ interface Props<TDto extends LookupDtoBase> {
   onDelete: (row: TDto) => void;
 }
 
+/**
+ * Radix-themed table row for any lookup admin block. Mirrors the previous MUI
+ * version's column layout (name / description / order / parent / updated /
+ * actions) with Radix primitives — no `alpha()` or `useTheme()` calls; all
+ * tone shifts route through Radix Themes' CSS variables.
+ */
 export function LookupTableRow<TDto extends LookupDtoBase>({
   row,
   config,
   onEdit,
   onDelete,
 }: Props<TDto>) {
-  const theme = useTheme();
-
   const parentName = config.parentNameField
     ? ((row[config.parentNameField] as unknown as string | null) ?? null)
     : null;
@@ -46,42 +48,33 @@ export function LookupTableRow<TDto extends LookupDtoBase>({
       id: "name",
       width: "30%",
       render: () => (
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Flex align="center" gap="3">
           <Avatar
-            sx={{
-              width: 40,
-              height: 40,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main,
-              fontSize: "1rem",
-              fontWeight: 600,
-            }}
-          >
-            {row.name.charAt(0).toUpperCase()}
-          </Avatar>
-          <Box>
-            <Typography variant="body2" fontWeight={600}>
+            size="2"
+            radius="full"
+            color="indigo"
+            variant="soft"
+            fallback={row.name.charAt(0).toUpperCase()}
+          />
+          <Box style={{ minWidth: 0 }}>
+            <Text size="2" weight="bold" as="div" truncate>
               {row.name}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              display="block"
-            >
+            </Text>
+            <Text size="1" color="gray" as="div">
               ID: {formatId(rowId)}
-            </Typography>
+            </Text>
           </Box>
-        </Stack>
+        </Flex>
       ),
     },
     {
       id: "description",
       width: "30%",
       render: () => (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{
+        <Text
+          size="2"
+          color="gray"
+          style={{
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
@@ -89,7 +82,7 @@ export function LookupTableRow<TDto extends LookupDtoBase>({
           }}
         >
           {row.description ?? "—"}
-        </Typography>
+        </Text>
       ),
     },
     {
@@ -97,15 +90,14 @@ export function LookupTableRow<TDto extends LookupDtoBase>({
       align: "center" as const,
       width: "10%",
       render: () => (
-        <Chip
-          label={row.displayOrder}
-          size="small"
-          sx={{
-            minWidth: 56,
-            fontWeight: 600,
-            bgcolor: alpha(theme.palette.primary.main, 0.06),
-          }}
-        />
+        <Badge
+          color="indigo"
+          variant="soft"
+          size="2"
+          style={{ minWidth: 48, justifyContent: "center" }}
+        >
+          {row.displayOrder}
+        </Badge>
       ),
     },
     {
@@ -113,31 +105,28 @@ export function LookupTableRow<TDto extends LookupDtoBase>({
       width: "15%",
       render: () =>
         parentName ? (
-          <Stack direction="row" alignItems="center" spacing={0.75}>
-            <AccountTreeOutlined
-              fontSize="small"
-              sx={{ color: theme.palette.text.secondary }}
-            />
-            <Typography variant="body2">{parentName}</Typography>
-          </Stack>
+          <Flex align="center" gap="1">
+            <Share1Icon style={{ color: "var(--gray-10)" }} />
+            <Text size="2">{parentName}</Text>
+          </Flex>
         ) : (
-          <Typography variant="caption" color="text.secondary">
+          <Text size="1" color="gray">
             —
-          </Typography>
+          </Text>
         ),
     },
     {
       id: "updatedAt",
       width: "10%",
       render: () => (
-        <Stack>
-          <Typography variant="body2">
+        <Flex direction="column">
+          <Text size="2">
             {formatDateTime(row.updatedAt ?? row.createdAt)}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
+          </Text>
+          <Text size="1" color="gray">
             by {row.updatedBy ?? row.createdBy ?? "system"}
-          </Typography>
-        </Stack>
+          </Text>
+        </Flex>
       ),
     },
     {
@@ -145,32 +134,30 @@ export function LookupTableRow<TDto extends LookupDtoBase>({
       align: "right" as const,
       width: "5%",
       render: () => (
-        <Stack
-          direction="row"
-          spacing={0.5}
-          justifyContent="flex-end"
-          alignItems="center"
-        >
-          <Tooltip title="Edit">
-            <IconButton size="small" onClick={() => onEdit(row)}>
-              <EditOutlined fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete">
+        <Flex direction="row" gap="1" justify="end" align="center">
+          <Tooltip content="Edit">
             <IconButton
-              size="small"
-              onClick={() => onDelete(row)}
-              sx={{
-                color: theme.palette.error.main,
-                "&:hover": {
-                  bgcolor: alpha(theme.palette.error.main, 0.1),
-                },
-              }}
+              size="1"
+              variant="ghost"
+              color="gray"
+              aria-label="Edit lookup row"
+              onClick={() => onEdit(row)}
             >
-              <DeleteOutlineOutlined fontSize="small" />
+              <Pencil1Icon />
             </IconButton>
           </Tooltip>
-        </Stack>
+          <Tooltip content="Delete">
+            <IconButton
+              size="1"
+              variant="ghost"
+              color="red"
+              aria-label="Delete lookup row"
+              onClick={() => onDelete(row)}
+            >
+              <TrashIcon />
+            </IconButton>
+          </Tooltip>
+        </Flex>
       ),
     },
   ];

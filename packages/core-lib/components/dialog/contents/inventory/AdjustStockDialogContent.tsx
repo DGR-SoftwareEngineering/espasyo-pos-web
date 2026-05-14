@@ -1,4 +1,3 @@
-import { Box } from "@mui/material";
 import {
   AdjustStockParams,
   InventoryDto,
@@ -61,14 +60,12 @@ export const AdjustStockDialogContent: React.FC<{
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <FormRenderer
-        formKey="adjust-stock-form"
-        inventory={inventory}
-        onSubmit={handleSubmit}
-        submitLoading={adjustCb.loading}
-        isInDialog={true}
-      />
-    </Box>
+    <FormRenderer
+      formKey="adjust-stock-form"
+      inventory={inventory}
+      onSubmit={handleSubmit}
+      submitLoading={adjustCb.loading}
+      isInDialog={true}
+    />
   );
 };

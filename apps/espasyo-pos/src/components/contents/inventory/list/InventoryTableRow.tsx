@@ -1,15 +1,13 @@
 import React, { useMemo } from "react";
 import {
   Avatar,
+  Badge,
   Box,
-  Chip,
+  Flex,
   IconButton,
-  Stack,
+  Text,
   Tooltip,
-  Typography,
-  alpha,
-  useTheme,
-} from "@mui/material";
+} from "@radix-ui/themes";
 import {
   KitchenOutlined,
   SwapVertOutlined,
@@ -18,7 +16,7 @@ import {
   VisibilityOutlined,
   DeleteOutlineOutlined,
 } from "@mui/icons-material";
-import { BaseTableRow } from "core-lib";
+import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
 import {
   InventoryDto,
   InventoryStatus,
@@ -37,6 +35,16 @@ interface Props {
   onDelete: (inventory: InventoryDto) => void;
 }
 
+const STATUS_TO_BADGE_COLOR: Record<
+  number,
+  "green" | "amber" | "red" | "gray"
+> = {
+  [InventoryStatus.InStock]: "green",
+  [InventoryStatus.LowStock]: "amber",
+  [InventoryStatus.Critical]: "red",
+  [InventoryStatus.OutOfStock]: "red",
+};
+
 export const InventoryTableRow: React.FC<Props> = ({
   row,
   onView,
@@ -45,8 +53,6 @@ export const InventoryTableRow: React.FC<Props> = ({
   onViewHistory,
   onDelete,
 }) => {
-  const theme = useTheme();
-
   const statusInfo = useMemo(() => {
     const s = STATUS_CONFIG[row.status];
     return (
@@ -60,44 +66,40 @@ export const InventoryTableRow: React.FC<Props> = ({
 
   const StatusIcon = statusInfo.icon;
   const unitLabel = row.stockUnitName ?? "units";
+  const badgeColor = STATUS_TO_BADGE_COLOR[row.status] ?? "gray";
 
   const stockColor =
     row.status === InventoryStatus.InStock
-      ? theme.palette.success.main
+      ? "var(--green-11)"
       : row.status === InventoryStatus.LowStock
-        ? theme.palette.warning.main
-        : theme.palette.error.main;
+        ? "var(--amber-11)"
+        : "var(--red-11)";
 
   const columns = [
     {
       id: "product",
       width: "28%",
       render: () => (
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Flex align="center" gap="3">
           <Avatar
-            sx={{
-              width: 40,
-              height: 40,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main,
-              fontSize: "1rem",
-              fontWeight: 600,
-            }}
-          >
-            {(row.productName ?? "—").charAt(0).toUpperCase()}
-          </Avatar>
-          <Box>
-            <Typography variant="body2" fontWeight={600}>
+            size="2"
+            radius="full"
+            color="indigo"
+            variant="soft"
+            fallback={(row.productName ?? "—").charAt(0).toUpperCase()}
+          />
+          <Box style={{ minWidth: 0 }}>
+            <Text size="2" weight="bold" as="div">
               {row.productName ?? "Unnamed ingredient"}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" display="block">
+            </Text>
+            <Text size="1" color="gray" as="div">
               ID: {formatId(row.inventoryID)}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" display="block">
+            </Text>
+            <Text size="1" color="gray" as="div">
               Unit: {unitLabel}
-            </Typography>
+            </Text>
           </Box>
-        </Stack>
+        </Flex>
       ),
     },
     {
@@ -105,18 +107,14 @@ export const InventoryTableRow: React.FC<Props> = ({
       align: "center" as const,
       width: "15%",
       render: () => (
-        <Stack direction="column" alignItems="center" spacing={0.25}>
-          <Typography
-            variant="body1"
-            fontWeight={700}
-            sx={{ color: stockColor }}
-          >
+        <Flex direction="column" align="center" gap="0">
+          <Text size="3" weight="bold" style={{ color: stockColor }}>
             {formatNumber(row.currentQuantity)}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
+          </Text>
+          <Text size="1" color="gray">
             {unitLabel}
-          </Typography>
-        </Stack>
+          </Text>
+        </Flex>
       ),
     },
     {
@@ -124,15 +122,15 @@ export const InventoryTableRow: React.FC<Props> = ({
       align: "center" as const,
       width: "15%",
       render: () => (
-        <Stack direction="column" alignItems="center" spacing={0.25}>
-          <Typography variant="body2" fontWeight={500}>
+        <Flex direction="column" align="center" gap="0">
+          <Text size="2" weight="medium">
             {formatNumber(row.reorderLevel)} /{" "}
             {formatNumber(row.minimumStockLevel)}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
+          </Text>
+          <Text size="1" color="gray">
             reorder / min
-          </Typography>
-        </Stack>
+          </Text>
+        </Flex>
       ),
     },
     {
@@ -140,27 +138,28 @@ export const InventoryTableRow: React.FC<Props> = ({
       align: "center" as const,
       width: "12%",
       render: () => (
-        <Chip
-          icon={<StatusIcon style={{ fontSize: 16 }} />}
-          label={statusInfo.label}
-          size="small"
-          color={statusInfo.color}
-          sx={{ fontWeight: 600, borderRadius: 2, minWidth: 100 }}
-        />
+        <Badge
+          color={badgeColor}
+          variant="soft"
+          size="2"
+          radius="medium"
+          style={{ minWidth: 100, justifyContent: "center" }}
+        >
+          <StatusIcon style={{ fontSize: 14 }} />
+          {statusInfo.label}
+        </Badge>
       ),
     },
     {
       id: "updatedAt",
       width: "15%",
       render: () => (
-        <Stack direction="column">
-          <Typography variant="body2">
-            {formatDateTime(row.updatedAt ?? row.createdAt)}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
+        <Flex direction="column">
+          <Text size="2">{formatDateTime(row.updatedAt ?? row.createdAt)}</Text>
+          <Text size="1" color="gray">
             by {row.updatedBy ?? row.createdBy ?? "system"}
-          </Typography>
-        </Stack>
+          </Text>
+        </Flex>
       ),
     },
     {
@@ -168,56 +167,63 @@ export const InventoryTableRow: React.FC<Props> = ({
       align: "right" as const,
       width: "15%",
       render: () => (
-        <Stack
-          direction="row"
-          spacing={0.5}
-          justifyContent="flex-end"
-          alignItems="center"
-        >
-          <Tooltip title="View Details">
-            <IconButton size="small" onClick={() => onView(row)}>
+        <Flex gap="1" justify="end" align="center">
+          <Tooltip content="View Details">
+            <IconButton
+              size="1"
+              variant="ghost"
+              color="gray"
+              aria-label="View"
+              onClick={() => onView(row)}
+            >
               <VisibilityOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Adjust Stock">
+          <Tooltip content="Adjust Stock">
             <IconButton
-              size="small"
+              size="1"
+              variant="ghost"
+              color="indigo"
+              aria-label="Adjust stock"
               onClick={() => onAdjust(row)}
-              sx={{
-                color: theme.palette.primary.main,
-                "&:hover": {
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                },
-              }}
             >
               <SwapVertOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Edit Thresholds">
-            <IconButton size="small" onClick={() => onEditThresholds(row)}>
+          <Tooltip content="Edit Thresholds">
+            <IconButton
+              size="1"
+              variant="ghost"
+              color="gray"
+              aria-label="Edit thresholds"
+              onClick={() => onEditThresholds(row)}
+            >
               <TuneOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Movement History">
-            <IconButton size="small" onClick={() => onViewHistory(row)}>
+          <Tooltip content="Movement History">
+            <IconButton
+              size="1"
+              variant="ghost"
+              color="gray"
+              aria-label="Movement history"
+              onClick={() => onViewHistory(row)}
+            >
               <ReceiptLongOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Delete Inventory">
+          <Tooltip content="Delete Inventory">
             <IconButton
-              size="small"
+              size="1"
+              variant="ghost"
+              color="red"
+              aria-label="Delete inventory"
               onClick={() => onDelete(row)}
-              sx={{
-                color: theme.palette.error.main,
-                "&:hover": {
-                  bgcolor: alpha(theme.palette.error.main, 0.1),
-                },
-              }}
             >
               <DeleteOutlineOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-        </Stack>
+        </Flex>
       ),
     },
   ];

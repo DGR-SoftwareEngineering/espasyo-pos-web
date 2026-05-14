@@ -39,8 +39,6 @@ export const useRecipeForm = ({
     submissionKey,
   });
 
-  console.log("form", form);
-
   const { watch } = form;
   const watchedValues = {
     menuItemId: watch("menuItemProductID"),

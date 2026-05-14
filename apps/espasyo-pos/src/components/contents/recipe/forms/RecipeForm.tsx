@@ -1,31 +1,27 @@
 import React, { useMemo, useState } from "react";
 import {
-  Grid,
-  CardContent,
   Box,
-  Typography,
-  useTheme,
-  Divider,
-  alpha,
-} from "@mui/material";
-import {
+  Callout,
   Card,
-  TextField,
-  FormSection,
-  FormActions,
-  InfoBox,
-  FormHeader,
-  SelectField,
-} from "core-lib";
+  Flex,
+  Heading,
+  Separator,
+  Text,
+} from "@radix-ui/themes";
 import {
   RestaurantMenuOutlined,
   KitchenOutlined,
   NotesOutlined,
   AddCircleOutlineOutlined,
   FastfoodOutlined,
-  InfoOutlined,
 } from "@mui/icons-material";
 import { useFieldArray } from "react-hook-form";
+import { TextField } from "core-lib/components/radix/form/TextField";
+import { SelectField } from "core-lib/components/radix/form/SelectField";
+import { FormHeader } from "core-lib/components/radix/FormHeader";
+import { FormSection } from "core-lib/components/radix/FormSection";
+import { FormActions } from "core-lib/components/radix/FormActions";
+import { InfoBox } from "core-lib/components/radix/InfoBox";
 import { RecipeFormProps } from "./types";
 import { useRecipeForm, useIngredientForm } from "../hooks";
 import { toSelectOptionsWithField } from "core-lib/business/array";
@@ -42,7 +38,6 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   menuItems,
   units,
 }) => {
-  const theme = useTheme();
   const [showAddForm, setShowAddForm] = useState(false);
   const addForm = useIngredientForm();
 
@@ -64,6 +59,8 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     control,
     name: "recipeItems",
   });
+
+  console.log('ingredients', ingredients)
 
   const menuItemOptions = useMemo(
     () => toSelectOptionsWithField(menuItems, "productID", "name"),
@@ -107,20 +104,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   };
 
   const handleFormSubmit = handleSubmit(onSubmit);
-  const handleButtonClick = () => {
-    handleFormSubmit();
-  };
+  const handleButtonClick = () => handleFormSubmit();
 
   return (
-    <Card
-      sx={{
-        width: "100%",
-        borderRadius: 3,
-        overflow: "hidden",
-        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.05)}`,
-      }}
-    >
+    <Card variant="surface" size="3" style={{ width: "100%" }}>
       <FormHeader
         isEdit={isEdit}
         title="Recipe"
@@ -130,68 +117,50 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
         icon={FastfoodOutlined}
       />
 
-      <CardContent sx={{ p: 4 }}>
-        <Grid container spacing={4}>
-          {/* Menu Item Selection */}
-          <Grid size={{ xs: 12 }}>
-            <FormSection
-              icon={<RestaurantMenuOutlined color="primary" />}
-              title="Select Menu Item"
-            >
-              <SelectField
-                name="menuItemProductID"
-                control={control}
-                options={menuItemOptions}
-                label="Menu Item"
-              />
-              {errors.menuItemProductID && (
-                <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                  {errors.menuItemProductID.message}
-                </Typography>
-              )}
-            </FormSection>
-          </Grid>
+      <Box p="4">
+        <Flex direction="column" gap="4">
+          <FormSection
+            icon={<RestaurantMenuOutlined style={{ color: "var(--accent-11)" }} />}
+            title="Select Menu Item"
+          >
+            <SelectField
+              name="menuItemProductID"
+              control={control}
+              options={menuItemOptions}
+              label="Menu Item"
+            />
+            {errors.menuItemProductID && (
+              <Text size="1" color="red" as="div" mt="1">
+                {errors.menuItemProductID.message}
+              </Text>
+            )}
+          </FormSection>
 
-          <Grid size={{ xs: 12 }}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
+          <Separator size="4" />
 
-          {/* Ingredients Section */}
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 3,
-              }}
-            >
-              <Typography
-                variant="subtitle1"
-                fontWeight={600}
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                <KitchenOutlined color="success" />
-                Ingredients ({fields.length})
-              </Typography>
-              <Box
-                component="span"
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 1,
-                  color: theme.palette.primary.main,
+          <Box>
+            <Flex justify="between" align="center" mb="3">
+              <Flex align="center" gap="2">
+                <KitchenOutlined style={{ color: "var(--green-11)" }} />
+                <Heading size="3" weight="bold">
+                  Ingredients ({fields.length})
+                </Heading>
+              </Flex>
+              <Flex
+                align="center"
+                gap="1"
+                style={{
                   cursor: "pointer",
-                  "&:hover": { textDecoration: "underline" },
+                  color: "var(--accent-11)",
                 }}
                 onClick={() => setShowAddForm(!showAddForm)}
               >
                 <AddCircleOutlineOutlined fontSize="small" />
-                <Typography variant="body2">
+                <Text size="2">
                   {showAddForm ? "Cancel" : "Add Ingredient"}
-                </Typography>
-              </Box>
-            </Box>
+                </Text>
+              </Flex>
+            </Flex>
 
             {showAddForm && (
               <IngredientAddForm
@@ -203,52 +172,35 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
               />
             )}
 
-            {/* Display duplicate ingredient error */}
             {errors.recipeItems?.message && (
-              <Box
-                sx={{
-                  p: 2,
-                  mb: 2,
-                  bgcolor: (theme) => alpha(theme.palette.error.main, 0.05),
-                  border: (theme) =>
-                    `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
-                <InfoOutlined sx={{ color: theme.palette.error.main }} />
-                <Typography variant="body2" color="error">
-                  {errors.recipeItems.message}
-                </Typography>
-              </Box>
+              <Callout.Root color="red" variant="soft" mb="2">
+                <Callout.Text>{errors.recipeItems.message}</Callout.Text>
+              </Callout.Root>
             )}
 
             {fields.length === 0 ? (
               <Box
-                sx={{
-                  p: 4,
+                p="5"
+                style={{
                   textAlign: "center",
-                  bgcolor: (theme) => alpha(theme.palette.info.main, 0.02),
-                  border: (theme) =>
-                    `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                  borderRadius: 2,
+                  background: "var(--blue-a2)",
+                  border: "1px solid var(--blue-a4)",
+                  borderRadius: "var(--radius-3)",
                 }}
               >
                 <KitchenOutlined
-                  sx={{
+                  style={{
                     fontSize: 48,
-                    color: theme.palette.text.secondary,
-                    mb: 2,
+                    color: "var(--gray-10)",
+                    marginBottom: 12,
                   }}
                 />
-                <Typography color="text.secondary">
+                <Text as="div" color="gray">
                   No ingredients added yet. Click "Add Ingredient" to start.
-                </Typography>
+                </Text>
               </Box>
             ) : (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <Flex direction="column" gap="2">
                 {fields
                   .sort((a, b) => a.displayOrder - b.displayOrder)
                   .map((field, index) => (
@@ -261,37 +213,34 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
                       onRemove={remove}
                     />
                   ))}
-              </Box>
+              </Flex>
             )}
-          </Grid>
+          </Box>
 
-          <Grid size={{ xs: 12 }}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
+          <Separator size="4" />
 
-          {/* Notes Section */}
-          <Grid size={{ xs: 12 }}>
-            <FormSection
-              icon={<NotesOutlined color="secondary" />}
-              title="Recipe Notes (Optional)"
-            >
-              <TextField
-                name="notes"
-                control={control}
-                label="Notes"
-                placeholder="Add any special instructions for this recipe..."
-                multiline
-                rows={3}
-              />
-            </FormSection>
-          </Grid>
+          <FormSection
+            icon={<NotesOutlined style={{ color: "var(--purple-11)" }} />}
+            title="Recipe Notes (Optional)"
+          >
+            <TextField
+              name="notes"
+              control={control}
+              label="Notes"
+              placeholder="Add any special instructions for this recipe..."
+              multiline
+              rows={3}
+            />
+          </FormSection>
 
-          {/* Info Box */}
-          <Grid size={{ xs: 12 }}>
-            <InfoBox />
-          </Grid>
-        </Grid>
-      </CardContent>
+          <InfoBox title="How recipes work">
+            Recipes define the ingredients and quantities required to produce
+            one unit of a menu item. The system uses this to compute cost-per-
+            serving and to deduct stock from inventory each time a sale is
+            recorded.
+          </InfoBox>
+        </Flex>
+      </Box>
 
       <FormActions
         isEdit={isEdit}

@@ -1,22 +1,11 @@
 import React from "react";
-import {
-  Box,
-  Grid,
-  Typography,
-  alpha,
-  Stack,
-  useTheme,
-  InputAdornment,
-} from "@mui/material";
+import { Box, Card, Flex, Grid, Text } from "@radix-ui/themes";
 import { TuneOutlined, InfoOutlined } from "@mui/icons-material";
-import {
-  Card,
-  TextField,
-  FormHeader,
-  FormSection,
-  FormActions,
-  FormErrorSummary,
-} from "core-lib";
+import { TextField } from "core-lib/components/radix/form/TextField";
+import { FormHeader } from "core-lib/components/radix/FormHeader";
+import { FormSection } from "core-lib/components/radix/FormSection";
+import { FormActions } from "core-lib/components/radix/FormActions";
+import { FormErrorSummary } from "core-lib/components/radix/FormErrorSummary";
 import { formatNumber } from "core-lib/business/number";
 import { useThresholdsForm } from "../hooks";
 import { PLACEHOLDERS } from "../constants";
@@ -34,7 +23,6 @@ export const ThresholdsForm: React.FC<ThresholdsFormProps> = ({
   resetForm,
   isInDialog,
 }) => {
-  const theme = useTheme();
   const {
     control,
     handleSubmit,
@@ -58,16 +46,13 @@ export const ThresholdsForm: React.FC<ThresholdsFormProps> = ({
     handleFormSubmit();
   };
 
+  const Shell: React.ElementType = isInDialog ? Box : Card;
+  const shellProps = isInDialog
+    ? { style: { width: "100%" } }
+    : { variant: "surface" as const, size: "3" as const, style: { width: "100%" } };
+
   return (
-    <Card
-      hoverEffect={false}
-      sx={{
-        width: "100%",
-        borderRadius: 3,
-        overflow: "hidden",
-        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-      }}
-    >
+    <Shell {...shellProps}>
       <FormHeader
         isEdit
         title="Edit Thresholds"
@@ -78,78 +63,74 @@ export const ThresholdsForm: React.FC<ThresholdsFormProps> = ({
       />
 
       <Box
-        sx={{
-          px: 4,
-          py: 2,
-          bgcolor: alpha(theme.palette.info.main, 0.04),
-          borderBottom: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
+        px="4"
+        py="3"
+        style={{
+          background: "var(--blue-a3)",
+          borderBottom: "1px solid var(--blue-a5)",
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
-          <InfoOutlined fontSize="small" sx={{ color: theme.palette.info.main }} />
-          <Typography variant="body2" color="text.secondary">
+        <Flex align="center" gap="2">
+          <InfoOutlined
+            style={{ fontSize: 18, color: "var(--blue-11)" }}
+          />
+          <Text size="2" color="gray">
             Current stock is{" "}
-            <strong>
+            <Text weight="bold" color="gray">
               {formatNumber(inventory.currentQuantity)} {unitLabel}
-            </strong>{" "}
+            </Text>{" "}
             — use <em>Adjust Stock</em> if you need to change it.
-          </Typography>
-        </Stack>
+          </Text>
+        </Flex>
       </Box>
 
-      <Box sx={{ p: 4 }}>
-        <FormErrorSummary
-          errors={errors}
-          fieldLabels={FIELD_LABELS}
-          sx={{ mb: 3 }}
-        />
+      <Box p="4">
+        <Flex direction="column" gap="4">
+          <FormErrorSummary errors={errors} fieldLabels={FIELD_LABELS} />
 
-        <FormSection
-          icon={<TuneOutlined color="info" />}
-          title="Threshold Levels"
-          description="Reorder level must be at or above the minimum stock level."
-        >
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                name="reorderLevel"
-                control={control}
-                label="Reorder Level"
-                type="number"
-                placeholder={PLACEHOLDERS.reorderLevel}
-                endAdornment={
-                  <InputAdornment position="end">{unitLabel}</InputAdornment>
-                }
-              />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 0.5, display: "block" }}
-              >
-                Triggers Low Stock when quantity drops to this level.
-              </Typography>
+          <FormSection
+            icon={<TuneOutlined style={{ color: "var(--blue-11)" }} />}
+            title="Threshold Levels"
+            description="Reorder level must be at or above the minimum stock level."
+          >
+            <Grid columns={{ initial: "1", md: "2" }} gap="3">
+              <Box>
+                <TextField
+                  name="reorderLevel"
+                  control={control}
+                  label="Reorder Level"
+                  type="number"
+                  placeholder={PLACEHOLDERS.reorderLevel}
+                  endAdornment={
+                    <Text size="2" color="gray">
+                      {unitLabel}
+                    </Text>
+                  }
+                />
+                <Text size="1" color="gray" as="div" mt="1">
+                  Triggers Low Stock when quantity drops to this level.
+                </Text>
+              </Box>
+              <Box>
+                <TextField
+                  name="minimumStockLevel"
+                  control={control}
+                  label="Minimum Stock Level"
+                  type="number"
+                  placeholder={PLACEHOLDERS.minimumStockLevel}
+                  endAdornment={
+                    <Text size="2" color="gray">
+                      {unitLabel}
+                    </Text>
+                  }
+                />
+                <Text size="1" color="gray" as="div" mt="1">
+                  Triggers Critical when quantity drops to this level.
+                </Text>
+              </Box>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                name="minimumStockLevel"
-                control={control}
-                label="Minimum Stock Level"
-                type="number"
-                placeholder={PLACEHOLDERS.minimumStockLevel}
-                endAdornment={
-                  <InputAdornment position="end">{unitLabel}</InputAdornment>
-                }
-              />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 0.5, display: "block" }}
-              >
-                Triggers Critical when quantity drops to this level.
-              </Typography>
-            </Grid>
-          </Grid>
-        </FormSection>
+          </FormSection>
+        </Flex>
       </Box>
 
       <FormActions
@@ -162,6 +143,6 @@ export const ThresholdsForm: React.FC<ThresholdsFormProps> = ({
         onButtonClick={handleButtonClick}
         buttonText="Update Thresholds"
       />
-    </Card>
+    </Shell>
   );
 };

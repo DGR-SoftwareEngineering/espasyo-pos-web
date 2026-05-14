@@ -1,13 +1,14 @@
 import React from "react";
 import {
-  Grid,
-  CardContent,
+  Badge,
   Box,
-  alpha,
-  Typography,
-  Stack,
-  Chip,
-} from "@mui/material";
+  Callout,
+  Card,
+  Flex,
+  Grid,
+  Heading,
+  Text,
+} from "@radix-ui/themes";
 import {
   Inventory2Outlined,
   KitchenOutlined,
@@ -17,15 +18,12 @@ import {
   WarningAmberOutlined,
   ErrorOutlineOutlined,
 } from "@mui/icons-material";
-import {
-  Card,
-  TextField,
-  AutoCompleteField,
-  FormHeader,
-  FormSection,
-  FormActions,
-  FormErrorSummary,
-} from "core-lib";
+import { TextField } from "core-lib/components/radix/form/TextField";
+import { AutoCompleteField } from "core-lib/components/radix/form/AutoCompleteField";
+import { FormHeader } from "core-lib/components/radix/FormHeader";
+import { FormSection } from "core-lib/components/radix/FormSection";
+import { FormActions } from "core-lib/components/radix/FormActions";
+import { FormErrorSummary } from "core-lib/components/radix/FormErrorSummary";
 import { ProductDataList } from "core-lib/api/commons/types";
 import { getStockStatus } from "core-lib/business/number";
 import { useInventoryForm } from "../hooks";
@@ -37,6 +35,12 @@ const FIELD_LABELS: Record<string, string> = {
   currentQuantity: "Current Quantity",
   reorderLevel: "Reorder Level",
   minimumStockLevel: "Minimum Stock Level",
+};
+
+type ProjectedStatus = {
+  label: string;
+  color: "green" | "amber" | "red";
+  icon: React.ReactNode;
 };
 
 export const InventoryForm: React.FC<InventoryFormProps> = ({
@@ -69,7 +73,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
     [ingredients, watchedValues.productID],
   );
 
-  const projectedStatus = React.useMemo(() => {
+  const projectedStatus = React.useMemo<ProjectedStatus | null>(() => {
     const { isNormal, isLow, isCritical } = getStockStatus(
       watchedValues.currentQuantity,
       watchedValues.reorderLevel,
@@ -78,25 +82,25 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
     if (watchedValues.currentQuantity <= 0)
       return {
         label: "Out of Stock",
-        color: "error" as const,
+        color: "red",
         icon: <ErrorOutlineOutlined fontSize="small" />,
       };
     if (isCritical)
       return {
         label: "Critical",
-        color: "error" as const,
+        color: "red",
         icon: <ErrorOutlineOutlined fontSize="small" />,
       };
     if (isLow)
       return {
         label: "Low Stock",
-        color: "warning" as const,
+        color: "amber",
         icon: <WarningAmberOutlined fontSize="small" />,
       };
     if (isNormal)
       return {
         label: "In Stock",
-        color: "success" as const,
+        color: "green",
         icon: <CheckCircleOutlined fontSize="small" />,
       };
     return null;
@@ -107,22 +111,10 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
   ]);
 
   const handleFormSubmit = handleSubmit(onSubmit);
-  const handleButtonClick = () => {
-    handleFormSubmit();
-  };
+  const handleButtonClick = () => handleFormSubmit();
 
   return (
-    <Card
-      hoverEffect={false}
-      sx={{
-        width: "100%",
-        borderRadius: 3,
-        overflow: "hidden",
-        border: (theme) => `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        boxShadow: (theme) =>
-          `0 8px 24px ${alpha(theme.palette.common.black, 0.05)}`,
-      }}
-    >
+    <Card variant="surface" size="3" style={{ width: "100%" }}>
       <FormHeader
         isEdit={isEdit}
         title="Inventory"
@@ -134,184 +126,146 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
 
       {selectedIngredient && (
         <Box
-          sx={{
-            px: 4,
-            py: 2.5,
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-            borderBottom: (theme) =>
-              `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+          px="4"
+          py="3"
+          style={{
+            background: "var(--accent-a2)",
+            borderBottom: "1px solid var(--accent-a4)",
           }}
         >
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            justifyContent="space-between"
-            alignItems={{ xs: "flex-start", sm: "center" }}
-            spacing={1.5}
+          <Flex
+            direction={{ initial: "column", sm: "row" }}
+            justify="between"
+            align={{ initial: "start", sm: "center" }}
+            gap="2"
           >
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <Flex align="center" gap="3">
               <Box
-                sx={{
+                style={{
                   width: 44,
                   height: 44,
-                  borderRadius: 2,
+                  borderRadius: "var(--radius-3)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                  color: (theme) => theme.palette.primary.main,
+                  background: "var(--accent-a3)",
+                  color: "var(--accent-11)",
                 }}
               >
                 <KitchenOutlined />
               </Box>
               <Box>
-                <Typography variant="subtitle1" fontWeight={700}>
+                <Heading size="3" weight="bold">
                   {selectedIngredient.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </Heading>
+                <Text size="1" color="gray">
                   {selectedIngredient.categoryName ?? "Uncategorized"} ·
                   Ingredient
-                </Typography>
+                </Text>
               </Box>
-            </Stack>
+            </Flex>
             {projectedStatus && (
-              <Chip
-                icon={projectedStatus.icon}
-                label={`Projected: ${projectedStatus.label}`}
+              <Badge
                 color={projectedStatus.color}
-                size="small"
-                sx={{ fontWeight: 600, borderRadius: 2 }}
-              />
+                variant="soft"
+                size="2"
+                radius="medium"
+              >
+                {projectedStatus.icon}
+                Projected: {projectedStatus.label}
+              </Badge>
             )}
-          </Stack>
+          </Flex>
         </Box>
       )}
 
-      <CardContent sx={{ p: 4 }}>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
-            <FormErrorSummary errors={errors} fieldLabels={FIELD_LABELS} />
-          </Grid>
+      <Box p="4">
+        <Flex direction="column" gap="4">
+          <FormErrorSummary errors={errors} fieldLabels={FIELD_LABELS} />
 
-          <Grid size={{ xs: 12 }}>
-            <FormSection
-              icon={<KitchenOutlined color="primary" />}
-              title="Ingredient"
-              description="Only ingredients (non-menu items) with a stock unit can have inventory."
-            >
-              <AutoCompleteField<typeof watchedValues, ProductDataList>
-                name="productID"
-                control={control}
-                options={ingredients}
-                loading={ingredientsLoading}
-                getOptionLabel={(opt) => opt.name}
-                getOptionValue={(opt) => opt.productID}
-                placeholder={PLACEHOLDERS.productSearch}
-                label="Select Ingredient"
-                disableClearable={false}
-                noOptionText="No matching ingredients"
-                textFieldProps={{ size: "small" }}
-              />
-            </FormSection>
-          </Grid>
+          <FormSection
+            icon={<KitchenOutlined style={{ color: "var(--accent-11)" }} />}
+            title="Ingredient"
+            description="Only ingredients (non-menu items) with a stock unit can have inventory."
+          >
+            <AutoCompleteField<typeof watchedValues, ProductDataList>
+              name="productID"
+              control={control}
+              options={ingredients}
+              loading={ingredientsLoading}
+              getOptionLabel={(opt) => opt.name}
+              getOptionValue={(opt) => opt.productID}
+              placeholder={PLACEHOLDERS.productSearch}
+              label="Select Ingredient"
+              disableClearable={false}
+              noOptionText="No matching ingredients"
+            />
+          </FormSection>
 
-          <Grid size={{ xs: 12 }}>
-            <FormSection
-              icon={<TuneOutlined color="info" />}
-              title="Stock Levels"
-              description="Set the initial quantity and the thresholds that drive low-stock and critical statuses."
-            >
-              <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <TextField
-                    name="currentQuantity"
-                    control={control}
-                    label="Current Quantity"
-                    type="number"
-                    placeholder={PLACEHOLDERS.currentQuantity}
-                  />
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 0.5, display: "block" }}
-                  >
-                    Opening balance — use 0 if stock will be received later.
-                  </Typography>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <TextField
-                    name="reorderLevel"
-                    control={control}
-                    label="Reorder Level"
-                    type="number"
-                    placeholder={PLACEHOLDERS.reorderLevel}
-                  />
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 0.5, display: "block" }}
-                  >
-                    Triggers "Low Stock" when quantity drops to this level.
-                  </Typography>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <TextField
-                    name="minimumStockLevel"
-                    control={control}
-                    label="Minimum Stock Level"
-                    type="number"
-                    placeholder={PLACEHOLDERS.minimumStockLevel}
-                  />
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 0.5, display: "block" }}
-                  >
-                    Triggers "Critical" when quantity drops to this level.
-                  </Typography>
-                </Grid>
-              </Grid>
-            </FormSection>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                bgcolor: (theme) => alpha(theme.palette.info.main, 0.03),
-                border: (theme) =>
-                  `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 1.5,
-              }}
-            >
-              <InfoOutlined
-                sx={{ color: (theme) => theme.palette.info.main, fontSize: 20 }}
-              />
+          <FormSection
+            icon={<TuneOutlined style={{ color: "var(--blue-11)" }} />}
+            title="Stock Levels"
+            description="Set the initial quantity and the thresholds that drive low-stock and critical statuses."
+          >
+            <Grid columns={{ initial: "1", md: "3" }} gap="3">
               <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  <strong>How status is computed:</strong>
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  • <strong>In Stock</strong> when quantity is above the reorder level
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  • <strong>Low Stock</strong> when quantity is at or below the reorder level
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  • <strong>Critical</strong> when quantity is at or below the minimum level
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  • <strong>Out of Stock</strong> when quantity reaches zero
-                </Typography>
+                <TextField
+                  name="currentQuantity"
+                  control={control}
+                  label="Current Quantity"
+                  type="number"
+                  placeholder={PLACEHOLDERS.currentQuantity}
+                />
+                <Text size="1" color="gray" as="div" mt="1">
+                  Opening balance — use 0 if stock will be received later.
+                </Text>
               </Box>
-            </Box>
-          </Grid>
-        </Grid>
-      </CardContent>
+
+              <Box>
+                <TextField
+                  name="reorderLevel"
+                  control={control}
+                  label="Reorder Level"
+                  type="number"
+                  placeholder={PLACEHOLDERS.reorderLevel}
+                />
+                <Text size="1" color="gray" as="div" mt="1">
+                  Triggers "Low Stock" when quantity drops to this level.
+                </Text>
+              </Box>
+
+              <Box>
+                <TextField
+                  name="minimumStockLevel"
+                  control={control}
+                  label="Minimum Stock Level"
+                  type="number"
+                  placeholder={PLACEHOLDERS.minimumStockLevel}
+                />
+                <Text size="1" color="gray" as="div" mt="1">
+                  Triggers "Critical" when quantity drops to this level.
+                </Text>
+              </Box>
+            </Grid>
+          </FormSection>
+
+          <Callout.Root color="blue" variant="soft">
+            <Callout.Icon>
+              <InfoOutlined style={{ fontSize: 18 }} />
+            </Callout.Icon>
+            <Callout.Text>
+              <strong>How status is computed:</strong>
+              <br />• <strong>In Stock</strong> when quantity is above the
+              reorder level
+              <br />• <strong>Low Stock</strong> when quantity is at or below
+              the reorder level
+              <br />• <strong>Critical</strong> when quantity is at or below the
+              minimum level
+              <br />• <strong>Out of Stock</strong> when quantity reaches zero
+            </Callout.Text>
+          </Callout.Root>
+        </Flex>
+      </Box>
 
       <FormActions
         isEdit={isEdit}

@@ -1,14 +1,14 @@
 import React from "react";
 import {
+  Badge,
   Box,
-  Stack,
-  Typography,
+  Callout,
+  Card,
+  Flex,
   Grid,
-  Chip,
-  alpha,
-  InputAdornment,
-  useTheme,
-} from "@mui/material";
+  Heading,
+  Text,
+} from "@radix-ui/themes";
 import {
   SwapVertOutlined,
   ArrowDownwardRounded,
@@ -16,16 +16,15 @@ import {
   InfoOutlined,
   WarningAmberOutlined,
 } from "@mui/icons-material";
+import { TextField } from "core-lib/components/radix/form/TextField";
 import {
-  Card,
-  TextField,
   ToggleField,
   ToggleOption,
-  FormHeader,
-  FormSection,
-  FormActions,
-  FormErrorSummary,
-} from "core-lib";
+} from "core-lib/components/radix/toggle/ToggleField";
+import { FormHeader } from "core-lib/components/radix/FormHeader";
+import { FormSection } from "core-lib/components/radix/FormSection";
+import { FormActions } from "core-lib/components/radix/FormActions";
+import { FormErrorSummary } from "core-lib/components/radix/FormErrorSummary";
 import { formatNumber } from "core-lib/business/number";
 import { useAdjustStockForm } from "../hooks";
 import {
@@ -62,7 +61,6 @@ export const AdjustStockForm: React.FC<AdjustStockFormProps> = ({
   resetForm,
   isInDialog,
 }) => {
-  const theme = useTheme();
   const {
     control,
     handleSubmit,
@@ -78,7 +76,6 @@ export const AdjustStockForm: React.FC<AdjustStockFormProps> = ({
     onSubmit,
   });
 
-
   const projectedBalance = inventory.currentQuantity + signedDelta;
   const wouldGoNegative = projectedBalance < 0;
   const unitLabel = inventory.stockUnitName ?? "units";
@@ -89,16 +86,19 @@ export const AdjustStockForm: React.FC<AdjustStockFormProps> = ({
     handleFormSubmit();
   };
 
+  const projectedColor = wouldGoNegative
+    ? "var(--red-11)"
+    : signedDelta > 0
+      ? "var(--green-11)"
+      : "var(--gray-12)";
+
+  const Shell: React.ElementType = isInDialog ? Box : Card;
+  const shellProps = isInDialog
+    ? { style: { width: "100%" } }
+    : { variant: "surface" as const, size: "3" as const, style: { width: "100%" } };
+
   return (
-    <Card
-      hoverEffect={false}
-      sx={{
-        width: "100%",
-        borderRadius: 3,
-        overflow: "hidden",
-        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-      }}
-    >
+    <Shell {...shellProps}>
       <FormHeader
         isEdit
         title="Adjust Stock"
@@ -109,84 +109,73 @@ export const AdjustStockForm: React.FC<AdjustStockFormProps> = ({
       />
 
       <Box
-        sx={{
-          px: 4,
-          py: 2.5,
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
-          gap: 2,
-          bgcolor: alpha(theme.palette.primary.main, 0.03),
-          borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+        px="4"
+        py="3"
+        style={{
+          background: "var(--accent-a2)",
+          borderBottom: "1px solid var(--accent-a4)",
         }}
       >
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Current Stock
-          </Typography>
-          <Typography variant="h6" fontWeight={700}>
-            {formatNumber(inventory.currentQuantity)} {unitLabel}
-          </Typography>
-        </Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Reorder / Min
-          </Typography>
-          <Typography variant="body1" fontWeight={600}>
-            {formatNumber(inventory.reorderLevel)} /{" "}
-            {formatNumber(inventory.minimumStockLevel)} {unitLabel}
-          </Typography>
-        </Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            After Adjustment
-          </Typography>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Typography
-              variant="h6"
-              fontWeight={700}
-              color={
-                wouldGoNegative
-                  ? "error.main"
-                  : signedDelta > 0
-                    ? "success.main"
-                    : "text.primary"
-              }
-            >
-              {formatNumber(projectedBalance)} {unitLabel}
-            </Typography>
-            {watchedValues.amount > 0 && !wouldGoNegative && (
-              <Chip
-                size="small"
-                label={`${signedDelta > 0 ? "+" : ""}${formatNumber(signedDelta)}`}
-                color={signedDelta > 0 ? "success" : "error"}
-                sx={{ height: 20, fontWeight: 600 }}
-              />
-            )}
-          </Stack>
-        </Box>
+        <Grid columns={{ initial: "1", sm: "3" }} gap="3">
+          <Box>
+            <Text size="1" color="gray" as="div">
+              Current Stock
+            </Text>
+            <Heading size="4" weight="bold">
+              {formatNumber(inventory.currentQuantity)} {unitLabel}
+            </Heading>
+          </Box>
+          <Box>
+            <Text size="1" color="gray" as="div">
+              Reorder / Min
+            </Text>
+            <Text size="3" weight="medium" as="div">
+              {formatNumber(inventory.reorderLevel)} /{" "}
+              {formatNumber(inventory.minimumStockLevel)} {unitLabel}
+            </Text>
+          </Box>
+          <Box>
+            <Text size="1" color="gray" as="div">
+              After Adjustment
+            </Text>
+            <Flex align="center" gap="2">
+              <Heading size="4" weight="bold" style={{ color: projectedColor }}>
+                {formatNumber(projectedBalance)} {unitLabel}
+              </Heading>
+              {watchedValues.amount > 0 && !wouldGoNegative && (
+                <Badge
+                  color={signedDelta > 0 ? "green" : "red"}
+                  variant="soft"
+                  radius="full"
+                >
+                  {signedDelta > 0 ? "+" : ""}
+                  {formatNumber(signedDelta)}
+                </Badge>
+              )}
+            </Flex>
+          </Box>
+        </Grid>
       </Box>
 
-      <Box sx={{ p: 4 }}>
-        <Stack spacing={3}>
+      <Box p="4">
+        <Flex direction="column" gap="4">
           <FormErrorSummary errors={errors} fieldLabels={FIELD_LABELS} />
 
           <FormSection
-            icon={<SwapVertOutlined color="primary" />}
+            icon={<SwapVertOutlined style={{ color: "var(--accent-11)" }} />}
             title="Direction & Amount"
           >
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12, md: 6 }}>
+            <Grid columns={{ initial: "1", md: "2" }} gap="3">
+              <Box>
                 <ToggleField
                   name="direction"
                   control={control}
                   options={DIRECTION_OPTIONS}
                   label="Direction"
                   required
-                  orientation="horizontal"
-                  spacing={2}
                 />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              </Box>
+              <Box>
                 <TextField
                   name="amount"
                   control={control}
@@ -194,64 +183,57 @@ export const AdjustStockForm: React.FC<AdjustStockFormProps> = ({
                   type="number"
                   placeholder={PLACEHOLDERS.adjustAmount}
                   endAdornment={
-                    <InputAdornment position="end">{unitLabel}</InputAdornment>
+                    <Text size="2" color="gray">
+                      {unitLabel}
+                    </Text>
                   }
                 />
-              </Grid>
+              </Box>
             </Grid>
           </FormSection>
 
           {wouldGoNegative && (
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                bgcolor: alpha(theme.palette.error.main, 0.06),
-                border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
-                display: "flex",
-                gap: 1.5,
-                alignItems: "flex-start",
-              }}
-            >
-              <WarningAmberOutlined color="error" />
-              <Box>
-                <Typography variant="body2" fontWeight={600} color="error.main">
-                  This adjustment would result in negative stock.
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Reduce the amount or change the direction.
-                </Typography>
-              </Box>
-            </Box>
+            <Callout.Root color="red" variant="soft">
+              <Callout.Icon>
+                <WarningAmberOutlined style={{ fontSize: 18 }} />
+              </Callout.Icon>
+              <Callout.Text>
+                <strong>This adjustment would result in negative stock.</strong>
+                <br />
+                Reduce the amount or change the direction.
+              </Callout.Text>
+            </Callout.Root>
           )}
 
           <FormSection
-            icon={<InfoOutlined color="info" />}
+            icon={<InfoOutlined style={{ color: "var(--blue-11)" }} />}
             title="Reason"
             description="Required — this is written to the immutable stock-movement log."
           >
-            <Stack spacing={2}>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {ADJUSTMENT_REASON_PRESETS.map((preset) => (
-                  <Chip
-                    key={preset}
-                    label={preset}
-                    variant={
-                      watchedValues.reason === preset ? "filled" : "outlined"
-                    }
-                    color={
-                      watchedValues.reason === preset ? "primary" : "default"
-                    }
-                    onClick={() =>
-                      setValue("reason", preset, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      })
-                    }
-                    sx={{ borderRadius: 2 }}
-                  />
-                ))}
-              </Stack>
+            <Flex direction="column" gap="3">
+              <Flex gap="2" wrap="wrap">
+                {ADJUSTMENT_REASON_PRESETS.map((preset) => {
+                  const isSelected = watchedValues.reason === preset;
+                  return (
+                    <Badge
+                      key={preset}
+                      color={isSelected ? "indigo" : "gray"}
+                      variant={isSelected ? "solid" : "soft"}
+                      radius="full"
+                      size="2"
+                      onClick={() =>
+                        setValue("reason", preset, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
+                      style={{ cursor: "pointer", userSelect: "none" }}
+                    >
+                      {preset}
+                    </Badge>
+                  );
+                })}
+              </Flex>
               <TextField
                 name="reason"
                 control={control}
@@ -260,9 +242,9 @@ export const AdjustStockForm: React.FC<AdjustStockFormProps> = ({
                 multiline
                 rows={2}
               />
-            </Stack>
+            </Flex>
           </FormSection>
-        </Stack>
+        </Flex>
       </Box>
 
       <FormActions
@@ -275,6 +257,6 @@ export const AdjustStockForm: React.FC<AdjustStockFormProps> = ({
         onButtonClick={handleButtonClick}
         buttonText="Submit Adjustment"
       />
-    </Card>
+    </Shell>
   );
 };

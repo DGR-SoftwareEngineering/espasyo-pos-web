@@ -1,24 +1,15 @@
 import React from "react";
-import {
-  Grid,
-  Paper,
-  Typography,
-  Chip,
-  IconButton,
-  Box,
-  Tooltip,
-  alpha,
-} from "@mui/material";
+import { Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
 import { DeleteOutline, InfoOutlined } from "@mui/icons-material";
 import { FieldArrayWithId } from "react-hook-form";
 import { RecipeForm } from "./contents/recipe/forms/validation";
-import { ProductDataList, CategoryDataList } from "core-lib/api/commons/types";
+import { ProductDataList, UnitDto } from "core-lib/api/commons/types";
 
 interface IngredientListItemProps {
   field: FieldArrayWithId<RecipeForm, "recipeItems", "id">;
   index: number;
   ingredients: ProductDataList[];
-  units: CategoryDataList[];
+  units: UnitDto[];
   onRemove: (index: number) => void;
 }
 
@@ -35,7 +26,7 @@ export const IngredientListItem: React.FC<IngredientListItemProps> = ({
   };
 
   const getUnitName = (id: string): string => {
-    const unit = units.find((u) => u.categoryID === id);
+    const unit = units.find((u) => u.unitID === id);
     return unit?.name || "Unknown";
   };
 
@@ -45,113 +36,98 @@ export const IngredientListItem: React.FC<IngredientListItemProps> = ({
       : Number(field.quantityRequired) || 0;
 
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 2,
-        borderRadius: 2,
-        borderColor: (theme) => alpha(theme.palette.primary.main, 0.2),
-        "&:hover": {
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02),
-        },
+    <Box
+      p="3"
+      style={{
+        background: "var(--color-panel-solid)",
+        border: "1px solid var(--accent-a5)",
+        borderRadius: "var(--radius-3)",
       }}
     >
-      <Grid container spacing={2} alignItems="center">
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Typography variant="caption" color="text.secondary">
+      <Box
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "minmax(0, 2.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.5fr) auto",
+          gap: "var(--space-3)",
+          alignItems: "center",
+        }}
+      >
+        <Box>
+          <Text size="1" color="gray" as="div">
             Ingredient
-          </Typography>
-          <Typography variant="body2" fontWeight={500}>
+          </Text>
+          <Text size="2" weight="medium" as="div">
             {getIngredientName(field.ingredientProductID)}
-          </Typography>
-        </Grid>
+          </Text>
+        </Box>
 
-        <Grid size={{ xs: 6, md: 2 }}>
-          <Typography variant="caption" color="text.secondary">
+        <Box>
+          <Text size="1" color="gray" as="div">
             Quantity
-          </Typography>
-          <Chip
-            label={quantity.toFixed(3)}
-            size="small"
-            sx={{
-              mt: 0.5,
-              bgcolor: (theme) => alpha(theme.palette.info.main, 0.1),
-              color: (theme) => theme.palette.info.main,
-              fontWeight: 500,
-              borderRadius: 1.5,
-            }}
-          />
-        </Grid>
+          </Text>
+          <Badge color="blue" variant="soft" radius="medium" mt="1">
+            {quantity.toFixed(3)}
+          </Badge>
+        </Box>
 
-        <Grid size={{ xs: 6, md: 2 }}>
-          <Typography variant="caption" color="text.secondary">
+        <Box>
+          <Text size="1" color="gray" as="div">
             Unit
-          </Typography>
-          <Typography variant="body2">{getUnitName(field.unitID)}</Typography>
-        </Grid>
+          </Text>
+          <Text size="2" as="div">
+            {getUnitName(field.unitID)}
+          </Text>
+        </Box>
 
-        <Grid size={{ xs: 4, md: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <Typography variant="caption" color="text.secondary">
+        <Box>
+          <Flex align="center" gap="1">
+            <Text size="1" color="gray">
               Order:
-            </Typography>
-            <Chip
-              label={field.displayOrder}
-              size="small"
-              sx={{
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                color: (theme) => theme.palette.primary.main,
-                fontWeight: 500,
-                borderRadius: 1.5,
-              }}
-            />
-            <Tooltip
-              title="Display order determines where this ingredient appears"
-              arrow
-              placement="top"
-            >
+            </Text>
+            <Badge color="indigo" variant="soft" radius="medium">
+              {field.displayOrder}
+            </Badge>
+            <Tooltip content="Display order determines where this ingredient appears">
               <InfoOutlined
-                sx={{
+                style={{
                   fontSize: 14,
-                  color: (theme) => theme.palette.info.main,
+                  color: "var(--blue-11)",
                   cursor: "help",
-                  ml: 0.5,
                 }}
               />
             </Tooltip>
-          </Box>
-        </Grid>
+          </Flex>
+        </Box>
 
-        <Grid size={{ xs: 6, md: 2 }}>
-          <Typography variant="caption" color="text.secondary">
+        <Box style={{ minWidth: 0 }}>
+          <Text size="1" color="gray" as="div">
             Notes
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            display="block"
-            noWrap
-          >
-            {field.notes || "—"}
-          </Typography>
-        </Grid>
-
-        <Grid size={{ xs: 2, md: 1 }}>
-          <IconButton
-            size="small"
-            onClick={() => onRemove(index)}
-            sx={{
-              color: (theme) => theme.palette.error.main,
-              bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
-              "&:hover": {
-                bgcolor: (theme) => alpha(theme.palette.error.main, 0.2),
-              },
+          </Text>
+          <Text
+            size="1"
+            color="gray"
+            as="div"
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
-            <DeleteOutline />
-          </IconButton>
-        </Grid>
-      </Grid>
-    </Paper>
+            {field.notes || "—"}
+          </Text>
+        </Box>
+
+        <IconButton
+          color="red"
+          variant="soft"
+          size="2"
+          onClick={() => onRemove(index)}
+          aria-label="Remove ingredient"
+        >
+          <DeleteOutline style={{ fontSize: 18 }} />
+        </IconButton>
+      </Box>
+    </Box>
   );
 };

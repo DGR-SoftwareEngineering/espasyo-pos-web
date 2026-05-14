@@ -1,25 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Box,
-  Button,
-  Paper,
-  Stack,
-  Switch,
-  FormControlLabel,
-  Typography,
-  alpha,
-  useTheme,
-} from "@mui/material";
-import { RefreshOutlined, AddOutlined } from "@mui/icons-material";
+import { Box, Card, Flex, Switch, Text } from "@radix-ui/themes";
+import { ReloadIcon, PlusIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
-import {
-  StatsCard,
-  FilterBar,
-  useDialogContext,
-  registerForm,
-} from "core-lib";
-import type { FilterConfig } from "core-lib/components/FilterBar";
-import { HeaderV2 } from "core-lib/components/header/HeaderV2";
+import { useDialogContext } from "core-lib";
+import { registerForm } from "core-lib/components/form/FormRenderer";
+import type { DialogContentType } from "core-lib/api/content/types/common";
+import type { FilterConfig } from "core-lib/components/radix/FilterBar";
+import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
+import { StatsCard } from "core-lib/components/radix/StatsCard";
+import { FilterBar } from "core-lib/components/radix/FilterBar";
+import { Button } from "core-lib/components/radix/buttons/Button";
 import { useApi } from "core-lib/core/hooks";
 import {
   InventoryDto,
@@ -40,7 +30,6 @@ registerForm("adjust-stock-form", AdjustStockForm);
 registerForm("thresholds-form", ThresholdsForm);
 
 export const InventoryListBlock: React.FC = () => {
-  const theme = useTheme();
   const router = useRouter();
   const { openDialog } = useDialogContext();
   const [items, setItems] = useState<InventoryDto[]>([]);
@@ -105,7 +94,7 @@ export const InventoryListBlock: React.FC = () => {
     (inv: InventoryDto) => {
       openDialog({
         title: DIALOG_TITLES.view,
-        dialogContentType: DIALOG_TYPES.view,
+        dialogContentType: DIALOG_TYPES.view as unknown as DialogContentType,
         data: inv,
       });
     },
@@ -116,7 +105,7 @@ export const InventoryListBlock: React.FC = () => {
     (inv: InventoryDto) => {
       openDialog({
         title: DIALOG_TITLES.adjust,
-        dialogContentType: DIALOG_TYPES.adjust,
+        dialogContentType: DIALOG_TYPES.adjust as unknown as DialogContentType,
         data: inv,
         onSuccess: handleRefresh,
       });
@@ -128,7 +117,7 @@ export const InventoryListBlock: React.FC = () => {
     (inv: InventoryDto) => {
       openDialog({
         title: DIALOG_TITLES.thresholds,
-        dialogContentType: DIALOG_TYPES.thresholds,
+        dialogContentType: DIALOG_TYPES.thresholds as unknown as DialogContentType,
         data: inv,
         onSuccess: handleRefresh,
       });
@@ -140,7 +129,7 @@ export const InventoryListBlock: React.FC = () => {
     (inv: InventoryDto) => {
       openDialog({
         title: DIALOG_TITLES.history,
-        dialogContentType: DIALOG_TYPES.history,
+        dialogContentType: DIALOG_TYPES.history as unknown as DialogContentType,
         data: inv,
       });
     },
@@ -151,7 +140,7 @@ export const InventoryListBlock: React.FC = () => {
     (inv: InventoryDto) => {
       openDialog({
         title: DIALOG_TITLES.delete,
-        dialogContentType: DIALOG_TYPES.delete,
+        dialogContentType: DIALOG_TYPES.delete as unknown as DialogContentType,
         data: inv,
         onSuccess: handleRefresh,
       });
@@ -160,34 +149,26 @@ export const InventoryListBlock: React.FC = () => {
   );
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}
-      >
+    <Box style={{ width: "100%" }}>
+      <Card variant="surface" size="3" mb="4">
         <HeaderV2
           title="Inventory"
           subtitle="Track ingredient stock and adjust quantities with a full audit trail."
           actionButton={{
             label: "New Inventory",
             onClick: handleCreate,
-            icon: <AddOutlined />,
+            icon: <PlusIcon />,
             variant: "contained",
             color: "primary",
           }}
         />
 
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{ mt: 3, flexWrap: "wrap", gap: 2 }}
-        >
-          <StatsCard label="Total Items" value={stats.totalItems} color="primary" />
+        <Flex gap="3" mt="4" wrap="wrap">
+          <StatsCard
+            label="Total Items"
+            value={stats.totalItems}
+            color="primary"
+          />
           <StatsCard label="In Stock" value={stats.inStock} color="success" />
           <StatsCard label="Low Stock" value={stats.lowStock} color="warning" />
           <StatsCard label="Critical" value={stats.critical} color="error" />
@@ -196,14 +177,14 @@ export const InventoryListBlock: React.FC = () => {
             value={stats.outOfStock}
             color="error"
           />
-        </Stack>
+        </Flex>
 
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "stretch", md: "center" }}
-          spacing={2}
-          sx={{ mt: 3 }}
+        <Flex
+          direction={{ initial: "column", md: "row" }}
+          justify="between"
+          align={{ initial: "stretch", md: "center" }}
+          gap="3"
+          mt="4"
         >
           <FilterBar
             searchValue={filters.searchTerm}
@@ -218,47 +199,40 @@ export const InventoryListBlock: React.FC = () => {
             resultCount={filteredItems.length}
             pageSize={pageSize}
           />
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <FormControlLabel
-              control={
+          <Flex gap="3" align="center">
+            <Flex align="center" gap="2" asChild>
+              <label>
                 <Switch
+                  size="2"
+                  color="amber"
                   checked={filters.showLowStockOnly}
-                  onChange={(e) =>
-                    updateFilter("showLowStockOnly", e.target.checked)
+                  onCheckedChange={(checked) =>
+                    updateFilter("showLowStockOnly", checked)
                   }
-                  color="warning"
                 />
-              }
-              label={
-                <Typography variant="body2" fontWeight={500}>
+                <Text size="2" weight="medium">
                   Needs Attention
-                </Typography>
-              }
-            />
+                </Text>
+              </label>
+            </Flex>
             <Button
-              variant="outlined"
-              startIcon={<RefreshOutlined />}
+              type="Secondary"
               onClick={() => {
                 handleRefresh();
                 resetFilters();
               }}
               disabled={data.loading}
-              sx={{ borderRadius: 2 }}
             >
-              Refresh
+              <Flex align="center" gap="2">
+                <ReloadIcon />
+                Refresh
+              </Flex>
             </Button>
-          </Stack>
-        </Stack>
-      </Paper>
+          </Flex>
+        </Flex>
+      </Card>
 
-      <Paper
-        elevation={0}
-        sx={{
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          overflow: "hidden",
-        }}
-      >
+      <Card variant="surface" size="2" style={{ overflow: "hidden" }}>
         <InventoryList
           data={filteredItems}
           loading={data.loading}
@@ -271,7 +245,7 @@ export const InventoryListBlock: React.FC = () => {
           onViewHistory={handleViewHistory}
           onDelete={handleDelete}
         />
-      </Paper>
+      </Card>
     </Box>
   );
 };

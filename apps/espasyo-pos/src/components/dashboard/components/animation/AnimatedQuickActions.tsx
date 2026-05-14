@@ -1,8 +1,8 @@
-import { Grid, Card, CardContent, Avatar, Typography } from "@mui/material";
+import { Avatar, Card, Flex, Text } from "@radix-ui/themes";
 import { motion } from "framer-motion";
 import { QUICK_ACTIONS } from "../../constants/actions";
 
-const MotionCard = motion(Card);
+const MotionDiv = motion.div;
 
 type QuickAction = (typeof QUICK_ACTIONS)[number];
 
@@ -11,38 +11,42 @@ interface Props {
   index: number;
 }
 
+/**
+ * Single quick-action tile inside the Quick Actions card. Radix `<Card>`
+ * with hover-scale micro-interaction; the MUI `Card`+`CardContent` pair is
+ * collapsed into one Radix surface.
+ */
 export const AnimatedQuickAction = ({ action, index }: Props) => {
   const Icon = action.icon;
 
   return (
-    <Grid size={{ xs: 6 }}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: index * 0.1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+    <MotionDiv
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.08 }}
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.97 }}
+    >
+      <Card
+        size="2"
+        variant="surface"
+        style={{
+          cursor: "pointer",
+          transition: "border-color 150ms ease, background 150ms ease",
+        }}
       >
-        <MotionCard sx={{ cursor: "pointer" }}>
-          <CardContent sx={{ textAlign: "center" }}>
-            <Avatar
-              sx={{
-                bgcolor: `${action.color}20`,
-                color: action.color,
-                width: 48,
-                height: 48,
-                mx: "auto",
-                mb: 1,
-              }}
-            >
-              <Icon />
-            </Avatar>
-            <Typography variant="body2" fontWeight={500}>
-              {action.label}
-            </Typography>
-          </CardContent>
-        </MotionCard>
-      </motion.div>
-    </Grid>
+        <Flex direction="column" align="center" gap="2" py="2">
+          <Avatar
+            size="3"
+            radius="full"
+            fallback={<Icon />}
+            style={{ background: `${action.color}22`, color: action.color }}
+          />
+          <Text size="2" weight="medium">
+            {action.label}
+          </Text>
+        </Flex>
+      </Card>
+    </MotionDiv>
   );
 };

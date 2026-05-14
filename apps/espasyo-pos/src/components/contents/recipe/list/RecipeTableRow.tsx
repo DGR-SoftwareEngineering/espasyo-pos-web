@@ -1,16 +1,14 @@
 import React, { useMemo, useState } from "react";
 import {
-  Stack,
   Avatar,
-  Typography,
   Box,
-  alpha,
-  useTheme,
-  Collapse,
+  Callout,
+  Flex,
   Grid,
-  TableRow,
-  TableCell,
-} from "@mui/material";
+  Heading,
+  Table,
+  Text,
+} from "@radix-ui/themes";
 import {
   RestaurantMenuOutlined,
   KitchenOutlined,
@@ -18,16 +16,14 @@ import {
   NotesOutlined,
 } from "@mui/icons-material";
 import { RecipeResponse } from "core-lib/api/commons/types";
-import {
-  BaseTableRow,
-  ActionButtons,
-  IDChip,
-  MetricBadge,
-  MetricDisplay,
-  CostDistributionBar,
-} from "core-lib";
+import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
+import { ActionButtons } from "core-lib/components/radix/buttons/ActionButtons";
+import { IDChip } from "core-lib/components/radix/IDChip";
+import { MetricBadge } from "core-lib/components/radix/metric/MetricBadge";
+import { MetricDisplay } from "core-lib/components/radix/metric/MetricDisplay";
+import { CostDistributionBar } from "core-lib/components/radix/CostDistributionBar";
 import { formatCurrency } from "core-lib/business/strings";
-import { calculateIngredientStats } from "core-lib/business/number";
+import { getIngredientCostStats } from "core-lib/business/recipe";
 import { IngredientDetail } from "../../../../components/IngredientDetail";
 
 interface Props {
@@ -49,26 +45,12 @@ export const RecipeTableRow: React.FC<Props> = ({
   selectedRowKey,
   onSelect,
 }) => {
-  const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
 
-  const stats = useMemo(
-    () =>
-      calculateIngredientStats(
-        row.recipeItems,
-        row.totalCost,
-        row.ingredientCount,
-      ),
-    [row],
-  );
+  const stats = useMemo(() => getIngredientCostStats(row), [row]);
 
-  const handleToggleExpand = () => {
-    setExpanded(!expanded);
-  };
-
-  const handleRowClick = () => {
-    setExpanded(!expanded);
-  };
+  const handleToggleExpand = () => setExpanded((prev) => !prev);
+  const handleRowClick = () => setExpanded((prev) => !prev);
 
   const hasNotes = row.recipeItems.some((item) => item.notes);
 
@@ -83,32 +65,24 @@ export const RecipeTableRow: React.FC<Props> = ({
       id: "recipe",
       width: "35%",
       render: () => (
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Flex align="center" gap="3">
           <Avatar
-            sx={{
-              width: 44,
-              height: 44,
-              bgcolor: alpha(theme.palette.primary.main, 0.12),
-              color: theme.palette.primary.main,
-              borderRadius: 2,
-            }}
-          >
-            <RestaurantMenuOutlined />
-          </Avatar>
-          <Box>
-            <Typography variant="subtitle2" fontWeight={600} lineHeight={1.3}>
+            size="3"
+            radius="medium"
+            color="indigo"
+            variant="soft"
+            fallback={<RestaurantMenuOutlined />}
+          />
+          <Box style={{ minWidth: 0 }}>
+            <Text size="2" weight="bold" as="div" style={{ lineHeight: 1.3 }}>
               {row.menuItemName}
-            </Typography>
-            <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+            </Text>
+            <Flex gap="2" mt="1">
               <IDChip id={row.menuItemProductID} label="Menu" />
-              <IDChip
-                id={row.recipeID}
-                label="Recipe"
-                color={theme.palette.info.main}
-              />
-            </Stack>
+              <IDChip id={row.recipeID} label="Recipe" color="blue" />
+            </Flex>
           </Box>
-        </Stack>
+        </Flex>
       ),
     },
     {
@@ -120,7 +94,7 @@ export const RecipeTableRow: React.FC<Props> = ({
           label="Ingredients"
           value={row.ingredientCount.toString()}
           icon={<KitchenOutlined />}
-          iconColor={theme.palette.success.main}
+          iconColor="var(--green-11)"
         />
       ),
     },
@@ -129,41 +103,39 @@ export const RecipeTableRow: React.FC<Props> = ({
       align: "center" as const,
       width: "20%",
       render: () => (
-        <Stack spacing={0.5}>
+        <Flex direction="column" gap="1">
           <MetricDisplay
             label="Total Cost"
             value={formatCurrency(row.totalCost)}
-            valueColor="success.main"
+            valueColor="var(--green-11)"
             tooltip={
               <Box>
-                <Typography variant="body2">
+                <Text as="div" size="2">
                   <strong>Total Cost:</strong> {formatCurrency(row.totalCost)}
-                </Typography>
-                <Typography variant="body2">
+                </Text>
+                <Text as="div" size="2">
                   <strong>Number of Ingredients:</strong> {row.ingredientCount}
-                </Typography>
-                <Typography variant="body2">
+                </Text>
+                <Text as="div" size="2">
                   <strong>Average per Ingredient:</strong>{" "}
                   {formatCurrency(stats.avg)}
-                </Typography>
-                <Typography variant="body2">
+                </Text>
+                <Text as="div" size="2">
                   <strong>Range:</strong> {formatCurrency(stats.min)} -{" "}
                   {formatCurrency(stats.max)}
-                </Typography>
+                </Text>
               </Box>
             }
-            showTooltip={true}
+            showTooltip
           />
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            <LocalDiningOutlined
-              sx={{ fontSize: 12, color: theme.palette.text.secondary }}
-            />
-            <Typography variant="caption" color="text.secondary">
+          <Flex align="center" gap="1">
+            <LocalDiningOutlined style={{ fontSize: 12, color: "var(--gray-11)" }} />
+            <Text size="1" color="gray">
               {row.recipeItems.length} item
               {row.recipeItems.length !== 1 ? "s" : ""}
-            </Typography>
-          </Stack>
-        </Stack>
+            </Text>
+          </Flex>
+        </Flex>
       ),
     },
     {
@@ -180,10 +152,10 @@ export const RecipeTableRow: React.FC<Props> = ({
           editTooltip="Edit Recipe"
           deleteTooltip="Delete Recipe"
           expandTooltip={expanded ? "Hide ingredients" : "Show ingredients"}
-          showView={true}
-          showEdit={true}
-          showDelete={true}
-          showExpand={true}
+          showView
+          showEdit
+          showDelete
+          showExpand
           isExpanded={expanded}
         />
       ),
@@ -202,88 +174,79 @@ export const RecipeTableRow: React.FC<Props> = ({
         onRowClick={handleRowClick}
       />
 
-      <TableRow>
-        <TableCell
-          style={{ paddingBottom: 0, paddingTop: 0 }}
-          colSpan={totalColumns}
-        >
-          <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <Box sx={{ py: 3 }}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}
+      {expanded && (
+        <Table.Row>
+          <Table.Cell
+            colSpan={totalColumns}
+            style={{ padding: 0, background: "var(--gray-2)" }}
+          >
+            <Box py="4" px="3">
+              <Flex
+                justify="between"
+                align="center"
+                mb="3"
+                wrap="wrap"
+                gap="2"
               >
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <KitchenOutlined sx={{ color: theme.palette.primary.main }} />
-                  <Typography variant="subtitle1" fontWeight={600}>
+                <Flex align="center" gap="2">
+                  <KitchenOutlined style={{ color: "var(--accent-11)" }} />
+                  <Heading size="3" weight="bold">
                     Ingredient List ({row.ingredientCount})
-                  </Typography>
-                </Stack>
+                  </Heading>
+                </Flex>
 
-                <Stack direction="row" spacing={1}>
+                <Flex gap="2">
                   <MetricBadge
                     label="Min"
                     value={formatCurrency(stats.min)}
-                    color={theme.palette.success.main}
+                    color="green"
                     tooltip={`Cheapest ingredient: ${formatCurrency(stats.min)}`}
                   />
                   <MetricBadge
                     label="Avg"
                     value={formatCurrency(stats.avg)}
-                    color={theme.palette.info.main}
+                    color="blue"
                     tooltip={`Average ingredient cost: ${formatCurrency(stats.avg)}`}
                   />
                   <MetricBadge
                     label="Max"
                     value={formatCurrency(stats.max)}
-                    color={theme.palette.warning.main}
+                    color="amber"
                     tooltip={`Most expensive ingredient: ${formatCurrency(stats.max)}`}
                   />
-                </Stack>
-              </Stack>
+                </Flex>
+              </Flex>
 
               <CostDistributionBar stats={stats} total={row.totalCost} />
 
-              <Grid container spacing={2}>
+              <Grid columns="1" gap="2">
                 {row.recipeItems
                   .sort((a, b) => a.displayOrder - b.displayOrder)
                   .map((ingredient) => (
-                    <Grid size={{ xs: 12 }} key={ingredient.recipeItemID}>
-                      <IngredientDetail ingredient={ingredient} />
-                    </Grid>
+                    <IngredientDetail
+                      key={ingredient.recipeItemID}
+                      ingredient={ingredient}
+                    />
                   ))}
               </Grid>
 
               {hasNotes && (
-                <Box
-                  sx={{
-                    mt: 2,
-                    p: 2,
-                    bgcolor: alpha(theme.palette.warning.main, 0.05),
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                  >
-                    <NotesOutlined
-                      sx={{ fontSize: 16, color: theme.palette.warning.main }}
-                    />
-                    <span>
-                      Some ingredients have notes - look for the{" "}
-                      <strong>yellow "Has notes"</strong> chips above
-                    </span>
-                  </Typography>
+                <Box mt="3">
+                  <Callout.Root color="amber" variant="soft">
+                    <Callout.Icon>
+                      <NotesOutlined style={{ fontSize: 16 }} />
+                    </Callout.Icon>
+                    <Callout.Text>
+                      Some ingredients have notes — look for the{" "}
+                      <strong>yellow "Has notes"</strong> chips above.
+                    </Callout.Text>
+                  </Callout.Root>
                 </Box>
               )}
             </Box>
-          </Collapse>
-        </TableCell>
-      </TableRow>
+          </Table.Cell>
+        </Table.Row>
+      )}
     </>
   );
 };
