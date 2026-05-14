@@ -1,15 +1,5 @@
-import {
-  alpha,
-  Avatar,
-  Box,
-  Chip,
-  Grid,
-  Paper,
-  Stack,
-  Tooltip,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import React from "react";
+import { Avatar, Badge, Box, Flex, Text, Tooltip } from "@radix-ui/themes";
 import { RecipeItemResponse } from "core-lib/api/commons/types";
 import {
   InventoryOutlined,
@@ -18,224 +8,186 @@ import {
   SwapHorizOutlined,
   AttachMoneyOutlined,
 } from "@mui/icons-material";
-import { IDChip, MetricDisplay } from "core-lib";
+import { IDChip } from "core-lib/components/radix/IDChip";
+import { MetricDisplay } from "core-lib/components/radix/metric/MetricDisplay";
 import { formatCurrency } from "core-lib/business/strings";
 
 export const IngredientDetail: React.FC<{ ingredient: RecipeItemResponse }> = ({
   ingredient,
 }) => {
-  const theme = useTheme();
   const hasUnitConversion =
-    ingredient.purchaseUnitName &&
-    ingredient.stockUnitName &&
+    !!ingredient.purchaseUnitName &&
+    !!ingredient.stockUnitName &&
     ingredient.purchaseUnitName !== ingredient.stockUnitName;
 
   const hasBatchPurchase =
     ingredient.ingredientCost !== ingredient.calculatedCost;
   const displayCost = ingredient.calculatedCost || ingredient.cost;
 
+  const tooltipContent = (
+    <Box>
+      <Text size="1" as="div">
+        <strong>Calculated Cost:</strong> {formatCurrency(displayCost)}
+      </Text>
+      {hasBatchPurchase && (
+        <Text size="1" as="div">
+          <strong>Original Cost:</strong>{" "}
+          {formatCurrency(ingredient.ingredientCost)} total
+        </Text>
+      )}
+      {ingredient.purchaseQuantity && ingredient.purchaseUnitName && (
+        <Text size="1" as="div">
+          <strong>Purchase:</strong> {ingredient.purchaseQuantity}{" "}
+          {ingredient.purchaseUnitName} @{" "}
+          {formatCurrency(ingredient.ingredientCost)} total
+        </Text>
+      )}
+      {ingredient.costPerStockUnit && (
+        <Text size="1" as="div">
+          <strong>Cost per {ingredient.stockUnitName}:</strong>{" "}
+          {formatCurrency(ingredient.costPerStockUnit)}
+        </Text>
+      )}
+    </Box>
+  );
+
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2,
-        bgcolor: alpha(theme.palette.background.default, 0.5),
-        borderRadius: 2,
-        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+    <Box
+      p="3"
+      style={{
+        background: "var(--gray-a2)",
+        border: "1px solid var(--gray-a4)",
+        borderRadius: "var(--radius-3)",
         transition: "all 0.2s",
-        "&:hover": {
-          bgcolor: alpha(theme.palette.primary.main, 0.02),
-          borderColor: alpha(theme.palette.primary.main, 0.2),
-        },
       }}
     >
-      <Grid container spacing={2} alignItems="center">
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <Stack direction="row" spacing={1.5} alignItems="center">
+      <Box
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
+          gap: "var(--space-3)",
+          alignItems: "center",
+        }}
+      >
+        <Box>
+          <Flex align="center" gap="3">
             <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                bgcolor: alpha(theme.palette.info.main, 0.1),
-                color: theme.palette.info.main,
-              }}
-            >
-              <InventoryOutlined />
-            </Avatar>
+              size="2"
+              radius="medium"
+              color="blue"
+              fallback={<InventoryOutlined />}
+            />
             <Box>
-              <Stack
-                direction="row"
-                spacing={1}
-                alignItems="center"
-                flexWrap="wrap"
-              >
-                <Typography variant="subtitle2" fontWeight={600}>
+              <Flex align="center" gap="2" wrap="wrap">
+                <Text size="2" weight="bold">
                   {ingredient.ingredientName}
-                </Typography>
+                </Text>
                 {hasUnitConversion && (
-                  <Chip
-                    icon={<SwapHorizOutlined sx={{ fontSize: 14 }} />}
-                    label={`${ingredient.purchaseUnitName} → ${ingredient.stockUnitName}`}
-                    size="small"
-                    sx={{
-                      height: 20,
-                      fontSize: "0.625rem",
-                      bgcolor: alpha(theme.palette.info.main, 0.1),
-                      color: theme.palette.info.main,
-                    }}
-                  />
+                  <Badge color="blue" variant="soft" radius="full" size="1">
+                    <SwapHorizOutlined style={{ fontSize: 14 }} />
+                    {ingredient.purchaseUnitName} → {ingredient.stockUnitName}
+                  </Badge>
                 )}
-              </Stack>
+              </Flex>
               <IDChip id={ingredient.ingredientProductID} label="ID" />
             </Box>
-          </Stack>
-        </Grid>
+          </Flex>
+        </Box>
 
-        <Grid size={{ xs: 6, sm: 2 }}>
+        <Box>
           <MetricDisplay
             label="Quantity"
             value={`${ingredient.quantityRequired} ${ingredient.unitName}`}
             icon={<ScaleOutlined />}
-            iconColor={theme.palette.primary.main}
-            tooltip={`Recipe requires ${ingredient.quantityRequired} ${ingredient.unitName}`}
+            iconColor="var(--accent-11)"
           />
           {hasUnitConversion &&
             ingredient.quantityRequired &&
             ingredient.costPerStockUnit && (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 0.5, display: "block" }}
-              >
+              <Text size="1" color="gray" as="div" mt="1">
                 ≈ {formatCurrency(ingredient.costPerStockUnit)} per{" "}
                 {ingredient.stockUnitName}
-              </Typography>
+              </Text>
             )}
-        </Grid>
+        </Box>
 
-        <Grid size={{ xs: 6, sm: 2 }}>
-          <Tooltip
-            title={
-              <Box>
-                <Typography variant="caption" display="block">
-                  <strong>Calculated Cost:</strong>{" "}
-                  {formatCurrency(displayCost)}
-                </Typography>
-                {hasBatchPurchase && (
-                  <Typography variant="caption" display="block">
-                    <strong>Original Cost:</strong>{" "}
-                    {formatCurrency(ingredient.ingredientCost)} total
-                  </Typography>
-                )}
-                {ingredient.purchaseQuantity && ingredient.purchaseUnitName && (
-                  <Typography variant="caption" display="block">
-                    <strong>Purchase:</strong> {ingredient.purchaseQuantity}{" "}
-                    {ingredient.purchaseUnitName} @{" "}
-                    {formatCurrency(ingredient.ingredientCost)} total
-                  </Typography>
-                )}
-                {ingredient.costPerStockUnit && (
-                  <Typography variant="caption" display="block">
-                    <strong>Cost per {ingredient.stockUnitName}:</strong>{" "}
-                    {formatCurrency(ingredient.costPerStockUnit)}
-                  </Typography>
-                )}
-              </Box>
-            }
-            arrow
-          >
-            <div>
+        <Box>
+          <Tooltip content={tooltipContent as unknown as string}>
+            <Box>
               <MetricDisplay
                 label="Cost"
                 value={formatCurrency(displayCost)}
-                valueColor="success.main"
+                valueColor="var(--green-11)"
                 icon={<AttachMoneyOutlined />}
-                tooltip
+                showTooltip
               />
-            </div>
+            </Box>
           </Tooltip>
           {hasBatchPurchase && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: 0.5, display: "block" }}
-            >
+            <Text size="1" color="gray" as="div" mt="1">
               <em>Calculated from batch purchase</em>
-            </Typography>
+            </Text>
           )}
-        </Grid>
+        </Box>
 
-        <Grid size={{ xs: 6, sm: 2 }}>
+        <Box>
           <MetricDisplay
             label="Unit Cost"
             value={`${formatCurrency(displayCost / ingredient.quantityRequired)}/${ingredient.unitName}`}
-            valueColor="text.secondary"
-            tooltip={`Cost per ${ingredient.unitName}`}
+            valueColor="var(--gray-11)"
           />
-        </Grid>
+        </Box>
 
-        <Grid size={{ xs: 6, sm: 2 }}>
+        <Box>
           {ingredient.notes ? (
-            <Tooltip title={ingredient.notes} arrow placement="top">
-              <Chip
-                icon={<NotesOutlined />}
-                label="Has notes"
-                size="small"
-                sx={{
-                  height: 24,
-                  bgcolor: alpha(theme.palette.warning.main, 0.1),
-                  color: theme.palette.warning.main,
-                  cursor: "help",
-                  "&:hover": {
-                    bgcolor: alpha(theme.palette.warning.main, 0.2),
-                  },
-                }}
-              />
+            <Tooltip content={ingredient.notes}>
+              <Badge
+                color="amber"
+                variant="soft"
+                radius="medium"
+                style={{ cursor: "help" }}
+              >
+                <NotesOutlined style={{ fontSize: 14 }} />
+                Has notes
+              </Badge>
             </Tooltip>
           ) : (
-            <Typography variant="caption" color="text.disabled">
+            <Text size="1" color="gray">
               No notes
-            </Typography>
+            </Text>
           )}
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {(ingredient.purchaseQuantity || hasUnitConversion) && (
         <Box
-          sx={{
-            mt: 1.5,
-            pt: 1.5,
-            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          }}
+          mt="3"
+          pt="3"
+          style={{ borderTop: "1px solid var(--gray-a4)" }}
         >
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            flexWrap="wrap"
-          >
+          <Flex gap="3" align="center" wrap="wrap">
             {ingredient.purchaseQuantity && ingredient.purchaseUnitName && (
-              <Typography variant="caption" color="text.secondary">
-                📦 Purchased: {ingredient.purchaseQuantity}{" "}
+              <Text size="1" color="gray">
+                Purchased: {ingredient.purchaseQuantity}{" "}
                 {ingredient.purchaseUnitName} at{" "}
                 {formatCurrency(ingredient.ingredientCost)} total
-              </Typography>
+              </Text>
             )}
             {ingredient.costPerStockUnit && ingredient.stockUnitName && (
-              <Typography variant="caption" color="text.secondary">
-                💰 Cost per {ingredient.stockUnitName}:{" "}
+              <Text size="1" color="gray">
+                Cost per {ingredient.stockUnitName}:{" "}
                 {formatCurrency(ingredient.costPerStockUnit)}
-              </Typography>
+              </Text>
             )}
             {hasUnitConversion && (
-              <Typography variant="caption" color="text.secondary">
-                🔄 Unit conversion applied: {ingredient.purchaseUnitName} →{" "}
+              <Text size="1" color="gray">
+                Unit conversion applied: {ingredient.purchaseUnitName} →{" "}
                 {ingredient.stockUnitName}
-              </Typography>
+              </Text>
             )}
-          </Stack>
+          </Flex>
         </Box>
       )}
-    </Paper>
+    </Box>
   );
 };

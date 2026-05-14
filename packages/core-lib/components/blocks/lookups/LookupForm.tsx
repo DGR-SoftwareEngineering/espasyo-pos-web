@@ -1,8 +1,9 @@
 import React from "react";
-import { Box, Grid, Stack, Typography, alpha, useTheme } from "@mui/material";
-import { TextField } from "../../form/TextField";
+import { Box, Flex, Grid, Text } from "@radix-ui/themes";
+import { TextField } from "../../radix/form/TextField";
+import { Button } from "../../radix/buttons/Button";
+import { FormErrorSummary } from "../../radix/FormErrorSummary";
 import { LookupPicker, LookupOption } from "../../LookupPicker";
-import { FormErrorSummary } from "../../FormErrorSummary";
 import { useBaseForm } from "../../../core/hooks/useBaseForm";
 import {
   LookupDtoBase,
@@ -39,7 +40,6 @@ export function LookupForm<TDto extends LookupDtoBase>({
   submitLoading,
   resetForm,
 }: Props<TDto>) {
-  const theme = useTheme();
   const supportsParent = !!config.parentIdField;
 
   const defaultValues: LookupFormValues = {
@@ -85,7 +85,7 @@ export function LookupForm<TDto extends LookupDtoBase>({
 
   return (
     <Box>
-      <Stack spacing={2.5}>
+      <Flex direction="column" gap="4">
         <FormErrorSummary errors={errors} fieldLabels={FIELD_LABELS} />
 
         <TextField
@@ -104,8 +104,11 @@ export function LookupForm<TDto extends LookupDtoBase>({
           rows={2}
         />
 
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: supportsParent ? 4 : 12 }}>
+        <Grid
+          columns={{ initial: "1", sm: supportsParent ? "12" : "1" }}
+          gap="3"
+        >
+          <Box style={{ gridColumn: supportsParent ? "span 4" : "auto" }}>
             <TextField
               name="displayOrder"
               control={control}
@@ -113,17 +116,13 @@ export function LookupForm<TDto extends LookupDtoBase>({
               type="number"
               placeholder="0"
             />
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: 0.5, display: "block" }}
-            >
+            <Text size="1" color="gray" as="div" mt="1">
               Lower numbers appear first in dropdowns.
-            </Typography>
-          </Grid>
+            </Text>
+          </Box>
 
           {supportsParent && (
-            <Grid size={{ xs: 12, sm: 8 }}>
+            <Box style={{ gridColumn: "span 8" }}>
               <LookupPicker<LookupFormValues, LookupOption>
                 name="parentID"
                 control={control}
@@ -132,54 +131,26 @@ export function LookupForm<TDto extends LookupDtoBase>({
                 placeholder={`Pick a parent ${config.entityName.toLowerCase()}…`}
                 noOptionText="No matching options"
               />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 0.5, display: "block" }}
-              >
+              <Text size="1" color="gray" as="div" mt="1">
                 Use this only if you want a nested taxonomy.
-              </Typography>
-            </Grid>
+              </Text>
+            </Box>
           )}
         </Grid>
 
-        <Box
-          sx={{
-            mt: 1,
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <button
-            type="button"
-            disabled={submitLoading}
+        <Flex justify="end" mt="2">
+          <Button
+            type="Primary"
             onClick={handleSubmit(onSubmit)}
-            style={{
-              padding: "10px 24px",
-              borderRadius: 12,
-              border: "none",
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-              color: theme.palette.primary.contrastText,
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              cursor: submitLoading ? "not-allowed" : "pointer",
-              opacity: submitLoading ? 0.6 : 1,
-              boxShadow: `0 4px 12px ${alpha(
-                theme.palette.primary.main,
-                0.3,
-              )}`,
-              minWidth: 160,
-              transition: "all 0.15s ease",
-            }}
+            disabled={submitLoading}
+            loading={submitLoading}
           >
-            {submitLoading
-              ? "Saving…"
-              : isEdit
-                ? `Update ${config.entityName}`
-                : `Create ${config.entityName}`}
-          </button>
-        </Box>
-      </Stack>
+            {isEdit
+              ? `Update ${config.entityName}`
+              : `Create ${config.entityName}`}
+          </Button>
+        </Flex>
+      </Flex>
     </Box>
   );
 }

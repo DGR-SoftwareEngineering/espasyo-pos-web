@@ -1,16 +1,12 @@
 import React from "react";
-import {
-  Grid,
-  Paper,
-  Button,
-  Box,
-  Tooltip,
-  InputAdornment,
-  Typography,
-  alpha,
-} from "@mui/material";
+import { Box, Flex, Heading, Tooltip } from "@radix-ui/themes";
 import { InfoOutlined } from "@mui/icons-material";
-import { TextField, SelectField, SelectOption } from "core-lib";
+import { TextField } from "core-lib/components/radix/form/TextField";
+import {
+  SelectField,
+  SelectOption,
+} from "core-lib/components/radix/form/SelectField";
+import { Button } from "core-lib/components/radix/buttons/Button";
 import { UseFormReturn } from "react-hook-form";
 import { NewIngredient } from "./contents/recipe/forms/types";
 
@@ -29,107 +25,89 @@ export const IngredientAddForm: React.FC<IngredientAddFormProps> = ({
   onAdd,
   onCancel,
 }) => {
-  const isValid = form.watch("ingredientProductID") && form.watch("unitID");
+  const isValid = !!form.watch("ingredientProductID") && !!form.watch("unitID");
 
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 3,
-        mb: 4,
-        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02),
-        borderColor: (theme) => alpha(theme.palette.primary.main, 0.2),
-        borderRadius: 2,
+    <Box
+      p="4"
+      mb="3"
+      style={{
+        background: "var(--accent-a2)",
+        border: "1px solid var(--accent-a5)",
+        borderRadius: "var(--radius-3)",
       }}
     >
-      <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+      <Heading size="3" weight="bold" mb="3">
         New Ingredient
-      </Typography>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 3 }}>
+      </Heading>
+
+      <Flex direction="column" gap="3">
+        <Box
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.2fr)",
+            gap: "var(--space-3)",
+          }}
+        >
           <SelectField
             name="ingredientProductID"
             control={form.control}
             options={ingredientOptions}
             label="Ingredient"
           />
-        </Grid>
 
-        <Grid size={{ xs: 12, md: 2 }}>
           <TextField
             name="quantityRequired"
             control={form.control}
             label="Quantity"
             type="number"
           />
-        </Grid>
 
-        <Grid size={{ xs: 12, md: 2 }}>
           <SelectField
             name="unitID"
             control={form.control}
             options={unitOptions}
             label="Unit"
           />
-        </Grid>
 
-        <Grid size={{ xs: 12, md: 2 }}>
           <TextField
             name="displayOrder"
             control={form.control}
             label="Display Order"
             type="number"
             endAdornment={
-              <InputAdornment position="end">
-                <Tooltip
-                  title="Controls the sequence of ingredients (1 = first, 2 = second, etc.). Lower numbers appear first."
-                  arrow
-                  placement="top"
-                >
-                  <InfoOutlined
-                    sx={{
-                      fontSize: 18,
-                      color: (theme) => theme.palette.info.main,
-                      cursor: "help",
-                    }}
-                  />
-                </Tooltip>
-              </InputAdornment>
+              <Tooltip content="Controls the sequence of ingredients (1 = first, 2 = second, etc.). Lower numbers appear first.">
+                <InfoOutlined
+                  style={{
+                    fontSize: 18,
+                    color: "var(--blue-11)",
+                    cursor: "help",
+                  }}
+                />
+              </Tooltip>
             }
           />
-        </Grid>
+        </Box>
 
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              variant="contained"
-              onClick={onAdd}
-              disabled={!isValid}
-              sx={{ flex: 2, height: "56px", borderRadius: 2 }}
-            >
-              Add
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={onCancel}
-              sx={{ flex: 1, height: "56px", borderRadius: 2 }}
-            >
-              Cancel
-            </Button>
-          </Box>
-        </Grid>
+        <TextField
+          name="notes"
+          control={form.control}
+          label="Notes (Optional)"
+          placeholder="e.g., finely chopped, room temperature"
+          multiline
+          rows={2}
+        />
 
-        <Grid size={{ xs: 12 }}>
-          <TextField
-            name="notes"
-            control={form.control}
-            label="Notes (Optional)"
-            placeholder="e.g., finely chopped, room temperature"
-            multiline
-            rows={2}
-          />
-        </Grid>
-      </Grid>
-    </Paper>
+        <Flex gap="2" justify="end">
+          <Button type="Secondary" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="Primary" onClick={onAdd} disabled={!isValid}>
+            Add Ingredient
+          </Button>
+        </Flex>
+      </Flex>
+    </Box>
   );
 };

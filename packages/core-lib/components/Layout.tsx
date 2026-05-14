@@ -1,12 +1,5 @@
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Box } from "@mui/material";
-import { useAuthContext } from "../core/contexts";
-import LinearProgress, {
-  linearProgressClasses,
-} from "@mui/material/LinearProgress";
-import { varAlpha } from "minimal-shared/utils";
 import { Suspense } from "react";
+import { useAuthContext } from "../core/contexts";
 import {
   useRefreshTokenHandler,
   useLogout,
@@ -14,38 +7,70 @@ import {
 } from "../core/hooks";
 import { DuplicationSessionBlock } from "./blocks";
 import { MuiThemeFramework } from "./design/MuiThemeFramework";
-import { RadixThemeFramework } from "./design/RadixThemeFramework";
+import {
+  RadixThemeFramework,
+  RadixThemeFrameworkProps,
+} from "./design/RadixThemeFramework";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 export type Framework = "Radix" | "MUI";
 
 interface Props {
-  framework: Framework;
+  framework?: Framework;
+  radixTheme?: Pick<
+    RadixThemeFrameworkProps,
+    | "appearance"
+    | "accentColor"
+    | "grayColor"
+    | "radius"
+    | "scaling"
+    | "panelBackground"
+  >;
 }
 
 const renderFallback = () => (
-  <Box
-    sx={{
+  <div
+    style={{
       display: "flex",
       flex: "1 1 auto",
       alignItems: "center",
       justifyContent: "center",
+      minHeight: 200,
     }}
   >
-    <LinearProgress
-      sx={{
-        width: 1,
+    <div
+      style={{
+        width: "100%",
         maxWidth: 320,
-        bgcolor: (theme) =>
-          varAlpha(theme.vars.palette.text.primaryChannel, 0.16),
-        [`& .${linearProgressClasses.bar}`]: { bgcolor: "text.primary" },
+        height: 4,
+        borderRadius: 2,
+        background: "rgba(0, 0, 0, 0.08)",
+        overflow: "hidden",
+        position: "relative",
       }}
-    />
-  </Box>
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.5), transparent)",
+          animation: "layout-fallback-shimmer 1.2s infinite linear",
+        }}
+      />
+    </div>
+    <style>{`
+      @keyframes layout-fallback-shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+    `}</style>
+  </div>
 );
 
 export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
-  framework,
+  framework = "Radix",
+  radixTheme,
   children,
 }) => {
   const { logout } = useLogout();
@@ -57,46 +82,49 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
     return <DuplicationSessionBlock />;
   }
 
-  const renderWithFramework = () => {
-    switch (framework) {
-      case "MUI":
-        return (
-          <Suspense fallback={renderFallback()}>
-            <ErrorBoundary errorMessage="MUI Framework Error">
-              <MuiThemeFramework
-                isAuthenticated={isAuthenticated}
-                loading={loading}
-                logout={logout}
-                children={children}
-                email={email}
-                role={role}
-                initials={initials}
-              />
-            </ErrorBoundary>
-          </Suspense>
-        );
-      case "Radix":
-        return (
-          <Suspense fallback={renderFallback()}>
-            <RadixThemeFramework
-              isAuthenticated={isAuthenticated}
-              loading={loading}
-              appearance="light"
-              logout={logout}
-              children={children}
-            />
-          </Suspense>
-        );
-      default:
-        return null;
-    }
-  };
+  const renderRadix = () => (
+    <Suspense fallback={renderFallback()}>
+      <ErrorBoundary errorMessage="Radix Framework Error">
+        <RadixThemeFramework
+          isAuthenticated={isAuthenticated}
+          loading={loading}
+          logout={logout}
+          email={email}
+          role={role}
+          initials={initials}
+          appearance={radixTheme?.appearance ?? "light"}
+          accentColor={radixTheme?.accentColor ?? "indigo"}
+          grayColor={radixTheme?.grayColor ?? "slate"}
+          radius={radixTheme?.radius ?? "medium"}
+          scaling={radixTheme?.scaling ?? "100%"}
+          panelBackground={radixTheme?.panelBackground ?? "solid"}
+        >
+          {children}
+        </RadixThemeFramework>
+      </ErrorBoundary>
+    </Suspense>
+  );
+
+  const renderMui = () => (
+    <Suspense fallback={renderFallback()}>
+      <ErrorBoundary errorMessage="MUI Framework Error">
+        <MuiThemeFramework
+          isAuthenticated={isAuthenticated}
+          loading={loading}
+          logout={logout}
+          email={email}
+          role={role}
+          initials={initials}
+        >
+          {children}
+        </MuiThemeFramework>
+      </ErrorBoundary>
+    </Suspense>
+  );
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <ErrorBoundary errorMessage="Layout Error">
-        {renderWithFramework()}
-      </ErrorBoundary>
-    </LocalizationProvider>
+    <ErrorBoundary errorMessage="Layout Error">
+      {framework === "MUI" ? renderMui() : renderRadix()}
+    </ErrorBoundary>
   );
 };

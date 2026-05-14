@@ -1,36 +1,20 @@
 import React, { useState, useMemo, useCallback } from "react";
+import { Badge, Box, Card, Flex, Text } from "@radix-ui/themes";
 import {
-  Box,
-  Paper,
-  Stack,
-  Typography,
-  alpha,
-  useTheme,
-  Fade,
-  Chip,
-  Button,
-} from "@mui/material";
-import {
-  RefreshOutlined,
-  SwapHorizOutlined,
-  TrendingUp,
-  TrendingDown,
-  CheckCircleOutline,
-  WarningAmberOutlined,
-  CompareArrows,
-} from "@mui/icons-material";
+  ReloadIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  SwitchIcon,
+} from "@radix-ui/react-icons";
 import { useApi } from "core-lib/core/hooks";
-import {
-  useDialogContext,
-  HeaderV2,
-  StatsCard,
-  FilterBar,
-  registerForm,
-} from "core-lib";
+import { useDialogContext } from "core-lib";
+import { registerForm } from "core-lib/components/form/FormRenderer";
+import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
+import { StatsCard } from "core-lib/components/radix/StatsCard";
+import { FilterBar } from "core-lib/components/radix/FilterBar";
+import { Button } from "core-lib/components/radix/buttons/Button";
 import { UnitConversionList } from "./UnitConversionList";
 import {
-  DIALOG_TITLES,
-  DIALOG_TYPES,
   applyUnitConversionSorting,
   sortOptions,
   UnitConversionFilterState,
@@ -43,8 +27,8 @@ import { formatNumber } from "core-lib/business";
 registerForm("unit-conversion-form", UnitConversionForm);
 
 export const UnitConversionListBlock: React.FC = () => {
-  const theme = useTheme();
-  const { openDialog } = useDialogContext();
+  // openDialog is wired but no actions trigger it for now — preserve future hooks
+  useDialogContext();
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState<UnitConversionFilterState>({
@@ -77,7 +61,6 @@ export const UnitConversionListBlock: React.FC = () => {
 
   const filteredConversions = useMemo(() => {
     let filtered = [...conversions];
-
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -87,7 +70,6 @@ export const UnitConversionListBlock: React.FC = () => {
           (conversion.notes && conversion.notes.toLowerCase().includes(query)),
       );
     }
-
     return applyUnitConversionSorting(filtered, filters);
   }, [conversions, filters]);
 
@@ -105,15 +87,11 @@ export const UnitConversionListBlock: React.FC = () => {
   }, [data]);
 
   const handleNextPage = useCallback(() => {
-    if (pagination?.hasNextPage) {
-      setPageNumber((prev) => prev + 1);
-    }
+    if (pagination?.hasNextPage) setPageNumber((prev) => prev + 1);
   }, [pagination]);
 
   const handlePreviousPage = useCallback(() => {
-    if (pagination?.hasPreviousPage) {
-      setPageNumber((prev) => prev - 1);
-    }
+    if (pagination?.hasPreviousPage) setPageNumber((prev) => prev - 1);
   }, [pagination]);
 
   const handlePageSizeChange = useCallback((size: number) => {
@@ -137,185 +115,135 @@ export const UnitConversionListBlock: React.FC = () => {
   }, []);
 
   return (
-    <Fade in timeout={500}>
-      <Box sx={{ width: "100%", p: 3 }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            mb: 3,
-            borderRadius: 4,
-            background: `linear-gradient(135deg, ${alpha(
-              theme.palette.primary.main,
-              0.03,
-            )} 0%, ${alpha(theme.palette.secondary.main, 0.03)} 100%)`,
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-            backdropFilter: "blur(8px)",
+    <Box style={{ width: "100%" }}>
+      <Card variant="surface" size="3" mb="4">
+        <HeaderV2
+          title="Unit Conversion Management"
+          subtitle="Define and manage conversion rates between different units of measurement"
+          icon={<SwitchIcon />}
+          actionButton={{
+            label: "New Conversion",
+            onClick: () => {},
+            variant: "contained",
+            color: "primary",
           }}
-        >
-          <HeaderV2
-            title="Unit Conversion Management"
-            subtitle="Define and manage conversion rates between different units of measurement"
-            icon={<SwapHorizOutlined sx={{ fontSize: 28 }} />}
-            actionButton={{
-              label: "New Conversion",
-              onClick: () => {},
-              variant: "contained",
-              color: "primary",
-            }}
+        />
+
+        <Flex gap="3" mt="4" wrap="wrap">
+          <StatsCard
+            label="Total Conversions"
+            value={stats.totalConversions}
+            color="primary"
+            variant="detailed"
           />
-
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{ mt: 4, flexWrap: "wrap", gap: 2 }}
-          >
-            <StatsCard
-              label="Total Conversions"
-              value={stats.totalConversions}
-              icon={<CompareArrows />}
-              color="primary"
-              variant="detailed"
-            />
-            <StatsCard
-              label="Exact Conversions"
-              value={stats.exactConversions}
-              icon={<CheckCircleOutline />}
-              color="success"
-              variant="detailed"
-            />
-            <StatsCard
-              label="Approximate"
-              value={stats.approximateConversions}
-              icon={<WarningAmberOutlined />}
-              color="warning"
-              variant="detailed"
-            />
-            <StatsCard
-              label="Avg Rate"
-              value={formatNumber(stats.averageRate, 2)}
-              icon={<TrendingUp />}
-              color="info"
-              variant="detailed"
-            />
-          </Stack>
-
-          {(stats.highestRate > 0 || stats.lowestRate < Infinity) && (
-            <Stack
-              direction="row"
-              spacing={2}
-              sx={{ mt: 2, flexWrap: "wrap", gap: 1 }}
-            >
-              <Chip
-                icon={<TrendingUp />}
-                label={`Highest Rate: 1 unit = ${formatNumber(stats.highestRate, 2)} units`}
-                size="small"
-                sx={{
-                  bgcolor: alpha(theme.palette.success.main, 0.1),
-                  color: theme.palette.success.main,
-                }}
-              />
-              <Chip
-                icon={<TrendingDown />}
-                label={`Lowest Rate: 1 unit = ${formatNumber(stats.lowestRate, 2)} units`}
-                size="small"
-                sx={{
-                  bgcolor: alpha(theme.palette.info.main, 0.1),
-                  color: theme.palette.info.main,
-                }}
-              />
-              {stats.mostConvertedFromUnit.name && (
-                <Chip
-                  icon={<SwapHorizOutlined />}
-                  label={`Most converted from: ${stats.mostConvertedFromUnit.name} (${stats.mostConvertedFromUnit.count} conversions)`}
-                  size="small"
-                  sx={{
-                    bgcolor: alpha(theme.palette.warning.main, 0.1),
-                    color: theme.palette.warning.main,
-                  }}
-                />
-              )}
-            </Stack>
-          )}
-
-          <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
-            <FilterBar
-              searchValue={filters.searchQuery}
-              onSearchChange={handleSearchChange}
-              searchPlaceholder="Search by unit names or notes..."
-              sortValue={filters.sortBy}
-              sortOptions={sortOptions}
-              onSortChange={handleSortChange}
-              resultCount={filteredConversions.length}
-              resultLabel="conversions"
-              pageSize={pageSize}
-              pageSizeOptions={[10, 20, 50, 100]}
-              onPageSizeChange={handlePageSizeChange}
-              activeFilterCount={activeFilterCount}
-              onClearFilters={handleClearFilters}
-              showFilterChip={true}
-            />
-            <Button
-              variant="outlined"
-              startIcon={<RefreshOutlined />}
-              onClick={handleRefresh}
-              disabled={data.loading}
-              sx={{ borderRadius: 3, ml: 2, px: 3, py: 1 }}
-            >
-              Refresh
-            </Button>
-          </Stack>
-        </Paper>
-
-        <Paper
-          elevation={0}
-          sx={{
-            borderRadius: 4,
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-            overflow: "hidden",
-            bgcolor: theme.palette.background.paper,
-            boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.05)}`,
-          }}
-        >
-          <UnitConversionList
-            data={filteredConversions}
-            loading={data.loading}
-            pagination={pagination}
-            onNextPage={handleNextPage}
-            onPreviousPage={handlePreviousPage}
-            onView={() => {}}
-            onEdit={() => {}}
-            onDelete={() => {}}
+          <StatsCard
+            label="Exact Conversions"
+            value={stats.exactConversions}
+            color="success"
+            variant="detailed"
           />
-        </Paper>
+          <StatsCard
+            label="Approximate"
+            value={stats.approximateConversions}
+            color="warning"
+            variant="detailed"
+          />
+          <StatsCard
+            label="Avg Rate"
+            value={formatNumber(stats.averageRate, 2)}
+            color="info"
+            variant="detailed"
+          />
+        </Flex>
 
-        {filteredConversions.length > 0 && (
-          <Fade in timeout={800}>
-            <Box
-              sx={{
-                mt: 2,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                px: 2,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Showing{" "}
-                {filteredConversions.length === 0
-                  ? 0
-                  : (pageNumber - 1) * pageSize + 1}{" "}
-                to {Math.min(pageNumber * pageSize, filteredConversions.length)}{" "}
-                of <strong>{pagination?.totalItems ?? 0}</strong> conversions
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Page <strong>{pageNumber}</strong> of{" "}
-                <strong>{pagination?.totalPages ?? 1}</strong>
-              </Typography>
-            </Box>
-          </Fade>
+        {(stats.highestRate > 0 || stats.lowestRate < Infinity) && (
+          <Flex gap="2" mt="3" wrap="wrap">
+            <Badge color="green" variant="soft" size="2" radius="full">
+              <ArrowUpIcon />
+              Highest Rate: 1 unit = {formatNumber(stats.highestRate, 2)} units
+            </Badge>
+            <Badge color="blue" variant="soft" size="2" radius="full">
+              <ArrowDownIcon />
+              Lowest Rate: 1 unit = {formatNumber(stats.lowestRate, 2)} units
+            </Badge>
+            {stats.mostConvertedFromUnit.name && (
+              <Badge color="amber" variant="soft" size="2" radius="full">
+                <SwitchIcon />
+                Most converted from: {stats.mostConvertedFromUnit.name} (
+                {stats.mostConvertedFromUnit.count} conversions)
+              </Badge>
+            )}
+          </Flex>
         )}
-      </Box>
-    </Fade>
+
+        <Flex justify="between" align="center" gap="3" mt="4" wrap="wrap">
+          <FilterBar
+            searchValue={filters.searchQuery}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search by unit names or notes…"
+            sortValue={filters.sortBy}
+            sortOptions={sortOptions}
+            onSortChange={handleSortChange}
+            resultCount={filteredConversions.length}
+            resultLabel="conversions"
+            pageSize={pageSize}
+            pageSizeOptions={[10, 20, 50, 100]}
+            onPageSizeChange={handlePageSizeChange}
+            activeFilterCount={activeFilterCount}
+            onClearFilters={handleClearFilters}
+            showFilterChip
+          />
+          <Button
+            type="Secondary"
+            onClick={handleRefresh}
+            disabled={data.loading}
+          >
+            <Flex align="center" gap="2">
+              <ReloadIcon />
+              Refresh
+            </Flex>
+          </Button>
+        </Flex>
+      </Card>
+
+      <Card variant="surface" size="2" style={{ overflow: "hidden" }}>
+        <UnitConversionList
+          data={filteredConversions}
+          loading={data.loading}
+          pagination={pagination}
+          onNextPage={handleNextPage}
+          onPreviousPage={handlePreviousPage}
+          onView={() => {}}
+          onEdit={() => {}}
+          onDelete={() => {}}
+        />
+      </Card>
+
+      {filteredConversions.length > 0 && (
+        <Flex justify="between" align="center" mt="3" px="2">
+          <Text size="2" color="gray">
+            Showing{" "}
+            {filteredConversions.length === 0
+              ? 0
+              : (pageNumber - 1) * pageSize + 1}{" "}
+            to {Math.min(pageNumber * pageSize, filteredConversions.length)} of{" "}
+            <Text weight="bold" color="gray">
+              {pagination?.totalItems ?? 0}
+            </Text>{" "}
+            conversions
+          </Text>
+          <Text size="2" color="gray">
+            Page{" "}
+            <Text weight="bold" color="gray">
+              {pageNumber}
+            </Text>{" "}
+            of{" "}
+            <Text weight="bold" color="gray">
+              {pagination?.totalPages ?? 1}
+            </Text>
+          </Text>
+        </Flex>
+      )}
+    </Box>
   );
 };

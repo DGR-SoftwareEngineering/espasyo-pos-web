@@ -1,19 +1,13 @@
 import { useToastContext } from "core-lib";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Box, Tabs } from "@radix-ui/themes";
 import { UnitConversionForm } from "./UnitConversionForm";
 import { UnitConversionForm as UnitConversionFormType } from "./validation";
-import { useApiCallback, useApi, useResolution } from "core-lib/core/hooks";
+import { useApiCallback, useApi } from "core-lib/core/hooks";
 import {
   CreateUnitConversionParams,
   UnitDto,
 } from "core-lib/api/commons/types";
-import { TabOption } from "core-lib/components/tabs/types";
-import {
-  TabsContextProvider,
-  TabsHeaderMobile,
-  TabsHeaderDesktop,
-  TabPanel,
-} from "core-lib";
 import { UnitConversionListBlock } from "../list/UnitConversionListBlock";
 
 export const UnitConversionFormBlock: React.FC = () => {
@@ -21,7 +15,6 @@ export const UnitConversionFormBlock: React.FC = () => {
   const [resetForm, setResetForm] = useState(false);
   const [units, setUnits] = useState<UnitDto[]>([]);
   const { showToast } = useToastContext();
-  const { isMobile } = useResolution();
 
   const unitData = useApi((api) => api.commons.unitList());
   const conversionCb = useApiCallback(
@@ -32,50 +25,6 @@ export const UnitConversionFormBlock: React.FC = () => {
   useEffect(() => {
     setUnits(unitData.result?.data.response ?? []);
   }, [unitData.result?.data.response]);
-
-  const tabs = useMemo<Array<TabOption>>(
-    () => [
-      {
-        key: "unit_conversion_creation",
-        label: "Unit Conversion Creation Form",
-        content: (
-          <UnitConversionForm
-            submitLoading={loading || unitData.loading}
-            resetForm={resetForm}
-            onSubmit={handleSubmit}
-            isInDialog={false}
-            units={units}
-          />
-        ),
-      },
-      {
-        key: "unit_conversion_list",
-        label: "Unit Conversion List",
-        content: <UnitConversionListBlock />,
-      },
-    ],
-    [units],
-  );
-
-  return (
-    <TabsContextProvider>
-      {isMobile ? (
-        <TabsHeaderMobile id="unit_conversion_mobile" tabs={tabs} />
-      ) : (
-        <TabsHeaderDesktop id="unit_conversion_desktop" tabs={tabs} />
-      )}
-      {tabs.map((tab, index) => (
-        <TabPanel
-          index={index}
-          id={`${tab.key}_tabpanel_${index}`}
-          aria-labelledby={`${tab.key}_tab_${index}`}
-          key={`${tab.key}_${index}`}
-        >
-          {tab.content}
-        </TabPanel>
-      ))}
-    </TabsContextProvider>
-  );
 
   async function handleSubmit(formData: UnitConversionFormType) {
     try {
@@ -108,4 +57,29 @@ export const UnitConversionFormBlock: React.FC = () => {
       setLoading(false);
     }
   }
+
+  return (
+    <Tabs.Root defaultValue="create">
+      <Tabs.List size="2">
+        <Tabs.Trigger value="create">Create Conversion</Tabs.Trigger>
+        <Tabs.Trigger value="list">Conversions</Tabs.Trigger>
+      </Tabs.List>
+
+      <Box pt="4">
+        <Tabs.Content value="create">
+          <UnitConversionForm
+            submitLoading={loading || unitData.loading}
+            resetForm={resetForm}
+            onSubmit={handleSubmit}
+            isInDialog={false}
+            units={units}
+          />
+        </Tabs.Content>
+
+        <Tabs.Content value="list">
+          <UnitConversionListBlock />
+        </Tabs.Content>
+      </Box>
+    </Tabs.Root>
+  );
 };

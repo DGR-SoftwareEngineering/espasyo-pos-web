@@ -1,8 +1,21 @@
-import { Paper, Typography, Avatar } from "@mui/material";
+import React from "react";
+import { Avatar, Flex, Text } from "@radix-ui/themes";
 import { motion, AnimatePresence } from "framer-motion";
-import { EmojiEmotions, Whatshot, Star, Spa, Bolt } from "@mui/icons-material";
+import {
+  FaceIcon,
+  StarFilledIcon,
+  LightningBoltIcon,
+  HeartFilledIcon,
+  RocketIcon,
+} from "@radix-ui/react-icons";
 
-const iconMap = { EmojiEmotions, Whatshot, Star, Spa, Bolt };
+const iconMap = {
+  EmojiEmotions: FaceIcon,
+  Whatshot: LightningBoltIcon,
+  Star: StarFilledIcon,
+  Spa: HeartFilledIcon,
+  Bolt: RocketIcon,
+} as const;
 
 interface Props {
   message: { id: string; text: string; icon: string };
@@ -10,37 +23,49 @@ interface Props {
 }
 
 export const MotivationMessage = ({ message, isVisible }: Props) => {
-  const Icon = iconMap[message.icon as keyof typeof iconMap];
+  const Icon =
+    iconMap[message.icon as keyof typeof iconMap] ?? StarFilledIcon;
 
   return (
-    <AnimatePresence mode="wait">
-      {isVisible && (
-        <motion.div
-          key={message.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Paper
-            sx={{
-              p: 2,
-              mb: 3,
-              bgcolor: "primary.main",
-              color: "white",
-              borderRadius: 2,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 2,
-            }}
+    <div style={{ minHeight: 64, marginBottom: 24 }}>
+      <AnimatePresence mode="wait" initial={false}>
+        {isVisible && (
+          <motion.div
+            key={message.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35 }}
           >
-            <Avatar sx={{ bgcolor: "transparent", color: "white" }}>
-              <Icon />
-            </Avatar>
-            <Typography variant="h6">{message.text}</Typography>
-          </Paper>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            <Flex
+              align="center"
+              gap="3"
+              display="inline-flex"
+              px="3"
+              py="2"
+              style={{
+                background: "var(--accent-9)",
+                color: "var(--accent-contrast)",
+                borderRadius: "var(--radius-4)",
+                boxShadow: "0 4px 12px var(--accent-a4)",
+              }}
+            >
+              <Avatar
+                size="2"
+                radius="full"
+                fallback={<Icon />}
+                style={{
+                  background: "rgba(255,255,255,0.18)",
+                  color: "white",
+                }}
+              />
+              <Text size="3" weight="medium" style={{ color: "inherit" }}>
+                {message.text}
+              </Text>
+            </Flex>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };

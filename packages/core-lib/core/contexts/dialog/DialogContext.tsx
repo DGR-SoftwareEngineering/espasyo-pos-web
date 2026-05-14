@@ -4,7 +4,8 @@ import {
   CustomDialogElement,
 } from "../../../api/content/types/common";
 import { useRouter } from "../../router";
-import { DialogBox, DialogContextModal } from "../../../components";
+import { DialogContextModal } from "../../../components";
+import { DialogBox } from "../../../components/radix/dialog/DialogBox";
 interface DialogContextType {
   isDialogOpen: boolean;
   openDialog: (element: CustomDialogElement) => void;
@@ -79,7 +80,7 @@ export const DialogContextProvider: React.FC<
           title={dialogElement?.title}
           disableDismiss={loading}
           fullScreenOnMobile
-          fullScreen
+          maxWidth="lg"
         >
           <DialogContextModal
             dialogFormType={dialogElement?.dialogContentType}

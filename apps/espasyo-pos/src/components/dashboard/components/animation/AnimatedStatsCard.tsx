@@ -1,9 +1,17 @@
-import { Grid, Paper, Typography, Avatar, Stack, Box } from "@mui/material";
+import React from "react";
+import {
+  Avatar,
+  Box,
+  Card,
+  Flex,
+  Heading,
+  Text,
+} from "@radix-ui/themes";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown } from "@mui/icons-material";
+import { ArrowUpIcon, ArrowDownIcon } from "@radix-ui/react-icons";
 import { STATS_CARDS } from "../../constants/stats";
 
-const MotionPaper = motion(Paper);
+const MotionDiv = motion.div;
 
 type StatCard = (typeof STATS_CARDS)[number];
 
@@ -12,82 +20,87 @@ interface Props {
   index: number;
 }
 
+/**
+ * Single stat tile in the dashboard grid. Radix `<Card>` surface with a
+ * rotating accent orb behind the avatar — the same micro-interaction the
+ * MUI version had, now riding on Radix tokens (`stat.color` is preserved
+ * for tenant-specific brand colors).
+ */
 export const AnimatedStatsCard = ({ stat, index }: Props) => {
   const Icon = stat.icon;
+  // `stat.trend` is a literal string in the data file; widen here so the
+  // comparison isn't flagged as a tautology when seed data only has one value.
+  const trendUp = (stat.trend as string) === "up";
+  const TrendIcon = trendUp ? ArrowUpIcon : ArrowDownIcon;
+  const trendColor = trendUp ? "var(--green-11)" : "var(--red-11)";
 
   return (
-    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1 }}
-        whileHover={{ y: -5 }}
+    <MotionDiv
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08 }}
+      whileHover={{ y: -4 }}
+    >
+      <Card
+        size="3"
+        variant="surface"
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          transition: "box-shadow 200ms ease",
+        }}
       >
-        <MotionPaper
-          whileHover={{ boxShadow: 10 }}
-          sx={{
-            p: 3,
-            borderRadius: 3,
-            position: "relative",
-            overflow: "hidden",
+        {/* Slowly rotating accent orb */}
+        <motion.div
+          aria-hidden
+          animate={{ rotate: 360 }}
+          transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+          style={{
+            position: "absolute",
+            top: -22,
+            right: -22,
+            width: 110,
+            height: 110,
+            borderRadius: "50%",
+            background: `${stat.color}22`,
+            pointerEvents: "none",
           }}
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        />
+
+        <Flex justify="between" align="center" style={{ position: "relative" }}>
+          <Box>
+            <Text size="1" color="gray">
+              {stat.title}
+            </Text>
+            <Heading size="7" weight="bold" my="1">
+              {stat.value}
+            </Heading>
+            <Flex align="center" gap="1">
+              <TrendIcon style={{ color: trendColor, width: 14, height: 14 }} />
+              <Text
+                size="1"
+                weight="bold"
+                style={{ color: trendColor }}
+              >
+                {stat.change}
+              </Text>
+              <Text size="1" color="gray">
+                vs yesterday
+              </Text>
+            </Flex>
+          </Box>
+
+          <Avatar
+            size="4"
+            radius="full"
+            fallback={<Icon />}
             style={{
-              position: "absolute",
-              top: -20,
-              right: -20,
-              width: 100,
-              height: 100,
-              borderRadius: "50%",
-              background: `${stat.color}20`,
+              background: `${stat.color}22`,
+              color: stat.color,
             }}
           />
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Box>
-              <Typography color="text.secondary" variant="body2">
-                {stat.title}
-              </Typography>
-              <Typography variant="h4" fontWeight={700} my={1}>
-                {stat.value}
-              </Typography>
-              <Stack direction="row" alignItems="center" spacing={0.5}>
-                {stat.trend === "up" ? (
-                  <TrendingUp sx={{ color: "success.main", fontSize: 16 }} />
-                ) : (
-                  <TrendingDown sx={{ color: "error.main", fontSize: 16 }} />
-                )}
-                <Typography
-                  variant="body2"
-                  fontWeight={600}
-                  color={stat.trend === "up" ? "success.main" : "error.main"}
-                >
-                  {stat.change}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  vs yesterday
-                </Typography>
-              </Stack>
-            </Box>
-            <Avatar
-              sx={{
-                bgcolor: `${stat.color}20`,
-                color: stat.color,
-                width: 56,
-                height: 56,
-              }}
-            >
-              <Icon />
-            </Avatar>
-          </Stack>
-        </MotionPaper>
-      </motion.div>
-    </Grid>
+        </Flex>
+      </Card>
+    </MotionDiv>
   );
 };

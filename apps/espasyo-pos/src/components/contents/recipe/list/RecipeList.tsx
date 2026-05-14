@@ -1,8 +1,12 @@
 import React, { useCallback, useMemo } from "react";
-import { Box, useTheme, alpha } from "@mui/material";
-import { DataTableV2 } from "core-lib";
+import { Box } from "@radix-ui/themes";
+import { DataTableV2 } from "core-lib/components/radix/table/DataTableV2";
 import { TABLE_HEADERS } from "../constants";
 import { RecipeResponse } from "core-lib/api/commons/types";
+import {
+  getRecipeIngredientCount,
+  getRecipeTotalCost,
+} from "core-lib/business/recipe";
 import { RecipeTableRow } from "./RecipeTableRow";
 
 interface Props {
@@ -38,23 +42,11 @@ export const RecipeList: React.FC<Props> = ({
   onEdit,
   onDelete,
 }) => {
-  const theme = useTheme();
-
-  const calculateTotalCost = (recipe: RecipeResponse): number => {
-    if (recipe.totalCost !== undefined && recipe.totalCost > 0) {
-      return recipe.totalCost;
-    }
-    return recipe.recipeItems.reduce(
-      (sum, item) => sum + (item.calculatedCost || item.cost),
-      0,
-    );
-  };
-
   const tableData = useMemo((): TableRecipe[] => {
     return data.map((recipe) => ({
       ...recipe,
-      ingredientCount: recipe.recipeItems.length,
-      totalCost: calculateTotalCost(recipe),
+      ingredientCount: getRecipeIngredientCount(recipe),
+      totalCost: getRecipeTotalCost(recipe),
     }));
   }, [data]);
 
@@ -71,59 +63,17 @@ export const RecipeList: React.FC<Props> = ({
     [onView, onEdit, onDelete],
   );
 
-  const transformedHeaders = useMemo(() => {
-    return TABLE_HEADERS.map((header) => ({
-      name: header.label,
-      label: header.label,
-      align: header.align as "left" | "center" | "right" | undefined,
-      width: header.width,
-      sortable: header.sortable,
-    }));
-  }, []);
-
   return (
-    <Box
-      sx={{
-        width: "100%"}}>
+    <Box style={{ width: "100%" }}>
       <DataTableV2
         data-testid="recipe-list-table"
         data={tableData}
         loading={loading}
-        tableHeaders={transformedHeaders}
+        tableHeaders={TABLE_HEADERS}
         pagination={pagination}
         onNextPage={onNextPage}
         onPreviousPage={onPreviousPage}
         bodyRowComponent={bodyRowComponent}
-        sx={{
-          tableHead: {
-            bgcolor: alpha(theme.palette.primary.main, 0.02),
-            borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-            "& th": {
-              color: theme.palette.text.primary,
-              fontWeight: 700,
-              fontSize: "0.875rem",
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-              whiteSpace: "normal",
-            },
-          },
-          headerCell: {
-            cell: {
-              py: 2,
-              backgroundColor: "transparent",
-            },
-            typography: {
-              fontWeight: 700,
-              fontSize: "0.875rem",
-            },
-          },
-          bodyCell: {
-            cell: {
-              py: 1.5,
-              borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-            },
-          },
-        }}
       />
     </Box>
   );

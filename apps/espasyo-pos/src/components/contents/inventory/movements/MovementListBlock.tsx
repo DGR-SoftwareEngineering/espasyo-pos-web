@@ -1,25 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
-  Button,
-  Paper,
-  Stack,
-  MenuItem,
-  TextField as MuiTextField,
-  alpha,
-  useTheme,
-} from "@mui/material";
+  Card,
+  Flex,
+  Select,
+  Text,
+  TextField,
+} from "@radix-ui/themes";
 import {
-  RefreshOutlined,
-  ReceiptLongOutlined,
-  SearchOutlined,
-} from "@mui/icons-material";
+  ReloadIcon,
+  MagnifyingGlassIcon,
+  ReaderIcon,
+} from "@radix-ui/react-icons";
 import { useApiCallback } from "core-lib/core/hooks";
 import {
   StockMovementDto,
   StockMovementType,
 } from "core-lib/api/commons/types";
-import { HeaderV2 } from "core-lib/components/header/HeaderV2";
+import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
+import { Button } from "core-lib/components/radix/buttons/Button";
 import { MovementList } from "./MovementList";
 import { MOVEMENT_TYPE_OPTIONS, PAGE_SIZE_OPTIONS } from "../constants";
 import { MovementFilterState } from "./types";
@@ -43,7 +42,6 @@ const defaultFromDate = (): string => {
 const defaultToDate = (): string => new Date().toISOString().slice(0, 10);
 
 export const MovementListBlock: React.FC = () => {
-  const theme = useTheme();
   const [items, setItems] = useState<StockMovementDto[]>([]);
   const [filters, setFilters] = useState<MovementFilterState>({
     fromDate: defaultFromDate(),
@@ -105,7 +103,6 @@ export const MovementListBlock: React.FC = () => {
 
   useEffect(() => {
     void executeFetch(1);
-    // intentionally run on mount only; user-driven refetches go through handlers below
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -132,112 +129,114 @@ export const MovementListBlock: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}
-      >
+    <Box style={{ width: "100%" }}>
+      <Card variant="surface" size="3" mb="4">
         <HeaderV2
           title="Stock Movements"
           subtitle="Audit trail of every inventory change — read-only and append-only."
-          icon={<ReceiptLongOutlined />}
+          icon={<ReaderIcon />}
         />
 
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          alignItems={{ xs: "stretch", md: "center" }}
-          sx={{ mt: 3 }}
+        <Flex
+          direction={{ initial: "column", md: "row" }}
+          gap="3"
+          align={{ initial: "stretch", md: "end" }}
+          mt="4"
+          wrap="wrap"
         >
-          <MuiTextField
-            label="From"
-            type="date"
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={filters.fromDate}
-            onChange={(e) => updateFilter("fromDate", e.target.value)}
-            sx={{ minWidth: 170 }}
-          />
-          <MuiTextField
-            label="To"
-            type="date"
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={filters.toDate}
-            onChange={(e) => updateFilter("toDate", e.target.value)}
-            sx={{ minWidth: 170 }}
-          />
-          <MuiTextField
-            label="Movement Type"
-            select
-            size="small"
-            value={filters.movementType}
-            onChange={(e) =>
-              updateFilter(
-                "movementType",
-                e.target.value === "all"
-                  ? "all"
-                  : (Number(e.target.value) as StockMovementType),
-              )
-            }
-            sx={{ minWidth: 200 }}
-          >
-            {MOVEMENT_TYPE_OPTIONS.map((opt) => (
-              <MenuItem key={String(opt.value)} value={String(opt.value)}>
-                {opt.label}
-              </MenuItem>
-            ))}
-          </MuiTextField>
-          <MuiTextField
-            label="Page Size"
-            select
-            size="small"
-            value={filters.pageSize}
-            onChange={(e) =>
-              updateFilter("pageSize", Number(e.target.value))
-            }
-            sx={{ minWidth: 130 }}
-          >
-            {PAGE_SIZE_OPTIONS.map((size) => (
-              <MenuItem key={size} value={size}>
-                {size}
-              </MenuItem>
-            ))}
-          </MuiTextField>
-          <Button
-            variant="contained"
-            startIcon={<SearchOutlined />}
-            onClick={handleSearch}
-            disabled={fetchCb.loading}
-            sx={{ borderRadius: 2 }}
-          >
-            Search
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshOutlined />}
-            onClick={() => executeFetch(pageNumber)}
-            disabled={fetchCb.loading}
-            sx={{ borderRadius: 2 }}
-          >
-            Refresh
-          </Button>
-        </Stack>
-      </Paper>
+          <Box>
+            <Text size="1" color="gray" as="div" mb="1">
+              From
+            </Text>
+            <TextField.Root
+              size="2"
+              type="date"
+              value={filters.fromDate}
+              onChange={(e) => updateFilter("fromDate", e.target.value)}
+              style={{ minWidth: 170 }}
+            />
+          </Box>
+          <Box>
+            <Text size="1" color="gray" as="div" mb="1">
+              To
+            </Text>
+            <TextField.Root
+              size="2"
+              type="date"
+              value={filters.toDate}
+              onChange={(e) => updateFilter("toDate", e.target.value)}
+              style={{ minWidth: 170 }}
+            />
+          </Box>
+          <Box>
+            <Text size="1" color="gray" as="div" mb="1">
+              Movement Type
+            </Text>
+            <Select.Root
+              size="2"
+              value={String(filters.movementType)}
+              onValueChange={(v) =>
+                updateFilter(
+                  "movementType",
+                  v === "all" ? "all" : (Number(v) as StockMovementType),
+                )
+              }
+            >
+              <Select.Trigger style={{ minWidth: 200 }} />
+              <Select.Content>
+                {MOVEMENT_TYPE_OPTIONS.map((opt) => (
+                  <Select.Item key={String(opt.value)} value={String(opt.value)}>
+                    {opt.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </Box>
+          <Box>
+            <Text size="1" color="gray" as="div" mb="1">
+              Page Size
+            </Text>
+            <Select.Root
+              size="2"
+              value={String(filters.pageSize)}
+              onValueChange={(v) => updateFilter("pageSize", Number(v))}
+            >
+              <Select.Trigger style={{ minWidth: 130 }} />
+              <Select.Content>
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <Select.Item key={size} value={String(size)}>
+                    {size}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </Box>
+          <Flex gap="2" align="end">
+            <Button
+              type="Primary"
+              onClick={handleSearch}
+              disabled={fetchCb.loading}
+            >
+              <Flex align="center" gap="2">
+                <MagnifyingGlassIcon />
+                Search
+              </Flex>
+            </Button>
+            <Button
+              type="Secondary"
+              onClick={() => executeFetch(pageNumber)}
+              disabled={fetchCb.loading}
+            >
+              <Flex align="center" gap="2">
+                <ReloadIcon />
+                Refresh
+              </Flex>
+            </Button>
+          </Flex>
+        </Flex>
+      </Card>
 
-      <Paper
-        elevation={0}
-        sx={{
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          overflow: "hidden",
-        }}
-      >
+      <Card variant="surface" size="2" style={{ overflow: "hidden" }}>
         <MovementList
           data={items}
           loading={fetchCb.loading}
@@ -245,7 +244,7 @@ export const MovementListBlock: React.FC = () => {
           onNextPage={() => executeFetch(pageNumber + 1)}
           onPreviousPage={() => executeFetch(Math.max(1, pageNumber - 1))}
         />
-      </Paper>
+      </Card>
     </Box>
   );
 };

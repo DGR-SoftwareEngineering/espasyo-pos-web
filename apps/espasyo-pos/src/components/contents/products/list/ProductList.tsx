@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
-import { Box, useTheme, alpha } from "@mui/material";
-import { DataTableV2 } from "core-lib";
+import { Box } from "@radix-ui/themes";
+import { DataTableV2 } from "core-lib/components/radix/table/DataTableV2";
 import { ProductTableRow } from "./ProductTableRow";
 import { TABLE_HEADERS } from "../constants";
 import { ProductListProps } from "./types";
@@ -16,8 +16,6 @@ export const ProductList: React.FC<ProductListProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const theme = useTheme();
-
   const bodyRowComponent = useCallback(
     (row: ProductDataList) => (
       <ProductTableRow
@@ -32,7 +30,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   );
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box style={{ width: "100%" }}>
       <DataTableV2
         data-testid="product-list-table"
         data={data}
@@ -42,30 +40,6 @@ export const ProductList: React.FC<ProductListProps> = ({
         onNextPage={onNextPage}
         onPreviousPage={onPreviousPage}
         bodyRowComponent={bodyRowComponent}
-        sx={{
-          tableHead: {
-            bgcolor: alpha(theme.palette.primary.main, 0.02),
-            borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-          },
-          headerCell: {
-            cell: {
-              py: 2,
-              fontWeight: 600,
-              color: theme.palette.text.primary,
-            },
-            typography: {
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            },
-          },
-          bodyCell: {
-            cell: {
-              py: 1.5,
-            },
-          },
-        }}
       />
     </Box>
   );

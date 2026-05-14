@@ -1,5 +1,6 @@
 import React from "react";
-import { DialogBox } from "../../dialog/DialogBox";
+import { Box } from "@radix-ui/themes";
+import { DialogBox } from "../../radix/dialog/DialogBox";
 import { useToastContext } from "../../../core/contexts";
 import { useApiCallback } from "../../../core/hooks";
 import { LookupForm } from "./LookupForm";
@@ -113,7 +114,7 @@ export function LookupFormDialog<TDto extends LookupDtoBase>({
       loading={createCb.loading || updateCb.loading}
       fullScreenOnMobile
     >
-      <div style={{ padding: 24 }}>
+      <Box p="4">
         <LookupForm
           config={config}
           rows={rows}
@@ -127,7 +128,7 @@ export function LookupFormDialog<TDto extends LookupDtoBase>({
           submitLoading={createCb.loading || updateCb.loading}
           onSubmit={handleSubmit}
         />
-      </div>
+      </Box>
     </DialogBox>
   );
 }

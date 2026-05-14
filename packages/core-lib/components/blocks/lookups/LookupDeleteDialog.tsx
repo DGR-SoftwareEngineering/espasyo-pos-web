@@ -1,13 +1,8 @@
-import {
-  alpha,
-  Box,
-  Button,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
-import { InfoOutlined } from "@mui/icons-material";
-import { DialogBox } from "../../dialog/DialogBox";
+import React from "react";
+import { Box, Callout, Flex, Text } from "@radix-ui/themes";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { DialogBox } from "../../radix/dialog/DialogBox";
+import { Button } from "../../radix/buttons/Button";
 import { useToastContext } from "../../../core/contexts";
 import { useApiCallback } from "../../../core/hooks";
 import { LookupAdminConfig, LookupDtoBase } from "./types";
@@ -27,7 +22,6 @@ export function LookupDeleteDialog<TDto extends LookupDtoBase>({
   onClose,
   onSuccess,
 }: Props<TDto>) {
-  const theme = useTheme();
   const { showToast } = useToastContext();
 
   const deleteCb = useApiCallback(
@@ -50,7 +44,8 @@ export function LookupDeleteDialog<TDto extends LookupDtoBase>({
         return;
       }
       showToast(
-        result.data.message ?? `Failed to delete ${config.entityName.toLowerCase()}`,
+        result.data.message ??
+          `Failed to delete ${config.entityName.toLowerCase()}`,
         "error",
       );
     } catch (error) {
@@ -67,69 +62,55 @@ export function LookupDeleteDialog<TDto extends LookupDtoBase>({
       maxWidth="xs"
       loading={deleteCb.loading}
     >
-      <Box sx={{ p: 3 }}>
-        <Typography variant="body1" sx={{ mb: 2 }}>
-          Are you sure you want to delete this {config.entityName.toLowerCase()}
-          ?
-        </Typography>
+      <Box p="4">
+        <Text as="p" size="3" mb="3">
+          Are you sure you want to delete this{" "}
+          {config.entityName.toLowerCase()}?
+        </Text>
 
         {row && (
           <Box
-            sx={{
-              p: 2,
-              mb: 3,
-              bgcolor: alpha(theme.palette.error.main, 0.05),
-              borderRadius: 2,
-              border: `1px solid ${alpha(theme.palette.error.main, 0.1)}`,
+            mb="3"
+            p="3"
+            style={{
+              background: "var(--red-a3)",
+              borderRadius: "var(--radius-3)",
+              border: "1px solid var(--red-a5)",
             }}
           >
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Text as="div" size="2" weight="bold">
               {row.name}
-            </Typography>
+            </Text>
             {row.description && (
-              <Typography variant="caption" color="text.secondary">
+              <Text as="div" size="1" color="gray">
                 {row.description}
-              </Typography>
+              </Text>
             )}
           </Box>
         )}
 
-        <Box
-          sx={{
-            p: 2,
-            mb: 3,
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette.info.main, 0.04),
-            border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-            display: "flex",
-            gap: 1.5,
-            alignItems: "flex-start",
-          }}
-        >
-          <InfoOutlined color="info" sx={{ fontSize: 20 }} />
-          <Typography variant="body2" color="text.secondary">
+        <Callout.Root color="blue" variant="soft" mb="4">
+          <Callout.Icon>
+            <InfoCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
             This is a <strong>soft delete</strong>. The row will be marked
             inactive but historical references stay intact.
-          </Typography>
-        </Box>
+          </Callout.Text>
+        </Callout.Root>
 
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
-          <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2 }}>
+        <Flex justify="end" gap="2">
+          <Button type="Secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button
-            variant="contained"
-            color="error"
+            type="Critical"
             onClick={handleDelete}
             loading={deleteCb.loading}
-            sx={{
-              borderRadius: 2,
-              boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`,
-            }}
           >
             Delete
           </Button>
-        </Stack>
+        </Flex>
       </Box>
     </DialogBox>
   );

@@ -3,7 +3,11 @@ import React, { useEffect, useState } from "react";
 import { RecipeForm as RecipeFormType } from "./validation";
 import { useApiCallback, useApi } from "core-lib/core/hooks";
 import { RecipeForm } from "./RecipeForm";
-import { ProductDataList, UnitDto } from "core-lib/api/commons/types";
+import {
+  ProductDataList,
+  RecipeParams,
+  UnitDto,
+} from "core-lib/api/commons/types";
 
 export const RecipeFormBlock: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -14,7 +18,7 @@ export const RecipeFormBlock: React.FC = () => {
   const { showToast } = useToastContext();
 
   const recipeCb = useApiCallback(
-    async (api, args: RecipeFormType) => await api.commons.createRecipe(args),
+    async (api, args: RecipeParams) => await api.commons.createRecipe(args),
   );
 
   const getMenuItems = useApi((api) =>
@@ -59,20 +63,65 @@ export const RecipeFormBlock: React.FC = () => {
   async function handleSubmit(data: RecipeFormType) {
     try {
       setLoading(true);
-      const result = await recipeCb.execute(data);
+
+      const payload: RecipeParams = {
+        menuItemProductID: data.menuItemProductID,
+        notes: data.notes ?? null,
+        recipeItems: (data.recipeItems ?? []).map((item) => ({
+          ingredientProductID: item.ingredientProductID,
+          quantityRequired: Number(item.quantityRequired),
+          unitID: item.unitID,
+          displayOrder: Number(item.displayOrder),
+          notes: item.notes ?? null,
+        })),
+      };
+
+      const result = await recipeCb.execute(payload);
 
       if (result.data.success) {
         showToast("Recipe created successfully", "success");
         setResetForm(true);
         setTimeout(() => setResetForm(false), 100);
-      } else {
-        showToast(result.data.message || "Failed to create recipe", "error");
+        return;
       }
+
+      showToast(extractErrorMessage(result.data), "error");
     } catch (error) {
       console.error("Error creating recipe:", error);
-      showToast("Failed to create recipe", "error");
+      const message =
+        extractAxiosErrorMessage(error) || "Failed to create recipe";
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }
   }
 };
+
+function extractErrorMessage(data: {
+  message?: string | null;
+  errors?: unknown;
+}): string {
+  if (Array.isArray(data.errors) && data.errors.length > 0) {
+    const first = data.errors[0];
+    if (typeof first === "string") return first;
+    if (first && typeof first === "object" && "message" in first) {
+      return String((first as { message?: unknown }).message);
+    }
+  }
+  return data.message ?? "Failed to create recipe";
+}
+
+function extractAxiosErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+  if (Array.isArray(error) && error.length > 0) {
+    const first = error[0];
+    if (typeof first === "string") return first;
+  }
+  const maybeAxios = error as {
+    response?: { data?: { message?: string | null; errors?: unknown } };
+  };
+  if (maybeAxios.response?.data) {
+    return extractErrorMessage(maybeAxios.response.data);
+  }
+  return null;
+}

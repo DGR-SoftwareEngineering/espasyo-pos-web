@@ -1,4 +1,3 @@
-import { Box } from "@mui/material";
 import {
   InventoryDto,
   UpdateInventoryParams,
@@ -55,14 +54,12 @@ export const ThresholdsDialogContent: React.FC<{
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <FormRenderer
-        formKey="thresholds-form"
-        inventory={inventory}
-        onSubmit={handleSubmit}
-        submitLoading={updateCb.loading}
-        isInDialog={true}
-      />
-    </Box>
+    <FormRenderer
+      formKey="thresholds-form"
+      inventory={inventory}
+      onSubmit={handleSubmit}
+      submitLoading={updateCb.loading}
+      isInDialog={true}
+    />
   );
 };

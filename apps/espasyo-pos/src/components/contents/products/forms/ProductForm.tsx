@@ -1,24 +1,5 @@
 import React from "react";
-import {
-  Grid,
-  CardContent,
-  InputAdornment,
-  Box,
-  alpha,
-  Typography,
-} from "@mui/material";
-import {
-  Card,
-  TextField,
-  SelectField,
-  FormHeader,
-  FormSection,
-  FormActions,
-  FormErrorSummary,
-  PreviewBanner,
-  ToggleField,
-  ToggleOption,
-} from "core-lib";
+import { Box, Callout, Card, Flex, Grid, Text } from "@radix-ui/themes";
 import {
   DescriptionOutlined,
   InfoOutlined,
@@ -29,6 +10,14 @@ import {
   ScaleOutlined,
   SwapHorizOutlined,
 } from "@mui/icons-material";
+import { ToggleField, ToggleOption } from "core-lib/components/radix/toggle/ToggleField";
+import { TextField } from "core-lib/components/radix/form/TextField";
+import { SelectField } from "core-lib/components/radix/form/SelectField";
+import { FormHeader } from "core-lib/components/radix/FormHeader";
+import { FormSection } from "core-lib/components/radix/FormSection";
+import { FormActions } from "core-lib/components/radix/FormActions";
+import { FormErrorSummary } from "core-lib/components/radix/FormErrorSummary";
+import { PreviewBanner } from "core-lib/components/radix/banner/PreviewBanner";
 import { useProductForm } from "../hooks";
 import { toSelectOptionsWithField } from "core-lib/business/array";
 import { formatPrice } from "core-lib/business/strings";
@@ -74,7 +63,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   productCategories,
   ingredientCategories,
   units,
-  lookupsLoading,
 }) => {
   const {
     control,
@@ -138,9 +126,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   ]);
 
   const handleFormSubmit = handleSubmit(onSubmit);
-  const handleButtonClick = () => {
-    handleFormSubmit();
-  };
+  const handleButtonClick = () => handleFormSubmit();
 
   const previewItem = React.useMemo(() => {
     const price = isMenuItem
@@ -163,17 +149,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   ]);
 
   return (
-    <Card
-      hoverEffect={false}
-      sx={{
-        width: "100%",
-        borderRadius: 3,
-        overflow: "hidden",
-        border: (theme) => `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        boxShadow: (theme) =>
-          `0 8px 24px ${alpha(theme.palette.common.black, 0.05)}`,
-      }}
-    >
+    <Card variant="surface" size="3" style={{ width: "100%" }}>
       <FormHeader
         isEdit={isEdit}
         title="Product"
@@ -187,23 +163,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         <PreviewBanner
           item={previewItem}
           type={isMenuItem ? "menuItem" : "ingredient"}
-          showCategory={true}
-          onClick={undefined} // Optional: add click handler if needed
+          showCategory
         />
       )}
 
-      <CardContent sx={{ p: 4 }}>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
-            <FormErrorSummary errors={errors} fieldLabels={FIELD_LABELS} />
-          </Grid>
+      <Box p="4">
+        <Flex direction="column" gap="4">
+          <FormErrorSummary errors={errors} fieldLabels={FIELD_LABELS} />
 
-          {/* Basic Information */}
-          <Grid size={{ xs: 12 }}>
-            <FormSection
-              icon={<DescriptionOutlined color="primary" />}
-              title="Basic Information"
-            >
+          <FormSection
+            icon={<DescriptionOutlined style={{ color: "var(--accent-11)" }} />}
+            title="Basic Information"
+          >
+            <Flex direction="column" gap="3">
               <TextField
                 name="name"
                 control={control}
@@ -225,216 +197,153 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 label="Select a Category"
               />
 
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ToggleField
-                  name="isMenuItem"
-                  control={control}
-                  options={PRODUCT_TYPE_OPTIONS}
-                  label="Product Type"
-                  required
-                  orientation="horizontal"
-                  spacing={2}
-                  onChange={handleProductTypeChange}
-                />
-              </Grid>
-            </FormSection>
-          </Grid>
+              <ToggleField
+                name="isMenuItem"
+                control={control}
+                options={PRODUCT_TYPE_OPTIONS}
+                label="Product Type"
+                required
+                onChange={handleProductTypeChange}
+              />
+            </Flex>
+          </FormSection>
 
           {isMenuItem ? (
-            <Grid size={{ xs: 12 }}>
-              <FormSection
-                icon={<RestaurantMenuOutlined color="success" />}
-                title="Menu Item Pricing"
-              >
-                <Grid container spacing={3}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      name="unitPrice"
-                      control={control}
-                      label="Selling Price"
-                      type="number"
-                      placeholder={PLACEHOLDERS.price}
-                      startAdornment={
-                        <InputAdornment position="start">₱</InputAdornment>
-                      }
-                    />
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ mt: 0.5, display: "block" }}
-                    >
-                      Price customers pay
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </FormSection>
-            </Grid>
+            <FormSection
+              icon={<RestaurantMenuOutlined style={{ color: "var(--green-11)" }} />}
+              title="Menu Item Pricing"
+            >
+              <Grid columns={{ initial: "1", md: "2" }} gap="3">
+                <Box>
+                  <TextField
+                    name="unitPrice"
+                    control={control}
+                    label="Selling Price"
+                    type="number"
+                    placeholder={PLACEHOLDERS.price}
+                  />
+                  <Text size="1" color="gray" as="div" mt="1">
+                    Price customers pay
+                  </Text>
+                </Box>
+              </Grid>
+            </FormSection>
           ) : (
             <>
-              <Grid size={{ xs: 12 }}>
-                <FormSection
-                  icon={<LocalShippingOutlined color="warning" />}
-                  title="Purchase Information"
-                >
-                  <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <TextField
-                        name="costPrice"
-                        control={control}
-                        label="Total Purchase Cost"
-                        type="number"
-                        placeholder="2300"
-                        startAdornment={
-                          <InputAdornment position="start">₱</InputAdornment>
-                        }
-                      />
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 0.5, display: "block" }}
-                      >
-                        Total amount paid to supplier (e.g., ₱2,300 for 15 kg)
-                      </Typography>
-                    </Grid>
+              <FormSection
+                icon={<LocalShippingOutlined style={{ color: "var(--amber-11)" }} />}
+                title="Purchase Information"
+              >
+                <Grid columns={{ initial: "1", md: "3" }} gap="3">
+                  <Box>
+                    <TextField
+                      name="costPrice"
+                      control={control}
+                      label="Total Purchase Cost"
+                      type="number"
+                      placeholder="2300"
+                    />
+                    <Text size="1" color="gray" as="div" mt="1">
+                      Total amount paid to supplier (e.g., ₱2,300 for 15 kg)
+                    </Text>
+                  </Box>
 
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <TextField
-                        name="purchaseQuantity"
-                        control={control}
-                        label="Purchase Quantity"
-                        type="number"
-                        placeholder="15"
-                      />
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 0.5, display: "block" }}
-                      >
-                        How many units you bought (e.g., 15)
-                      </Typography>
-                    </Grid>
+                  <Box>
+                    <TextField
+                      name="purchaseQuantity"
+                      control={control}
+                      label="Purchase Quantity"
+                      type="number"
+                      placeholder="15"
+                    />
+                    <Text size="1" color="gray" as="div" mt="1">
+                      How many units you bought (e.g., 15)
+                    </Text>
+                  </Box>
 
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <SelectField
-                        name="purchaseUnitID"
-                        control={control}
-                        options={unitOptions}
-                        label="Purchase Unit"
-                      />
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 0.5, display: "block" }}
-                      >
-                        Unit you buy from supplier (e.g., kg)
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </FormSection>
-              </Grid>
+                  <Box>
+                    <SelectField
+                      name="purchaseUnitID"
+                      control={control}
+                      options={unitOptions}
+                      label="Purchase Unit"
+                    />
+                    <Text size="1" color="gray" as="div" mt="1">
+                      Unit you buy from supplier (e.g., kg)
+                    </Text>
+                  </Box>
+                </Grid>
+              </FormSection>
 
-              <Grid size={{ xs: 12 }}>
-                <FormSection
-                  icon={<ScaleOutlined color="info" />}
-                  title="Stock Information"
-                >
-                  <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                      <SelectField
-                        name="stockUnitID"
-                        control={control}
-                        options={unitOptions}
-                        label="Stock Unit"
-                      />
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 0.5, display: "block" }}
-                      >
-                        Unit you use in recipes and inventory (e.g., pcs)
-                      </Typography>
-                    </Grid>
+              <FormSection
+                icon={<ScaleOutlined style={{ color: "var(--blue-11)" }} />}
+                title="Stock Information"
+              >
+                <Grid columns={{ initial: "1", md: "2" }} gap="3">
+                  <Box>
+                    <SelectField
+                      name="stockUnitID"
+                      control={control}
+                      options={unitOptions}
+                      label="Stock Unit"
+                    />
+                    <Text size="1" color="gray" as="div" mt="1">
+                      Unit you use in recipes and inventory (e.g., pcs)
+                    </Text>
+                  </Box>
 
-                    <Grid size={{ xs: 12, md: 6 }}>
-                      <Box
-                        sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          bgcolor: (theme) =>
-                            alpha(theme.palette.info.main, 0.05),
-                          border: (theme) =>
-                            `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                          height: "100%",
-                          display: "flex",
-                          alignItems: "center",
+                  <Box
+                    p="3"
+                    style={{
+                      background: "var(--blue-a3)",
+                      border: "1px solid var(--blue-a5)",
+                      borderRadius: "var(--radius-3)",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Flex align="start" gap="2">
+                      <SwapHorizOutlined
+                        style={{
+                          color: "var(--blue-11)",
+                          fontSize: 20,
+                          flexShrink: 0,
+                          marginTop: 2,
                         }}
-                      >
-                        <SwapHorizOutlined
-                          sx={{
-                            color: (theme) => theme.palette.info.main,
-                            mr: 1.5,
-                            fontSize: 20,
-                          }}
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>Example:</strong> If you buy 15 kg for ₱2,300
-                          and use pieces in recipes:
-                          <br />• Purchase Unit: <strong>kg</strong>
-                          <br />• Stock Unit: <strong>pcs</strong>
-                          <br />• The system will automatically convert using
-                          unit conversion
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </FormSection>
-              </Grid>
+                      />
+                      <Text size="2" color="gray">
+                        <strong>Example:</strong> If you buy 15 kg for ₱2,300 and
+                        use pieces in recipes:
+                        <br />• Purchase Unit: <strong>kg</strong>
+                        <br />• Stock Unit: <strong>pcs</strong>
+                        <br />• The system will automatically convert using unit
+                        conversion
+                      </Text>
+                    </Flex>
+                  </Box>
+                </Grid>
+              </FormSection>
             </>
           )}
 
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                bgcolor: (theme) => alpha(theme.palette.info.main, 0.03),
-                border: (theme) =>
-                  `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 1.5,
-              }}
-            >
-              <InfoOutlined
-                sx={{ color: (theme) => theme.palette.info.main, fontSize: 20 }}
-              />
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  <strong>Product Information:</strong>
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                >
-                  • {isMenuItem ? "Menu items" : "Ingredients"} have been
-                  created successfully
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                >
-                  •{" "}
-                  {isMenuItem
-                    ? "You can now create recipes using this menu item"
-                    : "You can now set up inventory levels for this ingredient"}
-                </Typography>
-              </Box>
-            </Box>
-          </Grid>
-        </Grid>
-      </CardContent>
+          <Callout.Root color="blue" variant="soft">
+            <Callout.Icon>
+              <InfoOutlined style={{ fontSize: 18 }} />
+            </Callout.Icon>
+            <Callout.Text>
+              <strong>Product Information:</strong>
+              <br />•{" "}
+              {isMenuItem ? "Menu items" : "Ingredients"} have been created
+              successfully
+              <br />•{" "}
+              {isMenuItem
+                ? "You can now create recipes using this menu item"
+                : "You can now set up inventory levels for this ingredient"}
+            </Callout.Text>
+          </Callout.Root>
+        </Flex>
+      </Box>
 
       <FormActions
         isEdit={isEdit}

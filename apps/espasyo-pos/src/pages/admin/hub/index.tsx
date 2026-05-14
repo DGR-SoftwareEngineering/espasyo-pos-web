@@ -1,6 +1,14 @@
-import { Box, Container, Fab, Tooltip } from "@mui/material";
-import { AutoAwesome } from "@mui/icons-material";
-import { useApi } from "core-lib/core/hooks";
+import {
+  Box,
+  Container,
+  Flex,
+  IconButton,
+  Text,
+  Tooltip,
+} from "@radix-ui/themes";
+import { MagicWandIcon } from "@radix-ui/react-icons";
+import { motion } from "framer-motion";
+import { useAuthContext } from "core-lib";
 import {
   useGreeting,
   useMotivation,
@@ -12,34 +20,25 @@ import {
   QuickActions,
   Achievements,
 } from "../../../components/dashboard/components";
-import { motion } from "framer-motion";
-import { Card, useAuthContext } from "core-lib";
-import { useEffect, useState } from "react";
-import { EndpointRegistry } from "core-lib/api/commons/types";
 
-const MotionFab = motion(Fab);
+const MotionIconButton = motion(IconButton);
 
 const DashboardHome = () => {
-  const [state, setState] = useState<EndpointRegistry>();
   const { timeOfDay } = useGreeting();
   const { currentMessage, isVisible, nextMessage } = useMotivation();
   const { role, loading, initials } = useAuthContext();
-  const endpointByKey = useApi((api) =>
-    api.commons.findEndpointByKey("sales-2026"),
-  );
 
-  useEffect(() => {
-    if (endpointByKey.result?.data) {
-      setState(endpointByKey.result.data.response);
-    }
-  }, [endpointByKey.result]);
-
-  if (loading || endpointByKey.loading)
-    return <Container>Loading...</Container>;
+  if (loading) {
+    return (
+      <Flex align="center" justify="center" style={{ minHeight: 240 }}>
+        <Text color="gray">Loading…</Text>
+      </Flex>
+    );
+  }
 
   return (
-    <Box sx={{ p: 3, minHeight: "100vh", bgcolor: "grey.50" }}>
-      <Container maxWidth="xl">
+    <Box style={{ minHeight: "100%", background: "var(--gray-2)" }}>
+      <Container size="4" px="4" py="4">
         <WelcomeHeader
           name={initials}
           role={role ?? "Staff"}
@@ -50,41 +49,34 @@ const DashboardHome = () => {
         <StatsGrid />
 
         <Box
-          sx={{
+          style={{
             display: "grid",
-            gridTemplateColumns: { md: "1fr 1fr" },
-            gap: 3,
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+            gap: 24,
           }}
         >
           <QuickActions />
           <Achievements />
         </Box>
-        {/* Example usage @rendy... */}
-        {/* <Card
-          elevation={3}
-          text="Monthly Sales"
-          showChart={true}
-          chartProps={{
-            id: "sales-chart",
-            chartKey: state?.keyUrl || "",
-            sourceUrl: state?.sourceUrl || "",
-            xAxisName: "Months",
-            yAxisName: "Sales Amount",
-            hideLegend: false,
-            heightToWidthRatio: 0.6,
-            customColors: ["#FF6B6B", "#4ECDC4", "#45B7D1"],
-          }}
-        /> */}
-        <Tooltip title="New motivation">
-          <MotionFab
-            color="primary"
+
+        <Tooltip content="New motivation">
+          <MotionIconButton
+            size="4"
+            radius="full"
+            variant="solid"
+            color="indigo"
             onClick={nextMessage}
             whileHover={{ scale: 1.1, rotate: 180 }}
             whileTap={{ scale: 0.9 }}
-            sx={{ position: "fixed", bottom: 24, right: 24 }}
+            style={{
+              position: "fixed",
+              bottom: 28,
+              right: 28,
+              boxShadow: "0 8px 24px var(--accent-a8)",
+            }}
           >
-            <AutoAwesome />
-          </MotionFab>
+            <MagicWandIcon />
+          </MotionIconButton>
         </Tooltip>
       </Container>
     </Box>

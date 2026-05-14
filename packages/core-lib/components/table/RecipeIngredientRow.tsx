@@ -103,7 +103,7 @@ export const RecipeIngredientRow: React.FC<Props> = ({
             Cost
           </Typography>
           <Typography variant="body2" fontWeight={700} color="success.main">
-            {formatCurrency(ingredient.cost)}
+            {formatCurrency(ingredient.calculatedCost || ingredient.cost)}
           </Typography>
         </Grid>
 
@@ -111,9 +111,25 @@ export const RecipeIngredientRow: React.FC<Props> = ({
           <Typography variant="caption" color="text.secondary">
             Unit Cost
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {formatCurrency(ingredient.ingredientCost)}/{ingredient.unitName}
-          </Typography>
+          <Tooltip
+            title={
+              ingredient.costPerStockUnit
+                ? `Computed from ${formatCurrency(
+                    ingredient.ingredientCost,
+                  )} total purchase`
+                : "Add a unit conversion (purchase unit → stock unit) so the system can compute per-unit cost"
+            }
+            arrow
+            placement="top"
+          >
+            <Typography variant="body2" color="text.secondary">
+              {ingredient.costPerStockUnit
+                ? `${formatCurrency(ingredient.costPerStockUnit)}/${
+                    ingredient.stockUnitName || ingredient.unitName
+                  }`
+                : "—"}
+            </Typography>
+          </Tooltip>
         </Grid>
 
         <Grid size={{ xs: 6, sm: 2 }}>

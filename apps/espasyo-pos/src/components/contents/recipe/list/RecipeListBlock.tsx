@@ -1,33 +1,24 @@
 import React, { useState, useMemo, useCallback } from "react";
+import { Badge, Box, Card, Flex, Text, Tooltip } from "@radix-ui/themes";
 import {
-  Box,
-  Paper,
-  Stack,
-  Typography,
-  alpha,
-  useTheme,
-  Fade,
-  Chip,
-  Button,
-  Tooltip,
-} from "@mui/material";
+  ReloadIcon,
+  RocketIcon,
+  LightningBoltIcon,
+} from "@radix-ui/react-icons";
 import {
-  RefreshOutlined,
   RestaurantMenuOutlined,
   AttachMoney,
   KitchenOutlined,
   LocalDiningOutlined,
-  TrendingUp,
-  Whatshot,
 } from "@mui/icons-material";
 import { useApi, useApiCallback } from "core-lib/core/hooks";
-import {
-  useDialogContext,
-  HeaderV2,
-  StatsCard,
-  FilterBar,
-  registerForm,
-} from "core-lib";
+import { useDialogContext } from "core-lib";
+import { registerForm } from "core-lib/components/form/FormRenderer";
+import type { DialogContentType } from "core-lib/api/content/types/common";
+import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
+import { StatsCard } from "core-lib/components/radix/StatsCard";
+import { FilterBar } from "core-lib/components/radix/FilterBar";
+import { Button } from "core-lib/components/radix/buttons/Button";
 import { RecipeList } from "./RecipeList";
 import {
   DIALOG_TITLES,
@@ -44,7 +35,6 @@ import { formatCurrency } from "core-lib/business";
 registerForm("recipe-form", RecipeForm);
 
 export const RecipeListBlock: React.FC = () => {
-  const theme = useTheme();
   const { openDialog } = useDialogContext();
 
   const [pageNumber, setPageNumber] = useState(1);
@@ -66,7 +56,10 @@ export const RecipeListBlock: React.FC = () => {
     return response?.items ?? [];
   }, [response]);
 
+  console.log('recipes', recipes);
   const stats = useRecipeStats(recipes);
+
+  console.log('stats', stats)
 
   const serverPagination = useMemo(() => {
     if (!response) return undefined;
@@ -95,14 +88,12 @@ export const RecipeListBlock: React.FC = () => {
       );
     }
 
-    const appliedFiltered = applyRecipeSorting(filtered, filters);
-    return appliedFiltered;
+    return applyRecipeSorting(filtered, filters);
   }, [recipes, filters]);
 
   const paginatedData = useMemo(() => {
     const start = (pageNumber - 1) * pageSize;
-    const end = start + pageSize;
-    return filteredRecipes.slice(start, end);
+    return filteredRecipes.slice(start, start + pageSize);
   }, [filteredRecipes, pageNumber, pageSize]);
 
   const clientPagination = useMemo(
@@ -137,7 +128,7 @@ export const RecipeListBlock: React.FC = () => {
         if (!calcCb.loading && result.data.success) {
           openDialog({
             title: DIALOG_TITLES.view,
-            dialogContentType: DIALOG_TYPES.view,
+            dialogContentType: DIALOG_TYPES.view as unknown as DialogContentType,
             data: {
               recipe: recipe,
               productionCapacity: result.data.response,
@@ -149,7 +140,7 @@ export const RecipeListBlock: React.FC = () => {
         console.error("Failed to fetch production capacity:", error);
         openDialog({
           title: DIALOG_TITLES.view,
-          dialogContentType: DIALOG_TYPES.view,
+          dialogContentType: DIALOG_TYPES.view as unknown as DialogContentType,
           data: {
             recipe: recipe,
             productionCapacity: undefined,
@@ -164,36 +155,32 @@ export const RecipeListBlock: React.FC = () => {
     (recipe: RecipeResponse) => {
       openDialog({
         title: DIALOG_TITLES.edit,
-        dialogContentType: DIALOG_TYPES.edit,
+        dialogContentType: DIALOG_TYPES.edit as unknown as DialogContentType,
         data: recipe,
         onSuccess: handleRefresh,
       });
     },
-    [openDialog],
+    [openDialog, handleRefresh],
   );
 
   const handleDelete = useCallback(
     (recipe: RecipeResponse) => {
       openDialog({
         title: DIALOG_TITLES.delete,
-        dialogContentType: DIALOG_TYPES.delete,
+        dialogContentType: DIALOG_TYPES.delete as unknown as DialogContentType,
         data: recipe,
         onSuccess: handleRefresh,
       });
     },
-    [openDialog],
+    [openDialog, handleRefresh],
   );
 
   const handleNextPage = useCallback(() => {
-    if (clientPagination.hasNextPage) {
-      setPageNumber((prev) => prev + 1);
-    }
+    if (clientPagination.hasNextPage) setPageNumber((prev) => prev + 1);
   }, [clientPagination.hasNextPage]);
 
   const handlePreviousPage = useCallback(() => {
-    if (clientPagination.hasPreviousPage) {
-      setPageNumber((prev) => prev - 1);
-    }
+    if (clientPagination.hasPreviousPage) setPageNumber((prev) => prev - 1);
   }, [clientPagination.hasPreviousPage]);
 
   const handlePageSizeChange = useCallback((size: number) => {
@@ -217,196 +204,147 @@ export const RecipeListBlock: React.FC = () => {
   }, []);
 
   return (
-    <Fade in timeout={500}>
-      <Box sx={{ width: "80vw", p: 3, }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            mb: 3,
-            borderRadius: 3,
-            background: `linear-gradient(135deg, ${alpha(
-              theme.palette.primary.main,
-              0.03,
-            )} 0%, ${alpha(theme.palette.secondary.main, 0.03)} 100%)`,
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-            backdropFilter: "blur(8px)",
+    <Box style={{ width: "100%" }}>
+      <Card variant="surface" size="3" mb="4">
+        <HeaderV2
+          title="Recipe Management"
+          subtitle="Create and manage your recipe catalog with ingredient compositions"
+          icon={<RestaurantMenuOutlined style={{ fontSize: 28 }} />}
+          actionButton={{
+            label: "New Recipe",
+            onClick: () => {},
+            variant: "contained",
+            color: "primary",
           }}
-        >
-          <HeaderV2
-            title="Recipe Management"
-            subtitle="Create and manage your recipe catalog with ingredient compositions"
-            icon={<RestaurantMenuOutlined sx={{ fontSize: 28 }} />}
-            actionButton={{
-              label: "New Recipe",
-              onClick: () => {},
-              variant: "contained",
-              color: "primary",
-            }}
+        />
+
+        <Flex gap="3" mt="4" wrap="wrap">
+          <StatsCard
+            label="Total Recipes"
+            value={stats.totalRecipes}
+            icon={<RestaurantMenuOutlined />}
+            color="primary"
+            variant="detailed"
           />
-
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{ mt: 4, flexWrap: "wrap", gap: 2 }}
-          >
-            <StatsCard
-              label="Total Recipes"
-              value={stats.totalRecipes}
-              icon={<RestaurantMenuOutlined />}
-              color="primary"
-              variant="detailed"
-            />
-            <StatsCard
-              label="Total Ingredients"
-              value={stats.totalIngredients}
-              icon={<KitchenOutlined />}
-              color="success"
-              variant="detailed"
-            />
-            <StatsCard
-              label="Avg Ingredients"
-              value={stats.averageIngredients}
-              icon={<LocalDiningOutlined />}
-              color="info"
-              variant="detailed"
-            />
-            <StatsCard
-              label="Total Recipe Cost"
-              value={formatCurrency(stats.totalCost)}
-              icon={<AttachMoney />}
-              color="warning"
-              variant="detailed"
-            />
-          </Stack>
-
-          {(stats.mostExpensive.name || stats.mostIngredients.name) && (
-            <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-              {stats.mostExpensive.name && (
-                <Chip
-                  icon={<TrendingUp />}
-                  label={`Most Expensive: ${stats.mostExpensive.name}`}
-                  size="small"
-                  sx={{
-                    bgcolor: alpha(theme.palette.warning.main, 0.1),
-                    color: theme.palette.warning.main,
-                  }}
-                />
-              )}
-              {stats.mostIngredients.name && (
-                <Chip
-                  icon={<Whatshot />}
-                  label={`Most Ingredients: ${stats.mostIngredients.name}`}
-                  size="small"
-                  sx={{
-                    bgcolor: alpha(theme.palette.info.main, 0.1),
-                    color: theme.palette.info.main,
-                  }}
-                />
-              )}
-            </Stack>
-          )}
-
-          <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
-            <FilterBar
-              searchValue={filters.searchQuery}
-              onSearchChange={handleSearchChange}
-              searchPlaceholder="Search recipes by name, ID, or ingredients..."
-              sortValue={filters.sortBy}
-              sortOptions={sortOptions}
-              onSortChange={handleSortChange}
-              resultCount={filteredRecipes.length}
-              resultLabel="recipes"
-              pageSize={pageSize}
-              pageSizeOptions={[10, 20, 50, 100]}
-              onPageSizeChange={handlePageSizeChange}
-              activeFilterCount={activeFilterCount}
-              onClearFilters={handleClearFilters}
-              showFilterChip={true}
-            />
-            <Button
-              variant="outlined"
-              startIcon={<RefreshOutlined />}
-              onClick={handleRefresh}
-              disabled={data.loading}
-              sx={{ borderRadius: 3, ml: 2, px: 3, py: 1 }}
-            >
-              Refresh
-            </Button>
-          </Stack>
-        </Paper>
-
-        <Paper
-          elevation={0}
-          sx={{
-            borderRadius: 3,
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-            overflow: "hidden",
-            bgcolor: theme.palette.background.paper,
-            boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.05)}`,
-          }}
-        >
-          <RecipeList
-            data={paginatedData}
-            loading={data.loading}
-            pagination={clientPagination}
-            onNextPage={handleNextPage}
-            onPreviousPage={handlePreviousPage}
-            onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
+          <StatsCard
+            label="Total Ingredients"
+            value={stats.totalIngredients}
+            icon={<KitchenOutlined />}
+            color="success"
+            variant="detailed"
           />
-        </Paper>
+          <StatsCard
+            label="Avg Ingredients"
+            value={stats.averageIngredients}
+            icon={<LocalDiningOutlined />}
+            color="info"
+            variant="detailed"
+          />
+          <StatsCard
+            label="Total Recipe Cost"
+            value={formatCurrency(stats.totalCost)}
+            icon={<AttachMoney />}
+            color="warning"
+            variant="detailed"
+          />
+        </Flex>
 
-        {filteredRecipes.length > 0 && (
-          <Fade in timeout={800}>
-            <Box
-              sx={{
-                mt: 2,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                px: 2,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Showing{" "}
-                {filteredRecipes.length === 0
-                  ? 0
-                  : (pageNumber - 1) * pageSize + 1}{" "}
-                to {Math.min(pageNumber * pageSize, filteredRecipes.length)} of{" "}
-                <strong>{filteredRecipes.length}</strong> recipes
-              </Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography variant="body2" color="text.secondary">
-                  Page <strong>{pageNumber}</strong> of{" "}
-                  <strong>{clientPagination.totalPages}</strong>
-                </Typography>
-                {serverPagination &&
-                  serverPagination.totalPages > 0 &&
-                  serverPagination.totalItems !== filteredRecipes.length && (
-                    <Tooltip
-                      title="Server-side pagination info (total items across all pages)"
-                      arrow
-                    >
-                      <Chip
-                        label={`Total in database: ${serverPagination.totalItems} recipes`}
-                        size="small"
-                        sx={{
-                          height: 20,
-                          fontSize: "0.625rem",
-                          bgcolor: alpha(theme.palette.info.main, 0.08),
-                          color: theme.palette.info.main,
-                          cursor: "help",
-                        }}
-                      />
-                    </Tooltip>
-                  )}
-              </Stack>
-            </Box>
-          </Fade>
+        {(stats.mostExpensive.name || stats.mostIngredients.name) && (
+          <Flex gap="2" mt="3" wrap="wrap">
+            {stats.mostExpensive.name && (
+              <Badge color="amber" variant="soft" size="2" radius="full">
+                <RocketIcon />
+                Most Expensive: {stats.mostExpensive.name}
+              </Badge>
+            )}
+            {stats.mostIngredients.name && (
+              <Badge color="blue" variant="soft" size="2" radius="full">
+                <LightningBoltIcon />
+                Most Ingredients: {stats.mostIngredients.name}
+              </Badge>
+            )}
+          </Flex>
         )}
-      </Box>
-    </Fade>
+
+        <Flex justify="between" align="center" gap="3" mt="4" wrap="wrap">
+          <FilterBar
+            searchValue={filters.searchQuery}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search recipes by name, ID, or ingredients…"
+            sortValue={filters.sortBy}
+            sortOptions={sortOptions}
+            onSortChange={handleSortChange}
+            resultCount={filteredRecipes.length}
+            resultLabel="recipes"
+            pageSize={pageSize}
+            pageSizeOptions={[10, 20, 50, 100]}
+            onPageSizeChange={handlePageSizeChange}
+            activeFilterCount={activeFilterCount}
+            onClearFilters={handleClearFilters}
+            showFilterChip
+          />
+          <Button
+            type="Secondary"
+            onClick={handleRefresh}
+            disabled={data.loading}
+          >
+            <Flex align="center" gap="2">
+              <ReloadIcon />
+              Refresh
+            </Flex>
+          </Button>
+        </Flex>
+      </Card>
+
+      <Card variant="surface" size="2" style={{ overflow: "hidden" }}>
+        <RecipeList
+          data={paginatedData}
+          loading={data.loading}
+          pagination={clientPagination}
+          onNextPage={handleNextPage}
+          onPreviousPage={handlePreviousPage}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </Card>
+
+      {filteredRecipes.length > 0 && (
+        <Flex justify="between" align="center" mt="3" px="2">
+          <Text size="2" color="gray">
+            Showing{" "}
+            {filteredRecipes.length === 0
+              ? 0
+              : (pageNumber - 1) * pageSize + 1}{" "}
+            to {Math.min(pageNumber * pageSize, filteredRecipes.length)} of{" "}
+            <Text weight="bold" color="gray">
+              {filteredRecipes.length}
+            </Text>{" "}
+            recipes
+          </Text>
+          <Flex align="center" gap="2">
+            <Text size="2" color="gray">
+              Page{" "}
+              <Text weight="bold" color="gray">
+                {pageNumber}
+              </Text>{" "}
+              of{" "}
+              <Text weight="bold" color="gray">
+                {clientPagination.totalPages}
+              </Text>
+            </Text>
+            {serverPagination &&
+              serverPagination.totalPages > 0 &&
+              serverPagination.totalItems !== filteredRecipes.length && (
+                <Tooltip content="Server-side pagination info (total items across all pages)">
+                  <Badge color="blue" variant="soft" size="1">
+                    Total in DB: {serverPagination.totalItems} recipes
+                  </Badge>
+                </Tooltip>
+              )}
+          </Flex>
+        </Flex>
+      )}
+    </Box>
   );
 };

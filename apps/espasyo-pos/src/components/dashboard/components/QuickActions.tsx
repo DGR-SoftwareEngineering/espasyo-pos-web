@@ -1,18 +1,20 @@
-import { Grid, Paper, Typography } from "@mui/material";
+import { Card, Grid, Heading } from "@radix-ui/themes";
 import { QUICK_ACTIONS } from "../constants/actions";
 import { AnimatedQuickAction } from "./animation/AnimatedQuickActions";
 
-export const QuickActions = () => {
-  return (
-    <Paper sx={{ p: 3, borderRadius: 3, height: "100%" }}>
-      <Typography variant="h6" fontWeight={600} mb={3}>
-        Quick Actions
-      </Typography>
-      <Grid container spacing={2}>
-        {QUICK_ACTIONS.map((action, index) => (
-          <AnimatedQuickAction key={action.id} action={action} index={index} />
-        ))}
-      </Grid>
-    </Paper>
-  );
-};
+/**
+ * Quick-action grid card. Radix `<Card>` surface holding a 2-column grid of
+ * tappable action tiles.
+ */
+export const QuickActions = () => (
+  <Card size="3" variant="surface" style={{ height: "100%" }}>
+    <Heading size="4" weight="bold" mb="3">
+      Quick Actions
+    </Heading>
+    <Grid columns="2" gap="3">
+      {QUICK_ACTIONS.map((action, index) => (
+        <AnimatedQuickAction key={action.id} action={action} index={index} />
+      ))}
+    </Grid>
+  </Card>
+);

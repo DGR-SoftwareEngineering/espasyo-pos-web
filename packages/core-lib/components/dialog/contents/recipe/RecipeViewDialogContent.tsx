@@ -30,6 +30,14 @@ import { StatusChip } from "../../../StatusChip";
 import { ConstraintRow } from "../../../table/ConstraintRow";
 import { RecipeIngredientRow } from "../../../table/RecipeIngredientRow";
 import { formatCurrency } from "../../../../business";
+import {
+  getAverageCostPerIngredient,
+  getProductionCostPerUnit,
+  getProductionMaxUnits,
+  getProductionTotalCostAtMax,
+  getRecipeIngredientCount,
+  getRecipeTotalCost,
+} from "../../../../business/recipe";
 
 interface Props {
   recipe: RecipeResponse;
@@ -42,11 +50,12 @@ export const RecipeViewDialogContent: React.FC<Props> = ({
 }) => {
   const theme = useTheme();
 
-  const totalCost =
-    recipe?.recipeItems?.reduce((sum, item) => sum + (item?.cost || 0), 0) || 0;
-  const ingredientCount = recipe?.recipeItems?.length || 0;
-  const avgCostPerIngredient =
-    ingredientCount > 0 ? totalCost / ingredientCount : 0;
+  const totalCost = getRecipeTotalCost(recipe);
+  const ingredientCount = getRecipeIngredientCount(recipe);
+  const avgCostPerIngredient = getAverageCostPerIngredient(recipe);
+  const maxUnits = getProductionMaxUnits(productionCapacity);
+  const costPerUnit = getProductionCostPerUnit(productionCapacity, recipe);
+  const totalCostAtMax = getProductionTotalCostAtMax(productionCapacity, recipe);
 
   const getStatusColor = (status: string | undefined): string => {
     if (!status) return theme.palette.text.secondary;
@@ -172,27 +181,23 @@ export const RecipeViewDialogContent: React.FC<Props> = ({
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <StatsCard
                         label="Maximum Units"
-                        value={productionCapacity.maxUnitsCanProduce ?? 0}
+                        value={maxUnits}
                         color="info"
                         variant="compact"
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <StatsCard
-                        label="Cost Per Unit"
-                        value={formatCurrency(
-                          productionCapacity.totalCostPerUnit,
-                        )}
+                        label="Cost Per Serving"
+                        value={formatCurrency(costPerUnit)}
                         color="success"
                         variant="compact"
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <StatsCard
-                        label="Total Cost at Max"
-                        value={formatCurrency(
-                          productionCapacity.totalCostMaxProduction,
-                        )}
+                        label="Total Cost at Max Production"
+                        value={formatCurrency(totalCostAtMax)}
                         color="warning"
                         variant="compact"
                       />

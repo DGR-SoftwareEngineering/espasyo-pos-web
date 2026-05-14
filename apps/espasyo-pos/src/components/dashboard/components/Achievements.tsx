@@ -1,18 +1,19 @@
-import { Paper, Typography, Stack } from "@mui/material";
+import { Card, Flex, Heading } from "@radix-ui/themes";
 import { ACHIEVEMENTS } from "../constants/actions";
 import { AnimatedAchievement } from "./animation/AnimatedAchievement";
 
-export const Achievements = () => {
-  return (
-    <Paper sx={{ p: 3, borderRadius: 3, height: "100%" }}>
-      <Typography variant="h6" fontWeight={600} mb={3}>
-        Today's Achievements
-      </Typography>
-      <Stack spacing={2}>
-        {ACHIEVEMENTS.map((item, index) => (
-          <AnimatedAchievement key={item.id} item={item} index={index} />
-        ))}
-      </Stack>
-    </Paper>
-  );
-};
+/**
+ * "Today's Achievements" panel — Radix `<Card>` listing milestone rows.
+ */
+export const Achievements = () => (
+  <Card size="3" variant="surface" style={{ height: "100%" }}>
+    <Heading size="4" weight="bold" mb="3">
+      Today&apos;s Achievements
+    </Heading>
+    <Flex direction="column" gap="3">
+      {ACHIEVEMENTS.map((item, index) => (
+        <AnimatedAchievement key={item.id} item={item} index={index} />
+      ))}
+    </Flex>
+  </Card>
+);

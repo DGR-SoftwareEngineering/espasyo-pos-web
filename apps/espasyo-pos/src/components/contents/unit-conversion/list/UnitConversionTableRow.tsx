@@ -1,24 +1,23 @@
 import React, { useState } from "react";
 import {
-  Stack,
   Avatar,
-  Typography,
+  Badge,
   Box,
-  alpha,
-  useTheme,
-  Collapse,
-  Chip,
-  TableRow,
-  TableCell,
-} from "@mui/material";
+  Flex,
+  Table,
+  Text,
+} from "@radix-ui/themes";
 import {
-  SwapHorizOutlined,
-  NotesOutlined,
-  WarningAmberOutlined,
-  CheckCircleOutline,
-} from "@mui/icons-material";
+  SwitchIcon,
+  CheckCircledIcon,
+  ExclamationTriangleIcon,
+} from "@radix-ui/react-icons";
+import { NotesOutlined } from "@mui/icons-material";
 import { UnitConversion } from "core-lib/api/commons/types";
-import { BaseTableRow, ActionButtons, IDChip, MetricDisplay } from "core-lib";
+import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
+import { ActionButtons } from "core-lib/components/radix/buttons/ActionButtons";
+import { IDChip } from "core-lib/components/radix/IDChip";
+import { MetricDisplay } from "core-lib/components/radix/metric/MetricDisplay";
 import { formatNumber } from "core-lib/business";
 
 interface Props {
@@ -40,64 +39,41 @@ export const UnitConversionTableRow: React.FC<Props> = ({
   selectedRowKey,
   onSelect,
 }) => {
-  const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
 
-  const handleToggleExpand = () => {
-    setExpanded(!expanded);
-  };
+  const handleToggleExpand = () => setExpanded((prev) => !prev);
 
   const columns = [
     {
       id: "conversion",
       width: "40%",
       render: () => (
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Flex align="center" gap="3">
           <Avatar
-            sx={{
-              width: 44,
-              height: 44,
-              bgcolor: alpha(theme.palette.primary.main, 0.12),
-              color: theme.palette.primary.main,
-              borderRadius: 2,
-            }}
-          >
-            <SwapHorizOutlined />
-          </Avatar>
+            size="3"
+            radius="medium"
+            color="indigo"
+            variant="soft"
+            fallback={<SwitchIcon />}
+          />
           <Box>
-            <Typography variant="subtitle2" fontWeight={600} lineHeight={1.3}>
+            <Text size="2" weight="bold" as="div" style={{ lineHeight: 1.3 }}>
               {row.fromUnitName} → {row.toUnitName}
-            </Typography>
-            <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+            </Text>
+            <Flex gap="2" mt="1">
               <IDChip id={row.unitConversionID} label="ID" />
               {row.isApproximate ? (
-                <Chip
-                  label="Approximate"
-                  size="small"
-                  icon={<WarningAmberOutlined />}
-                  sx={{
-                    height: 20,
-                    fontSize: "0.625rem",
-                    bgcolor: alpha(theme.palette.warning.main, 0.1),
-                    color: theme.palette.warning.main,
-                  }}
-                />
+                <Badge color="amber" variant="soft" size="1">
+                  <ExclamationTriangleIcon /> Approximate
+                </Badge>
               ) : (
-                <Chip
-                  label="Exact"
-                  size="small"
-                  icon={<CheckCircleOutline />}
-                  sx={{
-                    height: 20,
-                    fontSize: "0.625rem",
-                    bgcolor: alpha(theme.palette.success.main, 0.1),
-                    color: theme.palette.success.main,
-                  }}
-                />
+                <Badge color="green" variant="soft" size="1">
+                  <CheckCircledIcon /> Exact
+                </Badge>
               )}
-            </Stack>
+            </Flex>
           </Box>
-        </Stack>
+        </Flex>
       ),
     },
     {
@@ -108,8 +84,8 @@ export const UnitConversionTableRow: React.FC<Props> = ({
         <MetricDisplay
           label="Conversion Rate"
           value={`1 ${row.fromUnitName} = ${formatNumber(row.conversionRate, 4)} ${row.toUnitName}`}
-          icon={<SwapHorizOutlined />}
-          iconColor={theme.palette.success.main}
+          icon={<SwitchIcon />}
+          iconColor="var(--green-11)"
         />
       ),
     },
@@ -118,13 +94,13 @@ export const UnitConversionTableRow: React.FC<Props> = ({
       align: "center" as const,
       width: "15%",
       render: () => (
-        <Chip
-          label={row.isApproximate ? "Approximate" : "Exact"}
-          size="medium"
-          color={row.isApproximate ? "warning" : "success"}
-          variant="outlined"
-          sx={{ fontWeight: 500 }}
-        />
+        <Badge
+          color={row.isApproximate ? "amber" : "green"}
+          variant="outline"
+          size="2"
+        >
+          {row.isApproximate ? "Approximate" : "Exact"}
+        </Badge>
       ),
     },
     {
@@ -141,10 +117,10 @@ export const UnitConversionTableRow: React.FC<Props> = ({
           editTooltip="Edit Conversion"
           deleteTooltip="Delete Conversion"
           expandTooltip={expanded ? "Hide details" : "Show details"}
-          showView={true}
-          showEdit={true}
-          showDelete={true}
-          showExpand={true}
+          showView
+          showEdit
+          showDelete
+          showExpand
           isExpanded={expanded}
         />
       ),
@@ -164,77 +140,79 @@ export const UnitConversionTableRow: React.FC<Props> = ({
         onSelect={onSelect}
       />
 
-      <TableRow>
-        <TableCell
-          style={{ paddingBottom: 0, paddingTop: 0 }}
-          colSpan={totalColumns}
-        >
-          <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <Box sx={{ py: 3, px: 2 }}>
-              <Stack spacing={2}>
+      {expanded && (
+        <Table.Row>
+          <Table.Cell
+            colSpan={totalColumns}
+            style={{ padding: 0, background: "var(--gray-2)" }}
+          >
+            <Box py="4" px="3">
+              <Flex direction="column" gap="3">
                 <Box
-                  sx={{
-                    p: 2,
-                    bgcolor: alpha(theme.palette.info.main, 0.05),
-                    borderRadius: 2,
+                  p="3"
+                  style={{
+                    background: "var(--blue-a3)",
+                    borderRadius: "var(--radius-3)",
                   }}
                 >
-                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                  <Text size="2" weight="bold" as="div" mb="2">
                     Conversion Details
-                  </Typography>
-                  <Stack direction="row" spacing={4} flexWrap="wrap">
+                  </Text>
+                  <Flex gap="6" wrap="wrap">
                     <Box>
-                      <Typography variant="caption" color="text.secondary">
+                      <Text size="1" color="gray" as="div">
                         From Unit ID
-                      </Typography>
-                      <Typography variant="body2">{row.fromUnitID}</Typography>
+                      </Text>
+                      <Text size="2">{row.fromUnitID}</Text>
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">
+                      <Text size="1" color="gray" as="div">
                         To Unit ID
-                      </Typography>
-                      <Typography variant="body2">{row.toUnitID}</Typography>
+                      </Text>
+                      <Text size="2">{row.toUnitID}</Text>
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">
+                      <Text size="1" color="gray" as="div">
                         Status
-                      </Typography>
-                      <Chip
-                        label={row.isActive ? "Active" : "Inactive"}
-                        size="small"
-                        color={row.isActive ? "success" : "default"}
-                        sx={{ mt: 0.5 }}
-                      />
+                      </Text>
+                      <Badge
+                        color={row.isActive ? "green" : "gray"}
+                        variant="soft"
+                        size="1"
+                        mt="1"
+                      >
+                        {row.isActive ? "Active" : "Inactive"}
+                      </Badge>
                     </Box>
-                  </Stack>
+                  </Flex>
                 </Box>
 
                 {row.notes && (
                   <Box
-                    sx={{
-                      p: 2,
-                      bgcolor: alpha(theme.palette.warning.main, 0.05),
-                      borderRadius: 2,
+                    p="3"
+                    style={{
+                      background: "var(--amber-a3)",
+                      borderRadius: "var(--radius-3)",
                     }}
                   >
-                    <Stack direction="row" spacing={1} alignItems="flex-start">
+                    <Flex gap="2" align="start">
                       <NotesOutlined
-                        sx={{ fontSize: 20, color: theme.palette.warning.main }}
+                        style={{ fontSize: 20, color: "var(--amber-11)" }}
                       />
-                      <Box flex={1}>
-                        <Typography variant="caption" color="text.secondary">
+                      <Box style={{ flex: 1 }}>
+                        <Text size="1" color="gray" as="div">
                           Notes
-                        </Typography>
-                        <Typography variant="body2">{row.notes}</Typography>
+                        </Text>
+                        <Text size="2">{row.notes}</Text>
                       </Box>
-                    </Stack>
+                    </Flex>
                   </Box>
                 )}
-              </Stack>
+              </Flex>
             </Box>
-          </Collapse>
-        </TableCell>
-      </TableRow>
+          </Table.Cell>
+        </Table.Row>
+      )}
     </>
   );
 };

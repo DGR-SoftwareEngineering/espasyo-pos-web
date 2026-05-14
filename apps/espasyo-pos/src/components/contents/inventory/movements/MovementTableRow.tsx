@@ -1,18 +1,11 @@
 import React, { useMemo } from "react";
-import {
-  Box,
-  Chip,
-  Stack,
-  Typography,
-  alpha,
-  useTheme,
-} from "@mui/material";
+import { Badge, Box, Flex, Text } from "@radix-ui/themes";
 import {
   ArrowDownwardRounded,
   ArrowUpwardRounded,
   HelpOutlineRounded,
 } from "@mui/icons-material";
-import { BaseTableRow } from "core-lib";
+import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
 import {
   StockMovementDto,
   StockMovementType,
@@ -25,9 +18,21 @@ interface Props {
   row: StockMovementDto;
 }
 
-export const MovementTableRow: React.FC<Props> = ({ row }) => {
-  const theme = useTheme();
+// Map the existing MUI palette color names from MOVEMENT_TYPE_CONFIG to
+// Radix accent names so the Badge color stays consistent.
+const MUI_TO_RADIX_COLOR: Record<
+  string,
+  "green" | "amber" | "red" | "blue" | "gray" | "indigo"
+> = {
+  success: "green",
+  warning: "amber",
+  error: "red",
+  info: "blue",
+  default: "gray",
+  primary: "indigo",
+};
 
+export const MovementTableRow: React.FC<Props> = ({ row }) => {
   const cfg = useMemo(() => {
     const c = MOVEMENT_TYPE_CONFIG[row.movementType as StockMovementType];
     return (
@@ -43,22 +48,24 @@ export const MovementTableRow: React.FC<Props> = ({ row }) => {
   const IconCmp = cfg.icon;
   const unitLabel = row.unitName ?? "units";
   const isIn = row.quantity > 0;
-  const arrowColor = isIn
-    ? theme.palette.success.main
-    : theme.palette.error.main;
+  const badgeColor = MUI_TO_RADIX_COLOR[cfg.color] ?? "gray";
+  const arrowColor = isIn ? "var(--green-11)" : "var(--red-11)";
 
   const columns = [
     {
       id: "movementType",
       width: "14%",
       render: () => (
-        <Chip
-          icon={<IconCmp style={{ fontSize: 16 }} />}
-          label={cfg.label}
-          size="small"
-          color={cfg.color}
-          sx={{ fontWeight: 600, borderRadius: 2, minWidth: 110 }}
-        />
+        <Badge
+          color={badgeColor}
+          variant="soft"
+          size="2"
+          radius="medium"
+          style={{ minWidth: 110, justifyContent: "center" }}
+        >
+          <IconCmp style={{ fontSize: 14 }} />
+          {cfg.label}
+        </Badge>
       ),
     },
     {
@@ -66,13 +73,13 @@ export const MovementTableRow: React.FC<Props> = ({ row }) => {
       width: "22%",
       render: () => (
         <Box>
-          <Typography variant="body2" fontWeight={600}>
+          <Text size="2" weight="bold" as="div">
             {row.productName ?? "Unnamed"}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
+          </Text>
+          <Text size="1" color="gray" as="div">
             {row.referenceType ?? "—"}
             {row.referenceID ? ` · ${row.referenceID.substring(0, 8)}…` : ""}
-          </Typography>
+          </Text>
         </Box>
       ),
     },
@@ -81,26 +88,17 @@ export const MovementTableRow: React.FC<Props> = ({ row }) => {
       width: "13%",
       align: "center" as const,
       render: () => (
-        <Stack
-          direction="row"
-          spacing={0.5}
-          alignItems="center"
-          justifyContent="center"
-        >
+        <Flex align="center" gap="1" justify="center">
           {isIn ? (
             <ArrowUpwardRounded style={{ fontSize: 16, color: arrowColor }} />
           ) : (
             <ArrowDownwardRounded style={{ fontSize: 16, color: arrowColor }} />
           )}
-          <Typography
-            variant="body2"
-            fontWeight={700}
-            sx={{ color: arrowColor }}
-          >
+          <Text size="2" weight="bold" style={{ color: arrowColor }}>
             {isIn ? "+" : ""}
             {formatNumber(row.quantity)} {unitLabel}
-          </Typography>
-        </Stack>
+          </Text>
+        </Flex>
       ),
     },
     {
@@ -108,30 +106,24 @@ export const MovementTableRow: React.FC<Props> = ({ row }) => {
       width: "13%",
       align: "center" as const,
       render: () => (
-        <Box
-          sx={{
-            display: "inline-flex",
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette.primary.main, 0.06),
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-          }}
+        <Badge
+          color="indigo"
+          variant="soft"
+          size="2"
+          radius="medium"
+          style={{ minWidth: 60, justifyContent: "center" }}
         >
-          <Typography variant="body2" fontWeight={600}>
-            {formatNumber(row.balanceAfter)}
-          </Typography>
-        </Box>
+          {formatNumber(row.balanceAfter)}
+        </Badge>
       ),
     },
     {
       id: "reason",
       width: "20%",
       render: () => (
-        <Typography
-          variant="body2"
-          color="text.primary"
-          sx={{
+        <Text
+          size="2"
+          style={{
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
@@ -139,19 +131,19 @@ export const MovementTableRow: React.FC<Props> = ({ row }) => {
           }}
         >
           {row.reason ?? "—"}
-        </Typography>
+        </Text>
       ),
     },
     {
       id: "createdAt",
       width: "18%",
       render: () => (
-        <Stack>
-          <Typography variant="body2">{formatDateTime(row.createdAt)}</Typography>
-          <Typography variant="caption" color="text.secondary">
+        <Flex direction="column">
+          <Text size="2">{formatDateTime(row.createdAt)}</Text>
+          <Text size="1" color="gray">
             by {row.createdBy ?? "system"}
-          </Typography>
-        </Stack>
+          </Text>
+        </Flex>
       ),
     },
   ];

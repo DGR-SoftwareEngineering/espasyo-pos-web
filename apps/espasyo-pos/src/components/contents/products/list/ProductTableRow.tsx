@@ -1,15 +1,6 @@
 import React, { useMemo } from "react";
+import { Avatar, Badge, Box, Flex, Text } from "@radix-ui/themes";
 import {
-  Stack,
-  Avatar,
-  Typography,
-  Box,
-  alpha,
-  useTheme,
-  Chip,
-} from "@mui/material";
-import {
-  AttachMoney,
   RestaurantMenuOutlined,
   KitchenOutlined,
   LocationOnOutlined,
@@ -18,7 +9,8 @@ import {
   CategoryOutlined,
 } from "@mui/icons-material";
 import { ProductDataList } from "core-lib/api/commons/types";
-import { BaseTableRow, ActionButtons } from "core-lib";
+import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
+import { ActionButtons } from "core-lib/components/radix/buttons/ActionButtons";
 import {
   truncateDescription,
   formatId,
@@ -63,56 +55,39 @@ export const ProductTableRow: React.FC<Props> = ({
   isSelectable,
   onSelect,
 }) => {
-  const theme = useTheme();
-
   const categoryInfo = useMemo(
     () => getIconInfo(row.categoryType),
     [row.categoryType],
   );
 
   const isMenuItem = row.isMenuItem;
-  const productTypeColor = isMenuItem
-    ? theme.palette.primary.main
-    : theme.palette.success.main;
+  const typeAccent: "indigo" | "green" = isMenuItem ? "indigo" : "green";
 
   const columns = [
     {
       id: "product",
       width: "35%",
       render: () => (
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Flex align="center" gap="3">
           <Avatar
-            sx={{
-              width: 40,
-              height: 40,
-              bgcolor: alpha(productTypeColor, 0.1),
-              color: productTypeColor,
-              fontSize: "1rem",
-              fontWeight: 600,
-            }}
-          >
-            {row.name.charAt(0).toUpperCase()}
-          </Avatar>
-          <Box>
-            <Typography variant="body2" fontWeight={600}>
+            size="2"
+            radius="full"
+            color={typeAccent}
+            variant="soft"
+            fallback={row.name.charAt(0).toUpperCase()}
+          />
+          <Box style={{ minWidth: 0 }}>
+            <Text size="2" weight="bold" as="div" truncate>
               {row.name}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              display="block"
-            >
+            </Text>
+            <Text size="1" color="gray" as="div">
               {truncateDescription(row.description)}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              display="block"
-            >
+            </Text>
+            <Text size="1" color="gray" as="div">
               ID: {formatId(row.productID)}
-            </Typography>
+            </Text>
           </Box>
-        </Stack>
+        </Flex>
       ),
     },
     {
@@ -120,34 +95,29 @@ export const ProductTableRow: React.FC<Props> = ({
       align: "center" as const,
       width: "15%",
       render: () => (
-        <Stack direction="column" alignItems="center" spacing={0.5}>
+        <Flex direction="column" align="center" gap="1">
           {isMenuItem ? (
             <>
-              <Stack direction="row" spacing={0.5} alignItems="center">
-                <AttachMoney
-                  sx={{ fontSize: 16, color: theme.palette.success.main }}
-                />
-                <Typography variant="body2" fontWeight={600}>
-                  {formatCurrency(row.unitPrice)}
-                </Typography>
-              </Stack>
+              <Text size="2" weight="bold" style={{ color: "var(--green-11)" }}>
+                {formatCurrency(row.unitPrice)}
+              </Text>
               {row.costPrice && row.costPrice > 0 && (
-                <Typography variant="caption" color="text.secondary">
+                <Text size="1" color="gray">
                   Cost: {formatCurrency(row.costPrice)}
-                </Typography>
+                </Text>
               )}
             </>
           ) : (
             <>
-              <Typography variant="body2" fontWeight={600} color="info.main">
+              <Text size="2" weight="bold" style={{ color: "var(--blue-11)" }}>
                 {formatCurrency(row.costPrice)}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
+              </Text>
+              <Text size="1" color="gray">
                 Cost Price
-              </Typography>
+              </Text>
             </>
           )}
-        </Stack>
+        </Flex>
       ),
     },
     {
@@ -155,17 +125,14 @@ export const ProductTableRow: React.FC<Props> = ({
       align: "center" as const,
       width: "15%",
       render: () => (
-        <Chip
-          icon={isMenuItem ? <RestaurantMenuOutlined /> : <KitchenOutlined />}
-          label={isMenuItem ? "Menu Item" : "Ingredient"}
-          size="small"
-          sx={{
-            bgcolor: alpha(productTypeColor, 0.1),
-            color: productTypeColor,
-            fontWeight: 500,
-            borderRadius: 2,
-          }}
-        />
+        <Badge color={typeAccent} variant="soft" radius="medium" size="2">
+          {isMenuItem ? (
+            <RestaurantMenuOutlined fontSize="small" />
+          ) : (
+            <KitchenOutlined fontSize="small" />
+          )}
+          {isMenuItem ? "Menu Item" : "Ingredient"}
+        </Badge>
       ),
     },
     {
@@ -173,42 +140,38 @@ export const ProductTableRow: React.FC<Props> = ({
       align: "center" as const,
       width: "15%",
       render: () => (
-        <Chip
-          label={row.isActive ? "Active" : "Inactive"}
-          size="small"
-          color={row.isActive ? "success" : "default"}
-          sx={{
-            minWidth: 80,
-            fontWeight: 500,
-            borderRadius: 2,
-          }}
-        />
+        <Badge
+          color={row.isActive ? "green" : "gray"}
+          variant="soft"
+          radius="medium"
+          size="2"
+          style={{ minWidth: 80, justifyContent: "center" }}
+        >
+          {row.isActive ? "Active" : "Inactive"}
+        </Badge>
       ),
     },
     {
       id: "category",
       width: "20%",
       render: () => (
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Flex align="center" gap="2">
           <Avatar
-            sx={{
-              width: 24,
-              height: 24,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main,
-            }}
-          >
-            {categoryInfo.icon}
-          </Avatar>
+            size="1"
+            radius="full"
+            color="indigo"
+            variant="soft"
+            fallback={categoryInfo.icon}
+          />
           <Box>
-            <Typography variant="body2">
+            <Text size="2" as="div">
               {row.categoryName || "Uncategorized"}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
+            </Text>
+            <Text size="1" color="gray" as="div">
               {categoryInfo.label}
-            </Typography>
+            </Text>
           </Box>
-        </Stack>
+        </Flex>
       ),
     },
     {
