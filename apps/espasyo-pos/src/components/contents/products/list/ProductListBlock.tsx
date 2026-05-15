@@ -3,7 +3,7 @@ import { Box, Card, Flex, Text } from "@radix-ui/themes";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { useApi } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";
-import { registerForm } from "core-lib/components/form/FormRenderer";
+import { registerForm } from "core-lib/components/radix/form/FormRenderer";
 import { ProductDataList } from "core-lib/api/commons/types";
 import type { DialogContentType } from "core-lib/api/content/types/common";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";

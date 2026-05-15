@@ -4,7 +4,7 @@ import {
 } from "../../../../api/commons/types";
 import { useToastContext } from "../../../../core/contexts";
 import { useApiCallback } from "../../../../core/hooks";
-import { FormRenderer } from "../../../form";
+import { FormRenderer } from "../../../radix/form/FormRenderer";
 
 type AdjustSubmitValues = {
   direction: "in" | "out";

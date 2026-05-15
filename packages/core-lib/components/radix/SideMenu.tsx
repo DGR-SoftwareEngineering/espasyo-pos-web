@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DotFilledIcon,
+  HamburgerMenuIcon,
 } from "@radix-ui/react-icons";
+import { useResolution } from "../../core/hooks";
 import { RadixMenuContent } from "./menu/RadixMenuContent";
 import { RadixOptionsMenu } from "./menu/RadixOptionsMenu";
+import { SideMenuMobile } from "./SideMenuMobile";
 
 interface SideMenuProps {
   logout: () => Promise<void>;
@@ -43,10 +46,100 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   collapsed = false,
   onToggleCollapsed,
 }) => {
+  const { isMobile } = useResolution();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const displayName = initials || "User";
   const userInitial = (initials || email || "?").charAt(0).toUpperCase();
   const collapsedWidth = 72;
   const effectiveWidth = collapsed ? collapsedWidth : width;
+
+  if (isMobile) {
+    return (
+      <>
+        <Flex
+          align="center"
+          justify="between"
+          gap="3"
+          px="3"
+          py="2"
+          style={{
+            width: "100%",
+            background: "var(--color-panel-solid)",
+            borderBottom: "1px solid var(--gray-a3)",
+            position: "sticky",
+            top: 0,
+            zIndex: 5,
+            flexShrink: 0,
+            minHeight: 56,
+          }}
+        >
+          <Flex align="center" gap="2" style={{ minWidth: 0 }}>
+            <IconButton
+              variant="ghost"
+              color="gray"
+              size="2"
+              aria-label="Open menu"
+              onClick={() => setMobileOpen(true)}
+            >
+              <HamburgerMenuIcon />
+            </IconButton>
+            <Box
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "var(--radius-2)",
+                background:
+                  "linear-gradient(135deg, var(--accent-9), var(--accent-10))",
+                color: "var(--accent-contrast)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {brandMark ?? (
+                <Text size="2" weight="bold">
+                  {brand.charAt(0)}
+                </Text>
+              )}
+            </Box>
+            <Text size="3" weight="bold" truncate>
+              {brand}
+            </Text>
+          </Flex>
+
+          <Flex align="center" gap="2">
+            {role && (
+              <Tooltip content={`Role: ${role.toUpperCase()}`}>
+                <Badge color="indigo" variant="soft" size="1" radius="full">
+                  <DotFilledIcon />
+                  {role.charAt(0).toUpperCase()}
+                </Badge>
+              </Tooltip>
+            )}
+            <Avatar
+              size="2"
+              radius="full"
+              color="indigo"
+              variant="solid"
+              fallback={userInitial}
+            />
+          </Flex>
+        </Flex>
+
+        <SideMenuMobile
+          open={mobileOpen}
+          onOpenChange={setMobileOpen}
+          role={role}
+          initials={initials}
+          email={email}
+          logout={logout}
+          loading={loading}
+          brand={brand}
+        />
+      </>
+    );
+  }
 
   return (
     <Box

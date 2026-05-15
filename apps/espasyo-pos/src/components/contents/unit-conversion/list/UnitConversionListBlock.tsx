@@ -8,7 +8,7 @@ import {
 } from "@radix-ui/react-icons";
 import { useApi } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";
-import { registerForm } from "core-lib/components/form/FormRenderer";
+import { registerForm } from "core-lib/components/radix/form/FormRenderer";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { StatsCard } from "core-lib/components/radix/StatsCard";
 import { FilterBar } from "core-lib/components/radix/FilterBar";

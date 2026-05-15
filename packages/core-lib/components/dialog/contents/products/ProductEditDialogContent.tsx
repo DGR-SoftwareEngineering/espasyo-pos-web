@@ -9,7 +9,7 @@ import {
 import { useToastContext } from "../../../../core/contexts";
 import { useApi, useApiCallback } from "../../../../core/hooks";
 import { Box } from "@mui/material";
-import { FormRenderer } from "../../../form";
+import { FormRenderer } from "../../../radix/form/FormRenderer";
 
 export const ProductEditDialogContent: React.FC<{
   product: ProductDataList;
