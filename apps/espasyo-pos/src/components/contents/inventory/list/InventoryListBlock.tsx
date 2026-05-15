@@ -3,13 +3,15 @@ import { Box, Card, Flex, Switch, Text } from "@radix-ui/themes";
 import { ReloadIcon, PlusIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
 import { useDialogContext } from "core-lib";
-import { registerForm } from "core-lib/components/form/FormRenderer";
+import { registerForm } from "core-lib/components/radix/form/FormRenderer";
 import type { DialogContentType } from "core-lib/api/content/types/common";
 import type { FilterConfig } from "core-lib/components/radix/FilterBar";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { StatsCard } from "core-lib/components/radix/StatsCard";
 import { FilterBar } from "core-lib/components/radix/FilterBar";
 import { Button } from "core-lib/components/radix/buttons/Button";
+import { MessageBlock } from "core-lib/components/radix/blocks/messages";
+import { MessageType } from "core-lib/components/topAlertMessages/types";
 import { useApi } from "core-lib/core/hooks";
 import {
   InventoryDto,
@@ -179,6 +181,31 @@ export const InventoryListBlock: React.FC = () => {
           />
         </Flex>
 
+        {!data.loading && (stats.critical > 0 || stats.outOfStock > 0) && (
+          <Box mt="4">
+            <MessageBlock
+              type={MessageType.Problem}
+              header="Immediate attention required"
+              text={buildAttentionMessage(stats.critical, stats.outOfStock)}
+            />
+          </Box>
+        )}
+
+        {!data.loading &&
+          stats.critical === 0 &&
+          stats.outOfStock === 0 &&
+          stats.lowStock > 0 && (
+            <Box mt="4">
+              <MessageBlock
+                type={MessageType.Warning}
+                header="Low stock alert"
+                text={`${stats.lowStock} ingredient${
+                  stats.lowStock === 1 ? " is" : "s are"
+                } below the reorder threshold. Adjust stock or update purchasing soon to avoid running out.`}
+              />
+            </Box>
+          )}
+
         <Flex
           direction={{ initial: "column", md: "row" }}
           justify="between"
@@ -249,3 +276,18 @@ export const InventoryListBlock: React.FC = () => {
     </Box>
   );
 };
+
+function buildAttentionMessage(critical: number, outOfStock: number): string {
+  const parts: string[] = [];
+  if (outOfStock > 0) {
+    parts.push(
+      `${outOfStock} ingredient${outOfStock === 1 ? " is" : "s are"} out of stock`,
+    );
+  }
+  if (critical > 0) {
+    parts.push(
+      `${critical} ${critical === 1 ? "is" : "are"} at the critical threshold`,
+    );
+  }
+  return `${parts.join(" and ")}. Adjust stock or place a purchase order to keep service running.`;
+}
