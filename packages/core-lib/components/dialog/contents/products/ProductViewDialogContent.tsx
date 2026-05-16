@@ -6,21 +6,13 @@ export const ProductViewDialogContent: React.FC<{
 }> = ({ product }) => {
   const theme = useTheme();
 
-  const getCategoryTypeLabel = (type: number | null) => {
-    switch (type) {
-      case 1:
-        return "Location";
-      case 2:
-        return "Brand";
-      case 3:
-        return "Unit";
-      default:
-        return "Category";
-    }
-  };
-
-  // Determine product type label
   const productTypeLabel = product.isMenuItem ? "Menu Item" : "Ingredient";
+  const categoryName = product.isMenuItem
+    ? product.productCategoryName
+    : product.ingredientCategoryName;
+  const categoryTypeLabel = product.isMenuItem
+    ? "Menu Category"
+    : "Ingredient Category";
   const productTypeColor = product.isMenuItem
     ? theme.palette.primary.main
     : theme.palette.success.main;
@@ -124,11 +116,11 @@ export const ProductViewDialogContent: React.FC<{
             sx={{ mt: 0.5 }}
           >
             <Typography variant="body2" fontWeight={500}>
-              {product.categoryName || "Uncategorized"}
+              {categoryName || "Uncategorized"}
             </Typography>
-            {product.categoryType && (
+            {categoryName && (
               <Chip
-                label={getCategoryTypeLabel(product.categoryType)}
+                label={categoryTypeLabel}
                 size="small"
                 sx={{
                   bgcolor: alpha(theme.palette.primary.main, 0.1),

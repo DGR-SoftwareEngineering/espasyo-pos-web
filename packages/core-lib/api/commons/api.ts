@@ -6,6 +6,7 @@ import {
   ChartDataResponse,
   CreateCategoryParams,
   CreateProductParams,
+  UpdateProductParams,
   CreateUnitConversionParams,
   EndpointRegistryResponse,
   ProductionCapacityResponse,
@@ -117,15 +118,70 @@ export class CommonsApi {
   }
 
   public createNewProduct(params: CreateProductParams) {
-    return this.axios.post<ApiResponse>(`/api/v1/product-api/product`, params);
+    const form = new FormData();
+    form.append("Name", params.name);
+    form.append("Description", params.description ?? "");
+    form.append("IsMenuItem", String(params.isMenuItem));
+
+    const appendOptional = (key: string, value: unknown) => {
+      if (value === undefined || value === null || value === "") return;
+      form.append(key, String(value));
+    };
+
+    appendOptional("UnitPrice", params.unitPrice);
+    appendOptional("CostPrice", params.costPrice);
+    appendOptional("PurchaseQuantity", params.purchaseQuantity);
+    appendOptional("PurchaseUnitID", params.purchaseUnitID);
+    appendOptional("StockUnitID", params.stockUnitID);
+
+    if (params.isMenuItem) {
+      appendOptional("ProductCategoryID", params.categoryID);
+    } else {
+      appendOptional("IngredientCategoryID", params.categoryID);
+    }
+
+    if (params.imageFile instanceof File) {
+      form.append("ImageFile", params.imageFile, params.imageFile.name);
+    }
+
+    return this.axios.post<ApiResponse>(`/api/v1/product-api/product`, form);
   }
 
   public productList() {
     return this.axios.get<ProductListResponse>(`/api/v1/product-api/product`);
   }
 
-  public updateProduct(params: CreateProductParams) {
-    return this.axios.put<ApiResponse>(`/api/v1/product-api/product`, params);
+  public updateProduct(params: UpdateProductParams) {
+    const form = new FormData();
+    form.append("ProductID", params.productID);
+
+    const appendOptional = (key: string, value: unknown) => {
+      if (value === undefined || value === null || value === "") return;
+      form.append(key, String(value));
+    };
+
+    appendOptional("Name", params.name);
+    appendOptional("Description", params.description);
+    appendOptional("IsMenuItem", params.isMenuItem);
+    appendOptional("UnitPrice", params.unitPrice);
+    appendOptional("CostPrice", params.costPrice);
+    appendOptional("PurchaseQuantity", params.purchaseQuantity);
+    appendOptional("PurchaseUnitID", params.purchaseUnitID);
+    appendOptional("StockUnitID", params.stockUnitID);
+
+    if (params.isMenuItem === true) {
+      appendOptional("ProductCategoryID", params.categoryID);
+    } else if (params.isMenuItem === false) {
+      appendOptional("IngredientCategoryID", params.categoryID);
+    }
+
+    if (params.imageFile instanceof File) {
+      form.append("ImageFile", params.imageFile, params.imageFile.name);
+    } else if (params.removeImage) {
+      form.append("RemoveImage", "true");
+    }
+
+    return this.axios.put<ApiResponse>(`/api/v1/product-api/product`, form);
   }
 
   public deleteProduct(id: string[]) {

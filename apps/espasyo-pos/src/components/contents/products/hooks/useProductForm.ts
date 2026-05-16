@@ -25,6 +25,8 @@ const defaultValues: ProductFormType = {
   purchaseQuantity: undefined,
   purchaseUnitID: "",
   stockUnitID: "",
+  imageFile: null,
+  removeImage: false,
 };
 
 export const useProductForm = ({
@@ -61,6 +63,7 @@ export const useProductForm = ({
 
   const handleProductTypeChange = useCallback(
     (isMenuItem: boolean) => {
+      setValue("categoryID", null, { shouldValidate: true });
       if (isMenuItem) {
         setValue("costPrice", undefined, { shouldValidate: true });
         setValue("purchaseQuantity", undefined, { shouldValidate: true });

@@ -12,12 +12,14 @@ export * from "./Link";
 export * from "./Tooltip";
 export * from "./Checkbox";
 export * from "./CostDistributionBar";
+export * from "./ImageReader";
 
 export * from "./form/FieldError";
 export * from "./form/TextField";
 export * from "./form/SelectField";
 export * from "./form/AutoCompleteField";
 export * from "./form/Input";
+export * from "./form/ImageUploadField";
 export * from "./FormHeader";
 export * from "./FormSection";
 export * from "./FormActions";

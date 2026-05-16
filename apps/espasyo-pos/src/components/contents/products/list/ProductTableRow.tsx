@@ -3,39 +3,17 @@ import { Avatar, Badge, Box, Flex, Text } from "@radix-ui/themes";
 import {
   RestaurantMenuOutlined,
   KitchenOutlined,
-  LocationOnOutlined,
-  BrandingWatermarkOutlined,
-  StraightenOutlined,
-  CategoryOutlined,
 } from "@mui/icons-material";
 import { ProductDataList } from "core-lib/api/commons/types";
 import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
 import { ActionButtons } from "core-lib/components/radix/buttons/ActionButtons";
+import { ImageReader } from "core-lib/components/radix/ImageReader";
 import {
   truncateDescription,
   formatId,
   formatCurrency,
 } from "core-lib/business/strings";
 import { DIALOG_TITLES } from "../constants";
-
-const getIconInfo = (type: number | null) => {
-  switch (type) {
-    case 1:
-      return {
-        icon: <LocationOnOutlined fontSize="small" />,
-        label: "Location",
-      };
-    case 2:
-      return {
-        icon: <BrandingWatermarkOutlined fontSize="small" />,
-        label: "Brand",
-      };
-    case 3:
-      return { icon: <StraightenOutlined fontSize="small" />, label: "Unit" };
-    default:
-      return { icon: <CategoryOutlined fontSize="small" />, label: "Category" };
-  }
-};
 
 interface Props {
   row: ProductDataList;
@@ -55,13 +33,28 @@ export const ProductTableRow: React.FC<Props> = ({
   isSelectable,
   onSelect,
 }) => {
-  const categoryInfo = useMemo(
-    () => getIconInfo(row.categoryType),
-    [row.categoryType],
-  );
-
   const isMenuItem = row.isMenuItem;
   const typeAccent: "indigo" | "green" = isMenuItem ? "indigo" : "green";
+
+  const categoryInfo = useMemo(
+    () =>
+      isMenuItem
+        ? {
+            icon: <RestaurantMenuOutlined fontSize="small" />,
+            label: "Menu Category",
+            name: row.productCategoryName,
+          }
+        : {
+            icon: <KitchenOutlined fontSize="small" />,
+            label: "Ingredient Category",
+            name: row.ingredientCategoryName,
+          },
+    [
+      isMenuItem,
+      row.productCategoryName,
+      row.ingredientCategoryName,
+    ],
+  );
 
   const columns = [
     {
@@ -69,12 +62,14 @@ export const ProductTableRow: React.FC<Props> = ({
       width: "35%",
       render: () => (
         <Flex align="center" gap="3">
-          <Avatar
-            size="2"
-            radius="full"
-            color={typeAccent}
-            variant="soft"
-            fallback={row.name.charAt(0).toUpperCase()}
+          <ImageReader
+            src={row.imageUrl}
+            alt={row.name}
+            size={44}
+            radius="2"
+            border
+            fallbackText={row.name}
+            data-testid={`product-image-${row.productID}`}
           />
           <Box style={{ minWidth: 0 }}>
             <Text size="2" weight="bold" as="div" truncate>
@@ -165,7 +160,7 @@ export const ProductTableRow: React.FC<Props> = ({
           />
           <Box>
             <Text size="2" as="div">
-              {row.categoryName || "Uncategorized"}
+              {categoryInfo.name || "Uncategorized"}
             </Text>
             <Text size="1" color="gray" as="div">
               {categoryInfo.label}

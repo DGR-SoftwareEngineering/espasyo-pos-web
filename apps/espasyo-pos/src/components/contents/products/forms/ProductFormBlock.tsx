@@ -54,6 +54,7 @@ export const ProductFormBlock: React.FC = () => {
         description: formData.description || "",
         isMenuItem: formData.isMenuItem,
         categoryID: formData.categoryID || null,
+        imageFile: formData.imageFile ?? null,
       };
 
       if (formData.isMenuItem) {

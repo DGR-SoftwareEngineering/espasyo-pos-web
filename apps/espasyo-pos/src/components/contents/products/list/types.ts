@@ -32,7 +32,6 @@ export interface FilterState {
   searchTerm: string;
   statusFilter: number | "all";
   productTypeFilter: number | "all";
-  categoryTypeFilter: number | "all";
 }
 
 export interface StatsData {

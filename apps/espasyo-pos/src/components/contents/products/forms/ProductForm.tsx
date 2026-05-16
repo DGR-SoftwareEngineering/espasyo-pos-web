@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Callout, Card, Flex, Grid, Text } from "@radix-ui/themes";
 import {
   DescriptionOutlined,
+  ImageOutlined,
   InfoOutlined,
   InventoryOutlined,
   KitchenOutlined,
@@ -13,6 +14,9 @@ import {
 import { ToggleField, ToggleOption } from "core-lib/components/radix/toggle/ToggleField";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import { SelectField } from "core-lib/components/radix/form/SelectField";
+import { ImageUploadField } from "core-lib/components/radix/form/ImageUploadField";
+import { ImageReader } from "core-lib/components/radix/ImageReader";
+import { Button } from "core-lib/components/radix/buttons/Button";
 import { FormHeader } from "core-lib/components/radix/FormHeader";
 import { FormSection } from "core-lib/components/radix/FormSection";
 import { FormActions } from "core-lib/components/radix/FormActions";
@@ -34,6 +38,7 @@ const FIELD_LABELS: Record<string, string> = {
   stockUnitID: "Stock Unit",
   categoryID: "Category",
   isMenuItem: "Product Type",
+  imageFile: "Image",
 };
 
 const PRODUCT_TYPE_OPTIONS: ToggleOption<boolean>[] = [
@@ -63,6 +68,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   productCategories,
   ingredientCategories,
   units,
+  currentImageUrl,
 }) => {
   const {
     control,
@@ -72,6 +78,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     isDirty,
     submissionKey,
     handleProductTypeChange,
+    watch,
+    setValue,
   } = useProductForm({
     initialValues,
     resetForm,
@@ -81,6 +89,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   });
 
   const isMenuItem = watchedValues.isMenuItem;
+  const watchedImageFile = watch("imageFile");
+  const watchedRemoveImage = watch("removeImage");
+  const showCurrentImage =
+    isEdit && !!currentImageUrl && !watchedImageFile;
 
   const categoryOptions = React.useMemo(() => {
     if (isMenuItem) {
@@ -204,6 +216,89 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 label="Product Type"
                 required
                 onChange={handleProductTypeChange}
+              />
+            </Flex>
+          </FormSection>
+
+          <FormSection
+            icon={<ImageOutlined style={{ color: "var(--violet-11)" }} />}
+            title="Product Image"
+            description="Optional. Used on menu cards and inventory chips. PNG, JPG, WebP up to 5 MB."
+          >
+            <Flex direction="column" gap="3">
+              {showCurrentImage && (
+                <Flex
+                  align="center"
+                  gap="3"
+                  p="3"
+                  style={{
+                    borderRadius: "var(--radius-3)",
+                    border: "1px solid var(--gray-a5)",
+                    background: watchedRemoveImage
+                      ? "var(--red-a2)"
+                      : "var(--gray-a2)",
+                  }}
+                >
+                  <ImageReader
+                    src={currentImageUrl}
+                    alt={watchedValues.name || "Current product image"}
+                    size={56}
+                    radius="2"
+                    border
+                    fallbackText={watchedValues.name}
+                    style={{
+                      opacity: watchedRemoveImage ? 0.4 : 1,
+                      filter: watchedRemoveImage ? "grayscale(0.6)" : undefined,
+                    }}
+                  />
+                  <Box style={{ flex: 1, minWidth: 0 }}>
+                    <Text
+                      size="2"
+                      weight="bold"
+                      as="div"
+                      style={{
+                        textDecoration: watchedRemoveImage
+                          ? "line-through"
+                          : undefined,
+                      }}
+                    >
+                      Current image
+                    </Text>
+                    <Text size="1" color="gray" as="div">
+                      {watchedRemoveImage
+                        ? "Will be removed when you save."
+                        : "Drop a new image below to replace it."}
+                    </Text>
+                  </Box>
+                  {watchedRemoveImage ? (
+                    <Button
+                      type="Secondary"
+                      onClick={() =>
+                        setValue("removeImage", false, { shouldDirty: true })
+                      }
+                    >
+                      Undo
+                    </Button>
+                  ) : (
+                    <Button
+                      type="Critical"
+                      onClick={() => {
+                        setValue("imageFile", null, { shouldDirty: true });
+                        setValue("removeImage", true, { shouldDirty: true });
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </Flex>
+              )}
+
+              <ImageUploadField
+                name="imageFile"
+                control={control}
+                label=""
+                accept="image/*"
+                maxSizeBytes={5 * 1024 * 1024}
               />
             </Flex>
           </FormSection>

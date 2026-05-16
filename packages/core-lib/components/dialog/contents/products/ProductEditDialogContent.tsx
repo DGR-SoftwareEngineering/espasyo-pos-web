@@ -1,15 +1,29 @@
 import { useEffect, useState } from "react";
 import {
-  CreateProductParams,
   IngredientCategoryDto,
   ProductCategoryDto,
   ProductDataList,
   UnitDto,
+  UpdateProductParams,
 } from "../../../../api/commons/types";
 import { useToastContext } from "../../../../core/contexts";
 import { useApi, useApiCallback } from "../../../../core/hooks";
-import { Box } from "@mui/material";
+import { Box } from "@radix-ui/themes";
 import { FormRenderer } from "../../../radix/form/FormRenderer";
+
+interface ProductFormSubmitValues {
+  name: string;
+  description?: string | null;
+  isMenuItem: boolean;
+  categoryID?: string | null;
+  unitPrice?: number;
+  costPrice?: number;
+  purchaseQuantity?: number;
+  purchaseUnitID?: string;
+  stockUnitID?: string;
+  imageFile?: File | null;
+  removeImage?: boolean;
+}
 
 export const ProductEditDialogContent: React.FC<{
   product: ProductDataList;
@@ -44,49 +58,65 @@ export const ProductEditDialogContent: React.FC<{
   }, [unitData.result?.data.response]);
 
   const updateProductCb = useApiCallback(
-    async (api, args: CreateProductParams & { productID: string }) =>
+    async (api, args: UpdateProductParams) =>
       await api.commons.updateProduct(args),
   );
 
-  const handleSubmit = async (formValues: CreateProductParams) => {
+  const handleSubmit = async (formValues: ProductFormSubmitValues) => {
     try {
-      const apiValues: CreateProductParams = {
+      const payload: UpdateProductParams = {
+        productID: product.productID,
         name: formValues.name,
-        description: formValues.description,
+        description: formValues.description ?? "",
         isMenuItem: formValues.isMenuItem,
-        categoryID: formValues.categoryID,
+        categoryID: formValues.categoryID ?? null,
       };
 
       if (formValues.isMenuItem) {
-        apiValues.unitPrice = formValues.unitPrice;
-      } else if (formValues.costPrice) {
-        apiValues.costPrice = formValues.costPrice;
+        payload.unitPrice = formValues.unitPrice;
+      } else {
+        payload.costPrice = formValues.costPrice;
+        payload.purchaseQuantity = formValues.purchaseQuantity;
+        payload.purchaseUnitID = formValues.purchaseUnitID;
+        payload.stockUnitID = formValues.stockUnitID;
       }
 
-      const updateData = {
-        productID: product.productID,
-        ...apiValues,
-      };
+      if (formValues.imageFile instanceof File) {
+        payload.imageFile = formValues.imageFile;
+      } else if (formValues.removeImage) {
+        payload.removeImage = true;
+      }
 
-      const result = await updateProductCb.execute(updateData);
+      const result = await updateProductCb.execute(payload);
 
       if (result.status === 200 && result.data.success) {
         showToast("Product updated successfully", "success");
         onSuccess();
         onClose();
+      } else {
+        showToast(result.data.message || "Failed to update product", "error");
       }
     } catch (error) {
+      console.error("Error updating product:", error);
       showToast("Failed to update product", "error");
     }
   };
 
-  const initialValues: Partial<CreateProductParams> = {
+  const initialValues: Partial<ProductFormSubmitValues> = {
     name: product.name,
-    description: product.description ?? "no-description",
-    unitPrice: product.unitPrice ?? 0.01,
+    description: product.description ?? "",
+    unitPrice: product.unitPrice ?? undefined,
     costPrice: product.costPrice ?? undefined,
+    purchaseQuantity: product.purchaseQuantity ?? undefined,
+    purchaseUnitID: product.purchaseUnitID ?? "",
+    stockUnitID: product.stockUnitID ?? "",
     isMenuItem: product.isMenuItem,
-    categoryID: product.categoryID || null,
+    categoryID:
+      (product.isMenuItem
+        ? product.productCategoryID
+        : product.ingredientCategoryID) ?? null,
+    imageFile: null,
+    removeImage: false,
   };
 
   const lookupsLoading =
@@ -95,7 +125,7 @@ export const ProductEditDialogContent: React.FC<{
     unitData.loading;
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box p="2">
       <FormRenderer
         formKey="product-form"
         onSubmit={handleSubmit}
@@ -107,6 +137,7 @@ export const ProductEditDialogContent: React.FC<{
         lookupsLoading={lookupsLoading}
         isInDialog={true}
         isEdit={true}
+        currentImageUrl={product.imageUrl}
       />
     </Box>
   );
