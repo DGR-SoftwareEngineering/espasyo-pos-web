@@ -58,10 +58,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       e.preventDefault();
       return;
     }
-    if (action?.execute || onClick) {
+    const canExecuteAction = typeof action?.execute === "function";
+    if (canExecuteAction || onClick) {
       e.preventDefault();
-      if (action) await action.execute();
-      if (!action?.disableFurtherActions) onClick?.(e);
+      if (canExecuteAction) await action!.execute();
+      if (!canExecuteAction || !action?.disableFurtherActions) onClick?.(e);
     }
   };
 

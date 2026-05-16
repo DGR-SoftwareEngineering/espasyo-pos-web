@@ -14,6 +14,7 @@ import {
   ProductDataList,
   ProductionCapacity,
   RecipeResponse,
+  UserDto,
 } from "../../api/commons/types";
 import {
   ProductViewDialogContent,
@@ -32,6 +33,11 @@ import {
   InventoryDeleteDialogContent,
   MovementHistoryDialogContent,
 } from "./contents/inventory";
+import {
+  UserViewDialogContent,
+  UserEditDialogContent,
+  UserDeleteDialogContent,
+} from "./contents/users";
 
 interface Props {
   dialogFormType?: DialogContentType;
@@ -159,6 +165,25 @@ export const DialogContextModal: React.FC<Props> = ({
       return (
         <MovementHistoryDialogContent
           inventory={dialogData as InventoryDto}
+        />
+      );
+
+    case "UserView":
+      return <UserViewDialogContent user={dialogData as UserDto} />;
+    case "UserEdit":
+      return (
+        <UserEditDialogContent
+          user={dialogData as UserDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "UserDelete":
+      return (
+        <UserDeleteDialogContent
+          user={dialogData as UserDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
         />
       );
 

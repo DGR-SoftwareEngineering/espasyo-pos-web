@@ -173,6 +173,28 @@ export const menuItems: MenuItem[] = [
     permissionKey: "unitConversion",
   },
   {
+    id: "user-management",
+    text: "User Management",
+    icon: <PeopleRoundedIcon />,
+    permissionKey: "userManagement",
+    nestedItems: [
+      {
+        id: "user-management-new",
+        text: "Add New User",
+        icon: <AddCircleRoundedIcon />,
+        path: "/admin/hub/user-management/add-new",
+        permissionKey: "userManagement.nested.new",
+      },
+      {
+        id: "user-management-list",
+        text: "User List",
+        icon: <ListIcon />,
+        path: "/admin/hub/user-management",
+        permissionKey: "userManagement.nested.list",
+      },
+    ],
+  },
+  {
     id: "sales",
     text: "Sales",
     icon: <PointOfSaleRoundedIcon />,
