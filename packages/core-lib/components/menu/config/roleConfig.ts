@@ -50,6 +50,16 @@ const permissions: Record<UserRole, MenuPermissions> = {
       },
     },
     unitConversion: { view: true, create: true, edit: true, delete: true },
+    userManagement: {
+      view: true,
+      create: true,
+      edit: true,
+      delete: true,
+      nested: {
+        new: { view: true, create: true, edit: false, delete: false },
+        list: { view: true, create: false, edit: true, delete: true },
+      },
+    },
     clients: { view: true, create: true, edit: true, delete: true },
     tasks: { view: true, create: true, edit: true, delete: true },
     categories: {

@@ -4,6 +4,7 @@ import {
   ProductDataList,
   ProductionCapacity,
   RecipeResponse,
+  UserDto,
 } from "../../commons/types";
 
 export type CMSValue = { elementType?: string | { [key: string]: string } };
@@ -130,6 +131,10 @@ export type DialogDataType = {
   InventoryThresholds: InventoryDto;
   InventoryDelete: InventoryDto;
   InventoryHistory: InventoryDto;
+
+  UserView: UserDto;
+  UserEdit: UserDto;
+  UserDelete: UserDto;
 };
 
 // Dialog content type as a union

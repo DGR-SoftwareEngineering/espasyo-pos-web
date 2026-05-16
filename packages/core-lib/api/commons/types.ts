@@ -353,6 +353,82 @@ export type LocationListResponse = ApiResponse<LocationDto[]>;
 export type BrandResponse = ApiResponse<BrandDto>;
 export type BrandListResponse = ApiResponse<BrandDto[]>;
 
+// ===== Users / Roles =====
+
+export interface RoleDto {
+  roleID: string;
+  roleName: string;
+  description?: string | null;
+  isActive?: boolean;
+  createdBy?: string | null;
+  createdAt?: string | null;
+}
+
+export interface UserInfoDto {
+  userInfoID?: string;
+  userID?: string;
+  firstName: string;
+  middleName: string | null;
+  lastName: string;
+  email: string;
+  contactNumber: string;
+  licenseNumber: string | null;
+  imageUrl: string | null;
+}
+
+export interface AuthDto {
+  username: string;
+  password: string;
+}
+
+export interface UserDto {
+  userID: string;
+  roleID: string;
+  roleName: string | null;
+  username: string | null;
+  lastLogin: string | null;
+  auth: AuthDto | null;
+  userInfo: UserInfoDto | null;
+  isActive: boolean;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+}
+
+export interface CreateUserParams {
+  roleID: string;
+  username: string;
+  password: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email: string;
+  contactNumber: string;
+  licenseNumber?: string;
+  imageFile?: File | null;
+}
+
+export interface UpdateUserParams {
+  userID: string;
+  roleID?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  email?: string;
+  contactNumber?: string;
+  licenseNumber?: string;
+  password?: string;
+  imageFile?: File | null;
+  removeImage?: boolean;
+}
+
+export type UserResponse = ApiResponse<UserDto>;
+export type UserListResponse = ApiResponse<PaginatedResponse<UserDto>>;
+export type UserArrayResponse = ApiResponse<UserDto[]>;
+export type RoleResponse = ApiResponse<RoleDto>;
+export type RoleListResponse = ApiResponse<RoleDto[]>;
+
 // ===== Inventory =====
 
 export enum InventoryStatus {

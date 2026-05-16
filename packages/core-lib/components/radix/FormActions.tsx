@@ -20,6 +20,7 @@ export const FormActions: React.FC<FormActionsProps> = ({
   onButtonClick,
   buttonText,
   submissionKey,
+  isInDialog,
 }) => (
   <Box
     px="5"
@@ -35,7 +36,7 @@ export const FormActions: React.FC<FormActionsProps> = ({
         loading={submitLoading}
         disabled={!isDirty && !isEdit}
         onClick={onButtonClick}
-        customActionKey={submissionKey}
+        customActionKey={isInDialog ? undefined : submissionKey}
         style={{ minWidth: 180 }}
       >
         {buttonText}

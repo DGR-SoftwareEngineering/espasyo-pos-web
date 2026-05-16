@@ -52,6 +52,14 @@ import {
   UpdateProductCategoryParams,
   UpdateUnitParams,
 } from "./types";
+import {
+  CreateUserParams,
+  RoleListResponse,
+  UpdateUserParams,
+  UserArrayResponse,
+  UserListResponse,
+  UserResponse,
+} from "./types";
 
 export class CommonsApi {
   constructor(
@@ -494,5 +502,75 @@ export class CommonsApi {
         ...(movementType !== undefined ? { movementType } : {}),
       })}`,
     );
+  }
+
+  public roleList() {
+    return this.axios.get<RoleListResponse>(`/api/v1/role-api/role`);
+  }
+
+  public userList(pageNumber = 1, pageSize = 20) {
+    return this.axios.get<UserListResponse>(
+      `/api/v1/user?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    );
+  }
+
+  public getUserDetail(id: string) {
+    return this.axios.get<UserResponse>(`/api/v1/user/${id}`);
+  }
+
+  public getUsersByRole(roleId: string, includes: string[] = ["Role", "UserInfo", "Auth"]) {
+    return this.axios.get<UserArrayResponse>(
+      `/api/v1/user/GetUserByRole?${qs.stringify({ id: roleId, includes }, { arrayFormat: "none" })}`,
+    );
+  }
+
+  public getCurrentUserRole() {
+    return this.axios.get<ApiResponse<string>>(
+      `/api/v1/user/GetCurrentUserRole`,
+    );
+  }
+
+  public createUser(params: CreateUserParams) {
+    const form = new FormData();
+    form.append("roleID", params.roleID);
+    form.append("username", params.username);
+    form.append("password", params.password);
+    form.append("firstName", params.firstName);
+    if (params.middleName) form.append("middleName", params.middleName);
+    form.append("lastName", params.lastName);
+    form.append("email", params.email);
+    form.append("contactNumber", params.contactNumber);
+    if (params.licenseNumber) form.append("licenseNumber", params.licenseNumber);
+    if (params.imageFile instanceof File) {
+      form.append("imageFile", params.imageFile, params.imageFile.name);
+    }
+    return this.axios.post<UserResponse>(`/api/v1/user`, form);
+  }
+
+  public updateUser(params: UpdateUserParams) {
+    const form = new FormData();
+    form.append("userID", params.userID);
+    const appendOptional = (key: string, value: unknown) => {
+      if (value === undefined || value === null || value === "") return;
+      form.append(key, String(value));
+    };
+    appendOptional("roleID", params.roleID);
+    appendOptional("firstName", params.firstName);
+    appendOptional("middleName", params.middleName);
+    appendOptional("lastName", params.lastName);
+    appendOptional("email", params.email);
+    appendOptional("contactNumber", params.contactNumber);
+    appendOptional("licenseNumber", params.licenseNumber);
+    appendOptional("password", params.password);
+    if (params.imageFile instanceof File) {
+      form.append("imageFile", params.imageFile, params.imageFile.name);
+    } else if (params.removeImage) {
+      form.append("removeImage", "true");
+    }
+    return this.axios.put<UserResponse>(`/api/v1/user`, form);
+  }
+
+  public softDeleteUser(id: string) {
+    return this.axios.delete<ApiResponse<boolean>>(`/api/v1/user/${id}`);
   }
 }
