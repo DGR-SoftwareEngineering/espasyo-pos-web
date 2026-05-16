@@ -26,6 +26,22 @@ export interface CreateProductParams {
   purchaseQuantity?: number;
   purchaseUnitID?: string;
   stockUnitID?: string;
+  imageFile?: File | null;
+}
+
+export interface UpdateProductParams {
+  productID: string;
+  name?: string;
+  description?: string | null;
+  isMenuItem?: boolean;
+  categoryID?: string | null;
+  unitPrice?: number;
+  costPrice?: number;
+  purchaseQuantity?: number;
+  purchaseUnitID?: string;
+  stockUnitID?: string;
+  imageFile?: File | null;
+  removeImage?: boolean;
 }
 export interface CreateUnitConversionParams {
   fromUnitID: string;
@@ -48,10 +64,20 @@ export interface ProductDataList {
   description: string | null;
   unitPrice: number | null;
   costPrice: number | null;
+  purchaseQuantity: number | null;
+  purchaseUnitID: string | null;
+  purchaseUnitName: string | null;
+  stockUnitID: string | null;
+  stockUnitName: string | null;
+  costPerStockUnit: number | null;
   isMenuItem: boolean;
-  categoryID: string | null;
-  categoryName: string | null;
-  categoryType: number | null;
+  imageUrl: string | null;
+  productCategoryID: string | null;
+  productCategoryName: string | null;
+  ingredientCategoryID: string | null;
+  ingredientCategoryName: string | null;
+  brandID: string | null;
+  brandName: string | null;
   status?: number;
   createdBy: string | null;
   createdAt: string | null;

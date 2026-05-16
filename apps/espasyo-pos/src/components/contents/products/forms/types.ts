@@ -17,4 +17,5 @@ export interface ProductFormProps {
   units: UnitDto[];
   lookupsLoading?: boolean;
   isMenuItems?: boolean;
+  currentImageUrl?: string | null;
 }

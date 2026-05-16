@@ -159,8 +159,8 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
                   {selectedIngredient.name}
                 </Heading>
                 <Text size="1" color="gray">
-                  {selectedIngredient.categoryName ?? "Uncategorized"} ·
-                  Ingredient
+                  {selectedIngredient.ingredientCategoryName ?? "Uncategorized"}{" "}
+                  · Ingredient
                 </Text>
               </Box>
             </Flex>

@@ -111,7 +111,8 @@ const config = new FeatureConfigBuilder<ProductDataList>("Product")
     name: (a, b) => a.name.localeCompare(b.name),
     price: (a, b) => (b.unitPrice || 0) - (a.unitPrice || 0),
     priceLow: (a, b) => (a.unitPrice || 0) - (b.unitPrice || 0),
-    type: (a, b) => (a.categoryType || 0) - (b.categoryType || 0),
+    type: (a, b) =>
+      a.isMenuItem === b.isMenuItem ? 0 : a.isMenuItem ? -1 : 1,
     status: (a, b) => (a.status || 0) - (b.status || 0),
     newest: commonSortStrategies.newest as any,
     oldest: commonSortStrategies.oldest as any,

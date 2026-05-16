@@ -116,6 +116,25 @@ export const productFormSchema = yup.object({
     .nullable()
     .test("is-valid-uuid", "Invalid category", isOptionalUuid)
     .default(null),
+
+  imageFile: yup
+    .mixed<File>()
+    .optional()
+    .nullable()
+    .test(
+      "is-image",
+      "File must be an image",
+      (value) =>
+        !value || (value instanceof File && value.type.startsWith("image/")),
+    )
+    .test(
+      "max-size",
+      "Image must be 5 MB or smaller",
+      (value) => !value || (value instanceof File && value.size <= 5 * 1024 * 1024),
+    )
+    .default(null),
+
+  removeImage: yup.boolean().optional().default(false),
 });
 
 export type ProductForm = yup.InferType<typeof productFormSchema>;

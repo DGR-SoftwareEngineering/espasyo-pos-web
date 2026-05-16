@@ -10,7 +10,6 @@ export const useProductFilters = ({ products }: UseProductFiltersProps) => {
   const [filters, setFilters] = useState<FilterState>({
     searchTerm: "",
     productTypeFilter: "all",
-    categoryTypeFilter: "all",
     statusFilter: "all",
   });
 
@@ -21,26 +20,24 @@ export const useProductFilters = ({ products }: UseProductFiltersProps) => {
   useEffect(() => {
     let filtered = [...products];
 
-    // Search filter
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
+      filtered = filtered.filter((p) => {
+        const categoryName = p.isMenuItem
+          ? p.productCategoryName
+          : p.ingredientCategoryName;
+        return (
           p.name.toLowerCase().includes(searchLower) ||
-          p.description?.toLowerCase().includes(searchLower),
-      );
+          p.description?.toLowerCase().includes(searchLower) ||
+          categoryName?.toLowerCase().includes(searchLower) ||
+          p.brandName?.toLowerCase().includes(searchLower)
+        );
+      });
     }
 
     if (filters.productTypeFilter !== "all") {
       const isMenuItem = filters.productTypeFilter === 1;
       filtered = filtered.filter((p) => p.isMenuItem === isMenuItem);
-    }
-
-    // Category type filter
-    if (filters.categoryTypeFilter !== "all") {
-      filtered = filtered.filter(
-        (p) => p.categoryType === filters.categoryTypeFilter,
-      );
     }
 
     setFilteredProducts(filtered);
@@ -57,7 +54,6 @@ export const useProductFilters = ({ products }: UseProductFiltersProps) => {
     setFilters({
       searchTerm: "",
       productTypeFilter: "all",
-      categoryTypeFilter: "all",
       statusFilter: "all",
     });
   }, []);
