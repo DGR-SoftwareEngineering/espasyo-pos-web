@@ -4,6 +4,7 @@ import {
   ProductDataList,
   ProductionCapacity,
   RecipeResponse,
+  SupplierDto,
   UserDto,
 } from "../../commons/types";
 
@@ -135,6 +136,10 @@ export type DialogDataType = {
   UserView: UserDto;
   UserEdit: UserDto;
   UserDelete: UserDto;
+
+  SupplierView: SupplierDto;
+  SupplierEdit: SupplierDto;
+  SupplierDelete: SupplierDto;
 };
 
 // Dialog content type as a union

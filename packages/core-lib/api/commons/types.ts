@@ -429,6 +429,59 @@ export type UserArrayResponse = ApiResponse<UserDto[]>;
 export type RoleResponse = ApiResponse<RoleDto>;
 export type RoleListResponse = ApiResponse<RoleDto[]>;
 
+// ===== Suppliers =====
+
+export interface SupplierDto {
+  supplierID: string;
+  companyName: string;
+  contactPersonName: string | null;
+  email: string | null;
+  contactNumber: string | null;
+  address: string | null;
+  taxID: string | null;
+  paymentTerms: string | null;
+  notes: string | null;
+  logoUrl: string | null;
+  userID: string | null;
+  userUsername: string | null;
+  isActive: boolean;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+}
+
+export interface CreateSupplierParams {
+  companyName: string;
+  contactPersonName?: string;
+  email?: string;
+  contactNumber?: string;
+  address?: string;
+  taxID?: string;
+  paymentTerms?: string;
+  notes?: string;
+  userID?: string;
+  logoFile?: File | null;
+}
+
+export interface UpdateSupplierParams {
+  supplierID: string;
+  companyName?: string;
+  contactPersonName?: string;
+  email?: string;
+  contactNumber?: string;
+  address?: string;
+  taxID?: string;
+  paymentTerms?: string;
+  notes?: string;
+  userID?: string;
+  logoFile?: File | null;
+  removeLogo?: boolean;
+}
+
+export type SupplierResponse = ApiResponse<SupplierDto>;
+export type SupplierListResponse = ApiResponse<PaginatedResponse<SupplierDto>>;
+
 // ===== Inventory =====
 
 export enum InventoryStatus {
