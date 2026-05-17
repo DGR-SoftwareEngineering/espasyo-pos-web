@@ -60,6 +60,12 @@ import {
   UserListResponse,
   UserResponse,
 } from "./types";
+import {
+  CreateSupplierParams,
+  SupplierListResponse,
+  SupplierResponse,
+  UpdateSupplierParams,
+} from "./types";
 
 export class CommonsApi {
   constructor(
@@ -572,5 +578,68 @@ export class CommonsApi {
 
   public softDeleteUser(id: string) {
     return this.axios.delete<ApiResponse<boolean>>(`/api/v1/user/${id}`);
+  }
+
+  // ===== Supplier =====
+
+  public supplierList(pageNumber = 1, pageSize = 20) {
+    return this.axios.get<SupplierListResponse>(
+      `/api/v1/supplier-api/supplier?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    );
+  }
+
+  public getSupplierById(id: string) {
+    return this.axios.get<SupplierResponse>(`/api/v1/supplier-api/supplier/${id}`);
+  }
+
+  public createSupplier(params: CreateSupplierParams) {
+    const form = new FormData();
+    form.append("companyName", params.companyName);
+    const appendOptional = (key: string, value: unknown) => {
+      if (value === undefined || value === null || value === "") return;
+      form.append(key, String(value));
+    };
+    appendOptional("contactPersonName", params.contactPersonName);
+    appendOptional("email", params.email);
+    appendOptional("contactNumber", params.contactNumber);
+    appendOptional("address", params.address);
+    appendOptional("taxID", params.taxID);
+    appendOptional("paymentTerms", params.paymentTerms);
+    appendOptional("notes", params.notes);
+    appendOptional("userID", params.userID);
+    if (params.logoFile instanceof File) {
+      form.append("logoFile", params.logoFile, params.logoFile.name);
+    }
+    return this.axios.post<SupplierResponse>(`/api/v1/supplier-api/supplier`, form);
+  }
+
+  public updateSupplier(params: UpdateSupplierParams) {
+    const form = new FormData();
+    form.append("supplierID", params.supplierID);
+    const appendOptional = (key: string, value: unknown) => {
+      if (value === undefined || value === null || value === "") return;
+      form.append(key, String(value));
+    };
+    appendOptional("companyName", params.companyName);
+    appendOptional("contactPersonName", params.contactPersonName);
+    appendOptional("email", params.email);
+    appendOptional("contactNumber", params.contactNumber);
+    appendOptional("address", params.address);
+    appendOptional("taxID", params.taxID);
+    appendOptional("paymentTerms", params.paymentTerms);
+    appendOptional("notes", params.notes);
+    appendOptional("userID", params.userID);
+    if (params.logoFile instanceof File) {
+      form.append("logoFile", params.logoFile, params.logoFile.name);
+    } else if (params.removeLogo) {
+      form.append("removeLogo", "true");
+    }
+    return this.axios.put<SupplierResponse>(`/api/v1/supplier-api/supplier`, form);
+  }
+
+  public softDeleteSupplier(id: string) {
+    return this.axios.delete<ApiResponse<boolean>>(
+      `/api/v1/supplier-api/supplier/${id}`,
+    );
   }
 }

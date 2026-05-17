@@ -14,6 +14,7 @@ import {
   ProductDataList,
   ProductionCapacity,
   RecipeResponse,
+  SupplierDto,
   UserDto,
 } from "../../api/commons/types";
 import {
@@ -38,6 +39,11 @@ import {
   UserEditDialogContent,
   UserDeleteDialogContent,
 } from "./contents/users";
+import {
+  SupplierViewDialogContent,
+  SupplierEditDialogContent,
+  SupplierDeleteDialogContent,
+} from "./contents/suppliers";
 
 interface Props {
   dialogFormType?: DialogContentType;
@@ -182,6 +188,27 @@ export const DialogContextModal: React.FC<Props> = ({
       return (
         <UserDeleteDialogContent
           user={dialogData as UserDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+
+    case "SupplierView":
+      return (
+        <SupplierViewDialogContent supplier={dialogData as SupplierDto} />
+      );
+    case "SupplierEdit":
+      return (
+        <SupplierEditDialogContent
+          supplier={dialogData as SupplierDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "SupplierDelete":
+      return (
+        <SupplierDeleteDialogContent
+          supplier={dialogData as SupplierDto}
           onSuccess={onSuccess!}
           onClose={onClose!}
         />

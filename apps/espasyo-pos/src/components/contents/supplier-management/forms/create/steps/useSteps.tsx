@@ -6,73 +6,88 @@ import {
   WizardFormMap,
 } from "core-lib/core/hooks";
 import { ProgressStepper } from "core-lib/components/radix/Stepper/ProgressStepper";
-import { UserCreateForm } from "../validation";
-import { UserCreateStepKey, UserCreateStepProps } from "./UserCreateSteps";
+import { SupplierCreateForm } from "../validation";
 import {
-  AccountStep,
+  SupplierCreateStepKey,
+  SupplierCreateStepProps,
+} from "./SupplierCreateSteps";
+import {
+  BusinessStep,
+  CompanyStep,
   ContactStep,
-  PersonalStep,
-  PhotoStep,
+  LogoStep,
+  PortalStep,
   ReviewStep,
 } from "./content";
 
-const STEP_LABELS: Record<UserCreateStepKey, string> = {
-  Account: "Account",
-  Personal: "Personal",
+const STEP_LABELS: Record<SupplierCreateStepKey, string> = {
+  Company: "Company",
   Contact: "Contact",
-  Photo: "Profile Photo",
+  Business: "Business",
+  Portal: "Portal",
+  Logo: "Logo",
   Review: "Review",
 };
 
-const STEP_ORDER: UserCreateStepKey[] = [
-  "Account",
-  "Personal",
+const STEP_ORDER: SupplierCreateStepKey[] = [
+  "Company",
   "Contact",
-  "Photo",
+  "Business",
+  "Portal",
+  "Logo",
   "Review",
 ];
 
-export const useUserCreateWizardSteps = (onSubmit: () => void) => {
+export const useSupplierCreateWizardSteps = (onSubmit: () => void) => {
   const steps = useMemo(() => {
     return {
-      Account: {
-        content: (props) => <AccountStep {...props} />,
-        nextStep: "Personal",
-        previousStep: "Account",
-      },
-      Personal: {
-        content: (props) => <PersonalStep {...props} />,
+      Company: {
+        content: (props) => <CompanyStep {...props} />,
         nextStep: "Contact",
-        previousStep: "Account",
+        previousStep: "Company",
       },
       Contact: {
         content: (props) => <ContactStep {...props} />,
-        nextStep: "Photo",
-        previousStep: "Personal",
+        nextStep: "Business",
+        previousStep: "Company",
       },
-      Photo: {
-        content: (props) => <PhotoStep {...props} />,
-        nextStep: "Review",
+      Business: {
+        content: (props) => <BusinessStep {...props} />,
+        nextStep: "Portal",
         previousStep: "Contact",
+      },
+      Portal: {
+        content: (props) => <PortalStep {...props} />,
+        nextStep: "Logo",
+        previousStep: "Business",
+      },
+      Logo: {
+        content: (props) => <LogoStep {...props} />,
+        nextStep: "Review",
+        previousStep: "Portal",
       },
       Review: {
         content: (props) => <ReviewStep onSave={onSubmit} {...props} />,
         nextStep: "Review",
-        previousStep: "Photo",
+        previousStep: "Logo",
       },
-    } as WizardFormMap<UserCreateStepKey, UserCreateForm, UserCreateStepProps>;
+    } as WizardFormMap<
+      SupplierCreateStepKey,
+      SupplierCreateForm,
+      SupplierCreateStepProps
+    >;
   }, [onSubmit]);
 
   const wizardValues = (
-    prev: Partial<UserCreateForm> | undefined,
-    next: Partial<UserCreateForm>,
-  ): Partial<UserCreateForm> => ({ ...prev, ...next });
+    prev: Partial<SupplierCreateForm> | undefined,
+    next: Partial<SupplierCreateForm>,
+  ): Partial<SupplierCreateForm> => ({ ...prev, ...next });
 
   const { renderStep, reset } = useWizardForm<
-    UserCreateStepKey,
-    UserCreateForm,
-    UserCreateStepProps
-  >(steps, wizardValues, "Account");
+    SupplierCreateStepKey,
+    SupplierCreateForm,
+    SupplierCreateStepProps
+  >(steps, wizardValues, "Company");
 
   const stepLabels = STEP_ORDER.map((k) => STEP_LABELS[k]);
   const {

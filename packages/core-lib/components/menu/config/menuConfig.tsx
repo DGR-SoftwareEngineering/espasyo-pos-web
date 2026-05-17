@@ -174,7 +174,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: "user-management",
-    text: "User Management",
+    text: "Users & Suppliers",
     icon: <PeopleRoundedIcon />,
     permissionKey: "userManagement",
     nestedItems: [
@@ -186,8 +186,15 @@ export const menuItems: MenuItem[] = [
         permissionKey: "userManagement.nested.new",
       },
       {
+        id: "user-management-new-supplier",
+        text: "Add New Supplier",
+        icon: <AddCircleRoundedIcon />,
+        path: "/admin/hub/user-management/add-new-supplier",
+        permissionKey: "userManagement.nested.newSupplier",
+      },
+      {
         id: "user-management-list",
-        text: "User List",
+        text: "Manage",
         icon: <ListIcon />,
         path: "/admin/hub/user-management",
         permissionKey: "userManagement.nested.list",

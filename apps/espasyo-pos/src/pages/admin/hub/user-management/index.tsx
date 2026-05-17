@@ -1,7 +1,7 @@
-import { UserListBlock } from "../../../../components";
+import { PeopleManagementBlock } from "../../../../components";
 
 const UserManagement = () => {
-  return <UserListBlock />;
+  return <PeopleManagementBlock />;
 };
 
 export default UserManagement;
