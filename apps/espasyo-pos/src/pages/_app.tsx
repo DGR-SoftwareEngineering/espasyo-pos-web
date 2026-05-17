@@ -47,6 +47,12 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
     return baseApp(content);
   };
 
+  const initialPublicSettings = (
+    pageProps as { initialPublicSettings?: unknown }
+  )?.initialPublicSettings as
+    | import("core-lib/api/commons/types").SystemSettingDto[]
+    | undefined;
+
   return (
     <CacheProvider value={cache}>
       <Head>
@@ -55,7 +61,7 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
           content="minimum-scale=1, initial-scale=1, width=device-width"
         />
       </Head>
-      <Page>{renderApp()}</Page>
+      <Page initialPublicSettings={initialPublicSettings}>{renderApp()}</Page>
     </CacheProvider>
   );
 }

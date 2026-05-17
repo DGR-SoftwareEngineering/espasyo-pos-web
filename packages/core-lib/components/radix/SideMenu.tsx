@@ -7,6 +7,7 @@ import {
   HamburgerMenuIcon,
 } from "@radix-ui/react-icons";
 import { useResolution } from "../../core/hooks";
+import { usePublicSettings } from "../../core/contexts";
 import { RadixMenuContent } from "./menu/RadixMenuContent";
 import { RadixOptionsMenu } from "./menu/RadixOptionsMenu";
 import { SideMenuMobile } from "./SideMenuMobile";
@@ -39,8 +40,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   role = "",
   initials = "",
   email = "",
-  brand = DEFAULT_BRAND,
-  brandMark,
+  brand: brandProp,
+  brandMark: brandMarkProp,
   width = DEFAULT_WIDTH,
   collapsible = false,
   collapsed = false,
@@ -48,6 +49,21 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 }) => {
   const { isMobile } = useResolution();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { systemName, theme } = usePublicSettings();
+  const brand = brandProp ?? systemName ?? DEFAULT_BRAND;
+  const brandMark =
+    brandMarkProp ??
+    (theme.logoUrl ? (
+      <img
+        src={theme.logoUrl}
+        alt={brand}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+        }}
+      />
+    ) : undefined);
   const displayName = initials || "User";
   const userInitial = (initials || email || "?").charAt(0).toUpperCase();
   const collapsedWidth = 72;
@@ -95,6 +111,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
+                overflow: "hidden",
               }}
             >
               {brandMark ?? (
@@ -182,6 +199,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 justifyContent: "center",
                 flexShrink: 0,
                 boxShadow: "0 1px 2px var(--gray-a4)",
+                overflow: "hidden",
               }}
             >
               {brandMark ?? (

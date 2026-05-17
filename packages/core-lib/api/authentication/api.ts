@@ -1,11 +1,16 @@
 import { AxiosInstance } from "axios";
 import {
+  ChangeMpinParams,
   LoginParams,
   LoginResponse,
+  MpinActionResponse,
+  MpinStatusResponse,
+  SetMpinParams,
   SsoSessionParams,
   LogoutParams,
   RefreshParams,
   RefreshTokenResponse,
+  VerifyMpinParams,
 } from "./types";
 import { ApiResponse } from "../types";
 
@@ -55,6 +60,35 @@ export class AuthenticationApi {
   public validateToken() {
     return this.axios.get<ApiResponse>(
       `/authentication-api/api/authentication/validate-token`,
+    );
+  }
+
+  // ===== MPIN =====
+
+  public mpinStatus() {
+    return this.axios.get<MpinStatusResponse>(
+      `/authentication-api/api/Authentication/mpin-status`,
+    );
+  }
+
+  public setMpin(params: SetMpinParams) {
+    return this.axios.post<MpinActionResponse>(
+      `/authentication-api/api/Authentication/set-mpin`,
+      params,
+    );
+  }
+
+  public changeMpin(params: ChangeMpinParams) {
+    return this.axios.post<MpinActionResponse>(
+      `/authentication-api/api/Authentication/change-mpin`,
+      params,
+    );
+  }
+
+  public verifyMpin(params: VerifyMpinParams) {
+    return this.axios.post<MpinActionResponse>(
+      `/authentication-api/api/Authentication/verify-mpin`,
+      params,
     );
   }
 }

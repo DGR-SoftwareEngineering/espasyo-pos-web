@@ -3,8 +3,13 @@ import { FormProvider, useForm, UseFormReturn } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useApi, useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import { usePublicSettings } from "core-lib/core/contexts";
 import { CreateUserParams, RoleDto } from "core-lib/api/commons/types";
-import { UserCreateForm, userCreateFormSchema } from "./validation";
+import {
+  UserCreateForm,
+  makeUserCreateFormSchema,
+  userCreateFormSchema,
+} from "./validation";
 
 interface UserCreateContextValue {
   form: UseFormReturn<UserCreateForm>;
@@ -34,12 +39,18 @@ export const UserCreateProvider: React.FC<React.PropsWithChildren<Props>> = ({
   onSuccess,
 }) => {
   const { showToast } = useToastContext();
+  const { security } = usePublicSettings();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [createdUserName, setCreatedUserName] = useState<string | null>(null);
 
+  const schema = useMemo(
+    () => makeUserCreateFormSchema(security.passwordMinLength),
+    [security.passwordMinLength],
+  );
+
   const form = useForm<UserCreateForm>({
-    resolver: yupResolver(userCreateFormSchema),
+    resolver: yupResolver(schema),
     mode: "onChange",
     criteriaMode: "all",
     defaultValues: userCreateFormSchema.getDefault() as UserCreateForm,

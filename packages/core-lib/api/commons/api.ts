@@ -66,6 +66,22 @@ import {
   SupplierResponse,
   UpdateSupplierParams,
 } from "./types";
+import {
+  AuditLogListResponse,
+  AuditLogQueryParams,
+  AuditLogResponse,
+  BulkUpdateContentBlockParams,
+  BulkUpdateSystemSettingParams,
+  ContentBlockListResponse,
+  ContentBlockResponse,
+  CreateContentBlockParams,
+  SystemSettingListResponse,
+  SystemSettingResponse,
+  UpdateContentBlockParams,
+  UpdateSystemSettingParams,
+  UploadSettingImageParams,
+} from "./types";
+import { AdminConfirmationParams } from "../authentication/types";
 
 export class CommonsApi {
   constructor(
@@ -640,6 +656,142 @@ export class CommonsApi {
   public softDeleteSupplier(id: string) {
     return this.axios.delete<ApiResponse<boolean>>(
       `/api/v1/supplier-api/supplier/${id}`,
+    );
+  }
+
+  // ===== Settings =====
+
+  public settingsList() {
+    return this.axios.get<SystemSettingListResponse>(
+      `/api/v1/settings-api/Settings`,
+    );
+  }
+
+  public settingsGetById(id: string) {
+    return this.axios.get<SystemSettingResponse>(
+      `/api/v1/settings-api/Settings/${id}`,
+    );
+  }
+
+  public settingsByKey(key: string) {
+    return this.axios.get<SystemSettingResponse>(
+      `/api/v1/settings-api/Settings/by-key/${encodeURIComponent(key)}`,
+    );
+  }
+
+  public settingsByCategory(category: string) {
+    return this.axios.get<SystemSettingListResponse>(
+      `/api/v1/settings-api/Settings/by-category/${encodeURIComponent(category)}`,
+    );
+  }
+
+  public settingsPublic() {
+    return this.axios.get<SystemSettingListResponse>(
+      `/api/v1/settings-api/Settings/public`,
+    );
+  }
+
+  public updateSetting(params: UpdateSystemSettingParams) {
+    return this.axios.put<SystemSettingResponse>(
+      `/api/v1/settings-api/Settings`,
+      params,
+    );
+  }
+
+  public bulkUpdateSettings(params: BulkUpdateSystemSettingParams) {
+    return this.axios.put<SystemSettingListResponse>(
+      `/api/v1/settings-api/Settings/bulk`,
+      params,
+    );
+  }
+
+  public uploadSettingImage(params: UploadSettingImageParams) {
+    const form = new FormData();
+    form.append("key", params.key);
+    form.append("file", params.file, params.file.name);
+    return this.axios.post<SystemSettingResponse>(
+      `/api/v1/settings-api/Settings/upload-image`,
+      form,
+    );
+  }
+
+  // ===== Content Blocks =====
+
+  public contentBlockList() {
+    return this.axios.get<ContentBlockListResponse>(
+      `/api/v1/settings-api/ContentBlock`,
+    );
+  }
+
+  public contentBlockGetById(id: string) {
+    return this.axios.get<ContentBlockResponse>(
+      `/api/v1/settings-api/ContentBlock/${id}`,
+    );
+  }
+
+  public contentBlockByPage(pageKey: string) {
+    return this.axios.get<ContentBlockListResponse>(
+      `/api/v1/settings-api/ContentBlock/by-page/${encodeURIComponent(pageKey)}`,
+    );
+  }
+
+  public createContentBlock(params: CreateContentBlockParams) {
+    return this.axios.post<ContentBlockResponse>(
+      `/api/v1/settings-api/ContentBlock`,
+      params,
+    );
+  }
+
+  public updateContentBlock(params: UpdateContentBlockParams) {
+    return this.axios.put<ContentBlockResponse>(
+      `/api/v1/settings-api/ContentBlock`,
+      params,
+    );
+  }
+
+  public bulkUpdateContentBlocks(params: BulkUpdateContentBlockParams) {
+    return this.axios.put<ContentBlockListResponse>(
+      `/api/v1/settings-api/ContentBlock/bulk`,
+      params,
+    );
+  }
+
+  public deleteContentBlock(id: string) {
+    return this.axios.delete<ApiResponse<boolean>>(
+      `/api/v1/settings-api/ContentBlock/${id}`,
+    );
+  }
+
+  // ===== Audit Log =====
+
+  public auditLogList(params: AuditLogQueryParams = {}) {
+    const query = qs.stringify(
+      Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== ""),
+      ),
+    );
+    return this.axios.get<AuditLogListResponse>(
+      `/api/v1/settings-api/AuditLog${query ? `?${query}` : ""}`,
+    );
+  }
+
+  public auditLogGetById(id: string) {
+    return this.axios.get<AuditLogResponse>(
+      `/api/v1/settings-api/AuditLog/${id}`,
+    );
+  }
+
+  public resetAllSettings(params: AdminConfirmationParams) {
+    return this.axios.post<ApiResponse<number>>(
+      `/api/v1/settings-api/Settings/reset-all`,
+      params,
+    );
+  }
+
+  public deleteAllAuditLogs(params: AdminConfirmationParams) {
+    return this.axios.post<ApiResponse<number>>(
+      `/api/v1/settings-api/AuditLog/delete-all`,
+      params,
     );
   }
 }
