@@ -3,36 +3,44 @@ import * as yup from "yup";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const accountStepSchema = yup.object({
-  roleID: yup
-    .string()
-    .required("Role is required")
-    .test("is-valid-uuid", "Invalid role", (value) =>
-      !value ? false : UUID_REGEX.test(value),
-    )
-    .default(""),
-  username: yup
-    .string()
-    .required("Username is required")
-    .min(3, "Username must be at least 3 characters")
-    .max(50, "Username must not exceed 50 characters")
-    .matches(
-      /^[A-Za-z0-9._-]+$/,
-      "Only letters, numbers, dot, underscore and hyphen",
-    )
-    .default(""),
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(6, "Password must be at least 6 characters")
-    .max(100, "Password must not exceed 100 characters")
-    .default(""),
-  confirmPassword: yup
-    .string()
-    .required("Please confirm the password")
-    .oneOf([yup.ref("password")], "Passwords do not match")
-    .default(""),
-});
+const DEFAULT_PASSWORD_MIN = 6;
+
+export const makeAccountStepSchema = (passwordMinLength = DEFAULT_PASSWORD_MIN) =>
+  yup.object({
+    roleID: yup
+      .string()
+      .required("Role is required")
+      .test("is-valid-uuid", "Invalid role", (value) =>
+        !value ? false : UUID_REGEX.test(value),
+      )
+      .default(""),
+    username: yup
+      .string()
+      .required("Username is required")
+      .min(3, "Username must be at least 3 characters")
+      .max(50, "Username must not exceed 50 characters")
+      .matches(
+        /^[A-Za-z0-9._-]+$/,
+        "Only letters, numbers, dot, underscore and hyphen",
+      )
+      .default(""),
+    password: yup
+      .string()
+      .required("Password is required")
+      .min(
+        passwordMinLength,
+        `Password must be at least ${passwordMinLength} characters`,
+      )
+      .max(100, "Password must not exceed 100 characters")
+      .default(""),
+    confirmPassword: yup
+      .string()
+      .required("Please confirm the password")
+      .oneOf([yup.ref("password")], "Passwords do not match")
+      .default(""),
+  });
+
+export const accountStepSchema = makeAccountStepSchema();
 
 export const personalStepSchema = yup.object({
   firstName: yup
@@ -94,9 +102,12 @@ export const imageStepSchema = yup.object({
     .default(null),
 });
 
-export const userCreateFormSchema = accountStepSchema
-  .concat(personalStepSchema)
-  .concat(contactStepSchema)
-  .concat(imageStepSchema);
+export const makeUserCreateFormSchema = (passwordMinLength?: number) =>
+  makeAccountStepSchema(passwordMinLength)
+    .concat(personalStepSchema)
+    .concat(contactStepSchema)
+    .concat(imageStepSchema);
+
+export const userCreateFormSchema = makeUserCreateFormSchema();
 
 export type UserCreateForm = yup.InferType<typeof userCreateFormSchema>;

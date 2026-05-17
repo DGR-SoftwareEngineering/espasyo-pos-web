@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Badge,
   Box,
@@ -20,7 +20,9 @@ import {
   PointOfSaleOutlined,
   RestaurantMenuOutlined,
   ShieldOutlined,
+  AssignmentTurnedInOutlined,
 } from "@mui/icons-material";
+import type { SvgIconComponent } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
@@ -32,28 +34,161 @@ import {
   useFormSubmissionBindingHooks,
   useKeyDown,
 } from "core-lib/core/hooks";
+import { usePublicSettings } from "core-lib/core/contexts";
+import {
+  OPERATIONAL_STATUS_META,
+} from "core-lib/business/settings";
+import { ContentBlockDto } from "core-lib/api/commons/types";
 
 interface Props {
   onSubmit: (values: LoginFormType) => void;
   submitLoading: boolean;
+  contentBlocks?: ContentBlockDto[];
+  cooldownSeconds?: number;
 }
 
-const FEATURE_PILLS = [
-  { icon: PointOfSaleOutlined, label: "Point of Sale" },
-  { icon: Inventory2Outlined, label: "Live Inventory" },
-  { icon: RestaurantMenuOutlined, label: "Recipes" },
-  { icon: ShieldOutlined, label: "Audit Trail" },
+const ICON_MAP: Record<string, SvgIconComponent> = {
+  PointOfSale: PointOfSaleOutlined,
+  Inventory2: Inventory2Outlined,
+  RestaurantMenu: RestaurantMenuOutlined,
+  Coffee: CoffeeOutlined,
+  Shield: ShieldOutlined,
+  AssignmentTurnedIn: AssignmentTurnedInOutlined,
+};
+
+const DEFAULT_FEATURES = [
+  {
+    icon: PointOfSaleOutlined,
+    label: "Point of Sale",
+    description: "",
+  },
+  {
+    icon: Inventory2Outlined,
+    label: "Live Inventory",
+    description: "",
+  },
+  {
+    icon: RestaurantMenuOutlined,
+    label: "Recipes",
+    description: "",
+  },
+  {
+    icon: ShieldOutlined,
+    label: "Audit Trail",
+    description: "",
+  },
 ];
+
+const CONTENT_KEYS = {
+  title: "title",
+  subtitle: "subtitle",
+  formHeading: "form.heading",
+  formUsernameLabel: "form.usernameLabel",
+  formPasswordLabel: "form.passwordLabel",
+  formSubmitButton: "form.submitButton",
+  securityTitle: "security.title",
+  securityMessage: "security.message",
+  footerMessage: "footer.message",
+} as const;
+
+const featureKey = (idx: number, suffix: "icon" | "label" | "description") =>
+  `feature${idx + 1}.${suffix}`;
+
+const pick = (
+  blocks: Map<string, ContentBlockDto>,
+  key: string,
+  fallback: string,
+): string => {
+  const v = (blocks.get(key)?.value ?? "").trim();
+  return v || fallback;
+};
+
+const resolveIcon = (name: string, fallback: SvgIconComponent): SvgIconComponent =>
+  ICON_MAP[name] ?? fallback;
 
 const MotionDiv = motion.div;
 
-export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
+export const LoginForm: React.FC<Props> = ({
+  onSubmit,
+  submitLoading,
+  contentBlocks = [],
+  cooldownSeconds = 0,
+}) => {
   const { handleSubmit, control, formState, setFocus, clearErrors } =
     useForm<LoginFormType>({
       resolver: yupResolver(loginFormSchema),
       mode: "onChange",
       defaultValues: loginFormSchema.getDefault(),
     });
+
+  const { operationalStatus, systemName, theme } = usePublicSettings();
+  const statusMeta = OPERATIONAL_STATUS_META[operationalStatus];
+  const logoUrl = theme.logoUrl;
+
+  const blocksMap = useMemo(
+    () => new Map(contentBlocks.map((b) => [b.contentKey, b])),
+    [contentBlocks],
+  );
+
+  const brandName = systemName || "Espasyo";
+  const brandTagline = "Coffee House";
+
+  const heroTitle = pick(
+    blocksMap,
+    CONTENT_KEYS.title,
+    "Run your coffee house like a pro.",
+  );
+  const heroSubtitle = pick(
+    blocksMap,
+    CONTENT_KEYS.subtitle,
+    "A unified point-of-sale and inventory platform — built for speed at the counter and accuracy in the back of house.",
+  );
+  const formHeading = pick(blocksMap, CONTENT_KEYS.formHeading, "Welcome back");
+  const usernameLabel = pick(
+    blocksMap,
+    CONTENT_KEYS.formUsernameLabel,
+    "Username",
+  );
+  const passwordLabel = pick(
+    blocksMap,
+    CONTENT_KEYS.formPasswordLabel,
+    "Password",
+  );
+  const submitButtonLabel = pick(
+    blocksMap,
+    CONTENT_KEYS.formSubmitButton,
+    "Sign in",
+  );
+  const securityTitle = pick(
+    blocksMap,
+    CONTENT_KEYS.securityTitle,
+    "Secure Access",
+  );
+  const securityMessage = pick(
+    blocksMap,
+    CONTENT_KEYS.securityMessage,
+    "Your session is protected by encrypted tokens and idle timeout monitoring.",
+  );
+  const footerMessage = pick(
+    blocksMap,
+    CONTENT_KEYS.footerMessage,
+    "Need an account? Contact your administrator.",
+  );
+  const footerCopyright = `© ${new Date().getFullYear()} Espasyo Coffee House. Crafted with care.`;
+
+  const features = useMemo(
+    () =>
+      DEFAULT_FEATURES.map((d, idx) => {
+        const iconName = pick(blocksMap, featureKey(idx, "icon"), "");
+        const Icon = iconName ? resolveIcon(iconName, d.icon) : d.icon;
+        return {
+          icon: Icon,
+          label: pick(blocksMap, featureKey(idx, "label"), d.label),
+          description: pick(blocksMap, featureKey(idx, "description"), d.description),
+        };
+      }),
+    [blocksMap],
+  );
 
   useFormFocusOnError<LoginFormType>(formState.errors, setFocus);
   useKeyDown("Enter", () => handleSubmit(onSubmit)());
@@ -177,16 +312,29 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                       justifyContent: "center",
                       boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
                       color: "#3a2410",
+                      overflow: "hidden",
                     }}
                   >
-                    <CoffeeOutlined fontSize="medium" />
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt={brandName}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <CoffeeOutlined fontSize="medium" />
+                    )}
                   </Box>
                   <Flex direction="column" style={{ lineHeight: 1.1 }}>
                     <Text size="3" weight="bold" style={{ color: "#fbe9cf" }}>
-                      Espasyo
+                      {brandName}
                     </Text>
                     <Text size="1" style={{ color: "rgba(251, 233, 207, 0.7)" }}>
-                      Coffee House
+                      {brandTagline}
                     </Text>
                   </Flex>
                 </Flex>
@@ -199,7 +347,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
               >
                 <Flex direction="column" gap="5" style={{ maxWidth: 560 }}>
                   <Badge
-                    color="amber"
+                    color={statusMeta.color === "yellow" ? "amber" : statusMeta.color}
                     variant="soft"
                     size="2"
                     radius="full"
@@ -210,11 +358,11 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                         width: 6,
                         height: 6,
                         borderRadius: "50%",
-                        background: "var(--green-9)",
-                        boxShadow: "0 0 0 3px rgba(57, 167, 90, 0.25)",
+                        background: `var(--${statusMeta.color}-9)`,
+                        boxShadow: `0 0 0 3px var(--${statusMeta.color}-a5)`,
                       }}
                     />
-                    All systems operational
+                    {statusMeta.label}
                   </Badge>
 
                   <Heading
@@ -224,23 +372,14 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                       color: "#fbe9cf",
                       letterSpacing: "-0.02em",
                       lineHeight: 1.05,
+                      background:
+                        "linear-gradient(90deg, #fbe9cf 0%, #d3a970 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
                     }}
                   >
-                    Run your coffee house
-                    <Box
-                      asChild
-                      style={{
-                        background:
-                          "linear-gradient(90deg, #f5cf99 0%, #d3a970 100%)",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        backgroundClip: "text",
-                        display: "inline-block",
-                        marginLeft: 8,
-                      }}
-                    >
-                      <span>like a pro.</span>
-                    </Box>
+                    {heroTitle}
                   </Heading>
 
                   <Text
@@ -251,14 +390,13 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                       maxWidth: 480,
                     }}
                   >
-                    A unified point-of-sale and inventory platform — built for
-                    speed at the counter and accuracy in the back of house.
+                    {heroSubtitle}
                   </Text>
 
                   <Flex gap="2" wrap="wrap" mt="2">
-                    {FEATURE_PILLS.map(({ icon: Icon, label }, index) => (
+                    {features.map(({ icon: Icon, label, description }, index) => (
                       <MotionDiv
-                        key={label}
+                        key={`${label}-${index}`}
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
@@ -271,6 +409,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                           gap="2"
                           px="3"
                           py="2"
+                          title={description || undefined}
                           style={{
                             background: "rgba(251, 233, 207, 0.08)",
                             border: "1px solid rgba(251, 233, 207, 0.18)",
@@ -297,8 +436,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
               >
                 <Flex justify="between" align="center">
                   <Text size="1" style={{ color: "rgba(251, 233, 207, 0.55)" }}>
-                    © {new Date().getFullYear()} Espasyo Coffee House. Crafted
-                    with care.
+                    {footerCopyright}
                   </Text>
                   <Flex align="center" gap="3">
                     <Text
@@ -363,16 +501,29 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                       justifyContent: "center",
                       color: "var(--accent-contrast)",
                       boxShadow: "0 6px 16px var(--accent-a6)",
+                      overflow: "hidden",
                     }}
                   >
-                    <CoffeeOutlined fontSize="medium" />
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt={brandName}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <CoffeeOutlined fontSize="medium" />
+                    )}
                   </Box>
                   <Flex direction="column" style={{ lineHeight: 1.1 }}>
                     <Text size="3" weight="bold">
-                      Espasyo
+                      {brandName}
                     </Text>
                     <Text size="1" color="gray">
-                      Coffee House
+                      {brandTagline}
                     </Text>
                   </Flex>
                 </Flex>
@@ -394,11 +545,8 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                     weight="bold"
                     style={{ letterSpacing: "-0.02em" }}
                   >
-                    Welcome back
+                    {formHeading}
                   </Heading>
-                  <Text size="2" color="gray">
-                    Sign in to access the Espasyo dashboard.
-                  </Text>
                 </Flex>
 
                 <Flex direction="column" gap="4">
@@ -406,7 +554,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                     data-testid="auth-username"
                     name="userName"
                     control={control}
-                    label="Username"
+                    label={usernameLabel}
                     placeholder="e.g. barista.juan"
                     size="3"
                     startAdornment={
@@ -422,7 +570,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                     data-testid="auth-password"
                     name="password"
                     control={control}
-                    label="Password"
+                    label={passwordLabel}
                     placeholder="Enter your password"
                     type="password"
                     size="3"
@@ -483,9 +631,13 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                     >
                       <Flex align="center" justify="center" gap="2">
                         <Text size="3" weight="bold">
-                          Sign in
+                          {cooldownSeconds > 0
+                            ? `Try again in ${cooldownSeconds}s`
+                            : submitButtonLabel}
                         </Text>
-                        {!submitLoading && <ArrowRightIcon />}
+                        {!submitLoading && cooldownSeconds === 0 && (
+                          <ArrowRightIcon />
+                        )}
                       </Flex>
                     </Button>
                   </Box>
@@ -493,8 +645,8 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
 
                 <Flex align="center" gap="3" my="5">
                   <Separator size="4" style={{ flex: 1 }} />
-                  <Text size="1" color="gray">
-                    SECURE ACCESS
+                  <Text size="1" color="gray" style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    {securityTitle}
                   </Text>
                   <Separator size="4" style={{ flex: 1 }} />
                 </Flex>
@@ -513,23 +665,14 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, submitLoading }) => {
                     style={{ fontSize: 18, color: "var(--accent-11)" }}
                   />
                   <Text size="1" color="gray">
-                    Your session is protected by encrypted tokens and idle
-                    timeout monitoring.
+                    {securityMessage}
                   </Text>
                 </Flex>
               </Box>
 
               <Flex justify="center" mt="5">
                 <Text size="1" color="gray">
-                  Need an account? Contact your{" "}
-                  <Text
-                    size="1"
-                    weight="medium"
-                    style={{ color: "var(--accent-11)", cursor: "pointer" }}
-                  >
-                    administrator
-                  </Text>
-                  .
+                  {footerMessage}
                 </Text>
               </Flex>
             </MotionDiv>

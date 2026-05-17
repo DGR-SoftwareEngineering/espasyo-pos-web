@@ -105,7 +105,15 @@ function createApi(client: AxiosInstance, httpSsrClient: AxiosInstance) {
 function handleError(e: any) {
   console.error(`Error on client side response: ${JSON.stringify(e)}`);
   const rawErrors = e.response?.data?.errors;
-  return Array.isArray(rawErrors)
-    ? rawErrors.map((e) => e.code ?? "something_went_wrong")
+  const status: number | undefined = e.response?.status;
+  const arr: string[] = Array.isArray(rawErrors)
+    ? rawErrors.map((entry) =>
+        typeof entry === "string"
+          ? entry
+          : (entry?.code ?? entry?.message ?? "something_went_wrong"),
+      )
     : ["something_went_wrong"];
+  const enriched = arr as string[] & { status?: number };
+  if (status !== undefined) enriched.status = status;
+  return enriched;
 }

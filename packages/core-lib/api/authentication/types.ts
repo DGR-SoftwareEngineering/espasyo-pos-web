@@ -20,3 +20,32 @@ export type RefreshParams = { refreshToken: string };
 export type LoginResponse = ApiResponse<AuthTokens>;
 export type RefreshTokenResponse = ApiResponse<AuthTokens>;
 export type ValidateAccessTokenResponse = ApiResponse<string, unknown>;
+
+// ===== MPIN =====
+
+export interface SetMpinParams {
+  currentPassword: string;
+  mpin: string;
+}
+
+export interface ChangeMpinParams {
+  currentMpin: string;
+  newMpin: string;
+}
+
+export interface VerifyMpinParams {
+  mpin: string;
+}
+
+export interface MpinStatusDto {
+  hasMpin: boolean;
+  mpinSetAt: string | null;
+}
+
+export interface AdminConfirmationParams {
+  password: string;
+  mpin: string;
+}
+
+export type MpinStatusResponse = ApiResponse<MpinStatusDto>;
+export type MpinActionResponse = ApiResponse<boolean>;

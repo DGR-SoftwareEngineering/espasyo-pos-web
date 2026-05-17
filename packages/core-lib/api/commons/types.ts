@@ -482,6 +482,119 @@ export interface UpdateSupplierParams {
 export type SupplierResponse = ApiResponse<SupplierDto>;
 export type SupplierListResponse = ApiResponse<PaginatedResponse<SupplierDto>>;
 
+// ===== Settings =====
+
+export type SettingDataType = 1 | 2 | 3 | 4 | 5 | 6;
+
+export const SETTING_DATA_TYPE = {
+  String: 1 as SettingDataType,
+  Boolean: 2 as SettingDataType,
+  Integer: 3 as SettingDataType,
+  Decimal: 4 as SettingDataType,
+  Json: 5 as SettingDataType,
+  Color: 6 as SettingDataType,
+} as const;
+
+export interface SystemSettingDto {
+  systemSettingID: string;
+  key: string;
+  value: string;
+  dataType: SettingDataType;
+  category: string;
+  scope: string;
+  description: string | null;
+  isEditable: boolean;
+  displayOrder: number;
+  isActive: boolean;
+  updatedBy: string | null;
+  updatedAt: string | null;
+}
+
+export interface UpdateSystemSettingParams {
+  systemSettingID: string;
+  value: string;
+}
+
+export interface BulkUpdateSystemSettingParams {
+  settings: UpdateSystemSettingParams[];
+}
+
+export interface UploadSettingImageParams {
+  key: string;
+  file: File;
+}
+
+export type SystemSettingResponse = ApiResponse<SystemSettingDto>;
+export type SystemSettingListResponse = ApiResponse<SystemSettingDto[]>;
+
+// ===== Content Blocks =====
+
+export interface ContentBlockDto {
+  contentBlockID: string;
+  pageKey: string;
+  contentKey: string;
+  value: string;
+  contentType: string;
+  description: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  updatedBy: string | null;
+  updatedAt: string | null;
+}
+
+export interface CreateContentBlockParams {
+  pageKey: string;
+  contentKey: string;
+  value: string;
+  contentType?: string;
+  description?: string;
+  displayOrder?: number;
+}
+
+export interface UpdateContentBlockParams {
+  contentBlockID: string;
+  value?: string | null;
+  contentType?: string | null;
+  description?: string | null;
+  displayOrder?: number | null;
+}
+
+export interface BulkUpdateContentBlockParams {
+  blocks: UpdateContentBlockParams[];
+}
+
+export type ContentBlockResponse = ApiResponse<ContentBlockDto>;
+export type ContentBlockListResponse = ApiResponse<ContentBlockDto[]>;
+
+// ===== Audit Log =====
+
+export interface AuditLogDto {
+  auditLogID: string;
+  eventType: string;
+  entityName: string | null;
+  entityID: string | null;
+  action: string | null;
+  changesJson: string | null;
+  message: string | null;
+  userID: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+}
+
+export interface AuditLogQueryParams {
+  eventType?: string;
+  entityName?: string;
+  entityID?: string;
+  userID?: string;
+  fromDate?: string;
+  toDate?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export type AuditLogResponse = ApiResponse<AuditLogDto>;
+export type AuditLogListResponse = ApiResponse<PaginatedResponse<AuditLogDto>>;
+
 // ===== Inventory =====
 
 export enum InventoryStatus {

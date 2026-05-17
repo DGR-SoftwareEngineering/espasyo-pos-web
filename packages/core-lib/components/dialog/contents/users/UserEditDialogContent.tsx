@@ -13,7 +13,7 @@ import {
   InfoOutlined,
 } from "@mui/icons-material";
 import { useApi, useApiCallback } from "../../../../core/hooks";
-import { useToastContext } from "../../../../core/contexts";
+import { useToastContext, usePublicSettings } from "../../../../core/contexts";
 import {
   RoleDto,
   UpdateUserParams,
@@ -30,51 +30,65 @@ import { FormErrorSummary } from "../../../radix/FormErrorSummary";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const schema = yup.object({
-  roleID: yup
-    .string()
-    .required("Role is required")
-    .test("is-uuid", "Invalid role", (v) => !!v && UUID_REGEX.test(v))
-    .default(""),
-  firstName: yup.string().required("First name is required").max(100).default(""),
-  middleName: yup.string().optional().max(100).default(""),
-  lastName: yup.string().required("Last name is required").max(100).default(""),
-  email: yup.string().required("Email is required").email().max(200).default(""),
-  contactNumber: yup
-    .string()
-    .required("Contact number is required")
-    .max(50)
-    .default(""),
-  licenseNumber: yup.string().optional().max(100).default(""),
-  password: yup
-    .string()
-    .optional()
-    .test(
-      "min-length-when-set",
-      "Password must be at least 6 characters",
-      (v) => !v || v.length >= 6,
-    )
-    .max(100, "Password must not exceed 100 characters")
-    .default(""),
-  imageFile: yup
-    .mixed<File>()
-    .optional()
-    .nullable()
-    .test(
-      "is-image",
-      "File must be an image",
-      (v) => !v || (v instanceof File && v.type.startsWith("image/")),
-    )
-    .test(
-      "max-size",
-      "Image must be 5 MB or smaller",
-      (v) => !v || (v instanceof File && v.size <= 5 * 1024 * 1024),
-    )
-    .default(null),
-  removeImage: yup.boolean().optional().default(false),
-});
+const makeSchema = (passwordMinLength = 6) =>
+  yup.object({
+    roleID: yup
+      .string()
+      .required("Role is required")
+      .test("is-uuid", "Invalid role", (v) => !!v && UUID_REGEX.test(v))
+      .default(""),
+    firstName: yup
+      .string()
+      .required("First name is required")
+      .max(100)
+      .default(""),
+    middleName: yup.string().optional().max(100).default(""),
+    lastName: yup
+      .string()
+      .required("Last name is required")
+      .max(100)
+      .default(""),
+    email: yup
+      .string()
+      .required("Email is required")
+      .email()
+      .max(200)
+      .default(""),
+    contactNumber: yup
+      .string()
+      .required("Contact number is required")
+      .max(50)
+      .default(""),
+    licenseNumber: yup.string().optional().max(100).default(""),
+    password: yup
+      .string()
+      .optional()
+      .test(
+        "min-length-when-set",
+        `Password must be at least ${passwordMinLength} characters`,
+        (v) => !v || v.length >= passwordMinLength,
+      )
+      .max(100, "Password must not exceed 100 characters")
+      .default(""),
+    imageFile: yup
+      .mixed<File>()
+      .optional()
+      .nullable()
+      .test(
+        "is-image",
+        "File must be an image",
+        (v) => !v || (v instanceof File && v.type.startsWith("image/")),
+      )
+      .test(
+        "max-size",
+        "Image must be 5 MB or smaller",
+        (v) => !v || (v instanceof File && v.size <= 5 * 1024 * 1024),
+      )
+      .default(null),
+    removeImage: yup.boolean().optional().default(false),
+  });
 
-type EditValues = yup.InferType<typeof schema>;
+type EditValues = yup.InferType<ReturnType<typeof makeSchema>>;
 
 const FIELD_LABELS: Record<string, string> = {
   roleID: "Role",
@@ -92,8 +106,14 @@ export const UserEditDialogContent: React.FC<{
   onClose: () => void;
 }> = ({ user, onSuccess, onClose }) => {
   const { showToast } = useToastContext();
+  const { security } = usePublicSettings();
   const [roles, setRoles] = useState<RoleDto[]>([]);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
+
+  const schema = useMemo(
+    () => makeSchema(security.passwordMinLength),
+    [security.passwordMinLength],
+  );
 
   const rolesApi = useApi((api) => api.commons.roleList());
   useEffect(() => {
