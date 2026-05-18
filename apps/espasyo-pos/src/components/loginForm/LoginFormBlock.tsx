@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuthContext, useToastContext } from "core-lib";
+import { usePublicSettings } from "core-lib/core/contexts";
 import { useRouter } from "core-lib/core/router";
 import { ContentBlockDto } from "core-lib/api/commons/types";
 import { LoginForm } from "./LoginForm";
@@ -24,6 +25,7 @@ const isThrottleError = (error: unknown): boolean => {
 export const LoginFormBlock: React.FC<Props> = ({ contentBlocks = [] }) => {
   const router = useRouter();
   const { login } = useAuthContext();
+  const publicSettings = usePublicSettings();
   const [loading, setLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const { showToast } = useToastContext();
@@ -63,6 +65,7 @@ export const LoginFormBlock: React.FC<Props> = ({ contentBlocks = [] }) => {
     try {
       setLoading(true);
       await login({ userName, password });
+      await publicSettings.refresh();
       await router.push((router) => router.hub);
       showToast("Successfully Logged in", "success");
     } catch (error) {

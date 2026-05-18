@@ -96,16 +96,15 @@ export const SideMenuMobile: React.FC<Props> = ({
                 {brand}
               </Text>
             </Flex>
-            <Dialog.Close>
-              <IconButton
-                variant="ghost"
-                color="gray"
-                size="2"
-                aria-label="Close menu"
-              >
-                <Cross1Icon />
-              </IconButton>
-            </Dialog.Close>
+            <IconButton
+              variant="ghost"
+              color="gray"
+              size="2"
+              aria-label="Close menu"
+              onClick={() => onOpenChange(false)}
+            >
+              <Cross1Icon />
+            </IconButton>
           </Flex>
         </Dialog.Title>
 

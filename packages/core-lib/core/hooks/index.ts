@@ -22,5 +22,6 @@ export * from "./usePreventDuplicateSession";
 export * from "./useEmotionCache";
 export * from "./useMapErrors";
 export * from "./useMpinStatus";
+export * from "./useNotificationFeed";
 /* non-hook */
 export * from "./form-validation/field";

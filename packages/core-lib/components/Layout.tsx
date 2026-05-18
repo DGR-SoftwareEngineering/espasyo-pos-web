@@ -1,10 +1,11 @@
 import { Suspense } from "react";
-import { useAuthContext } from "../core/contexts";
+import { useAuthContext, usePublicSettings } from "../core/contexts";
 import {
   useRefreshTokenHandler,
   useLogout,
   usePreventDuplicateSession,
 } from "../core/hooks";
+import { hexToRadixAccent } from "../business/colors";
 import { DuplicationSessionBlock } from "./blocks";
 import { MuiThemeFramework } from "./design/MuiThemeFramework";
 import {
@@ -76,11 +77,16 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
   const { logout } = useLogout();
   const { isAuthenticated, loading, email, role, initials } = useAuthContext();
   const { hasDuplicateSession } = usePreventDuplicateSession();
+  const { theme: publicTheme } = usePublicSettings();
   useRefreshTokenHandler(logout);
 
   if (hasDuplicateSession) {
     return <DuplicationSessionBlock />;
   }
+
+  const resolvedAccent =
+    radixTheme?.accentColor ??
+    hexToRadixAccent(publicTheme.primaryColor, "indigo");
 
   const renderRadix = () => (
     <Suspense fallback={renderFallback()}>
@@ -93,7 +99,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
           role={role}
           initials={initials}
           appearance={radixTheme?.appearance ?? "light"}
-          accentColor={radixTheme?.accentColor ?? "indigo"}
+          accentColor={resolvedAccent}
           grayColor={radixTheme?.grayColor ?? "slate"}
           radius={radixTheme?.radius ?? "medium"}
           scaling={radixTheme?.scaling ?? "100%"}

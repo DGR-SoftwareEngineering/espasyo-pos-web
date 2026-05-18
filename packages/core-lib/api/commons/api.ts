@@ -3,12 +3,16 @@ import qs from "query-string";
 import { ApiResponse } from "../types";
 import {
   CategoryListResponse,
-  ChartDataResponse,
+  ChartDataApiResponse,
+  ChartQueryParams,
   CreateCategoryParams,
   CreateProductParams,
   UpdateProductParams,
   CreateUnitConversionParams,
-  EndpointRegistryResponse,
+  NotificationCountResponse,
+  NotificationListResponse,
+  NotificationQueryParams,
+  NotificationResponse,
   ProductionCapacityResponse,
   ProductListResponse,
   RecipeListResponse,
@@ -82,6 +86,14 @@ import {
   UploadSettingImageParams,
 } from "./types";
 import { AdminConfirmationParams } from "../authentication/types";
+import {
+  BackupHistoryListResponse,
+  ExportBackupParams,
+  ImportBackupParams,
+  ImportPreviewResponse,
+  ImportResultResponse,
+  PreviewImportParams,
+} from "./types";
 
 export class CommonsApi {
   constructor(
@@ -104,18 +116,66 @@ export class CommonsApi {
     return this.axios.get<T>(`${url}?${qs.stringify(params)}`);
   }
 
-  public chartData(url: string, key?: string) {
-    return this.axios.get<ChartDataResponse>(`${url}${key}`);
+  public getChartByKey(chartKey: string, query?: ChartQueryParams) {
+    const params: Record<string, unknown> = {};
+    if (query) {
+      Object.entries(query).forEach(([k, v]) => {
+        if (v === undefined || v === null) return;
+        if (Array.isArray(v) && v.length === 0) return;
+        params[k] = v;
+      });
+    }
+    const search = qs.stringify(params, { arrayFormat: "comma" });
+    return this.axios.get<ChartDataApiResponse>(
+      `/api/v1/chart-api/Chart/${encodeURIComponent(chartKey)}${search ? `?${search}` : ""}`,
+    );
   }
 
   public getUserById() {
     return this.ssrAxios.get<UserInfoResponse>(`/api/commons/get-user-info`);
   }
 
-  public findEndpointByKey(key: string) {
-    return this.axios.get<EndpointRegistryResponse>(
-      `/api/v1/endpoint-api/endpointregistry/get-sourceurl-by-key?key=${key}`,
+  // ===== Notifications =====
+
+  public notificationList(params: NotificationQueryParams = {}) {
+    const cleaned: Record<string, unknown> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") return;
+      cleaned[k] = v;
+    });
+    const search = qs.stringify(cleaned);
+    return this.axios.get<NotificationListResponse>(
+      `/api/v1/notifications-api/Notifications${search ? `?${search}` : ""}`,
     );
+  }
+
+  public notificationCount() {
+    return this.axios.get<NotificationCountResponse>(
+      `/api/v1/notifications-api/Notifications/count`,
+    );
+  }
+
+  public markNotificationRead(notificationID: string) {
+    return this.axios.post<NotificationResponse>(
+      `/api/v1/notifications-api/Notifications/${encodeURIComponent(notificationID)}/read`,
+      {},
+    );
+  }
+
+  public markAllNotificationsRead() {
+    return this.axios.post<ApiResponse<number>>(
+      `/api/v1/notifications-api/Notifications/read-all`,
+      {},
+    );
+  }
+
+  /**
+   * Returns the SSE stream URL for live notifications. Caller is responsible
+   * for opening the EventSource. The URL is built from the configured API
+   * base + the route below.
+   */
+  public notificationStreamUrl(baseUrl: string, accessToken: string) {
+    return `${baseUrl}/api/v1/notifications-api/Notifications/stream?access_token=${encodeURIComponent(accessToken)}`;
   }
 
   public async getRoleById(roleId?: string) {
@@ -792,6 +852,64 @@ export class CommonsApi {
     return this.axios.post<ApiResponse<number>>(
       `/api/v1/settings-api/AuditLog/delete-all`,
       params,
+    );
+  }
+
+  // ===== Backup & Restore =====
+
+  public async exportBackup(params: ExportBackupParams) {
+    try {
+      return await this.axios.post<Blob>(
+        `/api/v1/backup-api/Backup/export`,
+        {
+          password: params.password,
+          mpin: params.mpin,
+          includeAuditLog: params.includeAuditLog ?? false,
+          includeStockMovements: params.includeStockMovements ?? true,
+        },
+        { responseType: "blob" },
+      );
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: unknown; status?: number };
+      };
+      if (err?.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          err.response.data = JSON.parse(text);
+        } catch {
+          // Leave the Blob in place — handleError will fall through to a generic message.
+        }
+      }
+      throw error;
+    }
+  }
+
+  public previewImportBackup(params: PreviewImportParams) {
+    const form = new FormData();
+    form.append("file", params.file, params.file.name);
+    if (params.mode) form.append("mode", params.mode);
+    return this.axios.post<ImportPreviewResponse>(
+      `/api/v1/backup-api/Backup/preview-import`,
+      form,
+    );
+  }
+
+  public importBackup(params: ImportBackupParams) {
+    const form = new FormData();
+    form.append("file", params.file, params.file.name);
+    form.append("mode", params.mode);
+    form.append("password", params.password);
+    form.append("mpin", params.mpin);
+    return this.axios.post<ImportResultResponse>(
+      `/api/v1/backup-api/Backup/import`,
+      form,
+    );
+  }
+
+  public backupHistory(pageNumber = 1, pageSize = 20) {
+    return this.axios.get<BackupHistoryListResponse>(
+      `/api/v1/backup-api/Backup/history?pageNumber=${pageNumber}&pageSize=${pageSize}`,
     );
   }
 }

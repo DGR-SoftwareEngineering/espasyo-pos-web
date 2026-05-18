@@ -1,9 +1,16 @@
 import { useCallback, useMemo } from "react";
+import { useAccessContext } from "../../../core/contexts/AccessContext";
 import { roleConfig } from "../config/roleConfig";
 import { Permission } from "../permissions";
 
 export const usePermissions = (roleName: string | null) => {
+  const access = useAccessContext();
+
   const permissions = useMemo(() => {
+    if (access.ready && Object.keys(access.permissions).length > 0) {
+      return access.permissions;
+    }
+
     if (!roleName) {
       return null;
     }
@@ -21,7 +28,7 @@ export const usePermissions = (roleName: string | null) => {
     }
 
     return config.permissions || null;
-  }, [roleName]);
+  }, [roleName, access.ready, access.permissions]);
 
   const hasPermission = useCallback(
     (permissionKey: string, action: keyof Permission = "view"): boolean => {

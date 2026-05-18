@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo } from "react";
+import React, { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Flex } from "@radix-ui/themes";
 import { useRouter } from "next/router";
 import { useResolution } from "../../core/hooks";
@@ -10,6 +10,8 @@ import {
   MaintenanceBanner,
   MaintenancePageBlock,
 } from "./MaintenanceBanner";
+
+const SIDEBAR_COLLAPSED_KEY = "espasyo.sidebarCollapsed";
 
 const routeToPageKey = (pathname: string): string | null => {
   if (!pathname) return null;
@@ -46,6 +48,29 @@ export const RadixDashboard: React.FC<Props> = ({
   const { maintenance } = usePublicSettings();
   const isAdmin = (role ?? "").toLowerCase() === "admin";
 
+  // Default: expanded. Persists the user's choice across reloads.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      if (stored === "1") setSidebarCollapsed(true);
+    } catch {
+      // localStorage unavailable (private mode, etc.) — silently stay expanded.
+    }
+  }, []);
+
+  const handleToggleSidebar = useCallback((next: boolean) => {
+    setSidebarCollapsed(next);
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
+    } catch {
+      // Persistence is best-effort.
+    }
+  }, []);
+
   const currentPageKey = useMemo(
     () => routeToPageKey(router?.pathname ?? ""),
     [router?.pathname],
@@ -67,6 +92,9 @@ export const RadixDashboard: React.FC<Props> = ({
         role={role}
         initials={initials}
         email={email}
+        collapsible
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={handleToggleSidebar}
       />
 
       <Flex
@@ -74,7 +102,11 @@ export const RadixDashboard: React.FC<Props> = ({
         style={{ flex: 1, minWidth: 0, overflow: "auto" }}
       >
         <MaintenanceBanner />
-        <Header />
+        <Header
+          user={{ initials, email, role }}
+          logout={logout}
+          loading={loading}
+        />
         <Box
           style={{
             flex: 1,
