@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useRouter } from "../router";
-import { PageLoader } from "../../components";
-import { Box, CircularProgress, Fade } from "@mui/material";
+import { BrandedLoader } from "../../components/radix/BrandedLoader";
+import { RouteTransitionLoader } from "../../components/radix/RouteTransitionLoader";
 
 interface PageLoaderContextType {
   isLoading: boolean;
@@ -18,27 +18,8 @@ interface Props {
   children: React.ReactNode;
 }
 
-const ContentAreaLoader = () => (
-  <Fade in={true} timeout={300}>
-    <Box
-      sx={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "rgba(255, 255, 255, 0.7)",
-        backdropFilter: "blur(3px)",
-        zIndex: 1000,
-      }}
-    >
-      <CircularProgress size={40} thickness={4} />
-    </Box>
-  </Fade>
-);
+const isDashboardPath = (path: string) =>
+  path.startsWith("/hub") || path.startsWith("/admin/hub");
 
 export const PageLoaderContextProvider: React.FC<Props> = ({
   children,
@@ -48,6 +29,8 @@ export const PageLoaderContextProvider: React.FC<Props> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isContentTransition, setIsContentTransition] = useState(false);
   const [isRouteChange, setIsRouteChange] = useState(false);
+  const [isAuthSwitchTransition, setIsAuthSwitchTransition] = useState(false);
+  const lastPathRef = useRef<string>(router.asPath);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -59,22 +42,34 @@ export const PageLoaderContextProvider: React.FC<Props> = ({
     const handleRouteChangeStart = (url: string) => {
       if (url === router.asPath) return;
 
+      const cleanFrom = (lastPathRef.current ?? "").split("?")[0] ?? "/";
+      const cleanTo = url.split("?")[0] ?? "/";
+      const crossesAuthBoundary =
+        isDashboardPath(cleanFrom) !== isDashboardPath(cleanTo);
+
       if (isAuthenticated) {
-        setIsContentTransition(true);
+        if (crossesAuthBoundary) {
+          setIsAuthSwitchTransition(true);
+        } else {
+          setIsContentTransition(true);
+        }
       } else {
         setIsLoading(true);
       }
       setIsRouteChange(true);
     };
 
-    const handleRouteChangeComplete = () => {
+    const handleRouteChangeComplete = (url: string) => {
+      lastPathRef.current = url;
       setIsContentTransition(false);
+      setIsAuthSwitchTransition(false);
       setIsLoading(false);
       setIsRouteChange(false);
     };
 
     const handleRouteChangeError = () => {
       setIsContentTransition(false);
+      setIsAuthSwitchTransition(false);
       setIsLoading(false);
       setIsRouteChange(false);
     };
@@ -95,15 +90,19 @@ export const PageLoaderContextProvider: React.FC<Props> = ({
 
   const renderContent = () => {
     if (!isAuthenticated && (isLoading || router.loading)) {
-      return <PageLoader data-testid="page-loader" />;
+      return <BrandedLoader />;
+    }
+
+    if (isAuthenticated && isAuthSwitchTransition) {
+      return <BrandedLoader message="Opening your dashboard…" />;
     }
 
     if (isAuthenticated && (isContentTransition || isRouteChange)) {
       return (
-        <Box sx={{ position: "relative", minHeight: "100vh" }}>
-          <ContentAreaLoader />
-          <Box sx={{ opacity: 0.7, pointerEvents: "none" }}>{children}</Box>
-        </Box>
+        <div style={{ position: "relative", minHeight: "100vh" }}>
+          <div style={{ pointerEvents: "none" }}>{children}</div>
+          <RouteTransitionLoader />
+        </div>
       );
     }
 

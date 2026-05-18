@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Box, Flex, ScrollArea, Spinner, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Popover,
+  ScrollArea,
+  Spinner,
+  Text,
+  Tooltip,
+} from "@radix-ui/themes";
 import { ChevronRightIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import { useRouter } from "../../../core/router";
 import { usePageLoaderContext } from "../../../core/contexts";
@@ -151,14 +159,144 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
   );
 };
 
+interface CollapsedMenuItemProps {
+  item: MenuItem;
+  selectedPath: string;
+  onSelect: (path: string) => void;
+}
+
+const CollapsedMenuItem: React.FC<CollapsedMenuItemProps> = ({
+  item,
+  selectedPath,
+  onSelect,
+}) => {
+  const hasNested = !!item.nestedItems?.length;
+  const isSelected = item.path === selectedPath;
+  const hasSelectedChild = item.nestedItems?.some(
+    (n) => n.path === selectedPath,
+  );
+  const active = isSelected || hasSelectedChild;
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  const trigger = (
+    <Flex
+      align="center"
+      justify="center"
+      role="button"
+      tabIndex={0}
+      aria-current={isSelected ? "page" : undefined}
+      onClick={() => {
+        if (item.path) onSelect(item.path);
+        else if (hasNested) setPopoverOpen((v) => !v);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (item.path) onSelect(item.path);
+          else if (hasNested) setPopoverOpen((v) => !v);
+        }
+      }}
+      style={{
+        width: 44,
+        height: 40,
+        borderRadius: "var(--radius-2)",
+        cursor: "pointer",
+        background: active ? "var(--accent-a3)" : undefined,
+        color: active ? "var(--accent-11)" : "var(--gray-11)",
+        transition: "background 120ms ease",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) e.currentTarget.style.background = "var(--gray-a3)";
+      }}
+      onMouseLeave={(e) => {
+        if (!active) e.currentTarget.style.background = "";
+      }}
+    >
+      <Box style={{ display: "inline-flex", color: "inherit" }}>
+        {item.icon}
+      </Box>
+    </Flex>
+  );
+
+  // Parent items with only nested children open a flyout popover.
+  if (!item.path && hasNested) {
+    return (
+      <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
+        <Tooltip content={item.text} side="right">
+          <Popover.Trigger>{trigger}</Popover.Trigger>
+        </Tooltip>
+        <Popover.Content side="right" align="start" size="1" style={{ width: 200 }}>
+          <Text size="1" weight="bold" color="gray" as="div" mb="2">
+            {item.text}
+          </Text>
+          <Flex direction="column" gap="1">
+            {item.nestedItems!.map((nested) => {
+              const isNestedSelected = nested.path === selectedPath;
+              return (
+                <Flex
+                  key={nested.id}
+                  align="center"
+                  gap="2"
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => {
+                    onSelect(nested.path);
+                    setPopoverOpen(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect(nested.path);
+                      setPopoverOpen(false);
+                    }
+                  }}
+                  style={{
+                    padding: "6px 8px",
+                    borderRadius: "var(--radius-2)",
+                    cursor: "pointer",
+                    background: isNestedSelected ? "var(--accent-a3)" : undefined,
+                    color: isNestedSelected ? "var(--accent-11)" : "var(--gray-12)",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isNestedSelected)
+                      e.currentTarget.style.background = "var(--gray-a2)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isNestedSelected) e.currentTarget.style.background = "";
+                  }}
+                >
+                  <Box style={{ display: "inline-flex", opacity: 0.85 }}>
+                    {nested.icon}
+                  </Box>
+                  <Text size="2" weight={isNestedSelected ? "bold" : "regular"}>
+                    {nested.text}
+                  </Text>
+                </Flex>
+              );
+            })}
+          </Flex>
+        </Popover.Content>
+      </Popover.Root>
+    );
+  }
+
+  return (
+    <Tooltip content={item.text} side="right">
+      {trigger}
+    </Tooltip>
+  );
+};
+
 interface RadixMenuContentProps {
   roleName: string;
   loading?: boolean;
+  collapsed?: boolean;
 }
 
 export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
   roleName,
   loading,
+  collapsed = false,
 }) => {
   const router = useRouter();
   const { startContentTransition } = usePageLoaderContext();
@@ -166,7 +304,18 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
 
   const { mainMenu, secondaryMenu } = useFilteredMenu(roleName);
-  const mainMenuKey = useMemo(() => JSON.stringify(mainMenu), [mainMenu]);
+  const mainMenuKey = useMemo(
+    () =>
+      mainMenu
+        .map(
+          (item) =>
+            `${item.id}:${item.path ?? ""}:${(item.nestedItems ?? [])
+              .map((n) => `${n.id}=${n.path}`)
+              .join(",")}`,
+        )
+        .join("|"),
+    [mainMenu],
+  );
 
   useEffect(() => {
     setSelectedPath(router.pathname);
@@ -210,6 +359,50 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
       >
         <Spinner size="3" loading />
       </Flex>
+    );
+  }
+
+  if (collapsed) {
+    return (
+      <ScrollArea
+        scrollbars="vertical"
+        type="hover"
+        style={{ height: "100%", width: "100%" }}
+      >
+        <Flex direction="column" align="center" gap="1" p="2">
+          {mainMenu.map((item) => (
+            <CollapsedMenuItem
+              key={item.id}
+              item={item}
+              selectedPath={selectedPath}
+              onSelect={handleSelect}
+            />
+          ))}
+          {secondaryMenu.length > 0 && (
+            <Box
+              mt="3"
+              pt="2"
+              style={{
+                width: "100%",
+                borderTop: "1px solid var(--gray-a4)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              {secondaryMenu.map((item) => (
+                <CollapsedMenuItem
+                  key={item.id}
+                  item={item}
+                  selectedPath={selectedPath}
+                  onSelect={handleSelect}
+                />
+              ))}
+            </Box>
+          )}
+        </Flex>
+      </ScrollArea>
     );
   }
 

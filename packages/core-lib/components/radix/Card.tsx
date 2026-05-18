@@ -1,24 +1,7 @@
 import React, { ReactNode } from "react";
 import { Card as RadixCard, Box, Text, Flex } from "@radix-ui/themes";
 import Image from "next/image";
-import { ChartBlock } from "../blocks/chart/ChartBlock";
 import { cn } from "./_utils";
-
-export interface CardChartProps {
-  id: string;
-  chartKey: string;
-  sourceUrl?: string;
-  type?: string;
-  hideLegend?: boolean;
-  xAxisName?: string;
-  yAxisName?: string;
-  fullHeight?: boolean;
-  heightToWidthRatio?: number;
-  customColors?: string[];
-  defaultColors?: string[];
-  lightLoader?: boolean;
-  labelLengthLimit?: number;
-}
 
 export interface CardProps {
   className?: string;
@@ -39,12 +22,14 @@ export interface CardProps {
   actionsNode?: ReactNode;
   /** Forwarded to onClick — when set, the card gets cursor:pointer styling. */
   onClick?: React.MouseEventHandler<HTMLDivElement>;
-  /** Renders an embedded ChartBlock inside the card (parity with MUI Card). */
-  showChart?: boolean;
-  chartProps?: CardChartProps;
   children?: ReactNode;
 }
 
+/**
+ * Plain Radix card. For dashboards that need a chart inside, use
+ * `<ChartCard chartKey="…" />` from `core-lib/components/radix/charts`
+ * — it includes its own card chrome, filters, loader, and Recharts plot.
+ */
 export const Card: React.FC<CardProps> = ({
   className,
   style,
@@ -56,8 +41,6 @@ export const Card: React.FC<CardProps> = ({
   icon,
   actionsNode,
   onClick,
-  showChart = false,
-  chartProps,
   children,
 }) => {
   const interactive = !!onClick || hoverEffect;
@@ -97,26 +80,6 @@ export const Card: React.FC<CardProps> = ({
             </Text>
           )}
         </Flex>
-      )}
-
-      {showChart && chartProps && (
-        <Box mt="3" style={{ width: "100%" }}>
-          <ChartBlock
-            id={chartProps.id}
-            chartKey={chartProps.chartKey}
-            sourceUrl={chartProps.sourceUrl}
-            type={chartProps.type}
-            hideLegend={chartProps.hideLegend}
-            xAxisName={chartProps.xAxisName}
-            yAxisName={chartProps.yAxisName}
-            fullHeight={chartProps.fullHeight}
-            heightToWidthRatio={chartProps.heightToWidthRatio}
-            customColors={chartProps.customColors}
-            defaultColors={chartProps.defaultColors}
-            lightLoader={chartProps.lightLoader}
-            labelLengthLimit={chartProps.labelLengthLimit}
-          />
-        </Box>
       )}
 
       {children}

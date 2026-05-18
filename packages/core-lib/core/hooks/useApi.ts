@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, CancelTokenSource } from "axios";
 import { useAsync, useAsyncCallback } from "react-async-hook";
 import { stringify } from "qs";
+import { AccessApi } from "../../api/access/api";
 import { Api } from "../../api/api";
 import { AuthenticationApi } from "../../api/authentication/api";
 import { CommonsApi } from "../../api/commons/api";
@@ -99,6 +100,7 @@ function createApi(client: AxiosInstance, httpSsrClient: AxiosInstance) {
   return new Api(
     new AuthenticationApi(client, httpSsrClient),
     new CommonsApi(client, httpSsrClient),
+    new AccessApi(client),
   );
 }
 

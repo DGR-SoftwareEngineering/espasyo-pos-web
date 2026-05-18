@@ -15,12 +15,14 @@ import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { SystemSettingsTab } from "./tabs/SystemSettingsTab";
 import { ContentBlocksTab } from "./tabs/ContentBlocksTab";
 import { AuditLogTab } from "./tabs/AuditLogTab";
+import { AccessControlTab } from "./tabs/AccessControlTab";
+import { BackupRestoreTab } from "./tabs/BackupRestoreTab";
 
 export const SettingsManagementBlock: React.FC = () => {
   const { isMobile } = useResolution();
   const { operationalStatus, maintenance, systemName, theme } =
     usePublicSettings();
-  const { status: mpinStatus } = useMpinStatus();
+  const { status: mpinStatus, ready: mpinReady } = useMpinStatus();
 
   const statusMeta = OPERATIONAL_STATUS_META[operationalStatus];
   const hasMpin = !!mpinStatus?.hasMpin;
@@ -33,9 +35,19 @@ export const SettingsManagementBlock: React.FC = () => {
         content: <SystemSettingsTab />,
       },
       {
+        key: "settings_access",
+        label: "Access Control",
+        content: <AccessControlTab />,
+      },
+      {
         key: "settings_content",
         label: "Content Blocks",
         content: <ContentBlocksTab />,
+      },
+      {
+        key: "settings_backup",
+        label: "Backup & Restore",
+        content: <BackupRestoreTab />,
       },
       {
         key: "settings_audit",
@@ -90,16 +102,22 @@ export const SettingsManagementBlock: React.FC = () => {
           </Flex>
           <Flex gap="2" align="center" wrap="wrap">
             <Badge
-              color={hasMpin ? "green" : "amber"}
+              color={!mpinReady ? "gray" : hasMpin ? "green" : "amber"}
               variant="soft"
               radius="full"
               title={
-                hasMpin
-                  ? "Destructive admin actions are unlocked."
-                  : "Set an MPIN under Profile → MPIN Security to unlock Reset / Clear logs."
+                !mpinReady
+                  ? "Checking your MPIN status…"
+                  : hasMpin
+                    ? "Destructive admin actions are unlocked."
+                    : "Set an MPIN under Profile → MPIN Security to unlock Reset / Clear logs."
               }
             >
-              {hasMpin ? "MPIN ready" : "MPIN not set"}
+              {!mpinReady
+                ? "Checking MPIN…"
+                : hasMpin
+                  ? "MPIN ready"
+                  : "MPIN not set"}
             </Badge>
             {maintenance.enabled && (
               <Badge color="amber" variant="soft" radius="full">

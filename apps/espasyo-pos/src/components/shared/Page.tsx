@@ -1,5 +1,9 @@
 import { AuthProvider, Layout } from "core-lib";
-import { PublicSettingsProvider } from "core-lib/core/contexts";
+import {
+  AccessProvider,
+  MpinStatusProvider,
+  PublicSettingsProvider,
+} from "core-lib/core/contexts";
 import { ErrorBoundary } from "core-lib/components/ErrorBoundary";
 import { BrandingHead } from "core-lib/components/radix/BrandingHead";
 import { ThemeColorVars } from "core-lib/components/radix/ThemeColorVars";
@@ -19,7 +23,11 @@ const Page: React.FC<React.PropsWithChildren<Props>> = ({
         <BrandingHead />
         <ThemeColorVars />
         <AuthProvider authMethod="STANDARD_AUTH">
-          <Layout framework="Radix">{children}</Layout>
+          <AccessProvider>
+            <MpinStatusProvider>
+              <Layout framework="Radix">{children}</Layout>
+            </MpinStatusProvider>
+          </AccessProvider>
         </AuthProvider>
       </PublicSettingsProvider>
     </ErrorBoundary>

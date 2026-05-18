@@ -52,6 +52,8 @@ const ACTION_COLOR: Record<
 };
 
 const eventBadgeColor = (eventType: string) => {
+  if (eventType.startsWith("Loader.")) return "jade";
+  if (eventType.startsWith("Backup.")) return "teal";
   if (eventType.startsWith("System.")) return "amber";
   if (eventType.startsWith("User.")) return "indigo";
   if (eventType.startsWith("Inventory.") || eventType.startsWith("Stock."))
@@ -59,6 +61,8 @@ const eventBadgeColor = (eventType: string) => {
   if (eventType.startsWith("Sale.")) return "green";
   if (eventType.startsWith("Setting.")) return "purple";
   if (eventType.startsWith("Product.")) return "cyan";
+  if (eventType.startsWith("Role.")) return "iris";
+  if (eventType.startsWith("MenuItem.")) return "violet";
   return "gray";
 };
 
@@ -94,7 +98,7 @@ export const AuditLogTab: React.FC = () => {
       await api.commons.deleteAllAuditLogs(args),
   );
 
-  const hasMpin = !!mpinStatus.status?.hasMpin;
+  const hasMpin = mpinStatus.ready && !!mpinStatus.status?.hasMpin;
 
   const queryParams: AuditLogQueryParams = useMemo(
     () => ({
@@ -517,9 +521,9 @@ const AuditLogDetailDialog: React.FC<{
           </Box>
         )}
         <Flex justify="end" mt="4">
-          <Dialog.Close>
-            <Button type="Secondary">Close</Button>
-          </Dialog.Close>
+          <Button type="Secondary" onClick={onClose}>
+            Close
+          </Button>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

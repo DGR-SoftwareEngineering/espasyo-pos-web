@@ -38,6 +38,7 @@ import { usePublicSettings } from "core-lib/core/contexts";
 import {
   OPERATIONAL_STATUS_META,
 } from "core-lib/business/settings";
+import { hexToRadixAccent } from "core-lib/business/colors";
 import { ContentBlockDto } from "core-lib/api/commons/types";
 
 interface Props {
@@ -124,6 +125,7 @@ export const LoginForm: React.FC<Props> = ({
   const { operationalStatus, systemName, theme } = usePublicSettings();
   const statusMeta = OPERATIONAL_STATUS_META[operationalStatus];
   const logoUrl = theme.logoUrl;
+  const resolvedAccent = hexToRadixAccent(theme.primaryColor, "amber");
 
   const blocksMap = useMemo(
     () => new Map(contentBlocks.map((b) => [b.contentKey, b])),
@@ -202,7 +204,12 @@ export const LoginForm: React.FC<Props> = ({
   const submit = handleSubmit(onSubmit);
 
   return (
-    <Theme appearance="light" accentColor="amber" grayColor="sand" radius="large">
+    <Theme
+      appearance="light"
+      accentColor={resolvedAccent}
+      grayColor="sand"
+      radius="large"
+    >
       <Box
         style={{
           minHeight: "100vh",

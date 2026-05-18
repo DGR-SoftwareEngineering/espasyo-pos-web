@@ -20,6 +20,8 @@ export const SETTING_KEYS = {
   PosReceiptFooter: "POS.ReceiptFooter",
   PosRequireManagerOverrideForRefund: "POS.RequireManagerOverrideForRefund",
 
+  CurrencyCode: "Currency.Code",
+
   InventoryLowStockAlertEnabled: "Inventory.LowStockAlertEnabled",
   InventoryAllowNegativeStock: "Inventory.AllowNegativeStock",
   InventoryAutoDeductOnSale: "Inventory.AutoDeductOnSale",
@@ -33,6 +35,21 @@ export const SETTING_KEYS = {
   FeaturesNotificationsEnabled: "Features.NotificationsEnabled",
   FeaturesSupplierPortalEnabled: "Features.SupplierPortalEnabled",
   FeaturesMultiLocationEnabled: "Features.MultiLocationEnabled",
+
+  NotificationsRealtime: "Notifications.Realtime",
+  NotificationsPollIntervalSeconds: "Notifications.PollIntervalSeconds",
+  NotificationsRetentionDays: "Notifications.RetentionDays",
+  NotificationsSoundEnabled: "Notifications.SoundEnabled",
+
+  LoaderVariant: "Loader.Variant",
+  LoaderPrimaryMessage: "Loader.PrimaryMessage",
+  LoaderRotatingMessages: "Loader.RotatingMessages",
+  LoaderShowBrand: "Loader.ShowBrand",
+  LoaderShowLogo: "Loader.ShowLogo",
+  LoaderSpeedMs: "Loader.SpeedMs",
+  LoaderBackdropOpacity: "Loader.BackdropOpacity",
+  LoaderTransitionVariant: "Loader.TransitionVariant",
+  LoaderTransitionMessage: "Loader.TransitionMessage",
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -60,6 +77,31 @@ export const PAGE_KEYS = {
 
 export type PageKey = (typeof PAGE_KEYS)[keyof typeof PAGE_KEYS];
 
+export const LOADER_VARIANTS = [
+  "branded",
+  "minimal",
+  "pulse",
+  "skeleton-only",
+] as const;
+
+export type LoaderVariant = (typeof LOADER_VARIANTS)[number];
+
+export const LOADER_TRANSITION_VARIANTS = [
+  "bar",
+  "ring",
+  "bar-and-ring",
+  "shimmer",
+] as const;
+
+export type LoaderTransitionVariant =
+  (typeof LOADER_TRANSITION_VARIANTS)[number];
+
+export const CLOSED_SET_SETTINGS: Record<string, ReadonlyArray<string>> = {
+  [SETTING_KEYS.SystemOperationalStatus]: Object.values(OPERATIONAL_STATUSES),
+  [SETTING_KEYS.LoaderVariant]: LOADER_VARIANTS,
+  [SETTING_KEYS.LoaderTransitionVariant]: LOADER_TRANSITION_VARIANTS,
+};
+
 export const SETTING_CATEGORIES = {
   System: "System",
   Theme: "Theme",
@@ -67,6 +109,8 @@ export const SETTING_CATEGORIES = {
   Inventory: "Inventory",
   Security: "Security",
   Features: "Features",
+  Loader: "Loader",
+  Notifications: "Notifications",
 } as const;
 
 export type SettingCategory =
@@ -89,6 +133,20 @@ export const AUDIT_EVENT_TYPES = {
   UserMpinFailed: "User.MpinFailed",
   SystemSettingsReset: "System.SettingsReset",
   SystemAuditLogsCleared: "System.AuditLogsCleared",
+  RoleCreated: "Role.Created",
+  RoleUpdated: "Role.Updated",
+  RoleDeactivated: "Role.Deactivated",
+  RolePermissionsChanged: "Role.PermissionsChanged",
+  MenuItemCreated: "MenuItem.Created",
+  MenuItemUpdated: "MenuItem.Updated",
+  MenuItemDeactivated: "MenuItem.Deactivated",
+  MenuItemReordered: "MenuItem.Reordered",
+  LoaderConfigChanged: "Loader.ConfigChanged",
+  BackupExported: "Backup.Exported",
+  BackupExportFailed: "Backup.ExportFailed",
+  BackupImported: "Backup.Imported",
+  BackupImportFailed: "Backup.ImportFailed",
+  BackupPreviewRequested: "Backup.PreviewRequested",
   InventoryAdjusted: "Inventory.Adjusted",
   StockMovementRecorded: "Stock.MovementRecorded",
   SaleCompleted: "Sale.Completed",

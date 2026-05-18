@@ -462,11 +462,13 @@ const CreateContentBlockDialog: React.FC<CreateDialogProps> = ({
         </Flex>
 
         <Flex justify="end" gap="3" mt="4">
-          <Dialog.Close>
-            <Button type="Secondary" disabled={createCb.loading}>
-              Cancel
-            </Button>
-          </Dialog.Close>
+          <Button
+            type="Secondary"
+            disabled={createCb.loading}
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
           <Button
             type="Primary"
             onClick={handleSubmit}

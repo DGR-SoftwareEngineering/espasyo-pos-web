@@ -1,7 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, Flex, Switch, Text, TextArea, TextField } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Select,
+  Switch,
+  Text,
+  TextArea,
+  TextField,
+} from "@radix-ui/themes";
 import { SystemSettingDto } from "core-lib/api/commons/types";
 import {
+  CLOSED_SET_SETTINGS,
   parseSettingValue,
   serializeSettingValue,
 } from "core-lib/business/settings";
@@ -15,12 +24,38 @@ interface Props {
 const isLongString = (key: string) =>
   /receipt|message|description|note/i.test(key);
 
+const humanizeOption = (option: string): string =>
+  option
+    .split(/[-_]/g)
+    .map((seg) => seg.charAt(0).toUpperCase() + seg.slice(1))
+    .join(" ");
+
 export const SettingValueEditor: React.FC<Props> = ({
   setting,
   value,
   onChange,
 }) => {
   const disabled = !setting.isEditable;
+  const closedOptions = CLOSED_SET_SETTINGS[setting.key];
+
+  if (closedOptions && setting.dataType === 1) {
+    return (
+      <Select.Root
+        value={value || closedOptions[0]}
+        disabled={disabled}
+        onValueChange={onChange}
+      >
+        <Select.Trigger style={{ maxWidth: 240, width: "100%" }} />
+        <Select.Content>
+          {closedOptions.map((option) => (
+            <Select.Item key={option} value={option}>
+              {humanizeOption(option)}
+            </Select.Item>
+          ))}
+        </Select.Content>
+      </Select.Root>
+    );
+  }
 
   switch (setting.dataType) {
     case 2: {

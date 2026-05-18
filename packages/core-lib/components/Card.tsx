@@ -8,7 +8,6 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
-import { ChartBlock } from "./blocks/chart/ChartBlock";
 
 interface Props extends CardProps {
   elevation?: CardProps["elevation"];
@@ -19,22 +18,6 @@ interface Props extends CardProps {
   imageSrc?: string;
   text?: string;
   icon?: React.ReactElement;
-  showChart?: boolean;
-  chartProps?: {
-    id: string;
-    chartKey: string;
-    sourceUrl?: string;
-    type?: string;
-    hideLegend?: boolean;
-    xAxisName?: string;
-    yAxisName?: string;
-    fullHeight?: boolean;
-    heightToWidthRatio?: number;
-    customColors?: string[];
-    defaultColors?: string[];
-    lightLoader?: boolean;
-    labelLengthLimit?: number;
-  };
 }
 
 export const Card: React.FC<React.PropsWithChildren<Props>> = ({
@@ -45,9 +28,6 @@ export const Card: React.FC<React.PropsWithChildren<Props>> = ({
   hoverEffect,
   imageSrc,
   text,
-  icon,
-  showChart = false,
-  chartProps,
   ...rest
 }) => {
   const CardComponent = hoverEffect ? StyledCard : MuiCard;
@@ -63,7 +43,7 @@ export const Card: React.FC<React.PropsWithChildren<Props>> = ({
               layout="fill"
               objectFit="cover"
               quality={75}
-              style={{ borderRadius: "10px" }} // Optional: Add styling for border radius
+              style={{ borderRadius: "10px" }}
             />
           </div>
         )}
@@ -75,26 +55,6 @@ export const Card: React.FC<React.PropsWithChildren<Props>> = ({
           >
             {text}
           </Typography>
-        )}
-
-        {showChart && chartProps && (
-          <div style={{ marginTop: "16px", width: "100%" }}>
-            <ChartBlock
-              id={chartProps.id}
-              chartKey={chartProps.chartKey}
-              sourceUrl={chartProps.sourceUrl}
-              type={chartProps.type}
-              hideLegend={chartProps.hideLegend}
-              xAxisName={chartProps.xAxisName}
-              yAxisName={chartProps.yAxisName}
-              fullHeight={chartProps.fullHeight}
-              heightToWidthRatio={chartProps.heightToWidthRatio}
-              customColors={chartProps.customColors}
-              defaultColors={chartProps.defaultColors}
-              lightLoader={chartProps.lightLoader}
-              labelLengthLimit={chartProps.labelLengthLimit}
-            />
-          </div>
         )}
 
         {children}

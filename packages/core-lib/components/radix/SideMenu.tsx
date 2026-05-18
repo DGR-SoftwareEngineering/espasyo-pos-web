@@ -1,15 +1,12 @@
 import React, { useState } from "react";
 import { Avatar, Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   DotFilledIcon,
   HamburgerMenuIcon,
 } from "@radix-ui/react-icons";
 import { useResolution } from "../../core/hooks";
 import { usePublicSettings } from "../../core/contexts";
 import { RadixMenuContent } from "./menu/RadixMenuContent";
-import { RadixOptionsMenu } from "./menu/RadixOptionsMenu";
 import { SideMenuMobile } from "./SideMenuMobile";
 
 interface SideMenuProps {
@@ -64,7 +61,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         }}
       />
     ) : undefined);
-  const displayName = initials || "User";
   const userInitial = (initials || email || "?").charAt(0).toUpperCase();
   const collapsedWidth = 72;
   const effectiveWidth = collapsed ? collapsedWidth : width;
@@ -178,13 +174,18 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         {/* ── Brand header ── */}
         <Flex
           align="center"
-          justify="between"
+          justify={collapsed ? "center" : "between"}
           gap="3"
           px={collapsed ? "2" : "4"}
           py="3"
           style={{ flexShrink: 0, minHeight: 64 }}
         >
-          <Flex align="center" gap="2" style={{ overflow: "hidden" }}>
+          <Flex
+            align="center"
+            gap="2"
+            justify={collapsed ? "center" : "start"}
+            style={{ overflow: "hidden" }}
+          >
             {/* Brand mark — fallback is a coffee-bean dot when not provided */}
             <Box
               style={{
@@ -225,15 +226,32 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               <IconButton
                 variant="ghost"
                 color="gray"
-                size="1"
+                size="2"
                 aria-label="Collapse sidebar"
                 onClick={() => onToggleCollapsed?.(true)}
               >
-                <ChevronLeftIcon />
+                <HamburgerMenuIcon />
               </IconButton>
             </Tooltip>
           )}
         </Flex>
+
+        {/* ── Expand toggle (collapsed state) — same visual spot as the collapse button ── */}
+        {collapsible && collapsed && (
+          <Flex justify="center" pb="2">
+            <Tooltip content="Expand sidebar" side="right">
+              <IconButton
+                variant="ghost"
+                color="gray"
+                size="2"
+                aria-label="Expand sidebar"
+                onClick={() => onToggleCollapsed?.(false)}
+              >
+                <HamburgerMenuIcon />
+              </IconButton>
+            </Tooltip>
+          </Flex>
+        )}
 
         {/* ── Role indicator ── */}
         {!collapsed && role && (
@@ -288,72 +306,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
         {/* ── Menu list ── */}
         <Box style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-          {!collapsed && (
-            <RadixMenuContent roleName={role} loading={loading} />
-          )}
-        </Box>
-
-        {/* ── User footer ── */}
-        <Box
-          style={{
-            borderTop: "1px solid var(--gray-a3)",
-            padding: collapsed ? "12px 8px" : "12px 16px",
-            flexShrink: 0,
-            background: "var(--color-panel-translucent)",
-          }}
-        >
-          {collapsed ? (
-            <Flex direction="column" align="center" gap="2">
-              <Tooltip content={`${displayName} · ${email}`} side="right">
-                <Avatar
-                  size="2"
-                  fallback={userInitial}
-                  radius="full"
-                  color="indigo"
-                  variant="solid"
-                />
-              </Tooltip>
-              <RadixOptionsMenu logout={logout} loading={loading} />
-              {collapsible && (
-                <Tooltip content="Expand sidebar" side="right">
-                  <IconButton
-                    variant="ghost"
-                    color="gray"
-                    size="1"
-                    aria-label="Expand sidebar"
-                    onClick={() => onToggleCollapsed?.(false)}
-                  >
-                    <ChevronRightIcon />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Flex>
-          ) : (
-            <Flex align="center" gap="3">
-              <Avatar
-                size="3"
-                fallback={userInitial}
-                radius="full"
-                color="indigo"
-                variant="solid"
-              />
-              <Flex direction="column" style={{ flex: 1, minWidth: 0 }}>
-                <Text
-                  size="2"
-                  weight="bold"
-                  as="div"
-                  truncate
-                  style={{ lineHeight: 1.3 }}
-                >
-                  {displayName}
-                </Text>
-                <Text size="1" color="gray" as="div" truncate>
-                  {email || "—"}
-                </Text>
-              </Flex>
-              <RadixOptionsMenu logout={logout} loading={loading} />
-            </Flex>
-          )}
+          <RadixMenuContent
+            roleName={role}
+            loading={loading}
+            collapsed={collapsed}
+          />
         </Box>
       </aside>
     </Box>

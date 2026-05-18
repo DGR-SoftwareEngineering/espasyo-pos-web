@@ -5,6 +5,7 @@ import {
   Card,
   Flex,
   Heading,
+  IconButton,
   Separator,
   Tabs,
   Text,
@@ -20,6 +21,7 @@ import {
   Inventory2Outlined,
   ShieldOutlined,
   ToggleOnOutlined,
+  AutorenewOutlined,
 } from "@mui/icons-material";
 import { useApi, useApiCallback, useMpinStatus } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
@@ -43,6 +45,7 @@ import { ImageSettingEditor } from "../editors/ImageSettingEditor";
 const CATEGORY_ORDER: string[] = [
   SETTING_CATEGORIES.System,
   SETTING_CATEGORIES.Theme,
+  SETTING_CATEGORIES.Loader,
   SETTING_CATEGORIES.POS,
   SETTING_CATEGORIES.Inventory,
   SETTING_CATEGORIES.Security,
@@ -63,6 +66,12 @@ const CATEGORY_META: Record<
     label: "Theme",
     icon: <PaletteOutlined fontSize="small" />,
     description: "Brand colors, logo, and favicon used across the app.",
+  },
+  Loader: {
+    label: "Loader",
+    icon: <AutorenewOutlined fontSize="small" />,
+    description:
+      "Choose a loader style, customize messages, and tune the animation speed shown on boot and during page transitions.",
   },
   POS: {
     label: "POS",
@@ -119,7 +128,7 @@ export const SystemSettingsTab: React.FC = () => {
   const [resetOpen, setResetOpen] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
 
-  const hasMpin = !!mpinStatus.status?.hasMpin;
+  const hasMpin = mpinStatus.ready && !!mpinStatus.status?.hasMpin;
 
   const handleResetConfirm = async ({
     password,
@@ -280,32 +289,6 @@ export const SystemSettingsTab: React.FC = () => {
                 {dirtyCount} unsaved
               </Badge>
             )}
-            {!hasMpin ? (
-              <Tooltip content="Set up an MPIN under Profile → MPIN Security to enable this action.">
-                <Box>
-                  <Button type="Critical" disabled>
-                    <Flex align="center" gap="2">
-                      <RestartAltOutlined fontSize="small" />
-                      Reset to defaults
-                    </Flex>
-                  </Button>
-                </Box>
-              </Tooltip>
-            ) : (
-              <Button
-                type="Critical"
-                onClick={() => {
-                  setResetError(null);
-                  setResetOpen(true);
-                }}
-                disabled={resetCb.loading}
-              >
-                <Flex align="center" gap="2">
-                  <RestartAltOutlined fontSize="small" />
-                  Reset to defaults
-                </Flex>
-              </Button>
-            )}
             <Button
               type="Secondary"
               onClick={handleReset}
@@ -327,6 +310,30 @@ export const SystemSettingsTab: React.FC = () => {
                 Save changes
               </Flex>
             </Button>
+            <Separator orientation="vertical" size="2" />
+            <Tooltip
+              content={
+                !hasMpin
+                  ? "Set up an MPIN under Profile → MPIN Security to enable this action."
+                  : "Reset all settings to their seeded defaults."
+              }
+            >
+              <Box>
+                <IconButton
+                  color="red"
+                  variant="soft"
+                  size="2"
+                  disabled={!hasMpin || resetCb.loading}
+                  onClick={() => {
+                    setResetError(null);
+                    setResetOpen(true);
+                  }}
+                  aria-label="Reset all settings to defaults"
+                >
+                  <RestartAltOutlined fontSize="small" />
+                </IconButton>
+              </Box>
+            </Tooltip>
           </Flex>
         </Flex>
       </Card>

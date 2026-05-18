@@ -174,11 +174,13 @@ export const AdminConfirmDialog: React.FC<Props> = ({
         </Flex>
 
         <Flex justify="end" gap="3" mt="4">
-          <Dialog.Close>
-            <Button type="Secondary" disabled={loading}>
-              Cancel
-            </Button>
-          </Dialog.Close>
+          <Button
+            type="Secondary"
+            disabled={loading}
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
           <Button
             type={confirmColor}
             loading={loading}

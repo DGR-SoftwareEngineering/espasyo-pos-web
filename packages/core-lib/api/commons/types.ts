@@ -1,4 +1,4 @@
-import { ApiResponse, ChartData } from "../types";
+import { ApiResponse } from "../types";
 
 export interface UserInformations {
   roleID: string;
@@ -188,12 +188,151 @@ export interface ConversionRateResponse {
   message: string;
 }
 
-export interface EndpointRegistry {
-  endpointId: string;
-  keyUrl: string;
-  sourceUrl: string;
-  isActive: boolean;
+// ===== Charts (v2 — typed series/points shape, filter-aware) =====
+//
+// Backend should return this shape from GET /api/v1/chart-api/Chart/{chartKey}.
+// See chart-api-spec.md for the full backend contract.
+
+// ===== Notifications (admin bell) =====
+//
+// In-app notifications surfaced via the header bell. Backend stores per-user
+// records and exposes both a paginated list endpoint and a lightweight
+// unread-count endpoint. Real-time delivery is via SSE — see
+// `notifications-backend-ready.md` for the full backend contract.
+
+/**
+ * Wire-level category — serialized as the underlying integer (1..5).
+ * Indexed list used at the UI layer to map to icon/color.
+ */
+export enum NotificationCategoryDto {
+  Info = 1,
+  Success = 2,
+  Warning = 3,
+  Error = 4,
+  System = 5,
 }
+
+export interface NotificationDto {
+  notificationID: string;
+  /** Stable event key (e.g. "Inventory.LowStock", "Backup.Completed"). */
+  eventType: string;
+  category: NotificationCategoryDto;
+  title: string;
+  message: string | null;
+  /** Optional in-app link. When present, clicking the row navigates here. */
+  link: string | null;
+  /** Optional reference to the underlying entity. */
+  entityName: string | null;
+  entityID: string | null;
+  read: boolean;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationQueryParams {
+  pageNumber?: number;
+  pageSize?: number;
+  /** `true` → only unread, `false` → only read, omit → both. */
+  unreadOnly?: boolean;
+  category?: NotificationCategoryDto;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface NotificationCountDto {
+  unread: number;
+  total: number;
+}
+
+export type NotificationListResponse = ApiResponse<
+  PaginatedResponse<NotificationDto>
+>;
+export type NotificationResponse = ApiResponse<NotificationDto>;
+export type NotificationCountResponse = ApiResponse<NotificationCountDto>;
+
+export type ChartTypeDto = "line" | "area" | "bar" | "donut";
+
+export type ChartPeriodDto =
+  | "today"
+  | "yesterday"
+  | "7d"
+  | "30d"
+  | "90d"
+  | "ytd"
+  | "year"
+  | "all"
+  | "custom";
+
+export type ChartGroupByDto =
+  | "hour"
+  | "day"
+  | "week"
+  | "month"
+  | "quarter"
+  | "year";
+
+export interface ChartSeriesDto {
+  id: string;
+  name: string;
+  color?: string | null;
+}
+
+export interface ChartPointDto {
+  label: string;
+  timestamp?: string | null;
+  values: Record<string, number>;
+}
+
+export interface DonutSliceDto {
+  id: string;
+  label: string;
+  value: number;
+  color?: string | null;
+}
+
+export interface ChartNumberFormatDto {
+  prefix?: string | null;
+  suffix?: string | null;
+  decimals?: number | null;
+  thousands?: boolean | null;
+  currency?: string | null;
+}
+
+export interface ChartMetaResponseDto {
+  total?: number | null;
+  trend?: {
+    value: number;
+    direction: "up" | "down" | "flat";
+  } | null;
+  period?: ChartPeriodDto | null;
+  fromDate?: string | null;
+  toDate?: string | null;
+  stale?: boolean | null;
+}
+
+export interface ChartDataResponseDto {
+  chartKey: string;
+  chartType: ChartTypeDto;
+  title?: string | null;
+  description?: string | null;
+  numberFormat?: ChartNumberFormatDto | null;
+  series: ChartSeriesDto[];
+  points: ChartPointDto[];
+  slices?: DonutSliceDto[] | null;
+  meta?: ChartMetaResponseDto | null;
+}
+
+export interface ChartQueryParams {
+  period?: ChartPeriodDto;
+  fromDate?: string;
+  toDate?: string;
+  groupBy?: ChartGroupByDto;
+  productIds?: string[];
+  categoryIds?: string[];
+  [key: string]: string | string[] | number | undefined;
+}
+
+export type ChartDataApiResponse = ApiResponse<ChartDataResponseDto>;
 
 // ===== Lookups (typed taxonomy tables that replaced the legacy polymorphic Category) =====
 
@@ -595,6 +734,96 @@ export interface AuditLogQueryParams {
 export type AuditLogResponse = ApiResponse<AuditLogDto>;
 export type AuditLogListResponse = ApiResponse<PaginatedResponse<AuditLogDto>>;
 
+// ===== Backup & Restore =====
+
+export type BackupImportMode = "replace" | "merge";
+
+export interface ExportBackupParams {
+  password: string;
+  mpin: string;
+  includeAuditLog?: boolean;
+  includeStockMovements?: boolean;
+}
+
+export interface PreviewImportParams {
+  file: File;
+  mode?: BackupImportMode;
+}
+
+export interface ImportBackupParams {
+  file: File;
+  mode: BackupImportMode;
+  password: string;
+  mpin: string;
+}
+
+export interface ImportValidationError {
+  rowIndex: number;
+  columnName: string;
+  message: string;
+}
+
+export interface ImportPreviewSheetDto {
+  sheetName: string;
+  tableName: string;
+  recordCount: number;
+  willInsert: number;
+  willUpdate: number;
+  willDelete: number;
+  validationErrors: ImportValidationError[];
+}
+
+export interface ImportPreviewDto {
+  schemaVersion: number;
+  exportedAt: string;
+  exportedBy: string | null;
+  exportedByName: string | null;
+  mode: BackupImportMode;
+  sheets: ImportPreviewSheetDto[];
+  blockingErrors: string[];
+  totalRecordCount: number;
+  estimatedDurationMs: number;
+}
+
+export interface ImportResultSheetDto {
+  sheetName: string;
+  tableName: string;
+  inserted: number;
+  updated: number;
+  deleted: number;
+}
+
+export interface ImportResultDto {
+  startedAt: string;
+  completedAt: string;
+  durationMs: number;
+  mode: BackupImportMode;
+  sheets: ImportResultSheetDto[];
+  totalInserted: number;
+  totalUpdated: number;
+  totalDeleted: number;
+}
+
+export interface BackupHistoryDto {
+  backupHistoryID: string;
+  operation: "Export" | "Import";
+  mode: BackupImportMode | null;
+  performedBy: string | null;
+  performedByName: string | null;
+  performedAt: string;
+  status: "Success" | "Failed";
+  fileSizeBytes: number | null;
+  fileName: string | null;
+  recordsAffected: number | null;
+  errorMessage: string | null;
+}
+
+export type ImportPreviewResponse = ApiResponse<ImportPreviewDto>;
+export type ImportResultResponse = ApiResponse<ImportResultDto>;
+export type BackupHistoryListResponse = ApiResponse<
+  PaginatedResponse<BackupHistoryDto>
+>;
+
 // ===== Inventory =====
 
 export enum InventoryStatus {
@@ -682,10 +911,8 @@ export type StockMovementArrayResponse = ApiResponse<StockMovementDto[]>;
 export type UnitConversionListResponse = ApiResponse<
   PaginatedResponse<UnitConversion>
 >;
-export type EndpointRegistryResponse = ApiResponse<EndpointRegistry>;
 export type ProductionCapacityResponse = ApiResponse<ProductionCapacity>;
 export type RecipeListResponse = ApiResponse<PaginatedResponse<RecipeResponse>>;
 export type UserInfoResponse = ApiResponse<UserInformations>;
 export type CategoryListResponse = ApiResponse<CategoryDataList[]>;
 export type ProductListResponse = ApiResponse<ProductDataList[]>;
-export type ChartDataResponse = ApiResponse<ChartData>;
