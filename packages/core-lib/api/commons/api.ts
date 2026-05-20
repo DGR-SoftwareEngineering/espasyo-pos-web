@@ -6,18 +6,36 @@ import {
   ChartDataApiResponse,
   ChartQueryParams,
   CreateCategoryParams,
+  CreatePaymentParams,
   CreateProductParams,
+  CreatePurchaseOrderParams,
+  CreateReceiptParams,
+  CreateSupplierInvoiceParams,
   UpdateProductParams,
+  UpdatePurchaseOrderParams,
+  UpdateSupplierInvoiceParams,
   CreateUnitConversionParams,
+  DetectGapResponseDto,
   NotificationCountResponse,
   NotificationListResponse,
   NotificationQueryParams,
   NotificationResponse,
+  PaymentListResponse,
+  PaymentQueryParams,
+  PaymentResponse,
   ProductionCapacityResponse,
   ProductListResponse,
+  PurchaseOrderListResponse,
+  PurchaseOrderQueryParams,
+  PurchaseOrderResponse,
+  ReceiptListResponse,
+  ReceiptResponse,
   RecipeListResponse,
   RecipeParams,
   RecipeResponse,
+  SupplierInvoiceListResponse,
+  SupplierInvoiceQueryParams,
+  SupplierInvoiceResponse,
   UnitConversionListResponse,
   UpdateRecipeParams,
   UserInfoResponse,
@@ -93,6 +111,20 @@ import {
   ImportPreviewResponse,
   ImportResultResponse,
   PreviewImportParams,
+} from "./types";
+import {
+  CreateSaleParams,
+  DailySalesSummaryResponse,
+  OrderDetailResponse,
+  OrderListResponse,
+  OrderQueryParams,
+  RefundSaleParams,
+  SaleListResponse,
+  SaleQueryParams,
+  SaleResponse,
+  SellableProductListResponse,
+  SellableProductQueryParams,
+  VoidSaleParams,
 } from "./types";
 
 export class CommonsApi {
@@ -321,6 +353,18 @@ export class CommonsApi {
   public calculateMaxProduction(menuItemProductId: string) {
     return this.axios.get<ProductionCapacityResponse>(
       `/api/v1/product/recipe-api/recipe/calculate-max-production?menuItemProductId=${menuItemProductId}`,
+    );
+  }
+
+  public detectGap(menuItemProductId: string) {
+    return this.axios.post<ApiResponse<DetectGapResponseDto>>(
+      `/api/v1/product/recipe-api/recipe/detect-gap`,
+      JSON.stringify(menuItemProductId),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
     );
   }
 
@@ -910,6 +954,251 @@ export class CommonsApi {
   public backupHistory(pageNumber = 1, pageSize = 20) {
     return this.axios.get<BackupHistoryListResponse>(
       `/api/v1/backup-api/Backup/history?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    );
+  }
+
+  public purchaseOrderList(params: PurchaseOrderQueryParams = {}) {
+    const cleaned: Record<string, unknown> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") return;
+      cleaned[k] = v;
+    });
+    const search = qs.stringify(cleaned);
+    return this.axios.get<PurchaseOrderListResponse>(
+      `/api/v1/procurement-api/PurchaseOrders${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public purchaseOrderGetById(id: string) {
+    return this.axios.get<PurchaseOrderResponse>(
+      `/api/v1/procurement-api/PurchaseOrders/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public createPurchaseOrder(params: CreatePurchaseOrderParams) {
+    return this.axios.post<PurchaseOrderResponse>(
+      `/api/v1/procurement-api/PurchaseOrders`,
+      params,
+    );
+  }
+
+  public updatePurchaseOrder(id: string, params: UpdatePurchaseOrderParams) {
+    return this.axios.put<PurchaseOrderResponse>(
+      `/api/v1/procurement-api/PurchaseOrders/${encodeURIComponent(id)}`,
+      params,
+    );
+  }
+
+  public submitPurchaseOrder(id: string) {
+    return this.axios.post<PurchaseOrderResponse>(
+      `/api/v1/procurement-api/PurchaseOrders/${encodeURIComponent(id)}/submit`,
+      {},
+    );
+  }
+
+  public approvePurchaseOrder(id: string) {
+    return this.axios.post<PurchaseOrderResponse>(
+      `/api/v1/procurement-api/PurchaseOrders/${encodeURIComponent(id)}/approve`,
+      {},
+    );
+  }
+
+  public cancelPurchaseOrder(id: string, reason: string) {
+    return this.axios.post<PurchaseOrderResponse>(
+      `/api/v1/procurement-api/PurchaseOrders/${encodeURIComponent(id)}/cancel`,
+      { reason },
+    );
+  }
+
+  public closePurchaseOrder(id: string) {
+    return this.axios.post<PurchaseOrderResponse>(
+      `/api/v1/procurement-api/PurchaseOrders/${encodeURIComponent(id)}/close`,
+      {},
+    );
+  }
+
+  public deletePurchaseOrder(id: string) {
+    return this.axios.delete<ApiResponse<boolean>>(
+      `/api/v1/procurement-api/PurchaseOrders/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public receiptsByPurchaseOrder(purchaseOrderId: string) {
+    return this.axios.get<ReceiptListResponse>(
+      `/api/v1/procurement-api/Receipts?purchaseOrderId=${encodeURIComponent(purchaseOrderId)}`,
+    );
+  }
+
+  public createReceipt(params: CreateReceiptParams) {
+    return this.axios.post<ReceiptResponse>(
+      `/api/v1/procurement-api/Receipts`,
+      params,
+    );
+  }
+
+  public supplierInvoiceList(params: SupplierInvoiceQueryParams = {}) {
+    const cleaned: Record<string, unknown> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") return;
+      cleaned[k] = v;
+    });
+    const search = qs.stringify(cleaned);
+    return this.axios.get<SupplierInvoiceListResponse>(
+      `/api/v1/procurement-api/SupplierInvoices${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public supplierInvoiceGetById(id: string) {
+    return this.axios.get<SupplierInvoiceResponse>(
+      `/api/v1/procurement-api/SupplierInvoices/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public createSupplierInvoice(params: CreateSupplierInvoiceParams) {
+    return this.axios.post<SupplierInvoiceResponse>(
+      `/api/v1/procurement-api/SupplierInvoices`,
+      params,
+    );
+  }
+
+  public updateSupplierInvoice(
+    id: string,
+    params: UpdateSupplierInvoiceParams,
+  ) {
+    return this.axios.put<SupplierInvoiceResponse>(
+      `/api/v1/procurement-api/SupplierInvoices/${encodeURIComponent(id)}`,
+      params,
+    );
+  }
+
+  public voidSupplierInvoice(id: string, reason: string) {
+    return this.axios.post<SupplierInvoiceResponse>(
+      `/api/v1/procurement-api/SupplierInvoices/${encodeURIComponent(id)}/void`,
+      { reason },
+    );
+  }
+
+  public paymentList(params: PaymentQueryParams = {}) {
+    const cleaned: Record<string, unknown> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") return;
+      cleaned[k] = v;
+    });
+    const search = qs.stringify(cleaned);
+    return this.axios.get<PaymentListResponse>(
+      `/api/v1/procurement-api/Payments${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public createPayment(params: CreatePaymentParams) {
+    return this.axios.post<PaymentResponse>(
+      `/api/v1/procurement-api/Payments`,
+      params,
+    );
+  }
+
+  public voidPayment(id: string, reason: string) {
+    return this.axios.post<PaymentResponse>(
+      `/api/v1/procurement-api/Payments/${encodeURIComponent(id)}/void`,
+      { reason },
+    );
+  }
+
+  // ===== POS / Sales =====
+
+  public sellableProductList(params: SellableProductQueryParams = {}) {
+    const cleaned: Record<string, unknown> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") return;
+      cleaned[k] = v;
+    });
+    const search = qs.stringify(cleaned);
+    return this.axios.get<SellableProductListResponse>(
+      `/api/v1/sales-api/Sales/sellable-products${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public createSale(params: CreateSaleParams) {
+    return this.axios.post<SaleResponse>(`/api/v1/sales-api/Sales`, params);
+  }
+
+  public saleGetById(id: string) {
+    return this.axios.get<SaleResponse>(
+      `/api/v1/sales-api/Sales/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public saleGetByNumber(saleNumber: string) {
+    return this.axios.get<SaleResponse>(
+      `/api/v1/sales-api/Sales/by-number/${encodeURIComponent(saleNumber)}`,
+    );
+  }
+
+  public saleList(params: SaleQueryParams = {}) {
+    const cleaned: Record<string, unknown> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") return;
+      cleaned[k] = v;
+    });
+    const search = qs.stringify(cleaned);
+    return this.axios.get<SaleListResponse>(
+      `/api/v1/sales-api/Sales${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public voidSale(id: string, params: VoidSaleParams) {
+    return this.axios.post<SaleResponse>(
+      `/api/v1/sales-api/Sales/${encodeURIComponent(id)}/void`,
+      params,
+    );
+  }
+
+  public refundSale(id: string, params: RefundSaleParams) {
+    return this.axios.post<SaleResponse>(
+      `/api/v1/sales-api/Sales/${encodeURIComponent(id)}/refund`,
+      params,
+    );
+  }
+
+  public salesDailySummary(date?: string) {
+    const search = date ? `?${qs.stringify({ date })}` : "";
+    return this.axios.get<DailySalesSummaryResponse>(
+      `/api/v1/sales-api/Sales/daily-summary${search}`,
+    );
+  }
+
+  // ─── Orders API ─────────────────────────────────────────────────────────────
+
+  public orderList(params: OrderQueryParams = {}) {
+    const search = qs.stringify(params, { skipEmptyString: true, skipNull: true });
+    return this.axios.get<OrderListResponse>(
+      `/api/v1/orders-api/Orders${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public getOrderById(id: string) {
+    return this.axios.get<OrderDetailResponse>(
+      `/api/v1/orders-api/Orders/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public getOrderByNumber(orderNumber: string) {
+    return this.axios.get<OrderDetailResponse>(
+      `/api/v1/orders-api/Orders/by-number/${encodeURIComponent(orderNumber)}`,
+    );
+  }
+
+  public voidOrder(id: string, params: VoidSaleParams) {
+    return this.axios.post<OrderDetailResponse>(
+      `/api/v1/orders-api/Orders/${encodeURIComponent(id)}/void`,
+      params,
+    );
+  }
+
+  public refundOrder(id: string, params: RefundSaleParams) {
+    return this.axios.post<OrderDetailResponse>(
+      `/api/v1/orders-api/Orders/${encodeURIComponent(id)}/refund`,
+      params,
     );
   }
 }

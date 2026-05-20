@@ -49,8 +49,40 @@ export interface PublicNotificationsConfig {
   soundEnabled: boolean;
 }
 
+export interface PublicProcurementConfig {
+  requireApproval: boolean;
+  defaultPaymentTerms: string;
+  defaultFulfillmentMethod: number;
+  purchaseOrderNumberFormat: string;
+  receiptNumberFormat: string;
+  paymentNumberFormat: string;
+  allowedPaymentMethods: number[];
+  invoiceDueDaysDefault: number;
+  allowOverReceipt: boolean;
+  warnOnInvoiceVariance: boolean;
+}
+
 export interface PublicInventoryFlags {
   lowStockAlertEnabled: boolean;
+  autoDeductOnSale: boolean;
+  allowNegativeStock: boolean;
+}
+
+export interface PublicPosConfig {
+  allowSales: boolean;
+  allowDiscounts: boolean;
+  allowRefund: boolean;
+  requireManagerOverrideForRefund: boolean;
+  defaultTaxRate: number;
+  maxDiscountPercent: number;
+  saleNumberFormat: string;
+  receiptHeader: string;
+  receiptFooter: string;
+  /**
+   * When true, menu items without an active recipe are sellable with no inventory effect.
+   * When false, such items are flagged out-of-stock and `POST /Sales` rejects with `MENUITEM.NO_RECIPE`.
+   */
+  allowMenuItemsWithoutRecipe: boolean;
 }
 
 export interface PublicSecurityPolicy {
@@ -85,6 +117,8 @@ export interface PublicSettingsValue {
   security: PublicSecurityPolicy;
   loader: PublicLoaderConfig;
   notifications: PublicNotificationsConfig;
+  procurement: PublicProcurementConfig;
+  pos: PublicPosConfig;
   settingsMap: Map<string, SystemSettingDto>;
   refresh: () => Promise<void>;
 }
@@ -104,7 +138,23 @@ const DEFAULTS: Omit<
   maintenance: { enabled: false, message: "", pages: [] },
   operationalStatus: OPERATIONAL_STATUSES.Operational,
   features: { loyaltyEnabled: false, notificationsEnabled: false },
-  inventory: { lowStockAlertEnabled: true },
+  inventory: {
+    lowStockAlertEnabled: true,
+    autoDeductOnSale: true,
+    allowNegativeStock: false,
+  },
+  pos: {
+    allowSales: true,
+    allowDiscounts: true,
+    allowRefund: true,
+    requireManagerOverrideForRefund: true,
+    defaultTaxRate: 0.12,
+    maxDiscountPercent: 0.2,
+    saleNumberFormat: "S-{YYYY}-{######}",
+    receiptHeader: "",
+    receiptFooter: "",
+    allowMenuItemsWithoutRecipe: true,
+  },
   security: {
     sessionTimeoutMinutes: 30,
     passwordMinLength: 6,
@@ -133,6 +183,61 @@ const DEFAULTS: Omit<
     retentionDays: 30,
     soundEnabled: false,
   },
+  procurement: {
+    requireApproval: true,
+    defaultPaymentTerms: "Net 30",
+    defaultFulfillmentMethod: 1,
+    purchaseOrderNumberFormat: "PO-{YYYY}-{####}",
+    receiptNumberFormat: "RCPT-{YYYY}-{####}",
+    paymentNumberFormat: "PAY-{YYYY}-{####}",
+    allowedPaymentMethods: [1, 2, 3, 4, 5],
+    invoiceDueDaysDefault: 30,
+    allowOverReceipt: true,
+    warnOnInvoiceVariance: true,
+  },
+};
+
+const FULFILLMENT_NAME_TO_VALUE: Record<string, number> = {
+  delivery: 1,
+  pickup: 2,
+};
+
+const PAYMENT_METHOD_NAME_TO_VALUE: Record<string, number> = {
+  cash: 1,
+  banktransfer: 2,
+  check: 3,
+  gcash: 4,
+  other: 5,
+};
+
+const coerceFulfillment = (raw: unknown, fallback: number): number => {
+  if (typeof raw === "number" && raw >= 1 && raw <= 2) return raw;
+  if (typeof raw === "string") {
+    const mapped = FULFILLMENT_NAME_TO_VALUE[raw.trim().toLowerCase()];
+    if (mapped) return mapped;
+    const asInt = parseInt(raw, 10);
+    if (Number.isFinite(asInt) && asInt >= 1 && asInt <= 2) return asInt;
+  }
+  return fallback;
+};
+
+const coerceAllowedPaymentMethods = (
+  raw: unknown,
+  fallback: number[],
+): number[] => {
+  if (!Array.isArray(raw)) return fallback;
+  const out: number[] = [];
+  for (const entry of raw) {
+    if (typeof entry === "number" && entry >= 1 && entry <= 5) {
+      if (!out.includes(entry)) out.push(entry);
+      continue;
+    }
+    if (typeof entry === "string") {
+      const mapped = PAYMENT_METHOD_NAME_TO_VALUE[entry.trim().toLowerCase()];
+      if (mapped && !out.includes(mapped)) out.push(mapped);
+    }
+  }
+  return out.length > 0 ? out : fallback;
 };
 
 const Context = createContext<PublicSettingsValue | undefined>(undefined);
@@ -202,7 +307,62 @@ const buildState = (settings: SystemSettingDto[]) => {
     inventory: {
       lowStockAlertEnabled: get<boolean>(
         SETTING_KEYS.InventoryLowStockAlertEnabled,
-        true,
+        DEFAULTS.inventory.lowStockAlertEnabled,
+      ),
+      autoDeductOnSale: get<boolean>(
+        SETTING_KEYS.InventoryAutoDeductOnSale,
+        DEFAULTS.inventory.autoDeductOnSale,
+      ),
+      allowNegativeStock: get<boolean>(
+        SETTING_KEYS.InventoryAllowNegativeStock,
+        DEFAULTS.inventory.allowNegativeStock,
+      ),
+    },
+    pos: {
+      allowSales: get<boolean>(
+        SETTING_KEYS.PosAllowSales,
+        DEFAULTS.pos.allowSales,
+      ),
+      allowDiscounts: get<boolean>(
+        SETTING_KEYS.PosAllowDiscounts,
+        DEFAULTS.pos.allowDiscounts,
+      ),
+      allowRefund: get<boolean>(
+        SETTING_KEYS.PosAllowRefund,
+        DEFAULTS.pos.allowRefund,
+      ),
+      requireManagerOverrideForRefund: get<boolean>(
+        SETTING_KEYS.PosRequireManagerOverrideForRefund,
+        DEFAULTS.pos.requireManagerOverrideForRefund,
+      ),
+      defaultTaxRate: clampFloat(
+        get<number>(SETTING_KEYS.PosDefaultTaxRate, DEFAULTS.pos.defaultTaxRate),
+        0,
+        1,
+      ),
+      maxDiscountPercent: clampFloat(
+        get<number>(
+          SETTING_KEYS.PosMaxDiscountPercent,
+          DEFAULTS.pos.maxDiscountPercent,
+        ),
+        0,
+        1,
+      ),
+      saleNumberFormat: get<string>(
+        SETTING_KEYS.PosSaleNumberFormat,
+        DEFAULTS.pos.saleNumberFormat,
+      ),
+      receiptHeader: get<string>(
+        SETTING_KEYS.PosReceiptHeader,
+        DEFAULTS.pos.receiptHeader,
+      ),
+      receiptFooter: get<string>(
+        SETTING_KEYS.PosReceiptFooter,
+        DEFAULTS.pos.receiptFooter,
+      ),
+      allowMenuItemsWithoutRecipe: get<boolean>(
+        SETTING_KEYS.PosAllowMenuItemsWithoutRecipe,
+        DEFAULTS.pos.allowMenuItemsWithoutRecipe,
       ),
     },
     security: {
@@ -244,6 +404,58 @@ const buildState = (settings: SystemSettingDto[]) => {
       soundEnabled: get<boolean>(
         SETTING_KEYS.NotificationsSoundEnabled,
         DEFAULTS.notifications.soundEnabled,
+      ),
+    },
+    procurement: {
+      requireApproval: get<boolean>(
+        SETTING_KEYS.ProcurementRequireApproval,
+        DEFAULTS.procurement.requireApproval,
+      ),
+      defaultPaymentTerms: get<string>(
+        SETTING_KEYS.ProcurementDefaultPaymentTerms,
+        DEFAULTS.procurement.defaultPaymentTerms,
+      ),
+      defaultFulfillmentMethod: coerceFulfillment(
+        get<unknown>(
+          SETTING_KEYS.ProcurementDefaultFulfillmentMethod,
+          DEFAULTS.procurement.defaultFulfillmentMethod,
+        ),
+        DEFAULTS.procurement.defaultFulfillmentMethod,
+      ),
+      purchaseOrderNumberFormat: get<string>(
+        SETTING_KEYS.ProcurementPurchaseOrderNumberFormat,
+        DEFAULTS.procurement.purchaseOrderNumberFormat,
+      ),
+      receiptNumberFormat: get<string>(
+        SETTING_KEYS.ProcurementReceiptNumberFormat,
+        DEFAULTS.procurement.receiptNumberFormat,
+      ),
+      paymentNumberFormat: get<string>(
+        SETTING_KEYS.ProcurementPaymentNumberFormat,
+        DEFAULTS.procurement.paymentNumberFormat,
+      ),
+      allowedPaymentMethods: coerceAllowedPaymentMethods(
+        get<unknown>(
+          SETTING_KEYS.ProcurementAllowedPaymentMethods,
+          DEFAULTS.procurement.allowedPaymentMethods,
+        ),
+        DEFAULTS.procurement.allowedPaymentMethods,
+      ),
+      invoiceDueDaysDefault: clampInt(
+        get<number>(
+          SETTING_KEYS.ProcurementInvoiceDueDaysDefault,
+          DEFAULTS.procurement.invoiceDueDaysDefault,
+        ),
+        0,
+        365,
+      ),
+      allowOverReceipt: get<boolean>(
+        SETTING_KEYS.ProcurementAllowOverReceipt,
+        DEFAULTS.procurement.allowOverReceipt,
+      ),
+      warnOnInvoiceVariance: get<boolean>(
+        SETTING_KEYS.ProcurementWarnOnInvoiceVariance,
+        DEFAULTS.procurement.warnOnInvoiceVariance,
       ),
     },
   };
@@ -371,6 +583,8 @@ export const PublicSettingsProvider: React.FC<
       security: state.security,
       loader: state.loader,
       notifications: state.notifications,
+      procurement: state.procurement,
+      pos: state.pos,
       settingsMap: state.settingsMap,
       refresh,
     }),

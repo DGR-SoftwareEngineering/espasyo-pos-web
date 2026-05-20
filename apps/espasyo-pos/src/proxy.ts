@@ -115,7 +115,7 @@ function base64UrlDecode(b64url: string): string {
 function getAllowedPrefixesByRole(role: string | null): string[] {
   switch (role ?? "") {
     case "cashier":
-      return ["/hub"];
+      return ["/cashier"];
     case "admin":
       return ["/admin/hub"];
     default:
@@ -126,7 +126,7 @@ function getAllowedPrefixesByRole(role: string | null): string[] {
 function getHomePathByRole(role: string | null): string {
   switch (role ?? "") {
     case "cashier":
-      return "/hub";
+      return "/cashier/pos";
     case "admin":
       return "/admin/hub";
     default:
@@ -265,7 +265,7 @@ async function handleRouteProtection(
   authState: AuthState,
 ): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl;
-  const PROTECTED_PREFIXES = ["/hub", "/admin/hub"];
+  const PROTECTED_PREFIXES = ["/cashier", "/admin/hub"];
 
   const sensitiveRedirect = handleSensitiveParams(request);
   if (sensitiveRedirect) return sensitiveRedirect;

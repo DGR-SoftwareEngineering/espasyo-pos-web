@@ -1,12 +1,62 @@
+import type { ReactNode } from "react";
 import {
   CategoryDataList,
   InventoryDto,
   ProductDataList,
   ProductionCapacity,
+  PurchaseOrderDetailDto,
   RecipeResponse,
+  SaleDetailDto,
   SupplierDto,
+  SupplierInvoiceDetailDto,
   UserDto,
 } from "../../commons/types";
+
+export interface PosChargeDialogData {
+  totalAmount: number;
+  subtotal: number;
+  discountAmount: number;
+  taxRate: number;
+  taxAmount: number;
+  itemCount: number;
+  onConfirm: (payload: PosChargePayload) => Promise<void>;
+}
+
+export interface PosChargePaymentLine {
+  method: number;
+  amount: number;
+  tendered: number | null;
+  referenceNumber: string | null;
+}
+
+export interface PosChargePayload {
+  payments: PosChargePaymentLine[];
+  notes: string | null;
+}
+
+export interface PosReceiptDialogData {
+  sale: SaleDetailDto;
+}
+
+export interface PosVoidSaleDialogData {
+  sale: SaleDetailDto;
+  onSuccess: (voidedSale: SaleDetailDto) => void;
+}
+
+export interface PostSaleDialogData {
+  sale: SaleDetailDto;
+  /** Factory called with the current sale (may be voided after a void action). */
+  renderReceipt: (sale: SaleDetailDto) => ReactNode;
+}
+
+export interface OrderDetailDialogData {
+  /** Order ID used to fetch the full OrderDetailDto on mount. */
+  orderID: string;
+  /** Factory called with the fetched / updated order detail for receipt rendering. */
+  renderReceipt: (order: SaleDetailDto) => ReactNode;
+  /** Called after a successful void or refund so the orders list can refresh. */
+  onStateChange?: (updated: SaleDetailDto) => void;
+}
 
 export type CMSValue = { elementType?: string | { [key: string]: string } };
 
@@ -140,6 +190,17 @@ export type DialogDataType = {
   SupplierView: SupplierDto;
   SupplierEdit: SupplierDto;
   SupplierDelete: SupplierDto;
+
+  PurchaseOrderCreate: undefined;
+  PurchaseOrderReceive: PurchaseOrderDetailDto;
+  PurchaseOrderAddInvoice: PurchaseOrderDetailDto;
+  InvoiceRecordPayment: SupplierInvoiceDetailDto;
+
+  PosCharge: PosChargeDialogData;
+  PosReceipt: PosReceiptDialogData;
+  PosVoidSale: PosVoidSaleDialogData;
+  PostSale: PostSaleDialogData;
+  OrderDetail: OrderDetailDialogData;
 };
 
 // Dialog content type as a union

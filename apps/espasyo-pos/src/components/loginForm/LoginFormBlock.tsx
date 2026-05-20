@@ -1,10 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuthContext, useToastContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
-import { useRouter } from "core-lib/core/router";
+import { useApiCallback } from "core-lib/core/hooks";
+import { useRouter as useNextRouter } from "next/router";
 import { ContentBlockDto } from "core-lib/api/commons/types";
 import { LoginForm } from "./LoginForm";
 import { LoginForm as LoginFormType } from "./validation";
+
+const resolveHomeByRole = (roleName: string | null | undefined): string => {
+  const r = (roleName ?? "").trim().toLowerCase();
+  if (r === "cashier") return "/cashier/pos";
+  if (r === "admin") return "/admin/hub";
+  return "/";
+};
 
 interface Props {
   id?: string;
@@ -23,9 +31,10 @@ const isThrottleError = (error: unknown): boolean => {
 };
 
 export const LoginFormBlock: React.FC<Props> = ({ contentBlocks = [] }) => {
-  const router = useRouter();
-  const { login } = useAuthContext();
+  const nextRouter = useNextRouter();
+  const { login, completeAuthentication } = useAuthContext();
   const publicSettings = usePublicSettings();
+  const accessMeCb = useApiCallback(async (api) => api.access.me());
   const [loading, setLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const { showToast } = useToastContext();
@@ -66,7 +75,19 @@ export const LoginFormBlock: React.FC<Props> = ({ contentBlocks = [] }) => {
       setLoading(true);
       await login({ userName, password });
       await publicSettings.refresh();
-      await router.push((router) => router.hub);
+
+      // Resolve the home path by role, sourced from /Access/me — the canonical
+      // role for the authenticated user. Falls back to "/" if the call fails.
+      let homePath = "/";
+      try {
+        const meResult = await accessMeCb.execute();
+        const roleName = meResult?.data?.response?.role?.name;
+        homePath = resolveHomeByRole(roleName);
+      } catch (meError) {
+        console.error("Failed to resolve role after login", meError);
+      }
+      await nextRouter.push(homePath);
+      completeAuthentication();
       showToast("Successfully Logged in", "success");
     } catch (error) {
       console.error("Problem during login", error);

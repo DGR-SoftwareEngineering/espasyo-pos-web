@@ -22,6 +22,7 @@ import KitchenRoundedIcon from "@mui/icons-material/KitchenRounded";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import { JSX } from "react";
 
 export interface MenuItem {
@@ -198,6 +199,21 @@ export const menuItems: MenuItem[] = [
         icon: <ListIcon />,
         path: "/admin/hub/user-management",
         permissionKey: "userManagement.nested.list",
+      },
+    ],
+  },
+  {
+    id: "procurement",
+    text: "Procurement",
+    icon: <LocalShippingRoundedIcon />,
+    permissionKey: "procurement",
+    nestedItems: [
+      {
+        id: "procurement-purchase-orders",
+        text: "Purchase Orders",
+        icon: <ReceiptLongRoundedIcon />,
+        path: "/admin/hub/procurement/purchase-orders",
+        permissionKey: "procurement.nested.purchaseOrders",
       },
     ],
   },

@@ -13,10 +13,18 @@ import {
   InventoryDto,
   ProductDataList,
   ProductionCapacity,
+  PurchaseOrderDetailDto,
   RecipeResponse,
   SupplierDto,
+  SupplierInvoiceDetailDto,
   UserDto,
 } from "../../api/commons/types";
+import type {
+  OrderDetailDialogData,
+  PosChargeDialogData,
+  PosVoidSaleDialogData,
+  PostSaleDialogData,
+} from "../../api/content/types/common";
 import {
   ProductViewDialogContent,
   ProductEditDialogContent,
@@ -44,6 +52,18 @@ import {
   SupplierEditDialogContent,
   SupplierDeleteDialogContent,
 } from "./contents/suppliers";
+import {
+  CreatePurchaseOrderDialogContent,
+  ReceiveItemsDialogContent,
+  AddInvoiceDialogContent,
+  RecordPaymentDialogContent,
+} from "./contents/procurement";
+import {
+  CompleteSaleDialogContent,
+  OrderDetailDialogContent,
+  PostSaleDialogContent,
+  VoidSaleDialogContent,
+} from "./contents/pos";
 
 interface Props {
   dialogFormType?: DialogContentType;
@@ -210,6 +230,70 @@ export const DialogContextModal: React.FC<Props> = ({
         <SupplierDeleteDialogContent
           supplier={dialogData as SupplierDto}
           onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+
+    case "PurchaseOrderCreate":
+      return (
+        <CreatePurchaseOrderDialogContent
+          onSuccess={() => onSuccess?.()}
+          onClose={onClose!}
+        />
+      );
+    case "PurchaseOrderReceive":
+      return (
+        <ReceiveItemsDialogContent
+          purchaseOrder={dialogData as PurchaseOrderDetailDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "PurchaseOrderAddInvoice":
+      return (
+        <AddInvoiceDialogContent
+          purchaseOrder={dialogData as PurchaseOrderDetailDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "InvoiceRecordPayment":
+      return (
+        <RecordPaymentDialogContent
+          invoice={dialogData as SupplierInvoiceDetailDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+
+    case "PosCharge":
+      return (
+        <CompleteSaleDialogContent
+          data={dialogData as PosChargeDialogData}
+          onClose={onClose!}
+        />
+      );
+
+    case "PosVoidSale":
+      return (
+        <VoidSaleDialogContent
+          data={dialogData as PosVoidSaleDialogData}
+          onClose={onClose!}
+        />
+      );
+
+    case "PostSale":
+      return (
+        <PostSaleDialogContent
+          data={dialogData as PostSaleDialogData}
+          onClose={onClose!}
+        />
+      );
+
+    case "OrderDetail":
+      return (
+        <OrderDetailDialogContent
+          data={dialogData as OrderDetailDialogData}
           onClose={onClose!}
         />
       );

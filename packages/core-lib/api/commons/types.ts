@@ -128,12 +128,31 @@ export interface RecipeItemResponse {
   costPerStockUnit?: number;
 }
 
+export interface UntrackedSalesGapDto {
+  ingredientProductId: string;
+  ingredientName: string;
+  estimatedUnaccountedQuantity: number;
+  unitName: string;
+  untrackedSaleCount: number;
+}
+
+export interface DetectGapDto {
+  untrackedSaleCount: number;
+  totalEstimatedQuantity: number;
+  message: string;
+}
+
+export interface DetectGapResponseDto {
+  gaps: DetectGapDto[];
+}
+
 export interface RecipeResponse {
   recipeID: string;
   menuItemProductID: string;
   menuItemName: string;
   recipeItems: RecipeItemResponse[];
   totalCost: number;
+  untrackedSalesGap?: UntrackedSalesGapDto[];
 }
 
 export interface PaginatedResponse<T> {
@@ -249,6 +268,305 @@ export type NotificationListResponse = ApiResponse<
 >;
 export type NotificationResponse = ApiResponse<NotificationDto>;
 export type NotificationCountResponse = ApiResponse<NotificationCountDto>;
+
+// ===== Procurement (PO / Receiving / Invoices / Payments) =====
+
+export enum PurchaseOrderStatusDto {
+  Draft = 1,
+  Submitted = 2,
+  Approved = 3,
+  PartiallyReceived = 4,
+  Received = 5,
+  Closed = 6,
+  Cancelled = 7,
+}
+
+export enum FulfillmentMethodDto {
+  Delivery = 1,
+  Pickup = 2,
+}
+
+export enum SupplierInvoiceStatusDto {
+  Pending = 1,
+  PartiallyPaid = 2,
+  Paid = 3,
+  Overdue = 4,
+  Voided = 5,
+}
+
+export enum PaymentMethodDto {
+  Cash = 1,
+  BankTransfer = 2,
+  Check = 3,
+  GCash = 4,
+  Other = 5,
+}
+
+export interface PurchaseOrderItemDto {
+  purchaseOrderItemID: string;
+  productID: string;
+  productName: string;
+  productImageUrl: string | null;
+  quantity: number;
+  unitID: string;
+  unitName: string;
+  unitPrice: number;
+  discount: number | null;
+  lineTotal: number;
+  quantityReceived: number;
+  notes: string | null;
+  /** Product's stock unit name (e.g. "pcs"). Populated on PO Detail only. */
+  stockUnitName: string;
+  /**
+   * Current multiplier to convert PO-unit qty → stock units. `null` when no
+   * `UnitConversion` is configured — receive will fall back to 1:1.
+   */
+  conversionFactor: number | null;
+  /** False → receive will record 1:1; show a warning in the receive dialog. */
+  hasConfiguredConversion: boolean;
+}
+
+export interface PurchaseOrderDto {
+  purchaseOrderID: string;
+  orderNumber: string;
+  supplierID: string;
+  supplierName: string;
+  status: PurchaseOrderStatusDto;
+  fulfillmentMethod: FulfillmentMethodDto;
+  expectedDate: string | null;
+  orderDate: string;
+  paymentTerms: string;
+  currencyCode: string;
+  totalAmount: number;
+  itemCount: number;
+  totalQuantityOrdered: number;
+  totalQuantityReceived: number;
+  createdAt: string | null;
+}
+
+export interface PurchaseOrderDetailDto extends PurchaseOrderDto {
+  items: PurchaseOrderItemDto[];
+  receipts: ReceiptDto[];
+  invoices: SupplierInvoiceDto[];
+  subtotal: number;
+  taxAmount: number | null;
+  discountAmount: number | null;
+  shippingFee: number | null;
+  notes: string | null;
+  deliveryAddress: string | null;
+  submittedAt: string | null;
+  approvedAt: string | null;
+  approvedByUserID: string | null;
+  approvedByUserName: string | null;
+  closedAt: string | null;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  hasInvoiceVariance: boolean;
+}
+
+export interface CreatePurchaseOrderItemParams {
+  productID: string;
+  quantity: number;
+  unitID: string;
+  unitPrice: number;
+  discount?: number;
+  notes?: string;
+}
+
+export interface CreatePurchaseOrderParams {
+  supplierID: string;
+  fulfillmentMethod: FulfillmentMethodDto;
+  expectedDate?: string;
+  paymentTerms?: string;
+  currencyCode?: string;
+  taxAmount?: number;
+  discountAmount?: number;
+  shippingFee?: number;
+  notes?: string;
+  deliveryAddress?: string;
+  items: CreatePurchaseOrderItemParams[];
+}
+
+export interface UpdatePurchaseOrderParams {
+  fulfillmentMethod?: FulfillmentMethodDto;
+  expectedDate?: string;
+  paymentTerms?: string;
+  taxAmount?: number;
+  discountAmount?: number;
+  shippingFee?: number;
+  notes?: string;
+  deliveryAddress?: string;
+  items?: CreatePurchaseOrderItemParams[];
+}
+
+export interface PurchaseOrderQueryParams {
+  pageNumber?: number;
+  pageSize?: number;
+  status?: PurchaseOrderStatusDto;
+  supplierID?: string;
+  fromDate?: string;
+  toDate?: string;
+  search?: string;
+  fulfillmentMethod?: FulfillmentMethodDto;
+}
+
+export interface ReceiptItemDto {
+  receiptItemID: string;
+  purchaseOrderItemID: string;
+  productID: string;
+  productName: string;
+  /** PO-unit quantity as recorded against the supplier delivery note (e.g. 1 kg). */
+  quantity: number;
+  unitName: string;
+  /** PO-unit cost (e.g. ₱600 per kg). */
+  unitCost: number;
+  stockMovementID: string | null;
+  qualityNotes: string | null;
+  /** Inventory-ledger quantity after applying UnitConversion at receive time (e.g. 15 pcs). */
+  stockQuantity: number;
+  /** Stock unit name (e.g. "pcs"). */
+  stockUnitName: string;
+  /** Multiplier used at receive time. Survives later UnitConversion edits. */
+  conversionFactor: number;
+}
+
+export interface ReceiptDto {
+  receiptID: string;
+  receiptNumber: string;
+  purchaseOrderID: string;
+  receivedDate: string;
+  receivedByUserID: string;
+  receivedByUserName: string;
+  deliveryNoteNumber: string | null;
+  notes: string | null;
+  items: ReceiptItemDto[];
+  createdAt: string;
+}
+
+export interface CreateReceiptItemParams {
+  purchaseOrderItemID: string;
+  quantity: number;
+  unitCost?: number;
+  qualityNotes?: string;
+}
+
+export interface CreateReceiptParams {
+  purchaseOrderID: string;
+  receivedDate?: string;
+  deliveryNoteNumber?: string;
+  notes?: string;
+  items: CreateReceiptItemParams[];
+}
+
+export interface SupplierInvoiceDto {
+  supplierInvoiceID: string;
+  invoiceNumber: string;
+  purchaseOrderID: string;
+  purchaseOrderNumber: string;
+  supplierID: string;
+  supplierName: string;
+  status: SupplierInvoiceStatusDto;
+  invoiceDate: string;
+  dueDate: string;
+  totalAmount: number;
+  paidAmount: number;
+  balanceDue: number;
+  createdAt: string | null;
+}
+
+export interface SupplierInvoiceDetailDto extends SupplierInvoiceDto {
+  subtotal: number;
+  taxAmount: number | null;
+  discountAmount: number | null;
+  shippingFee: number | null;
+  notes: string | null;
+  attachmentUrl: string | null;
+  payments: PaymentDto[];
+}
+
+export interface CreateSupplierInvoiceParams {
+  purchaseOrderID: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate?: string;
+  subtotal: number;
+  taxAmount?: number;
+  discountAmount?: number;
+  shippingFee?: number;
+  notes?: string;
+}
+
+export interface UpdateSupplierInvoiceParams {
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  dueDate?: string;
+  subtotal?: number;
+  taxAmount?: number;
+  discountAmount?: number;
+  shippingFee?: number;
+  notes?: string;
+}
+
+export interface SupplierInvoiceQueryParams {
+  pageNumber?: number;
+  pageSize?: number;
+  status?: SupplierInvoiceStatusDto;
+  supplierID?: string;
+  purchaseOrderID?: string;
+  fromDate?: string;
+  toDate?: string;
+  search?: string;
+  dueOnly?: boolean;
+}
+
+export interface PaymentDto {
+  paymentID: string;
+  paymentNumber: string;
+  supplierInvoiceID: string;
+  supplierInvoiceNumber: string;
+  supplierID: string;
+  supplierName: string;
+  method: PaymentMethodDto;
+  methodName: string;
+  referenceNumber: string | null;
+  amount: number;
+  paymentDate: string;
+  notes: string | null;
+  isActive: boolean;
+  createdAt: string | null;
+}
+
+export interface CreatePaymentParams {
+  supplierInvoiceID: string;
+  method: PaymentMethodDto;
+  referenceNumber?: string;
+  amount: number;
+  paymentDate?: string;
+  notes?: string;
+}
+
+export interface PaymentQueryParams {
+  pageNumber?: number;
+  pageSize?: number;
+  supplierInvoiceID?: string;
+  supplierID?: string;
+  method?: PaymentMethodDto;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export type PurchaseOrderListResponse = ApiResponse<
+  PaginatedResponse<PurchaseOrderDto>
+>;
+export type PurchaseOrderResponse = ApiResponse<PurchaseOrderDetailDto>;
+export type ReceiptListResponse = ApiResponse<ReceiptDto[]>;
+export type ReceiptResponse = ApiResponse<ReceiptDto>;
+export type SupplierInvoiceListResponse = ApiResponse<
+  PaginatedResponse<SupplierInvoiceDto>
+>;
+export type SupplierInvoiceResponse = ApiResponse<SupplierInvoiceDetailDto>;
+export type PaymentListResponse = ApiResponse<PaginatedResponse<PaymentDto>>;
+export type PaymentResponse = ApiResponse<PaymentDto>;
 
 export type ChartTypeDto = "line" | "area" | "bar" | "donut";
 
@@ -915,4 +1233,297 @@ export type ProductionCapacityResponse = ApiResponse<ProductionCapacity>;
 export type RecipeListResponse = ApiResponse<PaginatedResponse<RecipeResponse>>;
 export type UserInfoResponse = ApiResponse<UserInformations>;
 export type CategoryListResponse = ApiResponse<CategoryDataList[]>;
+
+// ===== POS / Sales (cashier register) =====
+
+export enum SaleStatusDto {
+  Completed = 1,
+  Voided = 2,
+  PartiallyRefunded = 3,
+  FullyRefunded = 4,
+}
+
+export enum SalesPaymentMethodDto {
+  Cash = 1,
+  Card = 2,
+  GCash = 3,
+  Maya = 4,
+  BankTransfer = 5,
+  StoreCredit = 6,
+  Other = 7,
+}
+
+export interface SaleItemDto {
+  saleItemID: string;
+  productID: string;
+  productName: string;
+  /** Nullable: menu items produced from recipes don't require their own stock unit. */
+  unitID: string | null;
+  unitName: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  lineSubtotal: number;
+  lineTotal: number;
+  /** Legacy single-movement back-link, kept for one release. Equals the FIRST entry of stockMovementIDs. */
+  stockMovementID: string | null;
+  /**
+   * All StockMovement rows generated by this sale line. Length 1 for ingredient-direct lines;
+   * length = recipe ingredient count for menu items deducted via recipe.
+   */
+  stockMovementIDs: string[];
+  quantityRefunded: number;
+  isRefunded: boolean;
+}
+
+export interface SalePaymentDto {
+  salePaymentID: string;
+  method: SalesPaymentMethodDto;
+  methodName: string;
+  amount: number;
+  tendered: number;
+  referenceNumber: string | null;
+  createdAt: string | null;
+}
+
+export interface RefundItemDto {
+  refundItemID: string;
+  saleItemID: string;
+  productID: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  lineAmount: number;
+  /** Legacy single-movement back-link, kept for one release. Equals the FIRST entry of stockMovementIDs. */
+  stockMovementID: string | null;
+  /**
+   * All Return StockMovement rows generated by this refund line. Length 1 for ingredient-direct lines;
+   * length = recipe ingredient count for menu items refunded against a recipe.
+   * Scoped to this Refund — a SaleItem refunded twice gets two non-overlapping lists, one per Refund.
+   */
+  stockMovementIDs: string[];
+}
+
+export interface RefundDto {
+  refundID: string;
+  refundNumber: string;
+  saleID: string;
+  refundedByUserID: string;
+  refundedByUserName: string;
+  managerOverrideUserID: string | null;
+  reason: string;
+  totalAmount: number;
+  createdAt: string | null;
+  items: RefundItemDto[];
+}
+
+export interface SaleDto {
+  saleID: string;
+  saleNumber: string;
+  saleDate: string;
+  completedAt: string;
+  status: SaleStatusDto;
+  statusName: string;
+  cashierUserID: string;
+  cashierName: string;
+  totalAmount: number;
+  refundedAmount: number;
+  itemCount: number;
+  paymentCount: number;
+}
+
+export interface SaleDetailDto {
+  saleID: string;
+  saleNumber: string;
+  saleDate: string;
+  completedAt: string;
+  status: SaleStatusDto;
+  statusName: string;
+  cashierUserID: string;
+  cashierName: string;
+  customerID: string | null;
+  notes: string | null;
+
+  subtotal: number;
+  discountAmount: number;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
+  amountTendered: number;
+  changeDue: number;
+
+  items: SaleItemDto[];
+  payments: SalePaymentDto[];
+
+  voidedAt: string | null;
+  voidedByUserID: string | null;
+  voidedByUserName: string | null;
+  voidReason: string | null;
+  refundedAmount: number;
+  refunds: RefundDto[];
+}
+
+export interface SellableProductDto {
+  productID: string;
+  name: string;
+  categoryID: string | null;
+  categoryName: string | null;
+  imageUrl: string | null;
+  sellingPrice: number;
+  stockUnitName: string;
+  /**
+   * For ingredient products: Inventory.CurrentQuantity.
+   * For menu items with an active recipe: floor(min over ingredients of (ingredient.CurrentQuantity / qtyRequired)), soft-capped at 999.
+   * For menu items without a recipe: 999 when AllowMenuItemsWithoutRecipe=true; 0 when false.
+   */
+  currentStock: number;
+  isLowStock: boolean;
+  isOutOfStock: boolean;
+  isMenuItem: boolean;
+  isActive: boolean;
+  /** True when this menu item has an active recipe and currentStock reflects production capacity. */
+  isProducedFromRecipe: boolean;
+  /** True for menu items that have no active recipe configured. */
+  noRecipeConfigured: boolean;
+  /** Ingredient names limiting production. Populated only when isProducedFromRecipe=true AND stock is low/out. */
+  bottleneckIngredientNames: string[];
+}
+
+export interface CreateSaleItemParams {
+  productID: string;
+  quantity: number;
+  unitPrice: number;
+  discount?: number | null;
+}
+
+export interface CreateSalePaymentParams {
+  method: SalesPaymentMethodDto;
+  amount: number;
+  tendered?: number | null;
+  referenceNumber?: string | null;
+}
+
+export interface CreateSaleParams {
+  customerID?: string | null;
+  notes?: string | null;
+  items: CreateSaleItemParams[];
+  discountAmount?: number | null;
+  taxRate?: number | null;
+  payments: CreateSalePaymentParams[];
+}
+
+export interface VoidSaleParams {
+  reason: string;
+  /** Required when POS.RequireManagerOverrideForRefund=true. */
+  managerUserID?: string | null;
+  /** 4-6 digit MPIN, required when POS.RequireManagerOverrideForRefund=true. */
+  managerMpin?: string | null;
+}
+
+export interface RefundLineParams {
+  saleItemID: string;
+  /** Must be > 0 and <= (saleItem.quantity - saleItem.quantityRefunded). */
+  quantity: number;
+}
+
+export interface RefundSaleParams {
+  reason: string;
+  items: RefundLineParams[];
+  /** Required when POS.RequireManagerOverrideForRefund=true. */
+  managerUserID?: string | null;
+  /** 4-6 digit MPIN, required when POS.RequireManagerOverrideForRefund=true. */
+  managerMpin?: string | null;
+}
+
+export interface SellableProductQueryParams {
+  pageNumber?: number;
+  pageSize?: number;
+  categoryID?: string;
+  search?: string;
+}
+
+export interface SaleQueryParams {
+  pageNumber?: number;
+  pageSize?: number;
+  status?: SaleStatusDto;
+  cashierUserID?: string;
+  /** YYYY-MM-DD, inclusive. */
+  fromDate?: string;
+  /** YYYY-MM-DD, inclusive. */
+  toDate?: string;
+  /** Matches saleNumber or cashierName. */
+  search?: string;
+}
+
+export interface DailySalesSummaryByCashierDto {
+  cashierUserID: string;
+  cashierName: string;
+  salesCount: number;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  refundedAmount: number;
+  netRevenue: number;
+}
+
+export interface DailySalesSummaryDto {
+  /** YYYY-MM-DD (server-TZ when omitted on request). */
+  date: string;
+  /** Active sales on the date, excluding Voided. */
+  salesCount: number;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  refundedAmount: number;
+  /** totalAmount - refundedAmount. */
+  netRevenue: number;
+  /** Keyed by SalesPaymentMethod name ("Cash", "Card", ...). */
+  byPaymentMethod: Record<string, number>;
+  byCashier: DailySalesSummaryByCashierDto[];
+}
+
+// ===== Orders / Transactions (cashier orders page) =====
+
+export interface OrderDto {
+  orderID: string;
+  orderNumber: string;
+  orderDate: string;
+  completedAt: string;
+  status: SaleStatusDto;
+  statusName: string;
+  cashierUserID: string;
+  cashierName: string;
+  totalAmount: number;
+  refundedAmount: number;
+  itemCount: number;
+  paymentSummary: string;
+  voidedByUserName: string | null;
+}
+
+export interface OrderQueryParams {
+  pageNumber?: number;
+  pageSize?: number;
+  status?: SaleStatusDto;
+  cashierUserID?: string;
+  /** YYYY-MM-DD inclusive */
+  fromDate?: string;
+  /** YYYY-MM-DD inclusive */
+  toDate?: string;
+  /** Matches orderNumber or cashierName */
+  search?: string;
+}
+
+/** Same wire shape as SaleDetailDto — server maps Sale → OrderDetailDto identically. */
+export type OrderDetailDto = SaleDetailDto;
+
+export type SaleResponse = ApiResponse<SaleDetailDto>;
+export type SaleListResponse = ApiResponse<PaginatedResponse<SaleDto>>;
+export type OrderListResponse = ApiResponse<PaginatedResponse<OrderDto>>;
+export type OrderDetailResponse = ApiResponse<OrderDetailDto>;
+export type SellableProductListResponse = ApiResponse<
+  PaginatedResponse<SellableProductDto>
+>;
 export type ProductListResponse = ApiResponse<ProductDataList[]>;
+export type DailySalesSummaryResponse = ApiResponse<DailySalesSummaryDto>;

@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
       style={{
         position: sticky ? "sticky" : "relative",
         top: 0,
-        zIndex: 5,
+        zIndex: 20,
         background: "var(--color-background)",
         borderBottom: "1px solid var(--gray-a4)",
         padding: "16px 24px",

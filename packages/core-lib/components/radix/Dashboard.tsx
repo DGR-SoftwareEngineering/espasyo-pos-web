@@ -11,18 +11,20 @@ import {
   MaintenancePageBlock,
 } from "./MaintenanceBanner";
 
-const SIDEBAR_COLLAPSED_KEY = "espasyo.sidebarCollapsed";
+const SIDEBAR_COLLAPSED_KEY_PREFIX = "espasyo.sidebarCollapsed.";
+// Legacy single-key (kept for one-time cleanup so old prefs don't leak across roles).
+const LEGACY_SIDEBAR_COLLAPSED_KEY = "espasyo.sidebarCollapsed";
 
 const routeToPageKey = (pathname: string): string | null => {
   if (!pathname) return null;
   const path = pathname.toLowerCase();
-  if (path.includes("/pos") || path.includes("/sales")) return PAGE_KEYS.POS;
+  if (path.includes("/pos") || path.includes("/sales") || path.includes("/cashier")) return PAGE_KEYS.POS;
   if (path.includes("/inventory")) return PAGE_KEYS.Inventory;
   if (path.includes("/reports")) return PAGE_KEYS.Reports;
   if (path.includes("/settings")) return PAGE_KEYS.Settings;
   if (path.includes("/user-management")) return PAGE_KEYS.Users;
   if (path.includes("/supplier-management")) return PAGE_KEYS.Suppliers;
-  if (path === "/admin/hub" || path === "/hub") return PAGE_KEYS.Dashboard;
+  if (path === "/admin/hub") return PAGE_KEYS.Dashboard;
   return null;
 };
 
@@ -48,28 +50,45 @@ export const RadixDashboard: React.FC<Props> = ({
   const { maintenance } = usePublicSettings();
   const isAdmin = (role ?? "").toLowerCase() === "admin";
 
-  // Default: expanded. Persists the user's choice across reloads.
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+  const normalizedRole = (role ?? "").trim().toLowerCase();
+  const isCashier = normalizedRole === "cashier";
+  // Per-role storage key — cashier and admin track collapse state independently
+  // so they don't leak across roles when sharing a browser.
+  const storageKey = normalizedRole
+    ? `${SIDEBAR_COLLAPSED_KEY_PREFIX}${normalizedRole}`
+    : null;
+
+  // Admin defaults to expanded. Cashier defaults to collapsed so the POS gets
+  // maximum horizontal space. User's manual toggle is persisted per role.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(isCashier);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !storageKey) return;
     try {
-      const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
-      if (stored === "1") setSidebarCollapsed(true);
-    } catch {
-      // localStorage unavailable (private mode, etc.) — silently stay expanded.
-    }
-  }, []);
+      // One-time cleanup of the legacy global key so it doesn't override.
+      window.localStorage.removeItem(LEGACY_SIDEBAR_COLLAPSED_KEY);
 
-  const handleToggleSidebar = useCallback((next: boolean) => {
-    setSidebarCollapsed(next);
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
+      const stored = window.localStorage.getItem(storageKey);
+      if (stored === "1") setSidebarCollapsed(true);
+      else if (stored === "0") setSidebarCollapsed(false);
+      else setSidebarCollapsed(isCashier);
     } catch {
-      // Persistence is best-effort.
+      // localStorage unavailable (private mode, etc.) — silently use the default.
     }
-  }, []);
+  }, [storageKey, isCashier]);
+
+  const handleToggleSidebar = useCallback(
+    (next: boolean) => {
+      setSidebarCollapsed(next);
+      if (typeof window === "undefined" || !storageKey) return;
+      try {
+        window.localStorage.setItem(storageKey, next ? "1" : "0");
+      } catch {
+        // Persistence is best-effort.
+      }
+    },
+    [storageKey],
+  );
 
   const currentPageKey = useMemo(
     () => routeToPageKey(router?.pathname ?? ""),
