@@ -38,6 +38,7 @@ export type AuthService = {
   logout: (options?: LogoutOptions) => Promise<void>;
   softLogout: () => Promise<void>;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
+  completeAuthentication: () => void;
 };
 
 export type AuthInstance = {

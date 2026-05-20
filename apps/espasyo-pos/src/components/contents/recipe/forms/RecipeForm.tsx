@@ -26,6 +26,7 @@ import { RecipeFormProps } from "./types";
 import { useRecipeForm, useIngredientForm } from "../hooks";
 import { toSelectOptionsWithField } from "core-lib/business/array";
 import { IngredientAddForm, IngredientListItem } from "../../../../components";
+import { SelectOption } from "core-lib/components/radix/form/SelectField";
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({
   onSubmit,
@@ -37,6 +38,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   ingredients,
   menuItems,
   units,
+  onMenuItemSelect,
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const addForm = useIngredientForm();
@@ -128,6 +130,9 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
               control={control}
               options={menuItemOptions}
               label="Menu Item"
+              onSelectOption={(option: SelectOption) =>
+                onMenuItemSelect?.(option.value)
+              }
             />
             {errors.menuItemProductID && (
               <Text size="1" color="red" as="div" mt="1">

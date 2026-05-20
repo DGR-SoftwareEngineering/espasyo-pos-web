@@ -49,6 +49,18 @@ const PATH_REWRITES: ReadonlyArray<{ from: RegExp; to: string }> = [
   { from: /^\/admin\/hub\/inventory\/?$/, to: "/admin/hub/inventory/inventory-list" },
   { from: /^\/admin\/hub\/users\/?$/, to: "/admin/hub/user-management" },
   { from: /^\/admin\/hub\/suppliers\/?$/, to: "/admin/hub/supplier-management" },
+  {
+    from: /^\/admin\/hub\/procurement\/supplier-invoices\/.+$/,
+    to: "/admin/hub/procurement/purchase-orders",
+  },
+  {
+    from: /^\/admin\/hub\/categories\/units\/?$/,
+    to: "/admin/hub/unit-conversion",
+  },
+  {
+    from: /^\/admin\/hub\/unit-conversions?\/?$/,
+    to: "/admin/hub/unit-conversion",
+  },
 ];
 
 const normalizeLink = (link: string): string => {

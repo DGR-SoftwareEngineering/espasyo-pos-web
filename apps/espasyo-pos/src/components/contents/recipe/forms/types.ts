@@ -11,6 +11,7 @@ export interface RecipeFormProps {
   menuItems: ProductDataList[];
   ingredients: ProductDataList[];
   units: UnitDto[];
+  onMenuItemSelect?: (menuItemId: string) => void;
 }
 
 export interface NewIngredient {

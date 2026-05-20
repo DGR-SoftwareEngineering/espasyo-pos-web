@@ -106,15 +106,35 @@ function createApi(client: AxiosInstance, httpSsrClient: AxiosInstance) {
 
 function handleError(e: any) {
   console.error(`Error on client side response: ${JSON.stringify(e)}`);
-  const rawErrors = e.response?.data?.errors;
+  const body = e.response?.data;
+  const rawErrors = body?.errors;
   const status: number | undefined = e.response?.status;
-  const arr: string[] = Array.isArray(rawErrors)
-    ? rawErrors.map((entry) =>
-        typeof entry === "string"
-          ? entry
-          : (entry?.code ?? entry?.message ?? "something_went_wrong"),
-      )
-    : ["something_went_wrong"];
+
+  let arr: string[];
+  if (Array.isArray(rawErrors)) {
+    arr = rawErrors.map((entry) =>
+      typeof entry === "string"
+        ? entry
+        : (entry?.code ?? entry?.message ?? "something_went_wrong"),
+    );
+  } else if (rawErrors && typeof rawErrors === "object") {
+    // RFC 7807 ProblemDetails — errors is { fieldName: ["message", ...] }
+    // Emitted by ASP.NET's automatic ModelState validation before our service codes fire.
+    arr = Object.entries(rawErrors as Record<string, unknown>).flatMap(
+      ([field, messages]) => {
+        const list = Array.isArray(messages) ? messages : [messages];
+        return list
+          .filter((m): m is string => typeof m === "string")
+          .map((m) => (field && field !== "" ? `${field}: ${m}` : m));
+      },
+    );
+    if (arr.length === 0) {
+      arr = [body?.title ?? "something_went_wrong"];
+    }
+  } else {
+    arr = [body?.title ?? body?.message ?? "something_went_wrong"];
+  }
+
   const enriched = arr as string[] & { status?: number };
   if (status !== undefined) enriched.status = status;
   return enriched;

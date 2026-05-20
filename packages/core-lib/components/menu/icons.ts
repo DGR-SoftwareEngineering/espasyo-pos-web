@@ -21,6 +21,9 @@ import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import AddIcon from "@mui/icons-material/Add";
+import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
+import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
+import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
 
 import type { SvgIconComponent } from "@mui/icons-material";
 
@@ -48,6 +51,9 @@ export const ICON_REGISTRY: Record<string, SvgIconComponent> = {
   Restore: RestoreRoundedIcon,
   ShoppingCart: ShoppingCartRoundedIcon,
   Add: AddIcon,
+  LocalShipping: LocalShippingRoundedIcon,
+  Payments: PaymentsRoundedIcon,
+  AccountBalanceWallet: AccountBalanceWalletRoundedIcon,
 };
 
 export const ICON_NAMES = Object.keys(ICON_REGISTRY);

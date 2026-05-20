@@ -16,9 +16,12 @@ export const SETTING_KEYS = {
   PosAllowRefund: "POS.AllowRefund",
   PosAllowDiscounts: "POS.AllowDiscounts",
   PosDefaultTaxRate: "POS.DefaultTaxRate",
+  PosMaxDiscountPercent: "POS.MaxDiscountPercent",
+  PosSaleNumberFormat: "POS.SaleNumberFormat",
   PosReceiptHeader: "POS.ReceiptHeader",
   PosReceiptFooter: "POS.ReceiptFooter",
   PosRequireManagerOverrideForRefund: "POS.RequireManagerOverrideForRefund",
+  PosAllowMenuItemsWithoutRecipe: "POS.AllowMenuItemsWithoutRecipe",
 
   CurrencyCode: "Currency.Code",
 
@@ -40,6 +43,17 @@ export const SETTING_KEYS = {
   NotificationsPollIntervalSeconds: "Notifications.PollIntervalSeconds",
   NotificationsRetentionDays: "Notifications.RetentionDays",
   NotificationsSoundEnabled: "Notifications.SoundEnabled",
+
+  ProcurementRequireApproval: "Procurement.RequireApproval",
+  ProcurementDefaultPaymentTerms: "Procurement.DefaultPaymentTerms",
+  ProcurementDefaultFulfillmentMethod: "Procurement.DefaultFulfillmentMethod",
+  ProcurementPurchaseOrderNumberFormat: "Procurement.PurchaseOrderNumberFormat",
+  ProcurementReceiptNumberFormat: "Procurement.ReceiptNumberFormat",
+  ProcurementPaymentNumberFormat: "Procurement.PaymentNumberFormat",
+  ProcurementAllowedPaymentMethods: "Procurement.AllowedPaymentMethods",
+  ProcurementInvoiceDueDaysDefault: "Procurement.InvoiceDueDaysDefault",
+  ProcurementAllowOverReceipt: "Procurement.AllowOverReceipt",
+  ProcurementWarnOnInvoiceVariance: "Procurement.WarnOnInvoiceVariance",
 
   LoaderVariant: "Loader.Variant",
   LoaderPrimaryMessage: "Loader.PrimaryMessage",
@@ -111,6 +125,7 @@ export const SETTING_CATEGORIES = {
   Features: "Features",
   Loader: "Loader",
   Notifications: "Notifications",
+  Procurement: "Procurement",
 } as const;
 
 export type SettingCategory =

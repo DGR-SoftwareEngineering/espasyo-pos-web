@@ -11,7 +11,44 @@ import { useClearCookies } from "../../../hooks";
 import { useSSOCookie } from "../../../hooks/useCookie";
 import { useAccessToken, useRefreshToken } from "../hooks";
 import { useSessionIdleTimer } from "./useSessionIdleTimer";
-import { parseTokenId } from "../access-token";
+import { parseTokenId, safeDecode } from "../access-token";
+
+// Claim-type URLs are not constants in the codebase — they're constructed from
+// env vars (same pattern as src/proxy.ts) so the schema host stays out of git.
+const ROLE_CLAIM =
+  (process.env.NEXT_PUBLIC_CLAIMS_IDENTITY_URL ?? "") +
+  "/ws/2008/06/identity/claims/role";
+const NAME_CLAIM =
+  (process.env.NEXT_PUBLIC_CLAIMS_NAME_IDENTIFIER ?? "") +
+  "/ws/2005/05/identity/claims/name";
+
+interface JwtIdentity {
+  name: string | null;
+  role: string | null;
+}
+
+const readJwtIdentity = (token: string | null): JwtIdentity => {
+  if (!token) return { name: null, role: null };
+  const claims = safeDecode<Record<string, string>>(token);
+  if (!claims) return { name: null, role: null };
+  const name = typeof claims[NAME_CLAIM] === "string" ? claims[NAME_CLAIM] : null;
+  const role = typeof claims[ROLE_CLAIM] === "string" ? claims[ROLE_CLAIM] : null;
+  return { name, role };
+};
+
+const deriveInitialsFromName = (name: string | null): string => {
+  if (!name) return "";
+  const cleaned = name.trim();
+  if (!cleaned) return "";
+  // Try "First Last" split first; fall back to first char(s) of the username.
+  const parts = cleaned.split(/[\s._-]+/).filter(Boolean);
+  const first = parts[0];
+  const second = parts[1];
+  if (first && second) {
+    return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
+  }
+  return cleaned.slice(0, 2).toUpperCase();
+};
 
 export const useAuthentication = (): AuthService => {
   const router = useRouter();
@@ -80,6 +117,19 @@ export const useAuthentication = (): AuthService => {
     if (!isAuthenticated || !accessToken) return;
     let cancelled = false;
 
+    // 1) Immediate, dependency-free defaults from the JWT itself. This means the
+    //    Header avatar and the role-based menu light up the instant we have a
+    //    token, even if the user-info API call below is slow or denied.
+    const identity = readJwtIdentity(accessToken);
+    if (identity.role) setRole(identity.role);
+    if (identity.name) {
+      const initials = deriveInitialsFromName(identity.name);
+      if (initials) setUserInitials(initials);
+    }
+
+    // 2) Enhancement pass: try to fetch richer user info (firstName/lastName/email).
+    //    The user endpoint may be admin-gated — if so, we keep the JWT-derived
+    //    defaults and don't surface a console error stack.
     const fetchUserAndRole = async () => {
       setUserInfoLoading(true);
       try {
@@ -92,8 +142,8 @@ export const useAuthentication = (): AuthService => {
           const initials = `${firstName.charAt(0)}${lastName.charAt(
             0,
           )}`.toUpperCase();
-          setEmail(userEmail);
-          setUserInitials(initials);
+          if (initials.trim()) setUserInitials(initials);
+          if (userEmail) setEmail(userEmail);
         }
         const fetchedRoleID = userInfoData?.roleID;
         if (!fetchedRoleID) return;
@@ -103,11 +153,23 @@ export const useAuthentication = (): AuthService => {
           if (cancelled) return;
           const roleName = roleResult?.data?.response?.roleName;
           if (roleName) setRole(roleName);
+        } catch {
+          // Role lookup may also be admin-gated for cashier — JWT role stands.
         } finally {
           if (!cancelled) setRoleLoading(false);
         }
       } catch (error) {
-        console.error("Failed to load user/role after authentication", error);
+        // Treat 403 / 401 as "use JWT defaults" rather than a hard failure.
+        const status =
+          (error as { status?: number; response?: { status?: number } })
+            ?.status ??
+          (error as { response?: { status?: number } })?.response?.status;
+        if (status !== 403 && status !== 401) {
+          console.error(
+            "Failed to enhance user identity after authentication",
+            error,
+          );
+        }
       } finally {
         if (!cancelled) setUserInfoLoading(false);
       }
@@ -176,6 +238,10 @@ export const useAuthentication = (): AuthService => {
     await router.replace((routes) => routes.home, { shallow: false });
   }
 
+  const completeAuthentication = useCallback(() => {
+    setIsAuthenticated(true);
+  }, []);
+
   return {
     loading,
     isAuthenticated,
@@ -199,7 +265,6 @@ export const useAuthentication = (): AuthService => {
           secure: process.env.NODE_ENV === "production",
           domain: `.${window.location.hostname}`,
         });
-        setIsAuthenticated(true);
       } catch (err) {
         clearAccessToken();
         clearRefreshToken();
@@ -211,6 +276,7 @@ export const useAuthentication = (): AuthService => {
     logout,
     softLogout,
     setIsAuthenticated,
+    completeAuthentication,
     isAuthenticating: false,
     role,
     initials: userInitials,

@@ -8,6 +8,7 @@ import {
 } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { useApi } from "core-lib/core/hooks";
+import { usePublicSettings } from "core-lib/core/contexts";
 
 type Accent = "indigo" | "violet" | "teal" | "amber" | "red";
 
@@ -79,10 +80,19 @@ const TileCard: React.FC<{ tile: Tile; delay: number }> = ({ tile, delay }) => (
 );
 
 export const AdminKpiRow: React.FC = () => {
+  const { inventory } = usePublicSettings();
+  const lowStockEnabled = inventory.lowStockAlertEnabled;
+
   const usersCb = useApi((api) => api.commons.userList(1, 1));
   const suppliersCb = useApi((api) => api.commons.supplierList(1, 1));
   const productsCb = useApi((api) => api.commons.productList());
-  const lowStockCb = useApi((api) => api.commons.inventoryLowStock());
+  const lowStockCb = useApi(
+    async (api) => {
+      if (!lowStockEnabled) return undefined;
+      return api.commons.inventoryLowStock();
+    },
+    [lowStockEnabled],
+  );
 
   const tiles = useMemo<Tile[]>(() => {
     const userTotal = usersCb.result?.data?.response?.totalItems ?? null;
@@ -93,7 +103,7 @@ export const AdminKpiRow: React.FC = () => {
     const lowStockArr = lowStockCb.result?.data?.response;
     const lowStockTotal = Array.isArray(lowStockArr) ? lowStockArr.length : null;
 
-    return [
+    const base: Tile[] = [
       {
         label: "Total users",
         value: userTotal,
@@ -118,7 +128,10 @@ export const AdminKpiRow: React.FC = () => {
         icon: <CubeIcon width="22" height="22" />,
         loading: productsCb.loading,
       },
-      {
+    ];
+
+    if (lowStockEnabled) {
+      base.push({
         label: "Low-stock alerts",
         value: lowStockTotal,
         hint:
@@ -128,8 +141,10 @@ export const AdminKpiRow: React.FC = () => {
         accent: lowStockTotal && lowStockTotal > 0 ? "red" : "amber",
         icon: <ExclamationTriangleIcon width="22" height="22" />,
         loading: lowStockCb.loading,
-      },
-    ];
+      });
+    }
+
+    return base;
   }, [
     usersCb.result,
     usersCb.loading,
@@ -139,6 +154,7 @@ export const AdminKpiRow: React.FC = () => {
     productsCb.loading,
     lowStockCb.result,
     lowStockCb.loading,
+    lowStockEnabled,
   ]);
 
   return (
