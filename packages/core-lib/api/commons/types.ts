@@ -741,6 +741,35 @@ export interface UpdateIngredientCategoryParams {
   parentIngredientCategoryID?: string | null;
 }
 
+export interface BusinessSupplyCategoryDto {
+  businessSupplyCategoryID: string;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  parentBusinessSupplyCategoryID: string | null;
+  parentBusinessSupplyCategoryName: string | null;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+  isActive: boolean;
+}
+
+export interface CreateBusinessSupplyCategoryParams {
+  name: string;
+  description?: string | null;
+  displayOrder?: number;
+  parentBusinessSupplyCategoryID?: string | null;
+}
+
+export interface UpdateBusinessSupplyCategoryParams {
+  businessSupplyCategoryID: string;
+  name?: string | null;
+  description?: string | null;
+  displayOrder?: number | null;
+  parentBusinessSupplyCategoryID?: string | null;
+}
+
 export interface LocationDto {
   locationID: string;
   name: string;
@@ -1527,3 +1556,80 @@ export type SellableProductListResponse = ApiResponse<
 >;
 export type ProductListResponse = ApiResponse<ProductDataList[]>;
 export type DailySalesSummaryResponse = ApiResponse<DailySalesSummaryDto>;
+
+// ─── Business Expense ──────────────────────────────────────────────────────
+
+export interface BusinessExpenseDto {
+  businessExpenseID: string;
+  expenseDate: string;
+  amount: number;
+  description: string;
+  notes: string | null;
+  businessSupplyCategoryID: string | null;
+  categoryName: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface CreateBusinessExpenseParams {
+  expenseDate: string;
+  amount: number;
+  description: string;
+  notes?: string | null;
+  businessSupplyCategoryID?: string | null;
+}
+
+export interface UpdateBusinessExpenseParams {
+  businessExpenseID: string;
+  expenseDate?: string | null;
+  amount?: number | null;
+  description?: string | null;
+  notes?: string | null;
+  businessSupplyCategoryID?: string | null;
+}
+
+export type BusinessExpenseListResponse = ApiResponse<BusinessExpenseDto[]>;
+export type BusinessExpenseResponse = ApiResponse<BusinessExpenseDto>;
+
+// ─── Shift Management ────────────────────────────────────────────────────────
+
+export interface OpenShiftParams {
+  openingCash: number;
+  notes?: string | null;
+}
+
+export interface CloseShiftParams {
+  cashierShiftID: string;
+  actualCash: number;
+  mpin: string;
+  notes?: string | null;
+}
+
+export interface CashierShiftDto {
+  cashierShiftID: string;
+  shiftNumber: string;
+  cashierUserID: string;
+  cashierName: string;
+  status: "Open" | "Closed";
+  openedAt: string;
+  closedAt: string | null;
+  openingCash: number;
+  actualCash: number | null;
+  notes: string | null;
+}
+
+export interface ShiftSummaryDto extends CashierShiftDto {
+  cashSales: number;
+  nonCashSales: number;
+  totalSales: number;
+  transactionCount: number;
+  totalRefunds: number;
+  expectedCash: number;
+  overShort: number | null;
+  byPaymentMethod: Record<string, number>;
+}
+
+export type ActiveShiftResponse = ApiResponse<ShiftSummaryDto | null>;
+export type ShiftResponse = ApiResponse<CashierShiftDto>;
+export type ShiftSummaryResponse = ApiResponse<ShiftSummaryDto>;
+export type ShiftListResponse = ApiResponse<CashierShiftDto[]>;

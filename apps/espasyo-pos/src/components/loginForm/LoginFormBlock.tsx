@@ -86,9 +86,15 @@ export const LoginFormBlock: React.FC<Props> = ({ contentBlocks = [] }) => {
       } catch (meError) {
         console.error("Failed to resolve role after login", meError);
       }
+      // Wait for navigation to complete before marking as authenticated.
+      // This prevents the Dashboard from flashing during the page transition.
+      const handleRouteChangeComplete = () => {
+        nextRouter.events.off("routeChangeComplete", handleRouteChangeComplete);
+        completeAuthentication();
+        showToast("Successfully Logged in", "success");
+      };
+      nextRouter.events.on("routeChangeComplete", handleRouteChangeComplete);
       await nextRouter.push(homePath);
-      completeAuthentication();
-      showToast("Successfully Logged in", "success");
     } catch (error) {
       console.error("Problem during login", error);
       const messages = Array.isArray(error) ? (error as string[]) : [];

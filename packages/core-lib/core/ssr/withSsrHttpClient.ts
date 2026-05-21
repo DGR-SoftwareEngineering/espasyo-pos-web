@@ -35,8 +35,11 @@ const client = (
       headers: { ENV: config.value.NODE_ENV },
       paramsSerializer: (params) =>
         stringify(params, { encode: true, arrayFormat: "repeat" }),
-      onError: (error) =>
-        console.error(`Error on response: ${JSON.stringify(error)}`),
+      onError: (error) => {
+        const status = (error as any)?.response?.status;
+        if (status === 401 || status === 403) return;
+        console.error(`Error on response: ${JSON.stringify(error)}`);
+      },
       onRequest: (req) => {
         if (req.headers && session.accessToken)
           req.headers.Authorization = `Bearer ${session.accessToken}`;

@@ -12,6 +12,8 @@ import {
   UserDto,
 } from "../../commons/types";
 
+type AsyncFunction = () => Promise<void>;
+
 export interface PosChargeDialogData {
   totalAmount: number;
   subtotal: number;
@@ -228,8 +230,8 @@ export interface DialogElement {
 }
 
 export type CustomDialogElement = DialogElement & {
-  customOnClick?: AsyncFunction | VoidFunction;
-  customOnClose?: AsyncFunction | VoidFunction;
+  customOnClick?: AsyncFunction | (() => void);
+  customOnClose?: AsyncFunction | (() => void);
   loading?: boolean;
 };
 

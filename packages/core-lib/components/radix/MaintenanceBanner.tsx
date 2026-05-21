@@ -9,6 +9,7 @@ export const MaintenanceBanner: React.FC = () => {
 
   return (
     <Box
+      data-layout="maintenance-banner"
       style={{
         background: "var(--amber-a3)",
         borderBottom: "1px solid var(--amber-a6)",

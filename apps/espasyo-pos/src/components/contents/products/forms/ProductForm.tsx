@@ -27,32 +27,33 @@ import { toSelectOptionsWithField } from "core-lib/business/array";
 import { formatPrice } from "core-lib/business/strings";
 import { PLACEHOLDERS } from "../constants";
 import { ProductFormProps } from "./types";
+import type { ProductMode } from "./validation";
 
 const FIELD_LABELS: Record<string, string> = {
   name: "Product Name",
   description: "Description",
+  productMode: "Product Type",
   unitPrice: "Selling Price",
   costPrice: "Cost Price",
   purchaseQuantity: "Purchase Quantity",
   purchaseUnitID: "Purchase Unit",
   stockUnitID: "Stock Unit",
   categoryID: "Category",
-  isMenuItem: "Product Type",
   imageFile: "Image",
 };
 
-const PRODUCT_TYPE_OPTIONS: ToggleOption<boolean>[] = [
+const PRODUCT_MODE_OPTIONS: ToggleOption<ProductMode>[] = [
   {
-    value: true,
+    value: "menuItem",
     label: "Menu Item",
-    description: "Can be sold to customers",
+    description: "Sold to customers at POS",
     icon: <RestaurantMenuOutlined fontSize="small" />,
     selectedColor: "success",
   },
   {
-    value: false,
+    value: "ingredient",
     label: "Ingredient",
-    description: "Raw material for recipes",
+    description: "Raw material for recipes — stock deducted on sale",
     icon: <KitchenOutlined fontSize="small" />,
     selectedColor: "info",
   },
@@ -77,7 +78,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     watchedValues,
     isDirty,
     submissionKey,
-    handleProductTypeChange,
+    handleProductModeChange,
     watch,
     setValue,
   } = useProductForm({
@@ -88,11 +89,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     onSubmit,
   });
 
-  const isMenuItem = watchedValues.isMenuItem;
+  const productMode = watchedValues.productMode;
+  const isMenuItem = productMode === "menuItem";
+  const isIngredient = productMode === "ingredient";
+
   const watchedImageFile = watch("imageFile");
   const watchedRemoveImage = watch("removeImage");
-  const showCurrentImage =
-    isEdit && !!currentImageUrl && !watchedImageFile;
+  const showCurrentImage = isEdit && !!currentImageUrl && !watchedImageFile;
 
   const categoryOptions = React.useMemo(() => {
     if (isMenuItem) {
@@ -145,7 +148,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       ? watchedValues.unitPrice
       : watchedValues.costPrice;
     const formattedPrice = price && price > 0 ? formatPrice(price) : undefined;
-
     return {
       name: watchedValues.name || "",
       category: selectedCategory,
@@ -202,20 +204,26 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 multiline
                 rows={3}
               />
+
+              {/* Single flat 3-way toggle — replaces the nested isMenuItem + productType approach */}
+              <ToggleField
+                name="productMode"
+                control={control}
+                options={PRODUCT_MODE_OPTIONS}
+                label="Product Type"
+                required
+                onChange={handleProductModeChange}
+              />
+
               <SelectField
                 name="categoryID"
                 control={control}
                 options={categoryOptions}
-                label="Select a Category"
-              />
-
-              <ToggleField
-                name="isMenuItem"
-                control={control}
-                options={PRODUCT_TYPE_OPTIONS}
-                label="Product Type"
-                required
-                onChange={handleProductTypeChange}
+                label={
+                  isMenuItem
+                    ? "Product Category"
+                    : "Ingredient Category"
+                }
               />
             </Flex>
           </FormSection>
@@ -303,7 +311,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </Flex>
           </FormSection>
 
-          {isMenuItem ? (
+          {/* ── Menu Item: selling price + optional material cost ── */}
+          {isMenuItem && (
             <FormSection
               icon={<RestaurantMenuOutlined style={{ color: "var(--green-11)" }} />}
               title="Menu Item Pricing"
@@ -318,12 +327,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     placeholder={PLACEHOLDERS.price}
                   />
                   <Text size="1" color="gray" as="div" mt="1">
-                    Price customers pay
+                    Price customers pay at the POS
+                  </Text>
+                </Box>
+                <Box>
+                  <TextField
+                    name="costPrice"
+                    control={control}
+                    label="Material Cost (Optional)"
+                    type="number"
+                    placeholder="0.00"
+                  />
+                  <Text size="1" color="gray" as="div" mt="1">
+                    Estimated cost to produce this item — used for profit tracking
                   </Text>
                 </Box>
               </Grid>
             </FormSection>
-          ) : (
+          )}
+
+          {/* ── Ingredient: purchase info + stock unit (recipe conversion) ── */}
+          {isIngredient && (
             <>
               <FormSection
                 icon={<LocalShippingOutlined style={{ color: "var(--amber-11)" }} />}
@@ -342,7 +366,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       Total amount paid to supplier (e.g., ₱2,300 for 15 kg)
                     </Text>
                   </Box>
-
                   <Box>
                     <TextField
                       name="purchaseQuantity"
@@ -352,10 +375,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       placeholder="15"
                     />
                     <Text size="1" color="gray" as="div" mt="1">
-                      How many units you bought (e.g., 15)
+                      How many units you bought
                     </Text>
                   </Box>
-
                   <Box>
                     <SelectField
                       name="purchaseUnitID"
@@ -383,10 +405,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       label="Stock Unit"
                     />
                     <Text size="1" color="gray" as="div" mt="1">
-                      Unit you use in recipes and inventory (e.g., pcs)
+                      Unit used in recipes and inventory (e.g., pcs)
                     </Text>
                   </Box>
-
                   <Box
                     p="3"
                     style={{
@@ -412,8 +433,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                         use pieces in recipes:
                         <br />• Purchase Unit: <strong>kg</strong>
                         <br />• Stock Unit: <strong>pcs</strong>
-                        <br />• The system will automatically convert using unit
-                        conversion
+                        <br />• The system converts automatically
                       </Text>
                     </Flex>
                   </Box>
@@ -422,19 +442,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </>
           )}
 
+
           <Callout.Root color="blue" variant="soft">
             <Callout.Icon>
               <InfoOutlined style={{ fontSize: 18 }} />
             </Callout.Icon>
             <Callout.Text>
-              <strong>Product Information:</strong>
-              <br />•{" "}
-              {isMenuItem ? "Menu items" : "Ingredients"} have been created
-              successfully
-              <br />•{" "}
+              <strong>
+                {isMenuItem ? "Menu Item" : "Ingredient"}:
+              </strong>{" "}
               {isMenuItem
-                ? "You can now create recipes using this menu item"
-                : "You can now set up inventory levels for this ingredient"}
+                ? "This product will appear on the POS and can be added to recipes."
+                : "Stock will be deducted automatically when linked menu items are sold."}
             </Callout.Text>
           </Callout.Root>
         </Flex>

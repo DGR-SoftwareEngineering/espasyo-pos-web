@@ -202,7 +202,7 @@ export const ContentButtonBlock: React.FC<Props> = ({
   }
 
   async function navigateToPage(redirectUrl: string) {
-    const fullLink = reuseUrlParameters
+    const fullLink = reuseUrlParameters && queryParams
       ? qs.stringifyUrl({ url: redirectUrl, query: queryParams })
       : redirectUrl;
     openInTheNewTab ? openInNewTab(fullLink) : await router.push(fullLink);

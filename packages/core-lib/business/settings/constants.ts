@@ -22,6 +22,9 @@ export const SETTING_KEYS = {
   PosReceiptFooter: "POS.ReceiptFooter",
   PosRequireManagerOverrideForRefund: "POS.RequireManagerOverrideForRefund",
   PosAllowMenuItemsWithoutRecipe: "POS.AllowMenuItemsWithoutRecipe",
+  PosTargetSalesEnabled: "POS.TargetSalesEnabled",
+  PosTargetSalesAmountPerDay: "POS.TargetSalesAmount",
+  PosTargetSalesConfettiEnabled: "POS.TargetSalesConfettiEnabled",
 
   CurrencyCode: "Currency.Code",
 

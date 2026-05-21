@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  BusinessSupplyCategoryDto,
   IngredientCategoryDto,
   ProductCategoryDto,
   ProductDataList,
@@ -11,10 +12,12 @@ import { useApi, useApiCallback } from "../../../../core/hooks";
 import { Box } from "@radix-ui/themes";
 import { FormRenderer } from "../../../radix/form/FormRenderer";
 
+type ProductMode = "menuItem" | "ingredient" | "supply";
+
 interface ProductFormSubmitValues {
   name: string;
   description?: string | null;
-  isMenuItem: boolean;
+  productMode: ProductMode;
   categoryID?: string | null;
   unitPrice?: number;
   costPrice?: number;
@@ -37,11 +40,17 @@ export const ProductEditDialogContent: React.FC<{
   const [ingredientCategories, setIngredientCategories] = useState<
     IngredientCategoryDto[]
   >([]);
+  const [businessSupplyCategories, setBusinessSupplyCategories] = useState<
+    BusinessSupplyCategoryDto[]
+  >([]);
   const [units, setUnits] = useState<UnitDto[]>([]);
 
   const productCategoryData = useApi((api) => api.commons.productCategoryList());
   const ingredientCategoryData = useApi((api) =>
     api.commons.ingredientCategoryList(),
+  );
+  const businessSupplyCategoryData = useApi((api) =>
+    api.commons.businessSupplyCategoryList(),
   );
   const unitData = useApi((api) => api.commons.unitList());
 
@@ -54,6 +63,10 @@ export const ProductEditDialogContent: React.FC<{
   }, [ingredientCategoryData.result?.data.response]);
 
   useEffect(() => {
+    setBusinessSupplyCategories(businessSupplyCategoryData.result?.data.response ?? []);
+  }, [businessSupplyCategoryData.result?.data.response]);
+
+  useEffect(() => {
     setUnits(unitData.result?.data.response ?? []);
   }, [unitData.result?.data.response]);
 
@@ -64,16 +77,21 @@ export const ProductEditDialogContent: React.FC<{
 
   const handleSubmit = async (formValues: ProductFormSubmitValues) => {
     try {
+      const isMenuItem = formValues.productMode === "menuItem";
+
       const payload: UpdateProductParams = {
         productID: product.productID,
         name: formValues.name,
         description: formValues.description ?? "",
-        isMenuItem: formValues.isMenuItem,
+        isMenuItem,
         categoryID: formValues.categoryID ?? null,
       };
 
-      if (formValues.isMenuItem) {
+      if (isMenuItem) {
         payload.unitPrice = formValues.unitPrice;
+        if (formValues.costPrice != null && formValues.costPrice > 0) {
+          payload.costPrice = formValues.costPrice;
+        }
       } else {
         payload.costPrice = formValues.costPrice;
         payload.purchaseQuantity = formValues.purchaseQuantity;
@@ -102,15 +120,19 @@ export const ProductEditDialogContent: React.FC<{
     }
   };
 
+  const productMode: ProductMode = product.isMenuItem
+    ? "menuItem"
+    : "ingredient";
+
   const initialValues: Partial<ProductFormSubmitValues> = {
     name: product.name,
     description: product.description ?? "",
+    productMode,
     unitPrice: product.unitPrice ?? undefined,
     costPrice: product.costPrice ?? undefined,
     purchaseQuantity: product.purchaseQuantity ?? undefined,
     purchaseUnitID: product.purchaseUnitID ?? "",
     stockUnitID: product.stockUnitID ?? "",
-    isMenuItem: product.isMenuItem,
     categoryID:
       (product.isMenuItem
         ? product.productCategoryID
@@ -122,6 +144,7 @@ export const ProductEditDialogContent: React.FC<{
   const lookupsLoading =
     productCategoryData.loading ||
     ingredientCategoryData.loading ||
+    businessSupplyCategoryData.loading ||
     unitData.loading;
 
   return (
@@ -133,6 +156,7 @@ export const ProductEditDialogContent: React.FC<{
         initialValues={initialValues}
         productCategories={productCategories}
         ingredientCategories={ingredientCategories}
+        businessSupplyCategories={businessSupplyCategories}
         units={units}
         lookupsLoading={lookupsLoading}
         isInDialog={true}

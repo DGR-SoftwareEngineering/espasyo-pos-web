@@ -21,6 +21,8 @@ const HTTP_OPTIONS: HttpOptions = {
       req.headers.Authorization = `Bearer ${accessToken}`;
   },
   onError: (error) => {
+    const status = (error as any)?.response?.status;
+    if (status === 401 || status === 403) return;
     const user = getItem<string | undefined>("user");
     console.error(
       `Error on response: ${JSON.stringify(error)}. User: ${JSON.stringify(
@@ -105,10 +107,12 @@ function createApi(client: AxiosInstance, httpSsrClient: AxiosInstance) {
 }
 
 function handleError(e: any) {
-  console.error(`Error on client side response: ${JSON.stringify(e)}`);
+  const status: number | undefined = e.response?.status;
+  if (status !== 401 && status !== 403) {
+    console.error(`Error on client side response: ${JSON.stringify(e)}`);
+  }
   const body = e.response?.data;
   const rawErrors = body?.errors;
-  const status: number | undefined = e.response?.status;
 
   let arr: string[];
   if (Array.isArray(rawErrors)) {

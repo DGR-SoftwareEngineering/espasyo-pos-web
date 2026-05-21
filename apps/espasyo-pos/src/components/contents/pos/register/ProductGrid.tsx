@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Badge,
   Box,
   Callout,
   Flex,
+  IconButton,
   ScrollArea,
   Spinner,
   Text,
@@ -15,7 +16,7 @@ import {
   PlusIcon,
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
-import { LocalCafeOutlined } from "@mui/icons-material";
+import { LocalCafeOutlined, GridViewOutlined, ViewListOutlined } from "@mui/icons-material";
 import {
   CategoryDataList,
   SellableProductDto,
@@ -53,10 +54,29 @@ const buildTileTooltip = (
   return null;
 };
 
+type ViewMode = "grid" | "list";
+
+const VIEW_MODE_KEY = "espasyo.pos.viewMode";
+
 export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) => {
   const { currencyCode, inventory, pos } = usePublicSettings();
   const [search, setSearch] = useState("");
   const [categoryID, setCategoryID] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(VIEW_MODE_KEY) as ViewMode | null;
+      if (saved === "list" || saved === "grid") setViewMode(saved);
+    }
+  }, []);
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(VIEW_MODE_KEY, mode);
+    }
+  };
 
   const productsCb = useApi(
     (api) =>
@@ -127,31 +147,64 @@ export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) =>
               )}
             </TextField.Root>
           </Box>
-          <Flex
-            align="center"
-            gap="2"
-            px="3"
-            py="1"
-            style={{
-              border: "1px solid var(--gray-a4)",
-              borderRadius: 999,
-              background: "var(--color-panel-solid)",
-            }}
-          >
-            <Box
+          <Flex align="center" gap="2">
+            <Flex
+              align="center"
+              gap="1"
               style={{
-                width: 8,
-                height: 8,
-                borderRadius: 999,
-                background: "var(--green-9)",
-                boxShadow: "0 0 0 3px var(--green-a4)",
+                border: "1px solid var(--gray-a4)",
+                borderRadius: 8,
+                padding: 4,
+                background: "var(--color-panel-solid)",
               }}
-            />
-            <Text size="1" color="gray" weight="medium">
-              {productsCb.loading
-                ? "Loading menu…"
-                : `${items.length} of ${totalItems} products`}
-            </Text>
+            >
+              <IconButton
+                variant={viewMode === "grid" ? "solid" : "soft"}
+                color={viewMode === "grid" ? "indigo" : "gray"}
+                size="2"
+                onClick={() => handleViewModeChange("grid")}
+                aria-label="Grid view"
+                title="Grid view"
+              >
+                <GridViewOutlined fontSize="small" />
+              </IconButton>
+              <IconButton
+                variant={viewMode === "list" ? "solid" : "soft"}
+                color={viewMode === "list" ? "indigo" : "gray"}
+                size="2"
+                onClick={() => handleViewModeChange("list")}
+                aria-label="List view"
+                title="List view"
+              >
+                <ViewListOutlined fontSize="small" />
+              </IconButton>
+            </Flex>
+            <Flex
+              align="center"
+              gap="2"
+              px="3"
+              py="1"
+              style={{
+                border: "1px solid var(--gray-a4)",
+                borderRadius: 999,
+                background: "var(--color-panel-solid)",
+              }}
+            >
+              <Box
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 999,
+                  background: "var(--green-9)",
+                  boxShadow: "0 0 0 3px var(--green-a4)",
+                }}
+              />
+              <Text size="1" color="gray" weight="medium">
+                {productsCb.loading
+                  ? "Loading menu…"
+                  : `${items.length} of ${totalItems} products`}
+              </Text>
+            </Flex>
           </Flex>
         </Flex>
 
@@ -215,11 +268,11 @@ export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) =>
               Try a different search or category.
             </Text>
           </Flex>
-        ) : (
+        ) : viewMode === "grid" ? (
           <Box
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fill, 168px)",
               gap: 12,
               padding: 16,
             }}
@@ -252,9 +305,183 @@ export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) =>
               );
             })}
           </Box>
+        ) : (
+          <Flex direction="column" p="3" gap="2">
+            {items.map((p) => {
+              const disabled = p.isOutOfStock && !allowNegative;
+              const tooltip = buildTileTooltip(
+                p,
+                pos.allowMenuItemsWithoutRecipe,
+                disabled,
+              );
+              const row = (
+                <ProductRow
+                  key={p.productID}
+                  product={p}
+                  disabled={disabled}
+                  currencyCode={currencyCode}
+                  inCartCount={cartCountByProductID[p.productID] ?? 0}
+                  onClick={() => onAdd(p)}
+                />
+              );
+              if (!tooltip) return row;
+              return (
+                <Tooltip key={p.productID} content={tooltip}>
+                  {row}
+                </Tooltip>
+              );
+            })}
+          </Flex>
         )}
       </ScrollArea>
     </Flex>
+  );
+};
+
+const ProductRow: React.FC<{
+  product: SellableProductDto;
+  disabled: boolean;
+  currencyCode: string;
+  inCartCount: number;
+  onClick: () => void;
+}> = ({ product, disabled, currencyCode, inCartCount, onClick }) => {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      style={{
+        width: "100%",
+        textAlign: "left",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        background: "var(--color-panel-solid)",
+        border: "1px solid var(--gray-a4)",
+        borderRadius: 10,
+        padding: 12,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.55 : 1,
+        transition: "all 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+            "var(--gray-a2)";
+          (e.currentTarget as HTMLButtonElement).style.borderColor =
+            "var(--gray-a6)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+          "var(--color-panel-solid)";
+        (e.currentTarget as HTMLButtonElement).style.borderColor =
+          "var(--gray-a4)";
+      }}
+    >
+      <Box
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 10,
+          background:
+            "linear-gradient(135deg, var(--gray-a3) 0%, var(--gray-a4) 100%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "var(--gray-9)",
+          overflow: "hidden",
+          flexShrink: 0,
+        }}
+      >
+        {product.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <LocalCafeOutlined style={{ fontSize: 24 }} />
+        )}
+      </Box>
+
+      <Flex direction="column" style={{ flex: 1, minWidth: 0 }}>
+        <Text
+          size="2"
+          weight="medium"
+          style={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {product.name}
+        </Text>
+        {product.categoryName && (
+          <Text
+            size="1"
+            color="gray"
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              textTransform: "uppercase",
+              letterSpacing: 0.6,
+              fontSize: 11,
+            }}
+          >
+            {product.categoryName}
+          </Text>
+        )}
+      </Flex>
+
+      <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
+        <Text
+          size="3"
+          weight="bold"
+          style={{
+            background:
+              "linear-gradient(135deg, var(--indigo-11) 0%, var(--violet-11) 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          {formatCurrency(product.sellingPrice, currencyCode)}
+        </Text>
+
+        {inCartCount > 0 && (
+          <Badge
+            color="indigo"
+            variant="solid"
+            radius="full"
+            size="1"
+            style={{ minWidth: 26, justifyContent: "center" }}
+          >
+            ×{inCartCount}
+          </Badge>
+        )}
+
+        {!disabled && (
+          <Box
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: "linear-gradient(135deg, var(--indigo-9) 0%, var(--violet-9) 100%)",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 6px var(--indigo-a5)",
+            }}
+          >
+            <PlusIcon width={16} height={16} />
+          </Box>
+        )}
+      </Flex>
+    </button>
   );
 };
 
@@ -305,6 +532,8 @@ const ProductTile: React.FC<{
         textAlign: "left",
         display: "flex",
         flexDirection: "column",
+        width: "100%",
+        height: "100%",
         background: "var(--color-panel-solid)",
         border: `1px solid ${
           inCart

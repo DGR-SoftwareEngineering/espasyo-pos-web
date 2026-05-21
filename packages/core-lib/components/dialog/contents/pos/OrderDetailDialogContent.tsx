@@ -229,6 +229,10 @@ export const OrderDetailDialogContent: React.FC<Props> = ({ data, onClose }) => 
     (currentOrder.completedAt ?? currentOrder.saleDate ?? "").slice(0, 10) ===
       new Date().toISOString().slice(0, 10);
 
+  const allItemsHaveStockMovements = !!currentOrder &&
+    currentOrder.items.length > 0 &&
+    currentOrder.items.every((item) => item.stockMovementIDs.length > 0);
+
   const canVoid =
     !!currentOrder &&
     isSameDay &&
@@ -296,6 +300,7 @@ export const OrderDetailDialogContent: React.FC<Props> = ({ data, onClose }) => 
           currencyCode={currencyCode}
           canVoid={canVoid}
           canRefund={canRefund}
+          hasUntrackedItems={!allItemsHaveStockMovements}
           onPrint={handlePrint}
           onVoid={() => setView("voiding")}
           onRefund={() => setView("refunding")}
@@ -342,6 +347,7 @@ const ReceiptView: React.FC<{
   currencyCode: string;
   canVoid: boolean;
   canRefund: boolean;
+  hasUntrackedItems: boolean;
   onPrint: () => void;
   onVoid: () => void;
   onRefund: () => void;
@@ -351,6 +357,7 @@ const ReceiptView: React.FC<{
   currencyCode,
   canVoid,
   canRefund,
+  hasUntrackedItems,
   onPrint,
   onVoid,
   onRefund,
@@ -526,6 +533,18 @@ const ReceiptView: React.FC<{
             ))}
           </Flex>
         </Box>
+      )}
+
+      {/* Warning: Untracked items won't have inventory adjusted on void */}
+      {hasUntrackedItems && (
+        <Callout.Root color="amber" mb="4">
+          <Callout.Icon>
+            <WarningAmberOutlined />
+          </Callout.Icon>
+          <Callout.Text>
+            This order contains items sold without recipe/stock tracking. If voided, inventory will not be adjusted for these items.
+          </Callout.Text>
+        </Callout.Root>
       )}
 
       {/* Actions */}

@@ -4,6 +4,7 @@ import { useApi, useApiCallback } from "core-lib/core/hooks";
 import {
   CreateInventoryParams,
   ProductDataList,
+  UnitDto,
 } from "core-lib/api/commons/types";
 import { InventoryForm } from "./InventoryForm";
 import { InventoryFormValues } from "./validation";
@@ -16,11 +17,19 @@ export const InventoryFormBlock: React.FC = () => {
   const ingredientsData = useApi((api) =>
     api.commons.getProductByIngredientsOrMenu(false),
   );
+  const unitsData = useApi((api) => api.commons.unitList());
 
   const ingredients = useMemo<ProductDataList[]>(
     () =>
-      (ingredientsData.result?.data.response ?? []).filter((p) => p.isActive),
+      (ingredientsData.result?.data.response ?? []).filter(
+        (p) => p.isActive && !p.isMenuItem && !!p.stockUnitID, // Ingredients with a stock unit only
+      ),
     [ingredientsData.result?.data.response],
+  );
+
+  const units = useMemo<UnitDto[]>(
+    () => unitsData.result?.data.response ?? [],
+    [unitsData.result?.data.response],
   );
 
   const createInventoryCb = useApiCallback(
@@ -73,6 +82,7 @@ export const InventoryFormBlock: React.FC = () => {
       isInDialog={false}
       ingredients={ingredients}
       ingredientsLoading={ingredientsData.loading}
+      units={units}
     />
   );
 };

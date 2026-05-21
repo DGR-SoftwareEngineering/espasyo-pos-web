@@ -23,6 +23,7 @@ import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
+import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import { JSX } from "react";
 
 export interface MenuItem {
@@ -216,6 +217,13 @@ export const menuItems: MenuItem[] = [
         permissionKey: "procurement.nested.purchaseOrders",
       },
     ],
+  },
+  {
+    id: "shift-management",
+    text: "Shift Management",
+    icon: <AccessTimeRoundedIcon />,
+    path: "/admin/hub/shift-management",
+    permissionKey: "shiftManagement",
   },
   {
     id: "sales",
