@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProductDataList } from "core-lib/api/commons/types";
-import { FilterState, StatsData } from "./types";
+import { FilterState, ProductTypeFilter, StatsData } from "./types";
 
 interface UseProductFiltersProps {
   products: ProductDataList[];
@@ -36,8 +36,11 @@ export const useProductFilters = ({ products }: UseProductFiltersProps) => {
     }
 
     if (filters.productTypeFilter !== "all") {
-      const isMenuItem = filters.productTypeFilter === 1;
-      filtered = filtered.filter((p) => p.isMenuItem === isMenuItem);
+      filtered = filtered.filter((p) => {
+        if (filters.productTypeFilter === "menuItem") return p.isMenuItem;
+        if (filters.productTypeFilter === "ingredient") return !p.isMenuItem;
+        return true;
+      });
     }
 
     setFilteredProducts(filtered);
@@ -53,12 +56,11 @@ export const useProductFilters = ({ products }: UseProductFiltersProps) => {
   const resetFilters = useCallback(() => {
     setFilters({
       searchTerm: "",
-      productTypeFilter: "all",
+      productTypeFilter: "all" as ProductTypeFilter,
       statusFilter: "all",
     });
   }, []);
 
-  // Updated stats - removed inventory-related stats
   const stats: StatsData = useMemo(
     () => ({
       totalProducts: products.length,

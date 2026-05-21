@@ -36,3 +36,4 @@ export * from "./StatsCard";
 export * from "./header";
 export * from "./FilterBar";
 export * from "./StatusChip";
+export * from "./confetti";

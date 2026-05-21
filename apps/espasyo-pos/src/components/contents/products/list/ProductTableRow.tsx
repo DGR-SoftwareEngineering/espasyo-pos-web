@@ -49,11 +49,7 @@ export const ProductTableRow: React.FC<Props> = ({
             label: "Ingredient Category",
             name: row.ingredientCategoryName,
           },
-    [
-      isMenuItem,
-      row.productCategoryName,
-      row.ingredientCategoryName,
-    ],
+    [isMenuItem, row.productCategoryName, row.ingredientCategoryName],
   );
 
   const columns = [

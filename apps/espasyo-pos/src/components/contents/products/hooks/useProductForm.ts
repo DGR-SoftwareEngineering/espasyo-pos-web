@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import {
   ProductForm as ProductFormType,
+  ProductMode,
   productFormSchema,
 } from "../forms/validation";
 import { toNumeric } from "core-lib/business/number";
@@ -18,10 +19,10 @@ interface UseProductFormProps {
 const defaultValues: ProductFormType = {
   name: "",
   description: "",
+  productMode: "menuItem",
   unitPrice: undefined,
   costPrice: undefined,
-  isMenuItem: true,
-  categoryID: null,
+  categoryID: null as any,
   purchaseQuantity: undefined,
   purchaseUnitID: "",
   stockUnitID: "",
@@ -50,28 +51,29 @@ export const useProductForm = ({
   });
 
   const { watch, setValue, trigger } = form;
+
+  const productMode: ProductMode = watch("productMode") ?? "menuItem";
+
   const watchedValues = {
     name: watch("name"),
     unitPrice: toNumeric(watch("unitPrice")),
     costPrice: toNumeric(watch("costPrice")),
     categoryId: watch("categoryID"),
-    isMenuItem: watch("isMenuItem"),
+    productMode,
     purchaseQuantity: toNumeric(watch("purchaseQuantity")),
     purchaseUnitID: watch("purchaseUnitID"),
     stockUnitID: watch("stockUnitID"),
   };
 
-  const handleProductTypeChange = useCallback(
-    (isMenuItem: boolean) => {
-      setValue("categoryID", null, { shouldValidate: true });
-      if (isMenuItem) {
-        setValue("costPrice", undefined, { shouldValidate: true });
-        setValue("purchaseQuantity", undefined, { shouldValidate: true });
-        setValue("purchaseUnitID", "", { shouldValidate: true });
-        setValue("stockUnitID", "", { shouldValidate: true });
-      } else {
-        setValue("unitPrice", undefined, { shouldValidate: true });
-      }
+  const handleProductModeChange = useCallback(
+    (_mode: ProductMode) => {
+      // Reset all pricing/unit fields when the product mode changes
+      setValue("categoryID", null as any, { shouldValidate: true });
+      setValue("unitPrice", undefined, { shouldValidate: true });
+      setValue("costPrice", undefined, { shouldValidate: true });
+      setValue("purchaseQuantity", undefined, { shouldValidate: true });
+      setValue("purchaseUnitID", "", { shouldValidate: true });
+      setValue("stockUnitID", "", { shouldValidate: true });
       void trigger();
     },
     [setValue, trigger],
@@ -81,6 +83,6 @@ export const useProductForm = ({
     ...form,
     watchedValues,
     submissionKey,
-    handleProductTypeChange,
+    handleProductModeChange,
   };
 };

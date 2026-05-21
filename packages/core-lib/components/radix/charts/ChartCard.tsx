@@ -167,51 +167,69 @@ export const ChartCard: React.FC<ChartCardProps> = ({
     <Card size="3" variant="surface" style={{ height: "100%" }}>
       <Flex direction="column" gap="3" style={{ height: "100%" }}>
         <Flex
-          justify="between"
-          align="start"
-          gap="3"
-          wrap="wrap"
+          direction="column"
+          gap="2"
         >
-          <Flex align="center" gap="3" style={{ minWidth: 0, flex: 1 }}>
-            {icon && (
-              <Box
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "var(--radius-3)",
-                  background: "var(--accent-a3)",
-                  color: "var(--accent-11)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {icon}
-              </Box>
-            )}
-            <Box style={{ minWidth: 0, flex: 1 }}>
-              <Flex align="center" gap="2" wrap="wrap">
-                {resolvedTitle && (
-                  <Heading size="3" weight="medium" truncate>
-                    {resolvedTitle}
-                  </Heading>
-                )}
-                {data?.meta?.stale && (
-                  <Badge color="amber" variant="soft" radius="full" size="1">
-                    Refreshing
-                  </Badge>
-                )}
-              </Flex>
-              {resolvedDesc && (
-                <Text size="1" color="gray" truncate>
-                  {resolvedDesc}
-                </Text>
+          <Flex
+            justify="between"
+            align="start"
+            gap="3"
+            wrap="wrap"
+          >
+            <Flex align="center" gap="3" style={{ minWidth: 0, flex: 1 }}>
+              {icon && (
+                <Box
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "var(--radius-3)",
+                    background: "var(--accent-a3)",
+                    color: "var(--accent-11)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {icon}
+                </Box>
               )}
-            </Box>
+              <Box style={{ minWidth: 0, flex: 1 }}>
+                <Flex align="center" gap="2" wrap="wrap">
+                  {resolvedTitle && (
+                    <Heading size="3" weight="medium" truncate>
+                      {resolvedTitle}
+                    </Heading>
+                  )}
+                  {data?.meta?.stale && (
+                    <Badge color="amber" variant="soft" radius="full" size="1">
+                      Refreshing
+                    </Badge>
+                  )}
+                </Flex>
+                {resolvedDesc && (
+                  <Text size="1" color="gray" truncate>
+                    {resolvedDesc}
+                  </Text>
+                )}
+              </Box>
+            </Flex>
+            <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
+              <IconButton
+                size="1"
+                variant="ghost"
+                color="gray"
+                onClick={refresh}
+                disabled={loading}
+                aria-label="Refresh chart"
+                title="Refresh"
+              >
+                <ReloadIcon />
+              </IconButton>
+            </Flex>
           </Flex>
-          <Flex align="center" gap="2">
-            {showFilters && (
+          {showFilters && (
+            <Flex align="center" gap="2" wrap="wrap">
               <ChartFilters
                 state={filters}
                 onChange={setFilters}
@@ -223,19 +241,8 @@ export const ChartCard: React.FC<ChartCardProps> = ({
                 productOptions={productOptions}
                 quickPeriods={quickPeriods}
               />
-            )}
-            <IconButton
-              size="1"
-              variant="ghost"
-              color="gray"
-              onClick={refresh}
-              disabled={loading}
-              aria-label="Refresh chart"
-              title="Refresh"
-            >
-              <ReloadIcon />
-            </IconButton>
-          </Flex>
+            </Flex>
+          )}
         </Flex>
 
         {(total !== undefined || trend || windowLabel) && (
@@ -322,12 +329,12 @@ export const ChartCard: React.FC<ChartCardProps> = ({
               height={height}
               variant={chartType === "donut" ? "donut" : "cartesian"}
             />
-          ) : isEmpty ? (
+          ) : isEmpty || !data ? (
             <ChartEmpty
               height={height}
               hint={`chartKey: ${chartKey}`}
             />
-          ) : data ? (
+          ) : (
             <RechartsCanvas
               type={chartType}
               series={data.series}
@@ -339,11 +346,6 @@ export const ChartCard: React.FC<ChartCardProps> = ({
               hiddenSeries={hiddenSeries}
               xAxisLabel={xAxisLabel}
               yAxisLabel={yAxisLabel}
-            />
-          ) : (
-            <ChartLoader
-              height={height}
-              variant={chartType === "donut" ? "donut" : "cartesian"}
             />
           )}
         </Box>

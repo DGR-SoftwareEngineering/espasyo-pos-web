@@ -52,6 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <Box
+      data-layout="app-header"
       style={{
         position: sticky ? "sticky" : "relative",
         top: 0,

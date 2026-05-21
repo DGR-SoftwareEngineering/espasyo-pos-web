@@ -83,6 +83,9 @@ export interface PublicPosConfig {
    * When false, such items are flagged out-of-stock and `POST /Sales` rejects with `MENUITEM.NO_RECIPE`.
    */
   allowMenuItemsWithoutRecipe: boolean;
+  targetSalesEnabled: boolean;
+  targetSalesAmountPerDay: number;
+  targetSalesConfettiEnabled: boolean;
 }
 
 export interface PublicSecurityPolicy {
@@ -154,6 +157,9 @@ const DEFAULTS: Omit<
     receiptHeader: "",
     receiptFooter: "",
     allowMenuItemsWithoutRecipe: true,
+    targetSalesEnabled: false,
+    targetSalesAmountPerDay: 0,
+    targetSalesConfettiEnabled: true,
   },
   security: {
     sessionTimeoutMinutes: 30,
@@ -363,6 +369,18 @@ const buildState = (settings: SystemSettingDto[]) => {
       allowMenuItemsWithoutRecipe: get<boolean>(
         SETTING_KEYS.PosAllowMenuItemsWithoutRecipe,
         DEFAULTS.pos.allowMenuItemsWithoutRecipe,
+      ),
+      targetSalesEnabled: get<boolean>(
+        SETTING_KEYS.PosTargetSalesEnabled,
+        DEFAULTS.pos.targetSalesEnabled,
+      ),
+      targetSalesAmountPerDay: get<number>(
+        SETTING_KEYS.PosTargetSalesAmountPerDay,
+        DEFAULTS.pos.targetSalesAmountPerDay,
+      ),
+      targetSalesConfettiEnabled: get<boolean>(
+        SETTING_KEYS.PosTargetSalesConfettiEnabled,
+        DEFAULTS.pos.targetSalesConfettiEnabled,
       ),
     },
     security: {

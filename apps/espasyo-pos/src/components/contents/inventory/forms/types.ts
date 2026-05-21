@@ -1,4 +1,4 @@
-import { ProductDataList, InventoryDto } from "core-lib/api/commons/types";
+import { ProductDataList, InventoryDto, UnitDto } from "core-lib/api/commons/types";
 import {
   AdjustStockFormValues,
   InventoryFormValues,
@@ -14,6 +14,7 @@ export interface InventoryFormProps {
   isInDialog: boolean;
   ingredients: ProductDataList[];
   ingredientsLoading?: boolean;
+  units: UnitDto[];
 }
 
 export interface AdjustStockFormProps {

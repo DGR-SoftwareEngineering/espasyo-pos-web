@@ -2,15 +2,19 @@ import { AxiosInstance } from "axios";
 import qs from "query-string";
 import { ApiResponse } from "../types";
 import {
+  BusinessExpenseListResponse,
+  BusinessExpenseResponse,
   CategoryListResponse,
   ChartDataApiResponse,
   ChartQueryParams,
+  CreateBusinessExpenseParams,
   CreateCategoryParams,
   CreatePaymentParams,
   CreateProductParams,
   CreatePurchaseOrderParams,
   CreateReceiptParams,
   CreateSupplierInvoiceParams,
+  UpdateBusinessExpenseParams,
   UpdateProductParams,
   UpdatePurchaseOrderParams,
   UpdateSupplierInvoiceParams,
@@ -56,10 +60,12 @@ import {
   BrandListResponse,
   BrandResponse,
   CreateBrandParams,
+  CreateBusinessSupplyCategoryParams,
   CreateIngredientCategoryParams,
   CreateLocationParams,
   CreateProductCategoryParams,
   CreateUnitParams,
+  BusinessSupplyCategoryDto,
   IngredientCategoryListResponse,
   IngredientCategoryResponse,
   LocationListResponse,
@@ -69,6 +75,7 @@ import {
   UnitListResponse,
   UnitResponse,
   UpdateBrandParams,
+  UpdateBusinessSupplyCategoryParams,
   UpdateIngredientCategoryParams,
   UpdateLocationParams,
   UpdateProductCategoryParams,
@@ -125,6 +132,12 @@ import {
   SellableProductListResponse,
   SellableProductQueryParams,
   VoidSaleParams,
+  ActiveShiftResponse,
+  ShiftResponse,
+  ShiftSummaryResponse,
+  ShiftListResponse,
+  OpenShiftParams,
+  CloseShiftParams,
 } from "./types";
 
 export class CommonsApi {
@@ -453,6 +466,73 @@ export class CommonsApi {
     return this.axios.delete<ApiResponse<string>>(
       `/api/v1/ingredientcategory-api/ingredientcategory`,
       { data: { id: ids } },
+    );
+  }
+
+  // Business Supply Category
+  public businessSupplyCategoryList() {
+    return this.axios.get<ApiResponse<BusinessSupplyCategoryDto[]>>(
+      `/api/v1/businesssupplycategory-api/businesssupplycategory`,
+    );
+  }
+  public createBusinessSupplyCategory(
+    params: CreateBusinessSupplyCategoryParams,
+  ) {
+    return this.axios.post<ApiResponse<BusinessSupplyCategoryDto>>(
+      `/api/v1/businesssupplycategory-api/businesssupplycategory`,
+      params,
+    );
+  }
+  public updateBusinessSupplyCategory(
+    params: UpdateBusinessSupplyCategoryParams,
+  ) {
+    return this.axios.put<ApiResponse<BusinessSupplyCategoryDto>>(
+      `/api/v1/businesssupplycategory-api/businesssupplycategory`,
+      params,
+    );
+  }
+  public deleteBusinessSupplyCategories(ids: string[]) {
+    return this.axios.delete<ApiResponse<string>>(
+      `/api/v1/businesssupplycategory-api/businesssupplycategory`,
+      { data: { id: ids } },
+    );
+  }
+
+  // Business Expense
+  public businessExpenseList(params?: {
+    from?: string;
+    to?: string;
+    categoryId?: string;
+  }) {
+    return this.axios.get<BusinessExpenseListResponse>(
+      `/api/v1/businessexpense-api/BusinessExpense`,
+      { params },
+    );
+  }
+
+  public businessExpenseGetById(id: string) {
+    return this.axios.get<BusinessExpenseResponse>(
+      `/api/v1/businessexpense-api/BusinessExpense/${id}`,
+    );
+  }
+
+  public createBusinessExpense(params: CreateBusinessExpenseParams) {
+    return this.axios.post<BusinessExpenseResponse>(
+      `/api/v1/businessexpense-api/BusinessExpense`,
+      params,
+    );
+  }
+
+  public updateBusinessExpense(params: UpdateBusinessExpenseParams) {
+    return this.axios.put<BusinessExpenseResponse>(
+      `/api/v1/businessexpense-api/BusinessExpense`,
+      params,
+    );
+  }
+
+  public deleteBusinessExpense(id: string) {
+    return this.axios.delete<ApiResponse<string>>(
+      `/api/v1/businessexpense-api/BusinessExpense/${id}`,
     );
   }
 
@@ -1165,6 +1245,38 @@ export class CommonsApi {
     return this.axios.get<DailySalesSummaryResponse>(
       `/api/v1/sales-api/Sales/daily-summary${search}`,
     );
+  }
+
+  // ─── Shift API ───────────────────────────────────────────────────────────────
+
+  public getActiveShift() {
+    return this.axios.get<ActiveShiftResponse>(
+      `/api/v1/shift-api/CashierShift/active`,
+    );
+  }
+
+  public openShift(params: OpenShiftParams) {
+    return this.axios.post<ShiftResponse>(
+      `/api/v1/shift-api/CashierShift/open`,
+      params,
+    );
+  }
+
+  public closeShift(params: CloseShiftParams) {
+    return this.axios.post<ShiftSummaryResponse>(
+      `/api/v1/shift-api/CashierShift/close`,
+      params,
+    );
+  }
+
+  public getShiftById(id: string) {
+    return this.axios.get<ShiftSummaryResponse>(
+      `/api/v1/shift-api/CashierShift/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public listShifts() {
+    return this.axios.get<ShiftListResponse>(`/api/v1/shift-api/CashierShift`);
   }
 
   // ─── Orders API ─────────────────────────────────────────────────────────────

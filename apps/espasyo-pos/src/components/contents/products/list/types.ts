@@ -28,10 +28,12 @@ export interface CategoryInfo {
   label: string;
 }
 
+export type ProductTypeFilter = "all" | "menuItem" | "ingredient";
+
 export interface FilterState {
   searchTerm: string;
   statusFilter: number | "all";
-  productTypeFilter: number | "all";
+  productTypeFilter: ProductTypeFilter;
 }
 
 export interface StatsData {

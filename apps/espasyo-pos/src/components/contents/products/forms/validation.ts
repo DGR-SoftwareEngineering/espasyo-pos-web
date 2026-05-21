@@ -20,6 +20,8 @@ const isOptionalUuid = (value: string | undefined | null): boolean => {
   return UUID_REGEX.test(value);
 };
 
+export type ProductMode = "menuItem" | "ingredient";
+
 export const productFormSchema = yup.object({
   name: yup
     .string()
@@ -34,11 +36,17 @@ export const productFormSchema = yup.object({
     .max(500, "Description must not exceed 500 characters")
     .default(""),
 
+  productMode: yup
+    .mixed<ProductMode>()
+    .oneOf(["menuItem", "ingredient"], "Invalid product type")
+    .required("Product type is required")
+    .default("menuItem"),
+
   unitPrice: yup
     .number()
     .transform(numericTransform)
-    .when("isMenuItem", {
-      is: true,
+    .when("productMode", {
+      is: "menuItem",
       then: (schema) =>
         schema
           .typeError("Unit price must be a number")
@@ -56,12 +64,12 @@ export const productFormSchema = yup.object({
   costPrice: yup
     .number()
     .transform(numericTransform)
-    .when("isMenuItem", {
-      is: false,
+    .when("productMode", {
+      is: "ingredient",
       then: (schema) =>
         schema
           .typeError("Cost price must be a number")
-          .required("Cost price is required for ingredients")
+          .required("Cost price is required")
           .positive("Cost price must be greater than 0")
           .max(1000000, "Cost price cannot exceed 1,000,000")
           .test(
@@ -69,36 +77,49 @@ export const productFormSchema = yup.object({
             "Cost price can only have up to 2 decimal places",
             hasMaxTwoDecimals,
           ),
-      otherwise: (schema) => schema.optional().nullable().default(null),
+      otherwise: (schema) =>
+        schema
+          .optional()
+          .nullable()
+          .default(null)
+          .test(
+            "material-cost-valid",
+            "Material cost must be a positive number (max 1,000,000) with up to 2 decimal places",
+            (value) => {
+              if (value === null || value === undefined) return true;
+              return value > 0 && value <= 1000000 && hasMaxTwoDecimals(value);
+            },
+          ),
     }),
 
   purchaseQuantity: yup
     .number()
     .transform(numericTransform)
-    .when("isMenuItem", {
-      is: false,
+    .when("productMode", {
+      is: "ingredient",
       then: (schema) =>
         schema
           .typeError("Purchase quantity must be a number")
-          .required("Purchase quantity is required for ingredients")
+          .required("Purchase quantity is required")
           .positive("Purchase quantity must be greater than 0")
           .max(1000000, "Purchase quantity cannot exceed 1,000,000"),
       otherwise: (schema) => schema.optional().nullable().default(null),
     }),
 
-  purchaseUnitID: yup.string().when("isMenuItem", {
-    is: false,
+  purchaseUnitID: yup.string().when("productMode", {
+    is: "ingredient",
     then: (schema) =>
       schema
-        .required("Purchase unit is required for ingredients")
+        .required("Purchase unit is required")
         .test("is-valid-uuid", "Invalid purchase unit", (value) =>
           UUID_REGEX.test(value || ""),
         ),
     otherwise: (schema) => schema.optional().nullable().default(null),
   }),
 
-  stockUnitID: yup.string().when("isMenuItem", {
-    is: false,
+  // Stock unit only required for ingredients (used in recipe conversions)
+  stockUnitID: yup.string().when("productMode", {
+    is: "ingredient",
     then: (schema) =>
       schema
         .required("Stock unit is required for ingredients")
@@ -108,13 +129,13 @@ export const productFormSchema = yup.object({
     otherwise: (schema) => schema.optional().nullable().default(null),
   }),
 
-  isMenuItem: yup.boolean().required("Product type is required").default(true),
-
   categoryID: yup
     .string()
-    .optional()
     .nullable()
-    .test("is-valid-uuid", "Invalid category", isOptionalUuid)
+    .required("Category is required")
+    .test("is-valid-uuid", "Invalid category", (value) =>
+      value === null || value === undefined || UUID_REGEX.test(value),
+    )
     .default(null),
 
   imageFile: yup
@@ -130,7 +151,8 @@ export const productFormSchema = yup.object({
     .test(
       "max-size",
       "Image must be 5 MB or smaller",
-      (value) => !value || (value instanceof File && value.size <= 5 * 1024 * 1024),
+      (value) =>
+        !value || (value instanceof File && value.size <= 5 * 1024 * 1024),
     )
     .default(null),
 

@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Box, Card, Flex, Text } from "@radix-ui/themes";
 import { ReloadIcon } from "@radix-ui/react-icons";
+import {
+  RestaurantMenuOutlined,
+  KitchenOutlined,
+  BusinessCenterOutlined,
+} from "@mui/icons-material";
 import { useApi } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";
 import { registerForm } from "core-lib/components/radix/form/FormRenderer";
@@ -12,8 +17,17 @@ import { FilterBar } from "core-lib/components/radix/FilterBar";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import { ProductList } from "./ProductList";
 import { useProductFilters } from "./hooks";
+import type { ProductTypeFilter } from "./types";
 import { DIALOG_TITLES, DIALOG_TYPES } from "../constants";
 import { ProductForm } from "../forms/ProductForm";
+
+type TypeTab = { value: ProductTypeFilter; label: string; icon: React.ReactNode; color: string };
+const TYPE_TABS: TypeTab[] = [
+  { value: "all", label: "All", icon: null, color: "var(--gray-11)" },
+  { value: "menuItem", label: "Menu Items", icon: <RestaurantMenuOutlined style={{ fontSize: 14 }} />, color: "var(--indigo-11)" },
+  { value: "ingredient", label: "Ingredients", icon: <KitchenOutlined style={{ fontSize: 14 }} />, color: "var(--green-11)" },
+  { value: "supply", label: "Business Supplies", icon: <BusinessCenterOutlined style={{ fontSize: 14 }} />, color: "var(--amber-11)" },
+];
 
 registerForm("product-form", ProductForm);
 
@@ -119,9 +133,59 @@ export const ProductListBlock: React.FC = () => {
             value={stats.ingredients}
             color="primary"
           />
+          <StatsCard
+            label="Business Supplies"
+            value={stats.businessSupplies}
+            color="warning"
+          />
         </Flex>
 
-        <Flex justify="between" align="center" gap="3" mt="4" wrap="wrap">
+        {/* Type filter tabs */}
+        <Box
+          mt="4"
+          style={{
+            display: "inline-flex",
+            borderRadius: 999,
+            border: "1px solid var(--gray-a4)",
+            background: "var(--gray-a2)",
+            padding: 3,
+            gap: 2,
+          }}
+        >
+          {TYPE_TABS.map((tab) => {
+            const active = filters.productTypeFilter === tab.value;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => {
+                  updateFilter("productTypeFilter", tab.value);
+                  setPageNumber(1);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "5px 12px",
+                  borderRadius: 999,
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: active ? 600 : 400,
+                  background: active ? "var(--color-background)" : "transparent",
+                  color: active ? tab.color : "var(--gray-11)",
+                  boxShadow: active ? "var(--shadow-1)" : "none",
+                  transition: "all 0.15s ease",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            );
+          })}
+        </Box>
+
+        <Flex justify="between" align="center" gap="3" mt="3" wrap="wrap">
           <FilterBar
             searchValue={filters.searchTerm}
             onSearchChange={(value) => updateFilter("searchTerm", value)}

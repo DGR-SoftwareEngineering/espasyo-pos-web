@@ -126,7 +126,7 @@ function getAllowedPrefixesByRole(role: string | null): string[] {
 function getHomePathByRole(role: string | null): string {
   switch (role ?? "") {
     case "cashier":
-      return "/cashier/pos";
+      return "/cashier/shift/open";
     case "admin":
       return "/admin/hub";
     default:

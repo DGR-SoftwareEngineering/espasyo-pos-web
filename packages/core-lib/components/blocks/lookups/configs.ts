@@ -4,9 +4,11 @@ import {
   KitchenOutlined,
   PlaceOutlined,
   StorefrontOutlined,
+  BusinessCenterOutlined,
 } from "@mui/icons-material";
 import {
   BrandDto,
+  BusinessSupplyCategoryDto,
   IngredientCategoryDto,
   LocationDto,
   ProductCategoryDto,
@@ -164,3 +166,44 @@ export const BRAND_CONFIG: LookupAdminConfig<BrandDto> = {
     delete: (api, ids) => api.commons.deleteBrands(ids),
   },
 };
+
+export const BUSINESS_SUPPLY_CATEGORY_CONFIG: LookupAdminConfig<BusinessSupplyCategoryDto> =
+  {
+    entityName: "Business Supply Category",
+    entityNamePlural: "Business Supply Categories",
+    description:
+      "Grouping for non-sellable business items (Furniture, Equipment, Cleaning Supplies, Uniforms, …).",
+    icon: BusinessCenterOutlined,
+    idField: "businessSupplyCategoryID",
+    parentIdField: "parentBusinessSupplyCategoryID",
+    parentNameField: "parentBusinessSupplyCategoryName",
+    selectors: {
+      list: (api) => api.commons.businessSupplyCategoryList(),
+      create: async (api, values) => {
+        const response = await api.commons.createBusinessSupplyCategory({
+          name: values.name,
+          description: values.description || null,
+          displayOrder: values.displayOrder,
+          parentBusinessSupplyCategoryID: values.parentID,
+        });
+        return {
+          data: { ...response.data, response: "" },
+          status: response.status,
+        };
+      },
+      update: async (api, id, values) => {
+        const response = await api.commons.updateBusinessSupplyCategory({
+          businessSupplyCategoryID: id,
+          name: values.name,
+          description: values.description || null,
+          displayOrder: values.displayOrder,
+          parentBusinessSupplyCategoryID: values.parentID,
+        });
+        return {
+          data: { ...response.data, response: "" },
+          status: response.status,
+        };
+      },
+      delete: (api, ids) => api.commons.deleteBusinessSupplyCategories(ids),
+    },
+  };

@@ -1,5 +1,7 @@
 import { UserAddress } from "./internal/types";
 
+type Nullable<T> = { [K in keyof T]?: T[K] | null };
+
 export type CmsTokens = Nullable<{
   email: string;
   phoneNumber: string;

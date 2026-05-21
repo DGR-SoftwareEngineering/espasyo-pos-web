@@ -1,14 +1,24 @@
 import { useToastContext } from "core-lib";
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
+import { Box } from "@radix-ui/themes";
+import {
+  TabsContextProvider,
+  TabsHeaderDesktop,
+  TabsHeaderMobile,
+  TabPanel,
+  TabOption,
+} from "core-lib/components/radix/tabs";
 import { ProductForm } from "./ProductForm";
 import { ProductForm as ProductFormType } from "./validation";
-import { useApiCallback, useApi } from "core-lib/core/hooks";
+import { BusinessExpenseFormBlock } from "./BusinessExpenseForm/BusinessExpenseFormBlock";
+import { useApiCallback, useApi, useResolution } from "core-lib/core/hooks";
 import {
   CreateProductParams,
   IngredientCategoryDto,
   ProductCategoryDto,
   UnitDto,
 } from "core-lib/api/commons/types";
+import { useEffect } from "react";
 
 export const ProductFormBlock: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -21,6 +31,7 @@ export const ProductFormBlock: React.FC = () => {
   >([]);
   const [units, setUnits] = useState<UnitDto[]>([]);
   const { showToast } = useToastContext();
+  const { isMobile } = useResolution();
 
   const productCategoryData = useApi((api) => api.commons.productCategoryList());
   const ingredientCategoryData = useApi((api) =>
@@ -49,17 +60,23 @@ export const ProductFormBlock: React.FC = () => {
     try {
       setLoading(true);
 
+      const isMenuItem = formData.productMode === "menuItem";
+
       const payload: CreateProductParams = {
         name: formData.name,
         description: formData.description || "",
-        isMenuItem: formData.isMenuItem,
+        isMenuItem,
         categoryID: formData.categoryID || null,
         imageFile: formData.imageFile ?? null,
       };
 
-      if (formData.isMenuItem) {
+      if (isMenuItem) {
         payload.unitPrice = formData.unitPrice!;
+        if (formData.costPrice != null && formData.costPrice > 0) {
+          payload.costPrice = formData.costPrice;
+        }
       } else {
+        // ingredient
         payload.costPrice = formData.costPrice!;
         payload.purchaseQuantity = formData.purchaseQuantity;
         payload.purchaseUnitID = formData.purchaseUnitID!;
@@ -88,16 +105,50 @@ export const ProductFormBlock: React.FC = () => {
     ingredientCategoryData.loading ||
     unitData.loading;
 
+  const tabs = useMemo<TabOption[]>(
+    () => [
+      {
+        key: "product_creation",
+        label: "Product",
+        content: (
+          <ProductForm
+            submitLoading={loading || lookupsLoading}
+            resetForm={resetForm}
+            onSubmit={handleSubmit}
+            isInDialog={false}
+            productCategories={productCategories}
+            ingredientCategories={ingredientCategories}
+            units={units}
+            lookupsLoading={lookupsLoading}
+          />
+        ),
+      },
+      {
+        key: "business_expense_creation",
+        label: "Business Expense",
+        content: <BusinessExpenseFormBlock />,
+      },
+    ],
+    [productCategories, ingredientCategories, units, loading, lookupsLoading, resetForm],
+  );
+
   return (
-    <ProductForm
-      submitLoading={loading || lookupsLoading}
-      resetForm={resetForm}
-      onSubmit={handleSubmit}
-      isInDialog={false}
-      productCategories={productCategories}
-      ingredientCategories={ingredientCategories}
-      units={units}
-      lookupsLoading={lookupsLoading}
-    />
+    <TabsContextProvider>
+      {isMobile ? (
+        <TabsHeaderMobile id="product_creation_mobile" tabs={tabs} />
+      ) : (
+        <TabsHeaderDesktop id="product_creation_desktop" tabs={tabs} />
+      )}
+      {tabs.map((tab, index) => (
+        <TabPanel
+          index={index}
+          id={`${tab.key}_tabpanel_${index}`}
+          aria-labelledby={`${tab.key}_tab_${index}`}
+          key={`${tab.key}_${index}`}
+        >
+          <Box pt="4">{tab.content}</Box>
+        </TabPanel>
+      ))}
+    </TabsContextProvider>
   );
 };

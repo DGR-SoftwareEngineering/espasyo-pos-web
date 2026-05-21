@@ -24,7 +24,7 @@ import { FormHeader } from "core-lib/components/radix/FormHeader";
 import { FormSection } from "core-lib/components/radix/FormSection";
 import { FormActions } from "core-lib/components/radix/FormActions";
 import { FormErrorSummary } from "core-lib/components/radix/FormErrorSummary";
-import { ProductDataList } from "core-lib/api/commons/types";
+import { ProductDataList, UnitDto } from "core-lib/api/commons/types";
 import { getStockStatus } from "core-lib/business/number";
 import { useInventoryForm } from "../hooks";
 import { PLACEHOLDERS } from "../constants";
@@ -52,6 +52,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
   isInDialog = false,
   ingredients,
   ingredientsLoading,
+  units,
 }) => {
   const {
     control,
@@ -72,6 +73,15 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
     () => ingredients.find((p) => p.productID === watchedValues.productID),
     [ingredients, watchedValues.productID],
   );
+
+  const unitLabel = React.useMemo(() => {
+    if (!selectedIngredient) return null;
+    if (selectedIngredient.stockUnitName) return selectedIngredient.stockUnitName;
+    if (selectedIngredient.stockUnitID) {
+      return units.find((u) => u.unitID === selectedIngredient.stockUnitID)?.name ?? null;
+    }
+    return null;
+  }, [selectedIngredient, units]);
 
   const projectedStatus = React.useMemo<ProjectedStatus | null>(() => {
     const { isNormal, isLow, isCritical } = getStockStatus(
@@ -205,19 +215,30 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
           <FormSection
             icon={<TuneOutlined style={{ color: "var(--blue-11)" }} />}
             title="Stock Levels"
-            description="Set the initial quantity and the thresholds that drive low-stock and critical statuses."
+            description={
+              unitLabel
+                ? `All quantities below are in ${unitLabel}, as set on this ingredient's product.`
+                : "Set the initial quantity and the thresholds that drive low-stock and critical statuses."
+            }
           >
             <Grid columns={{ initial: "1", md: "3" }} gap="3">
               <Box>
                 <TextField
                   name="currentQuantity"
                   control={control}
-                  label="Current Quantity"
+                  label={unitLabel ? `Current Quantity (${unitLabel})` : "Current Quantity"}
                   type="number"
                   placeholder={PLACEHOLDERS.currentQuantity}
+                  endAdornment={
+                    unitLabel ? (
+                      <Text size="1" color="gray" style={{ paddingRight: 4, whiteSpace: "nowrap" }}>
+                        {unitLabel}
+                      </Text>
+                    ) : undefined
+                  }
                 />
                 <Text size="1" color="gray" as="div" mt="1">
-                  Opening balance — use 0 if stock will be received later.
+                  Opening balance{unitLabel ? ` in ${unitLabel}` : ""} — use 0 if stock will be received later.
                 </Text>
               </Box>
 
@@ -225,9 +246,16 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
                 <TextField
                   name="reorderLevel"
                   control={control}
-                  label="Reorder Level"
+                  label={unitLabel ? `Reorder Level (${unitLabel})` : "Reorder Level"}
                   type="number"
                   placeholder={PLACEHOLDERS.reorderLevel}
+                  endAdornment={
+                    unitLabel ? (
+                      <Text size="1" color="gray" style={{ paddingRight: 4, whiteSpace: "nowrap" }}>
+                        {unitLabel}
+                      </Text>
+                    ) : undefined
+                  }
                 />
                 <Text size="1" color="gray" as="div" mt="1">
                   Triggers "Low Stock" when quantity drops to this level.
@@ -238,9 +266,16 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
                 <TextField
                   name="minimumStockLevel"
                   control={control}
-                  label="Minimum Stock Level"
+                  label={unitLabel ? `Minimum Stock Level (${unitLabel})` : "Minimum Stock Level"}
                   type="number"
                   placeholder={PLACEHOLDERS.minimumStockLevel}
+                  endAdornment={
+                    unitLabel ? (
+                      <Text size="1" color="gray" style={{ paddingRight: 4, whiteSpace: "nowrap" }}>
+                        {unitLabel}
+                      </Text>
+                    ) : undefined
+                  }
                 />
                 <Text size="1" color="gray" as="div" mt="1">
                   Triggers "Critical" when quantity drops to this level.
