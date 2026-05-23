@@ -39,6 +39,7 @@ export const useProductFilters = ({ products }: UseProductFiltersProps) => {
       filtered = filtered.filter((p) => {
         if (filters.productTypeFilter === "menuItem") return p.isMenuItem;
         if (filters.productTypeFilter === "ingredient") return !p.isMenuItem;
+        if (filters.productTypeFilter === "supply") return !p.isMenuItem;
         return true;
       });
     }
@@ -67,6 +68,7 @@ export const useProductFilters = ({ products }: UseProductFiltersProps) => {
       activeProducts: products.filter((p) => p.isActive).length,
       menuItems: products.filter((p) => p.isMenuItem).length,
       ingredients: products.filter((p) => !p.isMenuItem).length,
+      businessSupplies: 0,
     }),
     [products],
   );

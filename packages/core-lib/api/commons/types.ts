@@ -78,6 +78,8 @@ export interface ProductDataList {
   ingredientCategoryName: string | null;
   brandID: string | null;
   brandName: string | null;
+  variantCount?: number;
+  addOnGroupCount?: number;
   status?: number;
   createdBy: string | null;
   createdAt: string | null;
@@ -1289,6 +1291,9 @@ export interface SaleItemDto {
   /** Nullable: menu items produced from recipes don't require their own stock unit. */
   unitID: string | null;
   unitName: string;
+  /** Snapshot of the variant chosen at sale time. */
+  productVariantID: string | null;
+  variantName: string | null;
   quantity: number;
   unitPrice: number;
   discount: number;
@@ -1303,6 +1308,15 @@ export interface SaleItemDto {
   stockMovementIDs: string[];
   quantityRefunded: number;
   isRefunded: boolean;
+  /** Add-on snapshot rows captured at sale time. */
+  addOns: SaleItemAddOnDto[];
+}
+
+export interface SaleItemAddOnDto {
+  saleItemAddOnID: string;
+  groupName: string;
+  itemName: string;
+  additionalPrice: number;
 }
 
 export interface SalePaymentDto {
@@ -1381,6 +1395,8 @@ export interface SaleDetailDto {
   amountTendered: number;
   changeDue: number;
 
+  promoID: string | null;
+
   items: SaleItemDto[];
   payments: SalePaymentDto[];
 
@@ -1398,7 +1414,7 @@ export interface SellableProductDto {
   categoryID: string | null;
   categoryName: string | null;
   imageUrl: string | null;
-  sellingPrice: number;
+  sellingPrice: number | null;
   stockUnitName: string;
   /**
    * For ingredient products: Inventory.CurrentQuantity.
@@ -1416,10 +1432,16 @@ export interface SellableProductDto {
   noRecipeConfigured: boolean;
   /** Ingredient names limiting production. Populated only when isProducedFromRecipe=true AND stock is low/out. */
   bottleneckIngredientNames: string[];
+  /** When true, cashier MUST pick a variant before adding to the order. */
+  hasVariants: boolean;
+  variants: ProductVariantDto[];
+  addOnGroups: ProductAddOnGroupDto[];
 }
 
 export interface CreateSaleItemParams {
   productID: string;
+  productVariantID?: string | null;
+  addOnItemIDs?: string[] | null;
   quantity: number;
   unitPrice: number;
   discount?: number | null;
@@ -1633,3 +1655,381 @@ export type ActiveShiftResponse = ApiResponse<ShiftSummaryDto | null>;
 export type ShiftResponse = ApiResponse<CashierShiftDto>;
 export type ShiftSummaryResponse = ApiResponse<ShiftSummaryDto>;
 export type ShiftListResponse = ApiResponse<CashierShiftDto[]>;
+
+// ─── Promo Management ────────────────────────────────────────────────────────
+
+export type PromoType = "PercentageDiscount" | "FixedDiscount" | "BuyXGetY" | "Bundle";
+export type PromoStatus = "Draft" | "Active" | "Inactive" | "Scheduled" | "Expired";
+
+export interface PromoItemDto {
+  promoItemID: string;
+  /** Set when this item targets a specific product. Null when it targets a category. */
+  productID: string | null;
+  productName: string | null;
+  /** Set when this item targets a whole category (auto-expands to sub-categories at sale time). */
+  productCategoryID: string | null;
+  productCategoryName: string | null;
+  quantity: number;
+  isFreeItem: boolean;
+}
+
+export interface PromoDto {
+  promoID: string;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  type: PromoType;
+  status: PromoStatus;
+  discountPercent: number | null;
+  discountAmount: number | null;
+  buyQuantity: number | null;
+  getQuantity: number | null;
+  bundlePrice: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  originalPrice: number | null;
+  promoPrice: number | null;
+  estimatedCost: number | null;
+  estimatedProfit: number | null;
+  estimatedMargin: number | null;
+  isAiGenerated: boolean;
+  reason: string | null;
+  createdAt: string;
+  items: PromoItemDto[];
+}
+
+export interface PromoSuggestionDto {
+  promoType: number;
+  description: string;
+  originalPrice: number;
+  promoPrice: number;
+  cost: number;
+  profit: number;
+  margin: number;
+  reason: string;
+  suggestedProductIDs: string[];
+}
+
+export interface PromoItemInput {
+  /** Exactly one of productID / productCategoryID must be set per item (backend rejects both/neither with 400). */
+  productID?: string | null;
+  productCategoryID?: string | null;
+  quantity: number;
+  isFreeItem: boolean;
+}
+
+export interface PromoCalculateRequest {
+  promoType: number;
+  discountPercent?: number | null;
+  discountAmount?: number | null;
+  buyQuantity?: number | null;
+  getQuantity?: number | null;
+  bundlePrice?: number | null;
+  items: PromoItemInput[];
+}
+
+export interface PromoCalculateResult {
+  originalPrice: number;
+  finalPrice: number;
+  totalCost: number;
+  profit: number;
+  marginPercent: number;
+  isViable: boolean;
+  hasCostData: boolean;
+}
+
+export interface CreatePromoParams {
+  title: string;
+  description?: string | null;
+  imageFile?: File | null;
+  type: number;
+  discountPercent?: number | null;
+  discountAmount?: number | null;
+  buyQuantity?: number | null;
+  getQuantity?: number | null;
+  bundlePrice?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  reason?: string | null;
+  isAiGenerated: boolean;
+  items: PromoItemInput[];
+}
+
+export interface UpdatePromoParams {
+  promoID: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+}
+
+export type PromoResponse = ApiResponse<PromoDto>;
+export type PromoListResponse = ApiResponse<PromoDto[]>;
+export type PromoSuggestionListResponse = ApiResponse<PromoSuggestionDto[]>;
+export type PromoCalculateResponse = ApiResponse<PromoCalculateResult>;
+
+// ===== Product Variants =====
+export interface ProductVariantDto {
+  productVariantID: string;
+  productID: string;
+  name: string;
+  price: number;
+  displayOrder: number;
+  isActive: boolean;
+}
+export interface CreateProductVariantDto {
+  productID: string;
+  name: string;
+  price: number;
+  displayOrder: number;
+}
+export interface UpdateProductVariantDto extends CreateProductVariantDto {
+  productVariantID: string;
+}
+export type ProductVariantResponse = ApiResponse<ProductVariantDto>;
+export type ProductVariantListResponse = ApiResponse<ProductVariantDto[]>;
+
+// ===== Product Add-Ons =====
+export interface ProductAddOnItemDto {
+  productAddOnItemID: string;
+  productAddOnGroupID: string;
+  name: string;
+  additionalPrice: number;
+  displayOrder: number;
+  isActive: boolean;
+}
+export interface ProductAddOnGroupDto {
+  productAddOnGroupID: string;
+  productID: string;
+  name: string;
+  isRequired: boolean;
+  minSelections: number;
+  maxSelections: number;
+  displayOrder: number;
+  isActive: boolean;
+  items: ProductAddOnItemDto[];
+}
+export interface CreateProductAddOnGroupItemDto {
+  name: string;
+  additionalPrice: number;
+  displayOrder: number;
+}
+export interface CreateProductAddOnGroupDto {
+  productID: string;
+  name: string;
+  isRequired: boolean;
+  minSelections: number;
+  maxSelections: number;
+  displayOrder: number;
+  items?: CreateProductAddOnGroupItemDto[];
+}
+export interface UpdateProductAddOnGroupDto {
+  productAddOnGroupID: string;
+  productID: string;
+  name: string;
+  isRequired: boolean;
+  minSelections: number;
+  maxSelections: number;
+  displayOrder: number;
+}
+export interface AddProductAddOnItemDto {
+  productAddOnGroupID: string;
+  name: string;
+  additionalPrice: number;
+  displayOrder: number;
+}
+export interface UpdateProductAddOnItemDto extends AddProductAddOnItemDto {
+  productAddOnItemID: string;
+}
+export type ProductAddOnGroupResponse = ApiResponse<ProductAddOnGroupDto>;
+export type ProductAddOnGroupListResponse = ApiResponse<ProductAddOnGroupDto[]>;
+export type ProductAddOnItemResponse = ApiResponse<ProductAddOnItemDto>;
+
+// ── Bulk product creation ────────────────────────────────────────────────────
+export interface BulkCreateVariantItem {
+  name: string;
+  price: number;
+  displayOrder?: number;
+}
+export interface BulkCreateAddOnItem {
+  name: string;
+  additionalPrice?: number;
+  displayOrder?: number;
+}
+export interface BulkCreateAddOnGroup {
+  name: string;
+  isRequired?: boolean;
+  minSelections?: number;
+  maxSelections?: number;
+  displayOrder?: number;
+  items: BulkCreateAddOnItem[];
+}
+export interface BulkCreateProductItem {
+  name: string;
+  description?: string;
+  unitPrice?: number;
+  costPrice?: number;
+  purchaseQuantity?: number;
+  purchaseUnitID?: string;
+  stockUnitID?: string;
+  isMenuItem: boolean;
+  imageUrl?: string;
+  productCategoryID?: string;
+  ingredientCategoryID?: string;
+  brandID?: string;
+  variants?: BulkCreateVariantItem[];
+  addOnGroups?: BulkCreateAddOnGroup[];
+}
+export interface BulkCreateProductParams {
+  products: BulkCreateProductItem[];
+}
+export interface BulkCreateError {
+  index: number;
+  name: string;
+  messages: string[];
+}
+export interface BulkCreatedProduct {
+  productID: string;
+  name: string;
+}
+export interface BulkCreateProductResult {
+  created: number;
+  failed: number;
+  products: BulkCreatedProduct[];
+  errors: BulkCreateError[];
+}
+export type BulkCreateProductResponse = ApiResponse<BulkCreateProductResult>;
+
+// ── Excel import ─────────────────────────────────────────────────────────────
+export interface ImportExcelParams {
+  file: File;
+}
+export type ImportExcelResponse = BulkCreateProductResponse;
+
+// ── Variant templates ─────────────────────────────────────────────────────────
+export interface ProductVariantTemplateItemDto {
+  productVariantTemplateItemID: string;
+  name: string;
+  defaultPrice: number;
+  displayOrder: number;
+  isActive: boolean;
+}
+export interface ProductVariantTemplateDto {
+  productVariantTemplateID: string;
+  name: string;
+  description?: string;
+  items: ProductVariantTemplateItemDto[];
+}
+export type ProductVariantTemplateResponse = ApiResponse<ProductVariantTemplateDto>;
+export type ProductVariantTemplateListResponse = ApiResponse<ProductVariantTemplateDto[]>;
+
+export interface CreateVariantTemplateItemDto {
+  name: string;
+  defaultPrice: number;
+  displayOrder: number;
+}
+export interface CreateVariantTemplateParams {
+  name: string;
+  description?: string;
+  items: CreateVariantTemplateItemDto[];
+}
+
+export interface UpdateVariantTemplateItemDto {
+  productVariantTemplateItemID?: string;
+  name: string;
+  defaultPrice: number;
+  displayOrder: number;
+  isActive: boolean;
+}
+export interface UpdateVariantTemplateParams {
+  productVariantTemplateID: string;
+  name: string;
+  description?: string;
+  items: UpdateVariantTemplateItemDto[];
+}
+
+export interface ApplyVariantOverride {
+  productVariantTemplateItemID: string;
+  name?: string;
+  price?: number;
+}
+export interface ApplyVariantTemplateParams {
+  productID: string;
+  templateID: string;
+  overrides?: ApplyVariantOverride[];
+}
+export type ApplyVariantTemplateResponse = ApiResponse<number>;
+
+// ── Add-on templates ──────────────────────────────────────────────────────────
+export interface ProductAddOnTemplateItemDto {
+  productAddOnTemplateItemID: string;
+  name: string;
+  additionalPrice: number;
+  displayOrder: number;
+}
+export interface ProductAddOnTemplateGroupDto {
+  productAddOnTemplateGroupID: string;
+  name: string;
+  isRequired: boolean;
+  minSelections: number;
+  maxSelections: number;
+  displayOrder: number;
+  items: ProductAddOnTemplateItemDto[];
+}
+export interface ProductAddOnTemplateDto {
+  productAddOnTemplateID: string;
+  name: string;
+  description?: string;
+  groups: ProductAddOnTemplateGroupDto[];
+}
+export type ProductAddOnTemplateResponse = ApiResponse<ProductAddOnTemplateDto>;
+export type ProductAddOnTemplateListResponse = ApiResponse<ProductAddOnTemplateDto[]>;
+
+export interface CreateAddOnTemplateItemDto {
+  name: string;
+  additionalPrice: number;
+  displayOrder: number;
+}
+export interface CreateAddOnTemplateGroupDto {
+  name: string;
+  isRequired: boolean;
+  minSelections: number;
+  maxSelections: number;
+  displayOrder: number;
+  items: CreateAddOnTemplateItemDto[];
+}
+export interface CreateAddOnTemplateParams {
+  name: string;
+  description?: string;
+  groups: CreateAddOnTemplateGroupDto[];
+}
+
+export interface UpdateAddOnTemplateItemDto {
+  productAddOnTemplateItemID?: string;
+  name: string;
+  additionalPrice: number;
+  displayOrder: number;
+  isActive: boolean;
+}
+export interface UpdateAddOnTemplateGroupDto {
+  productAddOnTemplateGroupID?: string;
+  name: string;
+  isRequired: boolean;
+  minSelections: number;
+  maxSelections: number;
+  displayOrder: number;
+  isActive: boolean;
+  items: UpdateAddOnTemplateItemDto[];
+}
+export interface UpdateAddOnTemplateParams {
+  productAddOnTemplateID: string;
+  name: string;
+  description?: string;
+  groups: UpdateAddOnTemplateGroupDto[];
+}
+
+export interface ApplyAddOnTemplateParams {
+  productID: string;
+  templateID: string;
+}
+export type ApplyAddOnTemplateResponse = ApiResponse<number>;

@@ -40,7 +40,7 @@ const formatTime = (d: Date) => {
   return `${padTwo(h12)}:${padTwo(m)}:${padTwo(s)} ${ampm}`;
 };
 const formatDate = (d: Date) =>
-  d.toLocaleDateString([], {
+  d.toLocaleDateString('en-US', {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -69,7 +69,8 @@ export const OpenShiftBlock: React.FC = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
+  const [greeting, setGreeting] = useState('');
 
   const activeShiftCb = useApiCallback(async (api) => api.commons.getActiveShift());
   const openShiftCb = useApiCallback(
@@ -83,6 +84,8 @@ export const OpenShiftBlock: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    setGreeting(getGreeting());
+    setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
@@ -343,7 +346,7 @@ export const OpenShiftBlock: React.FC = () => {
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
                 <Text size="1" style={{ color: "rgba(255,255,255,0.45)" }}>
-                  © {new Date().getFullYear()} {systemName}. All rights reserved.
+                  © <span suppressHydrationWarning>{new Date().getFullYear()}</span> {systemName}. All rights reserved.
                 </Text>
               </MotionDiv>
             </Flex>
@@ -428,13 +431,13 @@ export const OpenShiftBlock: React.FC = () => {
                 {/* Header — greeting + clock */}
                 <Flex direction="column" gap="1" mb="5">
                   <Text size="2" color="gray" weight="medium">
-                    {getGreeting()},
+                    {greeting || ' '},
                   </Text>
                   <Heading size="7" weight="bold" style={{ letterSpacing: "-0.02em" }}>
                     {displayName}
                   </Heading>
                   <Flex align="center" gap="2" mt="1">
-                    <Text size="2" color="gray">{formatDate(now)}</Text>
+                    <Text size="2" color="gray">{now ? formatDate(now) : ' '}</Text>
                   </Flex>
                   <Box
                     mt="2"
@@ -457,7 +460,7 @@ export const OpenShiftBlock: React.FC = () => {
                         fontFamily: "monospace",
                       }}
                     >
-                      {formatTime(now)}
+                      {now ? formatTime(now) : '--:--:-- --'}
                     </Text>
                   </Box>
                 </Flex>

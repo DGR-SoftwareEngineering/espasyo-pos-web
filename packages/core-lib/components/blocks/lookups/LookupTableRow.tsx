@@ -12,6 +12,8 @@ import {
   Pencil1Icon,
   TrashIcon,
   Share1Icon,
+  ChevronRightIcon,
+  ChevronDownIcon,
 } from "@radix-ui/react-icons";
 import { BaseTableRow } from "../../radix/table/BaseTableRow";
 import { formatDateTime } from "../../../business/dates";
@@ -23,6 +25,14 @@ interface Props<TDto extends LookupDtoBase> {
   config: LookupAdminConfig<TDto>;
   onEdit: (row: TDto) => void;
   onDelete: (row: TDto) => void;
+  /** Tree depth (0 = root). Used to indent the name column when enableTree is on. */
+  depth?: number;
+  /** Whether this row has at least one child in the rendered tree. */
+  hasChildren?: boolean;
+  /** Whether children are currently expanded. */
+  expanded?: boolean;
+  /** Click handler for the chevron. */
+  onToggle?: () => void;
 }
 
 /**
@@ -36,19 +46,42 @@ export function LookupTableRow<TDto extends LookupDtoBase>({
   config,
   onEdit,
   onDelete,
+  depth = 0,
+  hasChildren = false,
+  expanded = false,
+  onToggle,
 }: Props<TDto>) {
   const parentName = config.parentNameField
     ? ((row[config.parentNameField] as unknown as string | null) ?? null)
     : null;
 
-  const rowId = row[config.idField] as unknown as string;
+  const rowId = (row[config.idField] as unknown as string | undefined) ?? "";
+  const indent = depth * 20;
 
   const columns = [
     {
       id: "name",
       width: "30%",
       render: () => (
-        <Flex align="center" gap="3">
+        <Flex align="center" gap="2" style={{ paddingLeft: indent }}>
+          {config.enableTree ? (
+            hasChildren ? (
+              <IconButton
+                size="1"
+                variant="ghost"
+                color="gray"
+                aria-label={expanded ? "Collapse" : "Expand"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggle?.();
+                }}
+              >
+                {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+              </IconButton>
+            ) : (
+              <Box style={{ width: 24, flexShrink: 0 }} />
+            )
+          ) : null}
           <Avatar
             size="2"
             radius="full"
@@ -162,5 +195,5 @@ export function LookupTableRow<TDto extends LookupDtoBase>({
     },
   ];
 
-  return <BaseTableRow data={row} rowKey={rowId} columns={columns} />;
+  return <BaseTableRow data={row} rowKey={rowId || row.name} columns={columns} />;
 }

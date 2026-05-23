@@ -1,7 +1,10 @@
-import { LookupAdminBlock, PRODUCT_CATEGORY_CONFIG } from "core-lib";
+import { useEffect } from "react";
+import { useRouter } from "core-lib/core/router";
 
 const ProductCategoriesSettingsPage = () => {
-  return <LookupAdminBlock config={PRODUCT_CATEGORY_CONFIG} />;
+  const router = useRouter();
+  useEffect(() => { router.replace("/admin/hub/categories"); }, []);
+  return null;
 };
 
 export default ProductCategoriesSettingsPage;

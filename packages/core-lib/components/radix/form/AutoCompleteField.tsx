@@ -8,6 +8,7 @@ import {
   IconButton,
   Spinner,
 } from "@radix-ui/themes";
+import { Anchor as PopoverAnchor } from "@radix-ui/react-popover";
 import { MagnifyingGlassIcon, Cross1Icon } from "@radix-ui/react-icons";
 import {
   Control,
@@ -197,7 +198,7 @@ function AutoCompleteFieldComponent<TForm extends FieldValues, TOption>({
       )}
 
       <Popover.Root open={open} onOpenChange={setOpen}>
-        <Popover.Trigger>
+        <PopoverAnchor asChild>
           <RadixTextField.Root
             id={field.name}
             size={size}
@@ -239,12 +240,13 @@ function AutoCompleteFieldComponent<TForm extends FieldValues, TOption>({
               </RadixTextField.Slot>
             )}
           </RadixTextField.Root>
-        </Popover.Trigger>
+        </PopoverAnchor>
 
         <Popover.Content
           align="start"
           side="bottom"
           sideOffset={4}
+          onOpenAutoFocus={(e) => e.preventDefault()}
           style={{ width: "var(--radix-popover-trigger-width)", padding: 0 }}
         >
           {loading && (

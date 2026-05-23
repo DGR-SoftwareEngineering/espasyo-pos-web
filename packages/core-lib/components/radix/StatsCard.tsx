@@ -21,7 +21,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   value,
   icon,
   color = "primary",
-  formatValue = (v) => v.toString(),
+  formatValue = (v) => (v != null ? v.toString() : "0"),
   trend,
   variant = "default",
   onClick,
@@ -72,7 +72,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
               weight="bold"
               style={{ color: radixVar.accent(accent, 11) }}
             >
-              {formatValue(value)}
+              {formatValue(value ?? 0)}
             </Heading>
             <Text size="1" color="gray">
               {label}
@@ -96,7 +96,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
             weight="bold"
             style={{ color: radixVar.accent(accent, 11) }}
           >
-            {formatValue(value)}
+            {formatValue(value ?? 0)}
           </Heading>
           {trend && (
             <Flex align="center" gap="2">
@@ -132,7 +132,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
               weight="bold"
               style={{ color: radixVar.accent(accent, 11) }}
             >
-              {formatValue(value)}
+              {formatValue(value ?? 0)}
             </Heading>
           </Flex>
         </Flex>

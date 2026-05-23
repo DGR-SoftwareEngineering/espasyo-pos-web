@@ -138,6 +138,40 @@ import {
   ShiftListResponse,
   OpenShiftParams,
   CloseShiftParams,
+  CreatePromoParams,
+  UpdatePromoParams,
+  PromoCalculateRequest,
+  PromoResponse,
+  PromoListResponse,
+  PromoSuggestionListResponse,
+  PromoCalculateResponse,
+  CreateProductVariantDto,
+  UpdateProductVariantDto,
+  ProductVariantResponse,
+  ProductVariantListResponse,
+  CreateProductAddOnGroupDto,
+  UpdateProductAddOnGroupDto,
+  AddProductAddOnItemDto,
+  UpdateProductAddOnItemDto,
+  ProductAddOnGroupResponse,
+  ProductAddOnGroupListResponse,
+  ProductAddOnItemResponse,
+  BulkCreateProductParams,
+  BulkCreateProductResponse,
+  ImportExcelParams,
+  ImportExcelResponse,
+  ProductVariantTemplateListResponse,
+  ProductVariantTemplateResponse,
+  CreateVariantTemplateParams,
+  UpdateVariantTemplateParams,
+  ApplyVariantTemplateParams,
+  ApplyVariantTemplateResponse,
+  ProductAddOnTemplateListResponse,
+  ProductAddOnTemplateResponse,
+  CreateAddOnTemplateParams,
+  UpdateAddOnTemplateParams,
+  ApplyAddOnTemplateParams,
+  ApplyAddOnTemplateResponse,
 } from "./types";
 
 export class CommonsApi {
@@ -328,6 +362,81 @@ export class CommonsApi {
   public getProductByIngredientsOrMenu(isMenuItem: boolean) {
     return this.axios.get<ProductListResponse>(
       `/api/v1/product-api/product/product-by-menuitem?isMenuItem=${isMenuItem}`,
+    );
+  }
+
+  // ── Product Variants ───────────────────────────────────────────
+  public productVariantsByProduct(productId: string) {
+    return this.axios.get<ProductVariantListResponse>(
+      `/api/v1/product-api/ProductVariant/by-product/${productId}`,
+    );
+  }
+  public productVariantGet(id: string) {
+    return this.axios.get<ProductVariantResponse>(
+      `/api/v1/product-api/ProductVariant/${id}`,
+    );
+  }
+  public productVariantCreate(params: CreateProductVariantDto) {
+    return this.axios.post<ProductVariantResponse>(
+      `/api/v1/product-api/ProductVariant`,
+      params,
+    );
+  }
+  public productVariantUpdate(params: UpdateProductVariantDto) {
+    return this.axios.put<ProductVariantResponse>(
+      `/api/v1/product-api/ProductVariant`,
+      params,
+    );
+  }
+  public productVariantDelete(id: string) {
+    return this.axios.delete<ApiResponse<number>>(
+      `/api/v1/product-api/ProductVariant/${id}`,
+    );
+  }
+
+  // ── Product Add-Ons ────────────────────────────────────────────
+  public productAddOnGroupsByProduct(productId: string) {
+    return this.axios.get<ProductAddOnGroupListResponse>(
+      `/api/v1/product-api/ProductAddOn/groups/by-product/${productId}`,
+    );
+  }
+  public productAddOnGroupGet(groupId: string) {
+    return this.axios.get<ProductAddOnGroupResponse>(
+      `/api/v1/product-api/ProductAddOn/groups/${groupId}`,
+    );
+  }
+  public productAddOnGroupCreate(params: CreateProductAddOnGroupDto) {
+    return this.axios.post<ProductAddOnGroupResponse>(
+      `/api/v1/product-api/ProductAddOn/groups`,
+      params,
+    );
+  }
+  public productAddOnGroupUpdate(params: UpdateProductAddOnGroupDto) {
+    return this.axios.put<ProductAddOnGroupResponse>(
+      `/api/v1/product-api/ProductAddOn/groups`,
+      params,
+    );
+  }
+  public productAddOnGroupDelete(groupId: string) {
+    return this.axios.delete<ApiResponse<number>>(
+      `/api/v1/product-api/ProductAddOn/groups/${groupId}`,
+    );
+  }
+  public productAddOnItemCreate(params: AddProductAddOnItemDto) {
+    return this.axios.post<ProductAddOnItemResponse>(
+      `/api/v1/product-api/ProductAddOn/items`,
+      params,
+    );
+  }
+  public productAddOnItemUpdate(params: UpdateProductAddOnItemDto) {
+    return this.axios.put<ProductAddOnItemResponse>(
+      `/api/v1/product-api/ProductAddOn/items`,
+      params,
+    );
+  }
+  public productAddOnItemDelete(itemId: string) {
+    return this.axios.delete<ApiResponse<number>>(
+      `/api/v1/product-api/ProductAddOn/items/${itemId}`,
     );
   }
 
@@ -1279,6 +1388,82 @@ export class CommonsApi {
     return this.axios.get<ShiftListResponse>(`/api/v1/shift-api/CashierShift`);
   }
 
+  // ─── Promo API ───────────────────────────────────────────────────────────────
+
+  public promoSuggestions() {
+    return this.axios.get<PromoSuggestionListResponse>(`/api/v1/promo-api/promo/suggestions`);
+  }
+
+  public promoCalculate(params: PromoCalculateRequest) {
+    return this.axios.post<PromoCalculateResponse>(`/api/v1/promo-api/promo/calculate`, params);
+  }
+
+  public promoCreate(params: CreatePromoParams) {
+    const form = new FormData();
+    form.append("title", params.title);
+    if (params.description != null) form.append("description", params.description);
+    form.append("type", String(params.type));
+    form.append("isAiGenerated", String(params.isAiGenerated));
+    if (params.discountPercent != null) form.append("discountPercent", String(params.discountPercent));
+    if (params.discountAmount != null) form.append("discountAmount", String(params.discountAmount));
+    if (params.buyQuantity != null) form.append("buyQuantity", String(params.buyQuantity));
+    if (params.getQuantity != null) form.append("getQuantity", String(params.getQuantity));
+    if (params.bundlePrice != null) form.append("bundlePrice", String(params.bundlePrice));
+    if (params.startDate != null) form.append("startDate", params.startDate);
+    if (params.endDate != null) form.append("endDate", params.endDate);
+    if (params.reason != null) form.append("reason", params.reason);
+    if (params.imageFile instanceof File) form.append("imageFile", params.imageFile, params.imageFile.name);
+    params.items.forEach((item, idx) => {
+      if (item.productID) {
+        form.append(`items[${idx}].productID`, item.productID);
+      }
+      if (item.productCategoryID) {
+        form.append(
+          `items[${idx}].productCategoryID`,
+          item.productCategoryID,
+        );
+      }
+      form.append(`items[${idx}].quantity`, String(item.quantity));
+      form.append(`items[${idx}].isFreeItem`, String(item.isFreeItem));
+    });
+    return this.axios.post<PromoResponse>(`/api/v1/promo-api/promo`, form);
+  }
+
+  public promoList() {
+    return this.axios.get<PromoListResponse>(`/api/v1/promo-api/promo`);
+  }
+
+  public promoGetById(id: string) {
+    return this.axios.get<PromoResponse>(
+      `/api/v1/promo-api/promo/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public promoUpdate(params: UpdatePromoParams) {
+    return this.axios.put<PromoResponse>(
+      `/api/v1/promo-api/promo/${encodeURIComponent(params.promoID)}`,
+      params,
+    );
+  }
+
+  public promoActivate(id: string) {
+    return this.axios.put<PromoResponse>(
+      `/api/v1/promo-api/promo/${encodeURIComponent(id)}/activate`,
+    );
+  }
+
+  public promoDeactivate(id: string) {
+    return this.axios.put<PromoResponse>(
+      `/api/v1/promo-api/promo/${encodeURIComponent(id)}/deactivate`,
+    );
+  }
+
+  public promoDelete(id: string) {
+    return this.axios.delete<ApiResponse<string>>(
+      `/api/v1/promo-api/promo/${encodeURIComponent(id)}`,
+    );
+  }
+
   // ─── Orders API ─────────────────────────────────────────────────────────────
 
   public orderList(params: OrderQueryParams = {}) {
@@ -1310,6 +1495,110 @@ export class CommonsApi {
   public refundOrder(id: string, params: RefundSaleParams) {
     return this.axios.post<OrderDetailResponse>(
       `/api/v1/orders-api/Orders/${encodeURIComponent(id)}/refund`,
+      params,
+    );
+  }
+
+  // ── Bulk product creation ──────────────────────────────────────────────────
+  public bulkCreateProducts(params: BulkCreateProductParams) {
+    return this.axios.post<BulkCreateProductResponse>(
+      `/api/v1/product-api/Product/bulk`,
+      params,
+    );
+  }
+
+  public downloadImportTemplate() {
+    return this.axios.get(`/api/v1/product-api/Product/import-template`, {
+      responseType: "blob",
+    });
+  }
+
+  public importFromExcel(params: ImportExcelParams) {
+    const form = new FormData();
+    form.append("file", params.file);
+    return this.axios.post<ImportExcelResponse>(
+      `/api/v1/product-api/Product/import-excel`,
+      form,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+  }
+
+  // ── Variant templates ──────────────────────────────────────────────────────
+  public variantTemplateList() {
+    return this.axios.get<ProductVariantTemplateListResponse>(
+      `/api/v1/product-api/ProductVariantTemplate`,
+    );
+  }
+
+  public variantTemplateGet(id: string) {
+    return this.axios.get<ProductVariantTemplateResponse>(
+      `/api/v1/product-api/ProductVariantTemplate/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public variantTemplateCreate(params: CreateVariantTemplateParams) {
+    return this.axios.post<ProductVariantTemplateResponse>(
+      `/api/v1/product-api/ProductVariantTemplate`,
+      params,
+    );
+  }
+
+  public variantTemplateUpdate(params: UpdateVariantTemplateParams) {
+    return this.axios.put<ProductVariantTemplateResponse>(
+      `/api/v1/product-api/ProductVariantTemplate`,
+      params,
+    );
+  }
+
+  public variantTemplateDelete(id: string) {
+    return this.axios.delete(
+      `/api/v1/product-api/ProductVariantTemplate/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public variantTemplateApply(params: ApplyVariantTemplateParams) {
+    return this.axios.post<ApplyVariantTemplateResponse>(
+      `/api/v1/product-api/ProductVariantTemplate/apply`,
+      params,
+    );
+  }
+
+  // ── Add-on templates ───────────────────────────────────────────────────────
+  public addOnTemplateList() {
+    return this.axios.get<ProductAddOnTemplateListResponse>(
+      `/api/v1/product-api/ProductAddOnTemplate`,
+    );
+  }
+
+  public addOnTemplateGet(id: string) {
+    return this.axios.get<ProductAddOnTemplateResponse>(
+      `/api/v1/product-api/ProductAddOnTemplate/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public addOnTemplateCreate(params: CreateAddOnTemplateParams) {
+    return this.axios.post<ProductAddOnTemplateResponse>(
+      `/api/v1/product-api/ProductAddOnTemplate`,
+      params,
+    );
+  }
+
+  public addOnTemplateUpdate(params: UpdateAddOnTemplateParams) {
+    return this.axios.put<ProductAddOnTemplateResponse>(
+      `/api/v1/product-api/ProductAddOnTemplate`,
+      params,
+    );
+  }
+
+  public addOnTemplateDelete(id: string) {
+    return this.axios.delete(
+      `/api/v1/product-api/ProductAddOnTemplate/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public addOnTemplateApply(params: ApplyAddOnTemplateParams) {
+    return this.axios.post<ApplyAddOnTemplateResponse>(
+      `/api/v1/product-api/ProductAddOnTemplate/apply`,
       params,
     );
   }

@@ -36,6 +36,7 @@ export const ProductListBlock: React.FC = () => {
   const [products, setProducts] = useState<ProductDataList[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const data = useApi((api) => api.commons.productList());
 
@@ -66,7 +67,36 @@ export const ProductListBlock: React.FC = () => {
     data.execute();
     resetFilters();
     setPageNumber(1);
+    setSelectedIds(new Set());
   };
+
+  const handleSelectProduct = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds(prev =>
+      prev.size === paginatedData.length
+        ? new Set()
+        : new Set(paginatedData.map(p => p.productID))
+    );
+  }, [paginatedData]);
+
+  const handleBulkDelete = useCallback(() => {
+    openDialog({
+      title: `Delete ${selectedIds.size} Product${selectedIds.size > 1 ? 's' : ''}`,
+      dialogContentType: "ProductBulkDelete" as unknown as DialogContentType,
+      data: { ids: Array.from(selectedIds), count: selectedIds.size },
+      onSuccess: () => {
+        setSelectedIds(new Set());
+        handleRefresh();
+      },
+    });
+  }, [selectedIds, openDialog, handleRefresh]);
 
   const handleCreate = () => {
     openDialog({
@@ -198,16 +228,28 @@ export const ProductListBlock: React.FC = () => {
             resultLabel="products"
             pageSize={pageSize}
           />
-          <Button
-            type="Secondary"
-            onClick={handleRefresh}
-            disabled={data.loading}
-          >
-            <Flex align="center" gap="2">
-              <ReloadIcon />
-              Refresh
-            </Flex>
-          </Button>
+          <Flex gap="2" align="center">
+            {selectedIds.size > 0 && (
+              <Button
+                type="Critical"
+                onClick={handleBulkDelete}
+              >
+                <Flex align="center" gap="2">
+                  Delete Selected ({selectedIds.size})
+                </Flex>
+              </Button>
+            )}
+            <Button
+              type="Secondary"
+              onClick={handleRefresh}
+              disabled={data.loading}
+            >
+              <Flex align="center" gap="2">
+                <ReloadIcon />
+                Refresh
+              </Flex>
+            </Button>
+          </Flex>
         </Flex>
       </Card>
 
@@ -221,6 +263,9 @@ export const ProductListBlock: React.FC = () => {
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          selectedIds={selectedIds}
+          onSelectProduct={handleSelectProduct}
+          onSelectAll={handleSelectAll}
         />
       </Card>
 

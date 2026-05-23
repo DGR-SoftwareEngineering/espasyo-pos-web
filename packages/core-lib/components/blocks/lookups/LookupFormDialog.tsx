@@ -15,6 +15,7 @@ interface Props<TDto extends LookupDtoBase> {
   config: LookupAdminConfig<TDto>;
   rows: TDto[];
   editRow?: TDto;
+  createInitialValues?: Partial<LookupFormValues>;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -24,6 +25,7 @@ export function LookupFormDialog<TDto extends LookupDtoBase>({
   config,
   rows,
   editRow,
+  createInitialValues,
   onClose,
   onSuccess,
 }: Props<TDto>) {
@@ -89,7 +91,7 @@ export function LookupFormDialog<TDto extends LookupDtoBase>({
 
   const initialValues = React.useMemo<Partial<LookupFormValues> | undefined>(
     () => {
-      if (!editRow) return undefined;
+      if (!editRow) return createInitialValues ?? undefined;
       const parentId = config.parentIdField
         ? (editRow[config.parentIdField] as unknown as string | null)
         : null;
@@ -100,7 +102,7 @@ export function LookupFormDialog<TDto extends LookupDtoBase>({
         parentID: parentId ?? null,
       };
     },
-    [editRow, config.parentIdField],
+    [editRow, config.parentIdField, createInitialValues],
   );
 
   return (

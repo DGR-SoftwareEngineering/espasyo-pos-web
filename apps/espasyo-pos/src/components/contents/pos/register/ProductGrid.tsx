@@ -15,11 +15,13 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
   ExclamationTriangleIcon,
+  StarIcon,
 } from "@radix-ui/react-icons";
 import { LocalCafeOutlined, GridViewOutlined, ViewListOutlined } from "@mui/icons-material";
 import {
-  CategoryDataList,
+  ProductCategoryDto,
   SellableProductDto,
+  PromoDto,
 } from "core-lib/api/commons/types";
 import { useApi } from "core-lib/core/hooks";
 import { usePublicSettings } from "core-lib/core/contexts";
@@ -29,6 +31,9 @@ import { SELLABLE_PRODUCTS_PAGE_SIZE } from "../constants";
 interface Props {
   onAdd: (product: SellableProductDto) => void;
   cartCountByProductID: Record<string, number>;
+  /** Resolves the active promos a sellable product is eligible for — including category-targeted promos via BFS ancestry. */
+  eligiblePromosFor?: (product: SellableProductDto) => PromoDto[];
+  onPromoClick?: (product: SellableProductDto) => void;
 }
 
 const RECIPE_LIST_PATH = "/admin/hub/product/recipe/recipe-list";
@@ -58,7 +63,12 @@ type ViewMode = "grid" | "list";
 
 const VIEW_MODE_KEY = "espasyo.pos.viewMode";
 
-export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) => {
+export const ProductGrid: React.FC<Props> = ({
+  onAdd,
+  cartCountByProductID,
+  eligiblePromosFor,
+  onPromoClick,
+}) => {
   const { currencyCode, inventory, pos } = usePublicSettings();
   const [search, setSearch] = useState("");
   const [categoryID, setCategoryID] = useState<string | null>(null);
@@ -89,15 +99,54 @@ export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) =>
     [search, categoryID],
   );
 
-  const categoriesCb = useApi((api) => api.commons.categoryList(), []);
+  const categoriesCb = useApi((api) => api.commons.productCategoryList(), []);
   const items = productsCb.result?.data?.response?.items ?? [];
   const totalItems = productsCb.result?.data?.response?.totalItems ?? 0;
 
-  const menuCategories = useMemo(() => {
-    const list = (categoriesCb.result?.data?.response ??
-      []) as CategoryDataList[];
-    return list.filter((c) => c.type === 1);
-  }, [categoriesCb.result]);
+  const allCategories = useMemo<ProductCategoryDto[]>(
+    () => categoriesCb.result?.data?.response ?? [],
+    [categoriesCb.result],
+  );
+
+  // Roots — categories with no parent. Used in the top filter row.
+  const rootCategories = useMemo(
+    () => allCategories.filter((c) => !c.parentProductCategoryID),
+    [allCategories],
+  );
+
+  // Sub-categories grouped by their parent ID. Used to render the second row
+  // of chips when a root category is selected.
+  const subCategoriesByRoot = useMemo(() => {
+    const map = new Map<string, ProductCategoryDto[]>();
+    for (const c of allCategories) {
+      const pid = c.parentProductCategoryID;
+      if (!pid) continue;
+      const list = map.get(pid) ?? [];
+      list.push(c);
+      map.set(pid, list);
+    }
+    return map;
+  }, [allCategories]);
+
+  // Quick lookup of category by ID (handles drilling into a sub-category).
+  const categoryById = useMemo(() => {
+    const map = new Map<string, ProductCategoryDto>();
+    for (const c of allCategories) map.set(c.productCategoryID, c);
+    return map;
+  }, [allCategories]);
+
+  // The currently selected ROOT category — when a sub-category is selected,
+  // this resolves up to its top-level parent for the second-row toggle.
+  const selectedRootId = useMemo<string | null>(() => {
+    if (!categoryID) return null;
+    const cat = categoryById.get(categoryID);
+    if (!cat) return null;
+    return cat.parentProductCategoryID ?? cat.productCategoryID;
+  }, [categoryID, categoryById]);
+
+  const visibleSubCategories = selectedRootId
+    ? subCategoriesByRoot.get(selectedRootId) ?? []
+    : [];
 
   const allowNegative = inventory.allowNegativeStock;
   const outOfStockCount = useMemo(
@@ -219,16 +268,42 @@ export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) =>
               label="All items"
               onClick={() => setCategoryID(null)}
             />
-            {menuCategories.map((c) => (
+            {rootCategories.map((c) => (
               <CategoryPill
-                key={c.categoryID}
-                active={categoryID === c.categoryID}
+                key={c.productCategoryID}
+                active={selectedRootId === c.productCategoryID}
                 label={c.name}
-                onClick={() => setCategoryID(c.categoryID)}
+                onClick={() => setCategoryID(c.productCategoryID)}
               />
             ))}
           </Flex>
         </ScrollArea>
+
+        {visibleSubCategories.length > 0 && (
+          <ScrollArea
+            type="auto"
+            scrollbars="horizontal"
+            style={{ maxHeight: 36, marginTop: 8 }}
+          >
+            <Flex gap="2" pb="1">
+              <SubCategoryPill
+                active={categoryID === selectedRootId}
+                label={`All ${
+                  categoryById.get(selectedRootId!)?.name ?? "items"
+                }`}
+                onClick={() => setCategoryID(selectedRootId)}
+              />
+              {visibleSubCategories.map((c) => (
+                <SubCategoryPill
+                  key={c.productCategoryID}
+                  active={categoryID === c.productCategoryID}
+                  label={c.name}
+                  onClick={() => setCategoryID(c.productCategoryID)}
+                />
+              ))}
+            </Flex>
+          </ScrollArea>
+        )}
       </Box>
 
       {showOutWarning && (
@@ -284,6 +359,7 @@ export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) =>
                 pos.allowMenuItemsWithoutRecipe,
                 disabled,
               );
+              const promos = eligiblePromosFor?.(p) ?? [];
               const tile = (
                 <ProductTile
                   product={p}
@@ -291,6 +367,8 @@ export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) =>
                   currencyCode={currencyCode}
                   inCartCount={cartCountByProductID[p.productID] ?? 0}
                   onClick={() => onAdd(p)}
+                  promos={promos}
+                  onPromoClick={onPromoClick}
                 />
               );
               if (!tooltip) {
@@ -314,14 +392,16 @@ export const ProductGrid: React.FC<Props> = ({ onAdd, cartCountByProductID }) =>
                 pos.allowMenuItemsWithoutRecipe,
                 disabled,
               );
+              const promos = eligiblePromosFor?.(p) ?? [];
               const row = (
                 <ProductRow
-                  key={p.productID}
                   product={p}
                   disabled={disabled}
                   currencyCode={currencyCode}
                   inCartCount={cartCountByProductID[p.productID] ?? 0}
                   onClick={() => onAdd(p)}
+                  promos={promos}
+                  onPromoClick={onPromoClick}
                 />
               );
               if (!tooltip) return row;
@@ -344,7 +424,9 @@ const ProductRow: React.FC<{
   currencyCode: string;
   inCartCount: number;
   onClick: () => void;
-}> = ({ product, disabled, currencyCode, inCartCount, onClick }) => {
+  promos: PromoDto[];
+  onPromoClick?: (product: SellableProductDto) => void;
+}> = ({ product, disabled, currencyCode, inCartCount, onClick, promos, onPromoClick }) => {
   return (
     <button
       type="button"
@@ -437,6 +519,21 @@ const ProductRow: React.FC<{
       </Flex>
 
       <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
+        {promos.length > 0 && (
+          <IconButton
+            size="1"
+            color="amber"
+            variant="solid"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPromoClick?.(product);
+            }}
+            title="Click to view available promos"
+          >
+            <StarIcon width={16} height={16} />
+          </IconButton>
+        )}
+
         <Text
           size="3"
           weight="bold"
@@ -448,7 +545,11 @@ const ProductRow: React.FC<{
             backgroundClip: "text",
           }}
         >
-          {formatCurrency(product.sellingPrice, currencyCode)}
+          {product.sellingPrice != null
+            ? formatCurrency(product.sellingPrice, currencyCode)
+            : product.variants.length
+              ? `from ${formatCurrency(Math.min(...product.variants.map((v) => v.price)), currencyCode)}`
+              : "—"}
         </Text>
 
         {inCartCount > 0 && (
@@ -513,13 +614,40 @@ const CategoryPill: React.FC<{
   </button>
 );
 
+const SubCategoryPill: React.FC<{
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}> = ({ active, label, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    style={{
+      cursor: "pointer",
+      padding: "5px 12px",
+      borderRadius: 999,
+      fontSize: 12,
+      fontWeight: 500,
+      whiteSpace: "nowrap",
+      border: active ? "1px solid var(--indigo-a8)" : "1px dashed var(--gray-a5)",
+      background: active ? "var(--indigo-a3)" : "transparent",
+      color: active ? "var(--indigo-11)" : "var(--gray-11)",
+      transition: "all 0.15s ease",
+    }}
+  >
+    {label}
+  </button>
+);
+
 const ProductTile: React.FC<{
   product: SellableProductDto;
   disabled: boolean;
   currencyCode: string;
   inCartCount: number;
   onClick: () => void;
-}> = ({ product, disabled, currencyCode, inCartCount, onClick }) => {
+  promos: PromoDto[];
+  onPromoClick?: (product: SellableProductDto) => void;
+}> = ({ product, disabled, currencyCode, inCartCount, onClick, promos, onPromoClick }) => {
   const inCart = inCartCount > 0;
   const showNoRecipeBadge = product.noRecipeConfigured;
   return (
@@ -638,6 +766,44 @@ const ProductTile: React.FC<{
           </Box>
         )}
 
+        {/* Promo badge — bottom-left */}
+        {promos.length > 0 && (
+          <Box
+            style={{
+              position: "absolute",
+              bottom: 8,
+              left: 8,
+              width: 26,
+              height: 26,
+              borderRadius: 999,
+              background: "linear-gradient(135deg, var(--amber-9) 0%, var(--orange-9) 100%)",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 10px var(--amber-a6)",
+              cursor: "pointer",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onPromoClick?.(product);
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = "scale(1.15)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px var(--amber-a8)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 10px var(--amber-a6)";
+            }}
+            title="Click to view available promos"
+          >
+            <StarIcon width={14} height={14} />
+          </Box>
+        )}
+
         {/* Stock / recipe badge — top-right. noRecipeConfigured takes priority since it's an admin-actionable config gap. */}
         {(showNoRecipeBadge || product.isLowStock || product.isOutOfStock) && (
           <Box style={{ position: "absolute", top: 8, right: 8 }}>
@@ -724,7 +890,11 @@ const ProductTile: React.FC<{
               lineHeight: 1,
             }}
           >
-            {formatCurrency(product.sellingPrice, currencyCode)}
+            {product.sellingPrice != null
+            ? formatCurrency(product.sellingPrice, currencyCode)
+            : product.variants.length
+              ? `from ${formatCurrency(Math.min(...product.variants.map((v) => v.price)), currencyCode)}`
+              : "—"}
           </Text>
           {!product.isOutOfStock && (
             <Text size="1" color="gray">

@@ -67,6 +67,14 @@ export const SETTING_KEYS = {
   LoaderBackdropOpacity: "Loader.BackdropOpacity",
   LoaderTransitionVariant: "Loader.TransitionVariant",
   LoaderTransitionMessage: "Loader.TransitionMessage",
+
+  PromoAutoApplyEnabled: "Promo.AutoApplyEnabled",
+  PromoShowBadgeOnPOS: "Promo.ShowBadgeOnPOS",
+  PromoMaxActivePromos: "Promo.MaxActivePromos",
+  PromoViabilityMinMarginPercent: "Promo.ViabilityMinMarginPercent",
+  PromoAiSuggestionEnabled: "Promo.AI.SuggestionEnabled",
+  PromoAiMinViableMarginPercent: "Promo.AI.MinViableMarginPercent",
+  PromoAiMaxSuggestionsReturned: "Promo.AI.MaxSuggestionsReturned",
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -129,6 +137,7 @@ export const SETTING_CATEGORIES = {
   Loader: "Loader",
   Notifications: "Notifications",
   Procurement: "Procurement",
+  Promo: "Promo",
 } as const;
 
 export type SettingCategory =

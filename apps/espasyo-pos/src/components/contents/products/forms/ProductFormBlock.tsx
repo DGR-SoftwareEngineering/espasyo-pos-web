@@ -11,12 +11,15 @@ import {
 import { ProductForm } from "./ProductForm";
 import { ProductForm as ProductFormType } from "./validation";
 import { BusinessExpenseFormBlock } from "./BusinessExpenseForm/BusinessExpenseFormBlock";
+import { BulkProductCreationBlock } from "../bulk/BulkProductCreationBlock";
 import { useApiCallback, useApi, useResolution } from "core-lib/core/hooks";
 import {
   CreateProductParams,
   IngredientCategoryDto,
   ProductCategoryDto,
   UnitDto,
+  ProductVariantTemplateDto,
+  ProductAddOnTemplateDto,
 } from "core-lib/api/commons/types";
 import { useEffect } from "react";
 
@@ -30,6 +33,8 @@ export const ProductFormBlock: React.FC = () => {
     IngredientCategoryDto[]
   >([]);
   const [units, setUnits] = useState<UnitDto[]>([]);
+  const [variantTemplates, setVariantTemplates] = useState<ProductVariantTemplateDto[]>([]);
+  const [addOnTemplates, setAddOnTemplates] = useState<ProductAddOnTemplateDto[]>([]);
   const { showToast } = useToastContext();
   const { isMobile } = useResolution();
 
@@ -38,10 +43,34 @@ export const ProductFormBlock: React.FC = () => {
     api.commons.ingredientCategoryList(),
   );
   const unitData = useApi((api) => api.commons.unitList());
+  const variantTemplatesData = useApi((api) => api.commons.variantTemplateList());
+  const addOnTemplatesData = useApi((api) => api.commons.addOnTemplateList());
 
   const productCb = useApiCallback(
     async (api, args: CreateProductParams) =>
       await api.commons.createNewProduct(args),
+  );
+
+  const variantCreateCb = useApiCallback(
+    async (
+      api,
+      args: { productID: string; name: string; price: number; displayOrder: number },
+    ) => await api.commons.productVariantCreate(args),
+  );
+
+  const addOnGroupCreateCb = useApiCallback(
+    async (
+      api,
+      args: {
+        productID: string;
+        name: string;
+        isRequired: boolean;
+        minSelections: number;
+        maxSelections: number;
+        displayOrder: number;
+        items?: { name: string; additionalPrice: number; displayOrder: number }[];
+      },
+    ) => await api.commons.productAddOnGroupCreate(args),
   );
 
   useEffect(() => {
@@ -55,6 +84,14 @@ export const ProductFormBlock: React.FC = () => {
   useEffect(() => {
     setUnits(unitData.result?.data.response ?? []);
   }, [unitData.result?.data.response]);
+
+  useEffect(() => {
+    setVariantTemplates(variantTemplatesData.result?.data.response ?? []);
+  }, [variantTemplatesData.result?.data.response]);
+
+  useEffect(() => {
+    setAddOnTemplates(addOnTemplatesData.result?.data.response ?? []);
+  }, [addOnTemplatesData.result?.data.response]);
 
   const handleSubmit = async (formData: ProductFormType) => {
     try {
@@ -86,6 +123,56 @@ export const ProductFormBlock: React.FC = () => {
       const result = await productCb.execute(payload);
 
       if (result.status === 200 && result.data.success) {
+        const newProductId =
+          (result.data.response as unknown as string) ??
+          (result.data as any).response?.productID ??
+          null;
+
+        // Post initial variants and add-on groups (menu items only)
+        if (isMenuItem && newProductId) {
+          const variants = formData.variants ?? [];
+          const groups = formData.addOnGroups ?? [];
+          try {
+            await Promise.all([
+              ...variants.map((v) =>
+                variantCreateCb.execute({
+                  productID: newProductId,
+                  name: v.name,
+                  price: Number(v.price),
+                  displayOrder: Number(v.displayOrder) || 0,
+                }),
+              ),
+              ...groups.map((g) =>
+                addOnGroupCreateCb.execute({
+                  productID: newProductId,
+                  name: g.name,
+                  isRequired: !!g.isRequired,
+                  minSelections: Number(g.minSelections) || 0,
+                  maxSelections: Number(g.maxSelections) || 1,
+                  displayOrder: Number(g.displayOrder) || 0,
+                  items: (g.items ?? []).map((i) => ({
+                    name: i.name,
+                    additionalPrice: Number(i.additionalPrice) || 0,
+                    displayOrder: Number(i.displayOrder) || 0,
+                  })),
+                }),
+              ),
+            ]);
+          } catch (e) {
+            console.error(
+              "Product created but variants/add-ons partially failed:",
+              e,
+            );
+            showToast(
+              "Product created but some variants/add-ons couldn't be saved.",
+              "error",
+            );
+            setResetForm(true);
+            setTimeout(() => setResetForm(false), 100);
+            return;
+          }
+        }
+
         showToast("Product created successfully", "success");
         setResetForm(true);
         setTimeout(() => setResetForm(false), 100);
@@ -103,13 +190,15 @@ export const ProductFormBlock: React.FC = () => {
   const lookupsLoading =
     productCategoryData.loading ||
     ingredientCategoryData.loading ||
-    unitData.loading;
+    unitData.loading ||
+    variantTemplatesData.loading ||
+    addOnTemplatesData.loading;
 
   const tabs = useMemo<TabOption[]>(
     () => [
       {
         key: "product_creation",
-        label: "Product",
+        label: "Single Product",
         content: (
           <ProductForm
             submitLoading={loading || lookupsLoading}
@@ -120,8 +209,15 @@ export const ProductFormBlock: React.FC = () => {
             ingredientCategories={ingredientCategories}
             units={units}
             lookupsLoading={lookupsLoading}
+            variantTemplates={variantTemplates}
+            addOnTemplates={addOnTemplates}
           />
         ),
+      },
+      {
+        key: "multiple_products_creation",
+        label: "Multiple Products",
+        content: <BulkProductCreationBlock />,
       },
       {
         key: "business_expense_creation",
@@ -129,7 +225,7 @@ export const ProductFormBlock: React.FC = () => {
         content: <BusinessExpenseFormBlock />,
       },
     ],
-    [productCategories, ingredientCategories, units, loading, lookupsLoading, resetForm],
+    [productCategories, ingredientCategories, units, variantTemplates, addOnTemplates, loading, lookupsLoading, resetForm],
   );
 
   return (

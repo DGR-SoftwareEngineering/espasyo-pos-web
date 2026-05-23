@@ -15,7 +15,13 @@ export const ProductList: React.FC<ProductListProps> = ({
   onView,
   onEdit,
   onDelete,
+  selectedIds,
+  onSelectProduct,
+  onSelectAll,
 }) => {
+  const allSelected = data.length > 0 && data.every(p => selectedIds.has(p.productID));
+  const someSelected = !allSelected && data.some(p => selectedIds.has(p.productID));
+
   const bodyRowComponent = useCallback(
     (row: ProductDataList) => (
       <ProductTableRow
@@ -24,10 +30,21 @@ export const ProductList: React.FC<ProductListProps> = ({
         onView={onView}
         onEdit={onEdit}
         onDelete={onDelete}
+        isSelectable={true}
+        isChecked={selectedIds.has(row.productID)}
+        onSelect={() => onSelectProduct(row.productID)}
       />
     ),
-    [onView, onEdit, onDelete],
+    [onView, onEdit, onDelete, selectedIds, onSelectProduct],
   );
+
+  const handleSelectAll = useCallback(() => {
+    if (allSelected) {
+      onSelectAll();
+    } else {
+      onSelectAll();
+    }
+  }, [allSelected, onSelectAll]);
 
   return (
     <Box style={{ width: "100%" }}>
@@ -40,6 +57,10 @@ export const ProductList: React.FC<ProductListProps> = ({
         onNextPage={onNextPage}
         onPreviousPage={onPreviousPage}
         bodyRowComponent={bodyRowComponent}
+        selectable={true}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        onSelectAll={handleSelectAll}
       />
     </Box>
   );

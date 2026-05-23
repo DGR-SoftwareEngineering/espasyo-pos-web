@@ -100,8 +100,10 @@ export const formatCurrency = (amount: number | null): string => {
   if (!amount) return "₱0.00";
   return `₱${amount.toFixed(2)}`;
 };
-export const truncateId = (id: string, length: number = 6): string =>
-  `${id.substring(0, length)}...`;
+export const truncateId = (
+  id: string | null | undefined,
+  length: number = 6,
+): string => (id ? `${id.substring(0, length)}...` : "—");
 
 export const formatPrice = (price: unknown): string => {
   if (!price && price !== 0) return "0.00";
@@ -110,7 +112,8 @@ export const formatPrice = (price: unknown): string => {
   return Number.isNaN(numericPrice) ? "0.00" : numericPrice.toFixed(2);
 };
 
-export const formatId = (id: string): string => {
+export const formatId = (id: string | null | undefined): string => {
+  if (!id) return "—";
   return `${id.substring(0, 8)}...`;
 };
 

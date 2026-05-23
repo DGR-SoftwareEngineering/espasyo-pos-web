@@ -169,6 +169,7 @@ export type DialogDataType = {
   ProductView: ProductDataList;
   ProductEdit: ProductDataList;
   ProductDelete: ProductDataList;
+  ProductBulkDelete: { ids: string[]; count: number };
   ProductCreate: undefined;
 
   RecipeView: {

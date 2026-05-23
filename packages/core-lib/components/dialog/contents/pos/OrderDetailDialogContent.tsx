@@ -1130,6 +1130,23 @@ const RefundView: React.FC<{
                     <Text size="2" weight="medium" as="div" truncate>
                       {item.productName}
                     </Text>
+                    {item.variantName && (
+                      <Text size="1" color="indigo" as="div" weight="medium">
+                        {item.variantName}
+                      </Text>
+                    )}
+                    {item.addOns && item.addOns.length > 0 && (
+                      <Flex direction="column" gap="0">
+                        {item.addOns.map((a) => (
+                          <Text key={a.saleItemAddOnID} size="1" color="gray" as="div">
+                            + {a.itemName}
+                            {a.additionalPrice > 0 && (
+                              <> ({formatCurrencyShort(a.additionalPrice, currencyCode)})</>
+                            )}
+                          </Text>
+                        ))}
+                      </Flex>
+                    )}
                     <Text size="1" color="gray" as="div">
                       {formatCurrencyShort(item.unitPrice, currencyCode)} ×{" "}
                       {item.quantity}

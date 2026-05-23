@@ -45,20 +45,21 @@ export const productFormSchema = yup.object({
   unitPrice: yup
     .number()
     .transform(numericTransform)
-    .when("productMode", {
-      is: "menuItem",
-      then: (schema) =>
-        schema
+    .when(["productMode", "variants"], (values, schema) => {
+      const [productMode, variants] = values as [string, unknown[]];
+      if (productMode === "menuItem" && (!variants || variants.length === 0)) {
+        return schema
           .typeError("Unit price must be a number")
-          .required("Unit price is required for menu items")
+          .required("Unit price is required (or add at least one variant)")
           .positive("Unit price must be greater than 0")
           .max(1000000, "Unit price cannot exceed 1,000,000")
           .test(
             "two-decimals",
             "Unit price can only have up to 2 decimal places",
             hasMaxTwoDecimals,
-          ),
-      otherwise: (schema) => schema.optional().nullable().default(null),
+          );
+      }
+      return schema.optional().nullable().default(null);
     }),
 
   costPrice: yup
@@ -157,6 +158,126 @@ export const productFormSchema = yup.object({
     .default(null),
 
   removeImage: yup.boolean().optional().default(false),
+
+  // ── Menu-item only collections ─────────────────────────────────
+  variants: yup
+    .array()
+    .of(
+      yup.object({
+        productVariantID: yup.string().optional().nullable().default(null),
+        name: yup
+          .string()
+          .required("Variant name is required")
+          .max(200, "Variant name must not exceed 200 characters"),
+        price: yup
+          .number()
+          .transform(numericTransform)
+          .typeError("Variant price must be a number")
+          .required("Variant price is required")
+          .positive("Variant price must be greater than 0")
+          .max(1000000, "Variant price cannot exceed 1,000,000")
+          .test(
+            "two-decimals",
+            "Variant price can only have up to 2 decimal places",
+            hasMaxTwoDecimals,
+          ),
+        displayOrder: yup
+          .number()
+          .transform(numericTransform)
+          .typeError("Display order must be a number")
+          .min(0, "Display order must be 0 or greater")
+          .default(0),
+      }),
+    )
+    .optional()
+    .default([]),
+
+  addOnGroups: yup
+    .array()
+    .of(
+      yup.object({
+        productAddOnGroupID: yup.string().optional().nullable().default(null),
+        name: yup
+          .string()
+          .required("Group name is required")
+          .max(200, "Group name must not exceed 200 characters"),
+        isRequired: yup.boolean().default(false),
+        minSelections: yup
+          .number()
+          .transform(numericTransform)
+          .typeError("Min selections must be a number")
+          .min(0, "Min selections must be 0 or greater")
+          .default(0)
+          .when("isRequired", {
+            is: true,
+            then: (schema) =>
+              schema.min(1, "Required groups must allow at least 1 selection"),
+          }),
+        maxSelections: yup
+          .number()
+          .transform(numericTransform)
+          .typeError("Max selections must be a number")
+          .min(1, "Max selections must be at least 1")
+          .default(1)
+          .test(
+            "max-gte-min",
+            "Max selections must be ≥ min selections",
+            function (value) {
+              if (value === undefined || value === null) return true;
+              const min = (this.parent as { minSelections?: number })
+                .minSelections;
+              return min === undefined || min === null || value >= min;
+            },
+          ),
+        displayOrder: yup
+          .number()
+          .transform(numericTransform)
+          .typeError("Display order must be a number")
+          .min(0, "Display order must be 0 or greater")
+          .default(0),
+        items: yup
+          .array()
+          .of(
+            yup.object({
+              productAddOnItemID: yup
+                .string()
+                .optional()
+                .nullable()
+                .default(null),
+              name: yup
+                .string()
+                .required("Item name is required")
+                .max(200, "Item name must not exceed 200 characters"),
+              additionalPrice: yup
+                .number()
+                .transform(numericTransform)
+                .typeError("Additional price must be a number")
+                .min(0, "Additional price must be 0 or greater")
+                .max(1000000, "Additional price cannot exceed 1,000,000")
+                .default(0)
+                .test(
+                  "two-decimals",
+                  "Additional price can only have up to 2 decimal places",
+                  hasMaxTwoDecimals,
+                ),
+              displayOrder: yup
+                .number()
+                .transform(numericTransform)
+                .typeError("Display order must be a number")
+                .min(0, "Display order must be 0 or greater")
+                .default(0),
+            }),
+          )
+          .default([]),
+      }),
+    )
+    .optional()
+    .default([]),
 });
 
 export type ProductForm = yup.InferType<typeof productFormSchema>;
+export type ProductVariantFormItem = NonNullable<ProductForm["variants"]>[number];
+export type ProductAddOnGroupFormItem = NonNullable<ProductForm["addOnGroups"]>[number];
+export type ProductAddOnItemFormItem = NonNullable<
+  ProductAddOnGroupFormItem["items"]
+>[number];

@@ -22,6 +22,7 @@ import {
   ShieldOutlined,
   ToggleOnOutlined,
   AutorenewOutlined,
+  LocalOfferOutlined,
 } from "@mui/icons-material";
 import { useApi, useApiCallback, useMpinStatus } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
@@ -47,6 +48,7 @@ const CATEGORY_ORDER: string[] = [
   SETTING_CATEGORIES.Theme,
   SETTING_CATEGORIES.Loader,
   SETTING_CATEGORIES.POS,
+  SETTING_CATEGORIES.Promo,
   SETTING_CATEGORIES.Inventory,
   SETTING_CATEGORIES.Security,
   SETTING_CATEGORIES.Features,
@@ -95,6 +97,12 @@ const CATEGORY_META: Record<
     label: "Features",
     icon: <ToggleOnOutlined fontSize="small" />,
     description: "Feature flags for opt-in modules.",
+  },
+  Promo: {
+    label: "Promo",
+    icon: <LocalOfferOutlined fontSize="small" />,
+    description:
+      "Promotional pricing rules: auto-apply toggle, POS badge display, and viability thresholds.",
   },
 };
 

@@ -99,10 +99,10 @@ export const PageLoaderContextProvider: React.FC<Props> = ({
 
     if (isAuthenticated && (isContentTransition || isRouteChange)) {
       return (
-        <div style={{ position: "relative", minHeight: "100vh" }}>
+        <>
           <div style={{ pointerEvents: "none" }}>{children}</div>
           <RouteTransitionLoader />
-        </div>
+        </>
       );
     }
 

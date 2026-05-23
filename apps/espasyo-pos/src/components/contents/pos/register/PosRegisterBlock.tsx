@@ -7,11 +7,12 @@ import {
   usePublicSettings,
   useDialogContext,
 } from "core-lib/core/contexts";
-import { useApiCallback, useLogout } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useLogout } from "core-lib/core/hooks";
 import { ConfettiCanvas, ConfettiHandle } from "core-lib/components/confetti";
 import {
   CloseShiftParams,
   CreateSaleParams,
+  PromoDto,
   SaleDetailDto,
   SellableProductDto,
   ShiftSummaryDto,
@@ -23,6 +24,8 @@ import type {
 import { DialogBox } from "core-lib/components/radix/dialog/DialogBox";
 import { ProductGrid } from "./ProductGrid";
 import { CartPanel } from "./CartPanel";
+import { PromoSelectDialog } from "./PromoSelectDialog";
+import { VariantAddOnDialog } from "./VariantAddOnDialog";
 import { computeTotals, useCartState } from "./hooks";
 import { SaleReceiptPrintable } from "../printables/SaleReceiptPrintable";
 import { useTargetSales } from "./useTargetSales";
@@ -31,6 +34,19 @@ import { CloseShiftForm } from "../../shift-management/forms/validation";
 
 const MENU_ITEM_NO_RECIPE_CODE = "MENUITEM.NO_RECIPE";
 const ERROR_CODE_PREFIX_RE = /^\[([A-Z][A-Z0-9._]*)\]\s*/;
+
+const SALE_ERROR_FRIENDLY: Record<string, string> = {
+  "SALE.VARIANT_REQUIRED":
+    "Please pick a size/variant for this item before submitting.",
+  "SALE.INVALID_VARIANT":
+    "Selected variant is no longer available. The menu has been refreshed.",
+  "SALE.INVALID_ADDON":
+    "An add-on is no longer available. The menu has been refreshed.",
+  "SALE.ADDON_REQUIRED":
+    "A required add-on group still needs a selection.",
+  "SALE.ADDON_EXCEEDED":
+    "Too many add-ons selected for one group.",
+};
 
 // Persist per-day so confetti doesn't re-fire after page refresh
 const CONFETTI_FIRED_KEY = "espasyo.pos.confettiFiredDate";
@@ -56,6 +72,9 @@ const resolveSaleErrorMessage = (
     if (code === MENU_ITEM_NO_RECIPE_CODE) {
       return `${stripped} Set up the recipe before selling, or have an admin enable 'Allow Menu Items Without Recipe' in settings.`;
     }
+    if (SALE_ERROR_FRIENDLY[code]) {
+      return SALE_ERROR_FRIENDLY[code];
+    }
     return stripped;
   }
   return fallbackMessage ?? "Failed to complete sale";
@@ -63,7 +82,7 @@ const resolveSaleErrorMessage = (
 
 export const PosRegisterBlock: React.FC = () => {
   const { showToast } = useToastContext();
-  const { systemName, theme, currencyCode, pos } = usePublicSettings();
+  const { systemName, theme, currencyCode, pos, settingsMap } = usePublicSettings();
   const { openDialog } = useDialogContext();
   const { logout } = useLogout();
   const confettiRef = useRef<ConfettiHandle>(null);
@@ -136,6 +155,61 @@ export const PosRegisterBlock: React.FC = () => {
     [activeShiftSummary, closeShiftApiCb, logout, showToast],
   );
 
+  const promoData = useApi((api) => api.commons.promoList());
+  const activePromos = useMemo(
+    () => (promoData.result?.data.response ?? []).filter((p) => p.status === "Active"),
+    [promoData.result]
+  );
+
+  // Build a child→parent category lookup so we can do BFS-ancestry matching
+  // for category-targeted promos (a promo on "Drinks" applies to products in
+  // "Coffee" / "Milk Base" / etc. — see backend spec).
+  const promoCategoriesData = useApi(
+    (api) => api.commons.productCategoryList(),
+    [],
+  );
+  const categoryParents = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const c of promoCategoriesData.result?.data?.response ?? []) {
+      m.set(c.productCategoryID, c.parentProductCategoryID);
+    }
+    return m;
+  }, [promoCategoriesData.result]);
+
+  const eligiblePromosFor = useCallback(
+    (product: SellableProductDto): PromoDto[] => {
+      if (activePromos.length === 0) return [];
+      // Walk up the category tree starting from this product's direct category
+      const ancestors = new Set<string>();
+      let cur = product.categoryID ?? null;
+      while (cur && !ancestors.has(cur)) {
+        ancestors.add(cur);
+        cur = categoryParents.get(cur) ?? null;
+      }
+      const seen = new Set<string>();
+      const out: PromoDto[] = [];
+      for (const promo of activePromos) {
+        for (const item of promo.items) {
+          const hitsProduct =
+            !!item.productID && item.productID === product.productID;
+          const hitsCategory =
+            !!item.productCategoryID && ancestors.has(item.productCategoryID);
+          if (hitsProduct || hitsCategory) {
+            if (!seen.has(promo.promoID)) {
+              seen.add(promo.promoID);
+              out.push(promo);
+            }
+            break;
+          }
+        }
+      }
+      return out;
+    },
+    [activePromos, categoryParents],
+  );
+  const [promoDialogProduct, setPromoDialogProduct] = useState<SellableProductDto | null>(null);
+  const [pickerProduct, setPickerProduct] = useState<SellableProductDto | null>(null);
+
   const cart = useCartState(pos.defaultTaxRate);
   const totals = useMemo(
     () => computeTotals(cart.lines, cart.orderDiscount, cart.taxRate, []),
@@ -166,6 +240,12 @@ export const PosRegisterBlock: React.FC = () => {
   const handleAdd = useCallback(
     (product: SellableProductDto) => {
       if (product.isOutOfStock && !pos.allowSales) return;
+      const needsPicker =
+        product.hasVariants || (product.addOnGroups?.length ?? 0) > 0;
+      if (needsPicker) {
+        setPickerProduct(product);
+        return;
+      }
       cart.addProduct(product);
     },
     [cart, pos.allowSales],
@@ -176,6 +256,9 @@ export const PosRegisterBlock: React.FC = () => {
       const params: CreateSaleParams = {
         items: cart.lines.map((l) => ({
           productID: l.productID,
+          productVariantID: l.productVariantID ?? null,
+          addOnItemIDs:
+            l.addOnItemIDs && l.addOnItemIDs.length > 0 ? l.addOnItemIDs : null,
           quantity: l.quantity,
           unitPrice: l.unitPrice,
           discount: l.discount > 0 ? l.discount : null,
@@ -202,6 +285,12 @@ export const PosRegisterBlock: React.FC = () => {
         ) {
           const sale = result.data.response;
           showToast(`Sale ${sale.saleNumber} completed`, "success");
+          const showPromoBadge =
+            !!sale.promoID &&
+            settingsMap.get("Promo.ShowBadgeOnPOS")?.value !== "false";
+          if (showPromoBadge) {
+            showToast("Promo discount applied to this order!", "success");
+          }
           cart.clear();
 
           // Refresh daily total (non-blocking — don't await so it doesn't delay the dialog)
@@ -425,6 +514,8 @@ export const PosRegisterBlock: React.FC = () => {
         <ProductGrid
           onAdd={handleAdd}
           cartCountByProductID={cartCountByProductID}
+          eligiblePromosFor={eligiblePromosFor}
+          onPromoClick={setPromoDialogProduct}
         />
         <CartPanel
           state={cart}
@@ -490,6 +581,54 @@ export const PosRegisterBlock: React.FC = () => {
           />
         )}
       </DialogBox>
+
+      {/* Promo Selection Dialog */}
+      {promoDialogProduct && (
+        <PromoSelectDialog
+          product={promoDialogProduct}
+          promos={eligiblePromosFor(promoDialogProduct)}
+          onApply={(promo) => {
+            cart.applyPromo(promoDialogProduct, promo);
+            // Bundle promos with category-targeted items can't be auto-resolved
+            // client-side — surface a hint so the cashier adds eligible items.
+            if (
+              promo.type === "Bundle" &&
+              promo.items.some((i) => !!i.productCategoryID)
+            ) {
+              showToast(
+                "Bundle includes category items — add eligible products to the cart manually. The discount applies at checkout.",
+                "success",
+              );
+            }
+            setPromoDialogProduct(null);
+          }}
+          onClose={() => setPromoDialogProduct(null)}
+        />
+      )}
+
+      {/* Variant & Add-On Picker Dialog */}
+      {pickerProduct && (
+        <VariantAddOnDialog
+          product={pickerProduct}
+          onConfirm={(payload) => {
+            cart.addProductWithOptions(pickerProduct, {
+              productVariantID: payload.variant?.productVariantID ?? null,
+              variantName: payload.variant?.name ?? null,
+              unitPrice: payload.unitPrice,
+              quantity: payload.quantity,
+              addOnItems: payload.addOnItems.map(({ group, item }) => ({
+                productAddOnGroupID: group.productAddOnGroupID,
+                productAddOnItemID: item.productAddOnItemID,
+                groupName: group.name,
+                itemName: item.name,
+                additionalPrice: item.additionalPrice,
+              })),
+            });
+            setPickerProduct(null);
+          }}
+          onClose={() => setPickerProduct(null)}
+        />
+      )}
     </Box>
   );
 };

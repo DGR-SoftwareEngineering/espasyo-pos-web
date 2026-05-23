@@ -2,9 +2,20 @@ import { useCallback, useMemo, useState } from "react";
 import {
   SellableProductDto,
   SalesPaymentMethodDto,
+  PromoDto,
 } from "core-lib/api/commons/types";
 
+export interface CartLineAddOn {
+  productAddOnGroupID: string;
+  productAddOnItemID: string;
+  groupName: string;
+  itemName: string;
+  additionalPrice: number;
+}
+
 export interface CartLine {
+  /** Stable client-side ID, unique per cart line. */
+  lineId: string;
   productID: string;
   productName: string;
   unitID: string;
@@ -14,7 +25,23 @@ export interface CartLine {
   unitPrice: number;
   discount: number;
   currentStock: number;
+  promoID?: string;
+  promoLabel?: string;
+  originalPrice?: number;
+  // Variant snapshot
+  productVariantID?: string | null;
+  variantName?: string | null;
+  // Add-on snapshot (informational; canonical IDs live in addOnItemIDs)
+  addOnItemIDs?: string[];
+  addOnSummary?: CartLineAddOn[];
 }
+
+const genLineId = (): string => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `line_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+};
 
 export interface PaymentLine {
   id: string;
@@ -89,15 +116,28 @@ export const computeTotals = (
   };
 };
 
+export interface AddProductOptions {
+  productVariantID?: string | null;
+  variantName?: string | null;
+  unitPrice?: number; // resolved combined price (variant + addons)
+  quantity?: number;
+  addOnItems?: CartLineAddOn[];
+}
+
 export interface UseCartState {
   lines: CartLine[];
   orderDiscount: number;
   taxRate: number;
   notes: string;
   addProduct: (product: SellableProductDto) => void;
-  setLineQuantity: (productID: string, quantity: number) => void;
-  setLineDiscount: (productID: string, discount: number) => void;
-  removeLine: (productID: string) => void;
+  addProductWithOptions: (
+    product: SellableProductDto,
+    options: AddProductOptions,
+  ) => void;
+  applyPromo: (product: SellableProductDto, promo: PromoDto) => void;
+  setLineQuantity: (lineId: string, quantity: number) => void;
+  setLineDiscount: (lineId: string, discount: number) => void;
+  removeLine: (lineId: string) => void;
   setOrderDiscount: (value: number) => void;
   setTaxRate: (value: number) => void;
   setNotes: (value: string) => void;
@@ -112,10 +152,17 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
 
   const addProduct = useCallback((product: SellableProductDto) => {
     setLines((prev) => {
-      const existing = prev.find((l) => l.productID === product.productID);
+      // Only merge lines that have no variant or add-ons.
+      const existing = prev.find(
+        (l) =>
+          l.productID === product.productID &&
+          !l.productVariantID &&
+          (l.addOnItemIDs?.length ?? 0) === 0 &&
+          !l.promoID,
+      );
       if (existing) {
         return prev.map((l) =>
-          l.productID === product.productID
+          l.lineId === existing.lineId
             ? { ...l, quantity: l.quantity + 1 }
             : l,
         );
@@ -123,13 +170,14 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
       return [
         ...prev,
         {
+          lineId: genLineId(),
           productID: product.productID,
           productName: product.name,
           unitID: "",
           unitName: product.stockUnitName,
           imageUrl: product.imageUrl,
           quantity: 1,
-          unitPrice: product.sellingPrice,
+          unitPrice: product.sellingPrice ?? 0,
           discount: 0,
           currentStock: product.currentStock,
         },
@@ -137,30 +185,203 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
     });
   }, []);
 
-  const setLineQuantity = useCallback((productID: string, quantity: number) => {
+  const addProductWithOptions = useCallback(
+    (product: SellableProductDto, options: AddProductOptions) => {
+      setLines((prev) => {
+        const qty = options.quantity ?? 1;
+        const unitPrice = options.unitPrice ?? product.sellingPrice ?? 0;
+        const addOnIds = (options.addOnItems ?? []).map((a) => a.productAddOnItemID);
+        return [
+          ...prev,
+          {
+            lineId: genLineId(),
+            productID: product.productID,
+            productName: product.name,
+            unitID: "",
+            unitName: product.stockUnitName,
+            imageUrl: product.imageUrl,
+            quantity: qty,
+            unitPrice,
+            discount: 0,
+            currentStock: product.currentStock,
+            productVariantID: options.productVariantID ?? null,
+            variantName: options.variantName ?? null,
+            addOnItemIDs: addOnIds,
+            addOnSummary: options.addOnItems,
+          },
+        ];
+      });
+    },
+    [],
+  );
+
+  const applyPromo = useCallback((product: SellableProductDto, promo: PromoDto) => {
+    setLines((prev) => {
+      // Remove existing plain (non-variant, non-promo) line for this product
+      let filtered = prev.filter(
+        (l) =>
+          !(
+            l.productID === product.productID &&
+            !l.productVariantID &&
+            (l.addOnItemIDs?.length ?? 0) === 0
+          ),
+      );
+
+      if (promo.type === "PercentageDiscount") {
+        const effectivePrice = product.sellingPrice ?? 0;
+        const discountedPrice = round2(
+          effectivePrice * (1 - ((promo.discountPercent ?? 0) / 100))
+        );
+        return [
+          ...filtered,
+          {
+            lineId: genLineId(),
+            productID: product.productID,
+            productName: product.name,
+            unitID: "",
+            unitName: product.stockUnitName,
+            imageUrl: product.imageUrl,
+            quantity: 1,
+            unitPrice: discountedPrice,
+            discount: 0,
+            currentStock: product.currentStock,
+            promoID: promo.promoID,
+            promoLabel: promo.title,
+            originalPrice: effectivePrice,
+          },
+        ];
+      } else if (promo.type === "FixedDiscount") {
+        const effectivePrice = product.sellingPrice ?? 0;
+        const discountedPrice = Math.max(
+          0,
+          round2(effectivePrice - (promo.discountAmount ?? 0))
+        );
+        return [
+          ...filtered,
+          {
+            lineId: genLineId(),
+            productID: product.productID,
+            productName: product.name,
+            unitID: "",
+            unitName: product.stockUnitName,
+            imageUrl: product.imageUrl,
+            quantity: 1,
+            unitPrice: discountedPrice,
+            discount: 0,
+            currentStock: product.currentStock,
+            promoID: promo.promoID,
+            promoLabel: promo.title,
+            originalPrice: effectivePrice,
+          },
+        ];
+      } else if (promo.type === "BuyXGetY") {
+        const buyQty = promo.buyQuantity ?? 1;
+        const getQty = promo.getQuantity ?? 1;
+        const totalQty = buyQty + getQty;
+        const discountAmount = round2((product.sellingPrice ?? 0) * getQty);
+        return [
+          ...filtered,
+          {
+            lineId: genLineId(),
+            productID: product.productID,
+            productName: product.name,
+            unitID: "",
+            unitName: product.stockUnitName,
+            imageUrl: product.imageUrl,
+            quantity: totalQty,
+            unitPrice: product.sellingPrice ?? 0,
+            discount: discountAmount,
+            currentStock: product.currentStock,
+            promoID: promo.promoID,
+            promoLabel: promo.title,
+            originalPrice: product.sellingPrice ?? undefined,
+          },
+        ];
+      } else if (promo.type === "Bundle") {
+        // Category-targeted bundle items can't be pre-resolved client-side —
+        // the backend BFS-expands them at sale time. Filter them out here;
+        // the caller surfaces a hint toast so the cashier adds eligible items.
+        const productItems = promo.items.filter(
+          (i): i is typeof i & { productID: string } => !!i.productID,
+        );
+
+        // Remove lines for all bundle product items (plain lines only)
+        const bundleProductIds = new Set(productItems.map((i) => i.productID));
+        filtered = filtered.filter(
+          (l) => !bundleProductIds.has(l.productID) || l.productVariantID,
+        );
+
+        const bundlePrice = promo.bundlePrice ?? 0;
+        const paidItems = productItems.filter((i) => !i.isFreeItem);
+        const freeItems = productItems.filter((i) => i.isFreeItem);
+        const totalPaidQty = paidItems.reduce((s, i) => s + i.quantity, 0);
+        const pricePerPaidUnit = totalPaidQty > 0 ? round2(bundlePrice / totalPaidQty) : 0;
+
+        const newLines = [...filtered];
+
+        for (const item of paidItems) {
+          newLines.push({
+            lineId: genLineId(),
+            productID: item.productID,
+            productName: item.productName ?? "",
+            unitID: "",
+            unitName: "",
+            imageUrl: null,
+            quantity: item.quantity,
+            unitPrice: pricePerPaidUnit,
+            discount: 0,
+            currentStock: 9999,
+            promoID: promo.promoID,
+            promoLabel: promo.title,
+            originalPrice: undefined,
+          });
+        }
+
+        for (const item of freeItems) {
+          newLines.push({
+            lineId: genLineId(),
+            productID: item.productID,
+            productName: item.productName ?? "",
+            unitID: "",
+            unitName: "",
+            imageUrl: null,
+            quantity: item.quantity,
+            unitPrice: 0,
+            discount: 0,
+            currentStock: 9999,
+            promoID: promo.promoID,
+            promoLabel: promo.title,
+            originalPrice: undefined,
+          });
+        }
+
+        return newLines;
+      }
+
+      return prev;
+    });
+  }, []);
+
+  const setLineQuantity = useCallback((lineId: string, quantity: number) => {
     setLines((prev) =>
       prev
         .map((l) =>
-          l.productID === productID
-            ? { ...l, quantity: Math.max(0, quantity) }
-            : l,
+          l.lineId === lineId ? { ...l, quantity: Math.max(0, quantity) } : l,
         )
         .filter((l) => l.quantity > 0),
     );
   }, []);
 
-  const setLineDiscount = useCallback((productID: string, discount: number) => {
+  const setLineDiscount = useCallback((lineId: string, discount: number) => {
     setLines((prev) =>
       prev.map((l) =>
-        l.productID === productID
-          ? { ...l, discount: Math.max(0, discount) }
-          : l,
+        l.lineId === lineId ? { ...l, discount: Math.max(0, discount) } : l,
       ),
     );
   }, []);
 
-  const removeLine = useCallback((productID: string) => {
-    setLines((prev) => prev.filter((l) => l.productID !== productID));
+  const removeLine = useCallback((lineId: string) => {
+    setLines((prev) => prev.filter((l) => l.lineId !== lineId));
   }, []);
 
   const clear = useCallback(() => {
@@ -176,6 +397,8 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
     taxRate,
     notes,
     addProduct,
+    addProductWithOptions,
+    applyPromo,
     setLineQuantity,
     setLineDiscount,
     removeLine,
