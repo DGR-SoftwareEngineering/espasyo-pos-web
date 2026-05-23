@@ -2,6 +2,8 @@ import {
   IngredientCategoryDto,
   ProductCategoryDto,
   UnitDto,
+  ProductVariantTemplateDto,
+  ProductAddOnTemplateDto,
 } from "core-lib/api/commons/types";
 import { ProductForm as ProductFormType } from "./validation";
 
@@ -18,4 +20,6 @@ export interface ProductFormProps {
   lookupsLoading?: boolean;
   isMenuItems?: boolean;
   currentImageUrl?: string | null;
+  variantTemplates?: ProductVariantTemplateDto[];
+  addOnTemplates?: ProductAddOnTemplateDto[];
 }

@@ -1,7 +1,10 @@
-import { LookupAdminBlock, BRAND_CONFIG } from "core-lib";
+import { useEffect } from "react";
+import { useRouter } from "core-lib/core/router";
 
 const BrandsSettingsPage = () => {
-  return <LookupAdminBlock config={BRAND_CONFIG} />;
+  const router = useRouter();
+  useEffect(() => { router.replace("/admin/hub/categories"); }, []);
+  return null;
 };
 
 export default BrandsSettingsPage;

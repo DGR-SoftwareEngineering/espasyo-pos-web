@@ -1,5 +1,5 @@
 import React, { ReactElement } from "react";
-import { Table, Flex, IconButton, Text, Box } from "@radix-ui/themes";
+import { Table, Flex, IconButton, Text, Box, Checkbox } from "@radix-ui/themes";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -37,6 +37,10 @@ interface Props<T> {
   onNextPage?(): void;
   onPreviousPage?(): void;
   bodyRowComponent(data: T, key: number): ReactElement;
+  selectable?: boolean;
+  allSelected?: boolean;
+  someSelected?: boolean;
+  onSelectAll?(): void;
 }
 
 export const DataTableV2 = <T,>({
@@ -50,13 +54,30 @@ export const DataTableV2 = <T,>({
   onNextPage,
   onPreviousPage,
   bodyRowComponent,
+  selectable,
+  allSelected,
+  someSelected,
+  onSelectAll,
   ...rest
 }: Props<T>) => {
+  const headerColSpan = selectable ? tableHeaders.length + 1 : tableHeaders.length;
+
   return (
     <Box id={id} className={cn(className)}>
       <Table.Root variant="surface" data-testid={rest["data-testid"]}>
         <Table.Header style={sx?.tableHead}>
           <Table.Row>
+            {selectable && (
+              <Table.ColumnHeaderCell style={{ width: 40 }}>
+                <Flex justify="center" align="center">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={onSelectAll}
+                    aria-label="Select all rows"
+                  />
+                </Flex>
+              </Table.ColumnHeaderCell>
+            )}
             {tableHeaders.map((header, idx) => (
               <Table.ColumnHeaderCell
                 key={`${header.name}-${idx}`}
@@ -145,7 +166,7 @@ export const DataTableV2 = <T,>({
           {loading ? (
             <Table.Row>
               <Table.Cell
-                colSpan={tableHeaders.length}
+                colSpan={headerColSpan}
                 style={{ textAlign: "center", padding: 24 }}
               >
                 <Text size="2" color="gray">
@@ -156,7 +177,7 @@ export const DataTableV2 = <T,>({
           ) : data.length === 0 ? (
             <Table.Row>
               <Table.Cell
-                colSpan={tableHeaders.length}
+                colSpan={headerColSpan}
                 style={{ textAlign: "center", padding: 24 }}
               >
                 <Text size="2" color="gray">

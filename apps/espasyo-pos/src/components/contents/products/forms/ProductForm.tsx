@@ -1,5 +1,6 @@
 import React from "react";
-import { Box, Callout, Card, Flex, Grid, Text } from "@radix-ui/themes";
+import { useWatch } from "react-hook-form";
+import { Box, Callout, Card, Flex, Grid, Select, Text } from "@radix-ui/themes";
 import {
   DescriptionOutlined,
   ImageOutlined,
@@ -10,7 +11,11 @@ import {
   RestaurantMenuOutlined,
   ScaleOutlined,
   SwapHorizOutlined,
+  TuneOutlined,
+  LocalCafeOutlined,
 } from "@mui/icons-material";
+import { ProductVariantsSection } from "./ProductVariantsSection";
+import { ProductAddOnGroupsSection } from "./ProductAddOnGroupsSection";
 import { ToggleField, ToggleOption } from "core-lib/components/radix/toggle/ToggleField";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import { SelectField } from "core-lib/components/radix/form/SelectField";
@@ -70,6 +75,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   ingredientCategories,
   units,
   currentImageUrl,
+  variantTemplates,
+  addOnTemplates,
 }) => {
   const {
     control,
@@ -95,22 +102,72 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const watchedImageFile = watch("imageFile");
   const watchedRemoveImage = watch("removeImage");
+  const watchedVariants = useWatch({ control, name: "variants" });
+  const hasVariantsDefined = (watchedVariants ?? []).length > 0;
   const showCurrentImage = isEdit && !!currentImageUrl && !watchedImageFile;
 
-  const categoryOptions = React.useMemo(() => {
+  const [selectedRootId, setSelectedRootId] = React.useState<string | null>(null);
+
+  // Reset root selection when product mode changes (mode change also clears categoryID)
+  React.useEffect(() => {
+    setSelectedRootId(null);
+  }, [productMode]);
+
+  // On edit pre-load: auto-derive the root from the saved categoryID
+  React.useEffect(() => {
+    const currentCatId = watchedValues.categoryId;
+    if (!currentCatId) return;
+    setSelectedRootId((prevRoot) => {
+      if (prevRoot) return prevRoot;
+      if (isMenuItem) {
+        const found = (productCategories ?? []).find((c) => c.productCategoryID === currentCatId);
+        if (found?.parentProductCategoryID) return found.parentProductCategoryID;
+        if (found) return currentCatId;
+      } else {
+        const found = (ingredientCategories ?? []).find((c) => c.ingredientCategoryID === currentCatId);
+        if (found?.parentIngredientCategoryID) return found.parentIngredientCategoryID;
+        if (found) return currentCatId;
+      }
+      return prevRoot;
+    });
+  }, [watchedValues.categoryId, productCategories, ingredientCategories, isMenuItem]);
+
+  const rootCategoryOptions = React.useMemo(() => {
     if (isMenuItem) {
-      return toSelectOptionsWithField(
-        productCategories ?? [],
-        "productCategoryID",
-        "name",
-      );
+      return (productCategories ?? [])
+        .filter((c) => !c.parentProductCategoryID)
+        .map((c) => ({ value: c.productCategoryID, label: c.name }));
     }
-    return toSelectOptionsWithField(
-      ingredientCategories ?? [],
-      "ingredientCategoryID",
-      "name",
-    );
+    return (ingredientCategories ?? [])
+      .filter((c) => !c.parentIngredientCategoryID)
+      .map((c) => ({ value: c.ingredientCategoryID, label: c.name }));
   }, [isMenuItem, productCategories, ingredientCategories]);
+
+  const subCategoryOptions = React.useMemo(() => {
+    if (!selectedRootId) return [];
+    if (isMenuItem) {
+      return (productCategories ?? [])
+        .filter((c) => c.parentProductCategoryID === selectedRootId)
+        .map((c) => ({ value: c.productCategoryID, label: c.name }));
+    }
+    return (ingredientCategories ?? [])
+      .filter((c) => c.parentIngredientCategoryID === selectedRootId)
+      .map((c) => ({ value: c.ingredientCategoryID, label: c.name }));
+  }, [isMenuItem, productCategories, ingredientCategories, selectedRootId]);
+
+  const rootHasChildren = subCategoryOptions.length > 0;
+
+  const handleRootChange = React.useCallback((rootId: string) => {
+    const hasChildren = isMenuItem
+      ? (productCategories ?? []).some((c) => c.parentProductCategoryID === rootId)
+      : (ingredientCategories ?? []).some((c) => c.parentIngredientCategoryID === rootId);
+    setSelectedRootId(rootId);
+    if (!hasChildren) {
+      setValue("categoryID", rootId, { shouldValidate: true });
+    } else {
+      setValue("categoryID", null as any, { shouldValidate: false });
+    }
+  }, [isMenuItem, productCategories, ingredientCategories, setValue]);
 
   const unitOptions = React.useMemo(
     () => toSelectOptionsWithField(units ?? [], "unitID", "name"),
@@ -215,16 +272,43 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 onChange={handleProductModeChange}
               />
 
-              <SelectField
-                name="categoryID"
-                control={control}
-                options={categoryOptions}
-                label={
-                  isMenuItem
-                    ? "Product Category"
-                    : "Ingredient Category"
-                }
-              />
+              {/* Main Category — uncontrolled by RHF; drives sub-category list */}
+              <Flex direction="column" gap="1">
+                <Text as="label" size="2" weight="medium">
+                  {isMenuItem ? "Main Category" : "Category"}
+                </Text>
+                <Select.Root
+                  value={selectedRootId ?? undefined}
+                  onValueChange={handleRootChange}
+                >
+                  <Select.Trigger placeholder="Select main category…" />
+                  <Select.Content position="popper">
+                    {rootCategoryOptions.length === 0 ? (
+                      <Select.Item value="__empty" disabled>No categories</Select.Item>
+                    ) : (
+                      rootCategoryOptions.map((opt) => (
+                        <Select.Item key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </Select.Item>
+                      ))
+                    )}
+                  </Select.Content>
+                </Select.Root>
+                {!selectedRootId && errors.categoryID && (
+                  <Text size="1" color="red">{errors.categoryID.message}</Text>
+                )}
+              </Flex>
+
+              {/* Sub-Category — only when selected root has children */}
+              {selectedRootId && rootHasChildren && (
+                <SelectField
+                  name="categoryID"
+                  control={control}
+                  label="Sub-Category"
+                  options={subCategoryOptions}
+                  placeholder="Select sub-category…"
+                />
+              )}
             </Flex>
           </FormSection>
 
@@ -322,12 +406,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   <TextField
                     name="unitPrice"
                     control={control}
-                    label="Selling Price"
+                    label={hasVariantsDefined ? "Selling Price (Optional)" : "Selling Price"}
                     type="number"
                     placeholder={PLACEHOLDERS.price}
                   />
                   <Text size="1" color="gray" as="div" mt="1">
-                    Price customers pay at the POS
+                    {hasVariantsDefined
+                      ? "Optional — POS will use the selected variant's price."
+                      : "Price customers pay at the POS."}
                   </Text>
                 </Box>
                 <Box>
@@ -343,6 +429,34 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   </Text>
                 </Box>
               </Grid>
+            </FormSection>
+          )}
+
+          {/* ── Menu Item: variants ── */}
+          {isMenuItem && (
+            <FormSection
+              icon={<TuneOutlined style={{ color: "var(--orange-11)" }} />}
+              title="Product Variants"
+              description="Optional. Define size or format options (e.g., 12oz · 16oz · 22oz). Each variant has its own price."
+            >
+              <ProductVariantsSection
+                control={control}
+                variantTemplates={variantTemplates ?? []}
+              />
+            </FormSection>
+          )}
+
+          {/* ── Menu Item: add-on groups ── */}
+          {isMenuItem && (
+            <FormSection
+              icon={<LocalCafeOutlined style={{ color: "var(--purple-11)" }} />}
+              title="Add-On Groups"
+              description="Optional. Modifier groups customers can pick at the POS (e.g., 'Extras' with Cheese, Bacon)."
+            >
+              <ProductAddOnGroupsSection
+                control={control}
+                addOnTemplates={addOnTemplates ?? []}
+              />
             </FormSection>
           )}
 

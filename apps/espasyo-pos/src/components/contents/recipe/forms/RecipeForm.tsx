@@ -17,16 +17,17 @@ import {
 } from "@mui/icons-material";
 import { useFieldArray } from "react-hook-form";
 import { TextField } from "core-lib/components/radix/form/TextField";
-import { SelectField } from "core-lib/components/radix/form/SelectField";
+import { AutoCompleteField } from "core-lib/components/radix/form/AutoCompleteField";
 import { FormHeader } from "core-lib/components/radix/FormHeader";
 import { FormSection } from "core-lib/components/radix/FormSection";
 import { FormActions } from "core-lib/components/radix/FormActions";
 import { InfoBox } from "core-lib/components/radix/InfoBox";
 import { RecipeFormProps } from "./types";
+import type { RecipeForm as RecipeFormType } from "./validation";
 import { useRecipeForm, useIngredientForm } from "../hooks";
 import { toSelectOptionsWithField } from "core-lib/business/array";
 import { IngredientAddForm, IngredientListItem } from "../../../../components";
-import { SelectOption } from "core-lib/components/radix/form/SelectField";
+import { ProductDataList } from "core-lib/api/commons/types";
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({
   onSubmit,
@@ -61,13 +62,6 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     control,
     name: "recipeItems",
   });
-
-  console.log('ingredients', ingredients)
-
-  const menuItemOptions = useMemo(
-    () => toSelectOptionsWithField(menuItems, "productID", "name"),
-    [menuItems],
-  );
 
   const ingredientOptions = useMemo(
     () => toSelectOptionsWithField(ingredients, "productID", "name"),
@@ -125,14 +119,17 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
             icon={<RestaurantMenuOutlined style={{ color: "var(--accent-11)" }} />}
             title="Select Menu Item"
           >
-            <SelectField
+            <AutoCompleteField<RecipeFormType, ProductDataList>
               name="menuItemProductID"
               control={control}
-              options={menuItemOptions}
+              options={menuItems}
               label="Menu Item"
-              onSelectOption={(option: SelectOption) =>
-                onMenuItemSelect?.(option.value)
-              }
+              placeholder="Search menu items..."
+              getOptionLabel={(item) => item.name}
+              getOptionValue={(item) => item.productID}
+              valueMode="id"
+              disableClearable
+              onSelectOption={(option) => option && onMenuItemSelect?.(option.productID)}
             />
             {errors.menuItemProductID && (
               <Text size="1" color="red" as="div" mt="1">

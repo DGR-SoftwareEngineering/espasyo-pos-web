@@ -29,6 +29,7 @@ import {
   ProductViewDialogContent,
   ProductEditDialogContent,
   ProductDeleteDialogContent,
+  ProductBulkDeleteDialogContent,
 } from "./contents";
 import {
   RecipeViewDialogContent,
@@ -126,6 +127,17 @@ export const DialogContextModal: React.FC<Props> = ({
           onClose={onClose!}
         />
       );
+    case "ProductBulkDelete": {
+      const bulkData = dialogData as { ids: string[]; count: number };
+      return (
+        <ProductBulkDeleteDialogContent
+          ids={bulkData.ids}
+          count={bulkData.count}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    }
     // Recipe dialogs
     case "RecipeView":
       const viewData = dialogData as {

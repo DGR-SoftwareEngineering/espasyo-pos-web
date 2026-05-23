@@ -15,6 +15,7 @@ export interface BaseTableRowProps<T> {
   columns: BaseTableColumn<T>[];
   isSelectable?: boolean;
   selectedRowKey?: number | string;
+  isChecked?: boolean;
   onSelect?: (rowKey: number | string) => void;
   isDisabled?: boolean;
   onRowClick?: (data: T) => void;
@@ -29,6 +30,7 @@ export function BaseTableRow<T>({
   columns,
   isSelectable,
   selectedRowKey,
+  isChecked,
   onSelect,
   isDisabled,
   onRowClick,
@@ -36,7 +38,7 @@ export function BaseTableRow<T>({
   className,
   style,
 }: BaseTableRowProps<T>) {
-  const isSelected = selectedRowKey === rowKey;
+  const isSelected = isChecked !== undefined ? isChecked : selectedRowKey === rowKey;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (isDisabled) return;

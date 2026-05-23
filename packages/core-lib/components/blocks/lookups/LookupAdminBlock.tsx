@@ -93,6 +93,87 @@ export function LookupAdminBlock<TDto extends LookupDtoBase>({
     );
   }, [rows, searchTerm]);
 
+  const treeEnabled = !!(config.enableTree && config.parentIdField);
+
+  // Build {row, depth, hasChildren} list when tree mode is on.
+  const childrenByParent = useMemo(() => {
+    if (!treeEnabled) return new Map<string | null, TDto[]>();
+    const map = new Map<string | null, TDto[]>();
+    for (const r of filteredRows) {
+      const pid =
+        (r[config.parentIdField!] as unknown as string | null) ?? null;
+      const list = map.get(pid) ?? [];
+      list.push(r);
+      map.set(pid, list);
+    }
+    return map;
+  }, [filteredRows, treeEnabled, config.parentIdField]);
+
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+
+  // Auto-expand first two depths when rows first load.
+  React.useEffect(() => {
+    if (!treeEnabled) return;
+    setExpanded((prev) => {
+      if (prev.size > 0) return prev;
+      const next = new Set<string>();
+      const seedDepth0 = childrenByParent.get(null) ?? [];
+      for (const r of seedDepth0) {
+        const id = r[config.idField] as unknown as string;
+        next.add(id);
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [treeEnabled, childrenByParent]);
+
+  const toggleExpanded = useCallback((id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  interface FlatTreeNode {
+    row: TDto;
+    depth: number;
+    hasChildren: boolean;
+  }
+
+  const treeFlattened = useMemo<FlatTreeNode[]>(() => {
+    if (!treeEnabled) return [];
+    const out: FlatTreeNode[] = [];
+    const walk = (parentId: string | null, depth: number) => {
+      const kids = childrenByParent.get(parentId) ?? [];
+      for (const r of kids) {
+        const id = r[config.idField] as unknown as string;
+        const hasChildren = (childrenByParent.get(id)?.length ?? 0) > 0;
+        out.push({ row: r, depth, hasChildren });
+        if (hasChildren && expanded.has(id)) {
+          walk(id, depth + 1);
+        }
+      }
+    };
+    walk(null, 0);
+    return out;
+  }, [treeEnabled, childrenByParent, expanded, config.idField]);
+
+  const displayRows = useMemo<TDto[]>(
+    () => (treeEnabled ? treeFlattened.map((n) => n.row) : filteredRows),
+    [treeEnabled, treeFlattened, filteredRows],
+  );
+
+  const treeMetaById = useMemo(() => {
+    if (!treeEnabled) return new Map<string, FlatTreeNode>();
+    const m = new Map<string, FlatTreeNode>();
+    for (const n of treeFlattened) {
+      m.set(n.row[config.idField] as unknown as string, n);
+    }
+    return m;
+  }, [treeEnabled, treeFlattened, config.idField]);
+
   const stats = useMemo(
     () => ({
       total: rows.length,
@@ -112,16 +193,24 @@ export function LookupAdminBlock<TDto extends LookupDtoBase>({
   }, [data]);
 
   const bodyRowComponent = useCallback(
-    (row: TDto) => (
-      <LookupTableRow<TDto>
-        key={row[config.idField] as unknown as string}
-        row={row}
-        config={config}
-        onEdit={(r) => setEditRow(r)}
-        onDelete={(r) => setDeleteRow(r)}
-      />
-    ),
-    [config],
+    (row: TDto) => {
+      const id = row[config.idField] as unknown as string;
+      const meta = treeMetaById.get(id);
+      return (
+        <LookupTableRow<TDto>
+          key={id}
+          row={row}
+          config={config}
+          onEdit={(r) => setEditRow(r)}
+          onDelete={(r) => setDeleteRow(r)}
+          depth={meta?.depth ?? 0}
+          hasChildren={meta?.hasChildren ?? false}
+          expanded={expanded.has(id)}
+          onToggle={() => toggleExpanded(id)}
+        />
+      );
+    },
+    [config, treeMetaById, expanded, toggleExpanded],
   );
 
   return (
@@ -189,7 +278,7 @@ export function LookupAdminBlock<TDto extends LookupDtoBase>({
 
       <Card variant="surface" size="2" style={{ overflow: "hidden" }}>
         <DataTableV2
-          data={filteredRows}
+          data={displayRows}
           loading={data.loading}
           tableHeaders={TABLE_HEADERS}
           bodyRowComponent={bodyRowComponent}

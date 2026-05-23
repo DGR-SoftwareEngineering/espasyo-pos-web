@@ -48,9 +48,9 @@ export const RouteTransitionLoader: React.FC<Props> = ({
       role="status"
       aria-live="polite"
       style={{
-        position: "absolute",
+        position: "fixed",
         inset: 0,
-        zIndex: 50,
+        zIndex: 1399,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

@@ -1,7 +1,10 @@
-import { LookupAdminBlock, BUSINESS_SUPPLY_CATEGORY_CONFIG } from "core-lib";
+import { useEffect } from "react";
+import { useRouter } from "core-lib/core/router";
 
 const BusinessSupplyCategoriesSettingsPage = () => {
-  return <LookupAdminBlock config={BUSINESS_SUPPLY_CATEGORY_CONFIG} />;
+  const router = useRouter();
+  useEffect(() => { router.replace("/admin/hub/categories"); }, []);
+  return null;
 };
 
 export default BusinessSupplyCategoriesSettingsPage;

@@ -151,6 +151,26 @@ export const SaleReceiptPrintable: React.FC<Props> = ({
               </td>
               <td style={cellStyle}>
                 <div style={{ fontWeight: 500 }}>{item.productName}</div>
+                {item.variantName && (
+                  <div style={{ fontSize: 11, color: "#555", marginTop: 2, fontStyle: "italic" }}>
+                    {item.variantName}
+                  </div>
+                )}
+                {item.addOns && item.addOns.length > 0 && (
+                  <div style={{ marginTop: 4 }}>
+                    {item.addOns.map((a) => (
+                      <div
+                        key={a.saleItemAddOnID}
+                        style={{ fontSize: 11, color: "#777", paddingLeft: 8 }}
+                      >
+                        + {a.itemName}
+                        {a.additionalPrice > 0 && (
+                          <> ({formatCurrency(a.additionalPrice, currencyCode)})</>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div style={{ fontSize: 10, color: "#777", marginTop: 2 }}>
                   {item.unitName}
                 </div>

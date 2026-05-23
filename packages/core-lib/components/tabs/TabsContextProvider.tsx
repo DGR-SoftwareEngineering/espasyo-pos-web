@@ -12,10 +12,11 @@ export const useTabsContext = () => {
   return useContext(context);
 };
 
-export const TabsContextProvider: React.FC<React.PropsWithChildren<{}>> = ({
+export const TabsContextProvider: React.FC<React.PropsWithChildren<{ initialIndex?: number }>> = ({
   children,
+  initialIndex = 0,
 }) => {
-  const [tabIndex, setTab] = useState(0);
+  const [tabIndex, setTab] = useState(initialIndex);
 
   return (
     <context.Provider

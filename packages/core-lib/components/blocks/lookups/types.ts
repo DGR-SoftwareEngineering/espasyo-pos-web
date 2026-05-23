@@ -58,6 +58,8 @@ export interface LookupAdminConfig<TDto extends LookupDtoBase> {
   parentIdField?: keyof TDto;
   /** Optional key on TDto holding the flattened parent name (e.g. "parentUnitName"). */
   parentNameField?: keyof TDto;
+  /** When true and parentIdField is set, render rows as an indented tree (expand/collapse) instead of a flat list. */
+  enableTree?: boolean;
   /** API selectors — caller maps the generic LookupFormValues to entity-specific params. */
   selectors: LookupSelectors<TDto>;
 }

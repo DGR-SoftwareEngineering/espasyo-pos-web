@@ -86,6 +86,8 @@ const permissions: Record<UserRole, MenuPermissions> = {
         brands: { view: true, create: true, edit: true, delete: true },
       },
     },
+    shiftManagement: { view: true, create: false, edit: true, delete: false },
+    promoManagement: { view: true, create: true, edit: true, delete: true },
     about: { view: true, create: true, edit: true, delete: true },
     feedback: { view: true, create: true, edit: true, delete: true },
   },

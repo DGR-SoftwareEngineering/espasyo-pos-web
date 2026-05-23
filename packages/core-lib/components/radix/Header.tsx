@@ -6,6 +6,7 @@ import { useHeaderTitleContext } from "../../core/contexts";
 import { HeaderUserMenu } from "./menu/HeaderUserMenu";
 import { HeaderSearch } from "./menu/HeaderSearch";
 import { HeaderNotificationMenu } from "./menu/HeaderNotificationMenu";
+import { HeaderSalesTarget } from "./menu/HeaderSalesTarget";
 
 interface HeaderUser {
   initials?: string;
@@ -111,6 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
             gap="3"
             style={{ flex: "1 1 auto", justifyContent: "flex-end", minWidth: 0 }}
           >
+            {user?.role?.toLowerCase() === 'admin' && <HeaderSalesTarget />}
             <HeaderSearch />
             {user && logout && (
               <>

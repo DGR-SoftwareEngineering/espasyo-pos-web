@@ -1,4 +1,4 @@
-import { alpha, Box, Button, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, Flex, Text } from "@radix-ui/themes";
 import { ProductDataList } from "../../../../api/commons/types";
 import { useToastContext } from "../../../../core/contexts";
 import { useApiCallback } from "../../../../core/hooks";
@@ -8,7 +8,6 @@ export const ProductDeleteDialogContent: React.FC<{
   onSuccess: () => void;
   onClose: () => void;
 }> = ({ product, onSuccess, onClose }) => {
-  const theme = useTheme();
   const { showToast } = useToastContext();
 
   const deleteProductCb = useApiCallback(
@@ -22,55 +21,50 @@ export const ProductDeleteDialogContent: React.FC<{
         showToast("Product deleted successfully", "success");
         onSuccess();
         onClose();
+        return;
       }
 
-      showToast("Delete API not ready yet", "info");
-      onClose();
+      showToast("Failed to delete product", "error");
     } catch (error) {
       showToast("Failed to delete product", "error");
     }
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="body1" sx={{ mb: 3 }}>
+    <Box p="6">
+      <Text as="p" size="2" mb="4">
         Are you sure you want to delete this product?
-      </Typography>
+      </Text>
 
       <Box
-        sx={{
-          p: 2,
-          mb: 3,
-          bgcolor: alpha(theme.palette.error.main, 0.05),
-          borderRadius: 2,
-          border: `1px solid ${alpha(theme.palette.error.main, 0.1)}`,
+        p="4"
+        mb="4"
+        style={{
+          borderRadius: "var(--radius-2)",
+          border: "1px solid var(--red-a4)",
+          background: "var(--red-a2)",
         }}
       >
-        <Typography variant="subtitle2" fontWeight={600}>
+        <Text as="div" size="2" weight="bold" mb="2">
           {product.name}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
+        </Text>
+        <Text as="div" size="1" color="gray">
           ID: {product.productID}
-        </Typography>
+        </Text>
       </Box>
 
-      <Stack direction="row" spacing={2} justifyContent="flex-end">
-        <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2 }}>
+      <Flex gap="3" justify="end">
+        <Button variant="soft" onClick={onClose}>
           Cancel
         </Button>
         <Button
-          variant="contained"
-          color="error"
+          color="red"
           onClick={handleDelete}
-          loading={deleteProductCb.loading}
-          sx={{
-            borderRadius: 2,
-            boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`,
-          }}
+          disabled={deleteProductCb.loading}
         >
-          Delete
+          {deleteProductCb.loading ? "Deleting…" : "Delete"}
         </Button>
-      </Stack>
+      </Flex>
     </Box>
   );
 };

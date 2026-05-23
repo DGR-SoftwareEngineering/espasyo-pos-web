@@ -28,6 +28,8 @@ const defaultValues: ProductFormType = {
   stockUnitID: "",
   imageFile: null,
   removeImage: false,
+  variants: [],
+  addOnGroups: [],
 };
 
 export const useProductForm = ({

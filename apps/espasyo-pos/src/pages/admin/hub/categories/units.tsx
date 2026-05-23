@@ -1,7 +1,10 @@
-import { LookupAdminBlock, UNIT_CONFIG } from "core-lib";
+import { useEffect } from "react";
+import { useRouter } from "core-lib/core/router";
 
 const UnitsSettingsPage = () => {
-  return <LookupAdminBlock config={UNIT_CONFIG} />;
+  const router = useRouter();
+  useEffect(() => { router.replace("/admin/hub/categories"); }, []);
+  return null;
 };
 
 export default UnitsSettingsPage;

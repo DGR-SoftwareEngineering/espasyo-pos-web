@@ -55,6 +55,7 @@ export const PRODUCT_CATEGORY_CONFIG: LookupAdminConfig<ProductCategoryDto> = {
   idField: "productCategoryID",
   parentIdField: "parentProductCategoryID",
   parentNameField: "parentProductCategoryName",
+  enableTree: true,
   selectors: {
     list: (api) => api.commons.productCategoryList(),
     create: (api, values) =>

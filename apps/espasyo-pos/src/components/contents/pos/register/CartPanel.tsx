@@ -167,13 +167,13 @@ export const CartPanel: React.FC<Props> = ({
               <Flex direction="column" p="3" gap="1">
                 {state.lines.map((line) => (
                   <CartRow
-                    key={line.productID}
+                    key={line.lineId}
                     line={line}
                     currencyCode={currencyCode}
                     allowDiscounts={pos.allowDiscounts}
-                    onQuantity={(q) => state.setLineQuantity(line.productID, q)}
-                    onDiscount={(d) => state.setLineDiscount(line.productID, d)}
-                    onRemove={() => state.removeLine(line.productID)}
+                    onQuantity={(q) => state.setLineQuantity(line.lineId, q)}
+                    onDiscount={(d) => state.setLineDiscount(line.lineId, d)}
+                    onRemove={() => state.removeLine(line.lineId)}
                   />
                 ))}
               </Flex>
@@ -706,19 +706,50 @@ const CartRow: React.FC<{
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Flex justify="between" align="start" gap="2">
             <Box style={{ flex: 1, minWidth: 0 }}>
-              <Text
-                size="2"
-                weight="medium"
-                as="div"
-                style={{
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {line.productName}
-              </Text>
+              <Flex gap="2" align="center" mb="1">
+                <Text
+                  size="2"
+                  weight="medium"
+                  as="div"
+                  style={{
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {line.productName}
+                </Text>
+                {line.promoLabel && (
+                  <Badge color="amber" variant="soft" size="1">
+                    🏷️ {line.promoLabel}
+                  </Badge>
+                )}
+              </Flex>
+              {line.variantName && (
+                <Text size="1" color="indigo" as="div" weight="medium" style={{ marginBottom: 2 }}>
+                  {line.variantName}
+                </Text>
+              )}
+              {line.addOnSummary && line.addOnSummary.length > 0 && (
+                <Flex direction="column" gap="0" style={{ marginBottom: 2 }}>
+                  {line.addOnSummary.map((a, idx) => (
+                    <Text key={`${a.productAddOnItemID}-${idx}`} size="1" color="gray" as="div">
+                      + {a.itemName}
+                      {a.additionalPrice > 0 && (
+                        <> ({formatCurrency(a.additionalPrice, currencyCode)})</>
+                      )}
+                    </Text>
+                  ))}
+                </Flex>
+              )}
               <Text size="1" color="gray" as="div">
+                {line.originalPrice && line.originalPrice !== line.unitPrice && (
+                  <span style={{ marginRight: 6 }}>
+                    <s style={{ color: "var(--gray-8)" }}>
+                      {formatCurrency(line.originalPrice, currencyCode)}
+                    </s>{" "}
+                  </span>
+                )}
                 {formatCurrency(line.unitPrice, currencyCode)} ·{" "}
                 {line.unitName}
               </Text>

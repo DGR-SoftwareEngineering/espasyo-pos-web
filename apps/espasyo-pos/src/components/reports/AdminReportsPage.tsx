@@ -2,6 +2,7 @@ import React, {
   memo,
   useCallback,
   useDeferredValue,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -11,13 +12,16 @@ import {
   Button,
   Callout,
   Card,
+  Dialog,
   Flex,
   Grid,
   Heading,
+  IconButton,
   ScrollArea,
   Separator,
   Skeleton,
   Text,
+  Spinner,
 } from "@radix-ui/themes";
 import {
   ActivityLogIcon,
@@ -26,6 +30,9 @@ import {
   LayersIcon,
   PieChartIcon,
   CalendarIcon,
+  Cross2Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@radix-ui/react-icons";
 import {
   TrendingUpOutlined,
@@ -38,8 +45,20 @@ import {
   ShoppingCartOutlined,
   SavingsOutlined,
   InfoOutlined,
+  RefreshOutlined,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Cell,
+  ReferenceLine,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+} from "recharts";
 import {
   ChartCard,
   ChartEmpty,
@@ -57,13 +76,20 @@ import {
 } from "core-lib/components/radix/tabs";
 import { useApi, useResolution } from "core-lib/core/hooks";
 import { usePublicSettings } from "core-lib/core/contexts";
+import { useRouter } from "core-lib/core/router";
+import { useDialogContext } from "core-lib";
 import { FinancialSummaryTable } from "./FinancialSummaryTable";
 import {
   SupplierInvoiceDto,
   SupplierInvoiceStatusDto,
+  OrderDto,
+  SaleStatusDto,
+  SaleDetailDto,
 } from "core-lib/api/commons/types";
+import type { OrderDetailDialogData } from "core-lib/api/content/types/common";
 import { INVOICE_STATUS_META } from "../contents/procurement/constants";
 import { formatCurrency } from "../contents/procurement/format";
+import { SaleReceiptPrintable } from "../contents/pos/printables/SaleReceiptPrintable";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -618,23 +644,913 @@ const ProcurementTrendCard = memo<{
   );
 });
 
+// ─── Helper Functions ─────────────────────────────────────────────────────────
+
+function getDaysAgoIso(n: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - n);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getDatesInRange(from: string, to: string): string[] {
+  const dates: string[] = [];
+  const current = new Date(from + "T00:00:00Z");
+  const end = new Date(to + "T00:00:00Z");
+  const maxDays = 31;
+
+  let dayCount = 0;
+  while (current <= end && dayCount < maxDays) {
+    dates.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 1);
+    dayCount++;
+  }
+
+  return dates;
+}
+
+function getStatusBadge(
+  status: SaleStatusDto
+): { color: "green" | "red" | "amber" | "blue"; label: string } {
+  switch (status) {
+    case SaleStatusDto.Completed:
+      return { color: "green", label: "Completed" };
+    case SaleStatusDto.Voided:
+      return { color: "red", label: "Voided" };
+    case SaleStatusDto.PartiallyRefunded:
+      return { color: "amber", label: "Partial Refund" };
+    case SaleStatusDto.FullyRefunded:
+      return { color: "blue", label: "Fully Refunded" };
+    default:
+      return { color: "gray" as any, label: "Unknown" };
+  }
+}
+
+// ─── Daily Transactions Panel Component ───────────────────────────────────────
+
+interface DailyTransactionsPanelProps {
+  date: string | null;
+  summary: { totalAmount: number; salesCount: number } | null;
+  onClose: () => void;
+}
+
+const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
+  date,
+  summary,
+  onClose,
+}) => {
+  const { openDialog } = useDialogContext();
+  const { systemName, theme, currencyCode, pos } = usePublicSettings();
+  const [pageNumber, setPageNumber] = useState(1);
+  const pageSize = 20;
+
+  const ordersApi = useApi(
+    (api) =>
+      date
+        ? api.commons.orderList({
+            fromDate: date,
+            toDate: date,
+            pageNumber,
+            pageSize,
+          })
+        : Promise.resolve(null),
+    [date, pageNumber],
+  );
+
+  const orders = (ordersApi.result?.data?.response?.items ?? []) as OrderDto[];
+  const pagination = ordersApi.result?.data?.response;
+  const totalPages = pagination?.totalPages ?? 1;
+
+  const renderReceipt = useCallback(
+    (sale: SaleDetailDto) => (
+      <SaleReceiptPrintable
+        sale={sale}
+        businessName={systemName}
+        logoUrl={theme?.logoUrl ?? null}
+        currencyCode={currencyCode}
+        receiptHeader={pos.receiptHeader}
+        receiptFooter={pos.receiptFooter}
+      />
+    ),
+    [systemName, theme, currencyCode, pos],
+  );
+
+  const handleRowClick = useCallback(
+    (order: OrderDto) => {
+      openDialog({
+        title: `Order · ${order.orderNumber}`,
+        dialogContentType: "OrderDetail",
+        data: {
+          orderID: order.orderID,
+          renderReceipt,
+          onStateChange: () => setPageNumber(1),
+        } as OrderDetailDialogData,
+      });
+    },
+    [openDialog, renderReceipt],
+  );
+
+  const dateFormatted = date
+    ? new Date(date + "T00:00:00Z").toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "";
+
+  return (
+    <Dialog.Root open={date !== null} onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Content
+        style={{
+          maxWidth: "860px",
+          maxHeight: "80vh",
+          overflowY: "auto",
+        }}
+      >
+        {/* Header */}
+        <Flex justify="between" align="center" mb="4">
+          <Heading size="5" weight="bold">
+            Transactions — {dateFormatted}
+          </Heading>
+          <Dialog.Close>
+            <IconButton size="2" variant="ghost">
+              <Cross2Icon />
+            </IconButton>
+          </Dialog.Close>
+        </Flex>
+
+        {/* Summary chips */}
+        <Flex gap="2" mb="4">
+          <Card
+            style={{
+              padding: "12px 16px",
+              background: "var(--indigo-a2)",
+              border: "1px solid var(--indigo-a5)",
+            }}
+          >
+            <Flex direction="column" gap="1">
+              <Text size="1" color="gray" weight="medium">
+                Daily Total
+              </Text>
+              <Text size="3" weight="bold" style={{ color: "var(--indigo-11)" }}>
+                {formatCurrency(summary?.totalAmount ?? 0)}
+              </Text>
+            </Flex>
+          </Card>
+          <Card
+            style={{
+              padding: "12px 16px",
+              background: "var(--amber-a2)",
+              border: "1px solid var(--amber-a5)",
+            }}
+          >
+            <Flex direction="column" gap="1">
+              <Text size="1" color="gray" weight="medium">
+                Transactions
+              </Text>
+              <Text size="3" weight="bold" style={{ color: "var(--amber-11)" }}>
+                {summary?.salesCount ?? 0}
+              </Text>
+            </Flex>
+          </Card>
+        </Flex>
+
+        {/* Loading state */}
+        {ordersApi.loading && (
+          <Flex justify="center" align="center" style={{ minHeight: "200px" }}>
+            <Spinner size="3" />
+          </Flex>
+        )}
+
+        {/* Orders table */}
+        {!ordersApi.loading && orders.length > 0 && (
+          <>
+            <style>{`
+              .daily-orders-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+              .daily-orders-table thead tr { background: var(--gray-a2); border-bottom: 1px solid var(--gray-a4); }
+              .daily-orders-table th { padding: 10px 12px; text-align: left; font-weight: 500; color: var(--gray-11); }
+              .daily-orders-table th:nth-child(2),
+              .daily-orders-table th:nth-child(3),
+              .daily-orders-table th:nth-child(4),
+              .daily-orders-table th:nth-child(5),
+              .daily-orders-table th:nth-child(6) { text-align: center; }
+              .daily-orders-table tbody tr { border-bottom: 1px solid var(--gray-a3); transition: background 80ms ease; cursor: pointer; }
+              .daily-orders-table tbody tr:hover { background: var(--gray-a2); }
+              .daily-orders-table td { padding: 10px 12px; color: var(--gray-12); }
+              .daily-orders-table td:nth-child(2),
+              .daily-orders-table td:nth-child(3),
+              .daily-orders-table td:nth-child(4),
+              .daily-orders-table td:nth-child(5),
+              .daily-orders-table td:nth-child(6) { text-align: center; }
+            `}</style>
+
+            <Box style={{ overflowX: "auto", marginBottom: "16px" }}>
+              <table className="daily-orders-table">
+                <thead>
+                  <tr>
+                    <th>Order #</th>
+                    <th>Time</th>
+                    <th>Cashier</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => {
+                    const badge = getStatusBadge(order.status);
+                    const time = order.completedAt
+                      ? new Date(order.completedAt).toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "—";
+                    return (
+                      <tr key={order.orderID} onClick={() => handleRowClick(order)}>
+                        <td style={{ fontWeight: 500 }}>{order.orderNumber}</td>
+                        <td>{time}</td>
+                        <td>{order.cashierName}</td>
+                        <td>{order.paymentSummary}</td>
+                        <td>
+                          <Badge size="1" color={badge.color}>
+                            {badge.label}
+                          </Badge>
+                        </td>
+                        <td style={{ fontWeight: 500 }}>
+                          {order.refundedAmount > 0 && (
+                            <div style={{ textDecoration: "line-through", color: "var(--gray-9)" }}>
+                              {formatCurrency(order.totalAmount)}
+                            </div>
+                          )}
+                          <div>{formatCurrency(order.totalAmount - order.refundedAmount)}</div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </Box>
+
+            {/* Pagination */}
+            <Flex justify="between" align="center" mt="3">
+              <Text size="1" color="gray">
+                Page {pageNumber} of {totalPages}
+              </Text>
+              <Flex gap="2">
+                <Button
+                  size="1"
+                  variant="soft"
+                  disabled={pageNumber === 1}
+                  onClick={() => setPageNumber((n) => Math.max(1, n - 1))}
+                >
+                  <ChevronLeftIcon />
+                </Button>
+                <Button
+                  size="1"
+                  variant="soft"
+                  disabled={pageNumber >= totalPages}
+                  onClick={() => setPageNumber((n) => n + 1)}
+                >
+                  <ChevronRightIcon />
+                </Button>
+              </Flex>
+            </Flex>
+          </>
+        )}
+
+        {/* Empty state */}
+        {!ordersApi.loading && orders.length === 0 && (
+          <Flex
+            justify="center"
+            align="center"
+            direction="column"
+            style={{ minHeight: "200px", gap: "12px" }}
+          >
+            <Text size="3" style={{ fontSize: "32px" }}>
+              📭
+            </Text>
+            <Text size="2" color="gray" align="center">
+              No orders for this date
+            </Text>
+          </Flex>
+        )}
+      </Dialog.Content>
+    </Dialog.Root>
+  );
+};
+
+// ─── Daily Sales Target Tab Component ──────────────────────────────────────────
+
+interface DailySalesTargetTabProps {
+  todayTotal: number;
+  salesCount: number;
+  salesLoading: boolean;
+}
+
+const DailySalesTargetTab: React.FC<DailySalesTargetTabProps> = ({ todayTotal, salesCount, salesLoading }) => {
+  const { pos } = usePublicSettings();
+  const router = useRouter();
+  const { openDialog } = useDialogContext();
+
+  // Today's data (always today, independent of table filter)
+  const targetAmount = pos.targetSalesAmountPerDay;
+  const currentAmount = todayTotal;
+
+  // Date range state — table only (defaults to today)
+  const [fromDate, setFromDate] = useState(() => getDaysAgoIso(0));
+  const [toDate, setToDate] = useState(() => getDaysAgoIso(0));
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  // Chart-based per-day data for table rows (admin-wide, not user-scoped)
+  const rangeChart = useChart({
+    chartKey: "sales-by-day",
+    fromDate,
+    toDate,
+  });
+
+  const progressPct = useMemo(() => {
+    if (targetAmount <= 0) return 0;
+    return Math.min((currentAmount / targetAmount) * 100, 100);
+  }, [currentAmount, targetAmount]);
+
+  const remaining = Math.max(targetAmount - currentAmount, 0);
+  const reached = targetAmount > 0 && currentAmount >= targetAmount;
+
+  // Transform chart points to table rows (must be before conditional return — Rules of Hooks)
+  const rangeRows = useMemo(() => {
+    const points = rangeChart.data?.points ?? [];
+    return points.map((p) => {
+      const isoDate = p.timestamp
+        ? new Date(p.timestamp).toISOString().split("T")[0]
+        : null;
+      const amount = Object.values(p.values)[0] ?? 0;
+      return { date: isoDate, label: p.label, amount };
+    });
+  }, [rangeChart.data]);
+
+  const chartData = useMemo(
+    () =>
+      [...rangeRows].reverse().map(({ label, amount }) => ({
+        label,
+        actual: amount > 0 ? amount : 0,
+      })),
+    [rangeRows],
+  );
+
+  const selectedDateSummary = selectedDate
+    ? { totalAmount: rangeRows.find((r) => r.date === selectedDate)?.amount ?? 0, salesCount: 0 }
+    : null;
+
+  // Conditional return AFTER all hooks
+  if (targetAmount <= 0 || !pos.targetSalesEnabled) {
+    return (
+      <Box pt="4">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          <Callout.Root
+            style={{
+              background: "var(--amber-a2)",
+              borderColor: "var(--amber-a5)",
+              padding: "20px",
+            }}
+          >
+            <WarningAmberOutlined style={{ fontSize: 18 }} />
+            <Callout.Text>
+              <strong>Daily Sales Target not configured</strong> — Go to{" "}
+              <Button
+                variant="ghost"
+                size="1"
+                style={{ cursor: "pointer", paddingInline: "4px" }}
+                onClick={() => router.push("/admin/hub/settings")}
+              >
+                Settings
+              </Button>
+              {" "}to enable and set your daily target.
+            </Callout.Text>
+          </Callout.Root>
+        </motion.div>
+      </Box>
+    );
+  }
+
+  const getStatusColor = (): { color: string; bg: string; message: string; emoji: string } => {
+    if (reached) return { color: "jade", bg: "jade-a2", message: "🎉 Target achieved!", emoji: "🎯" };
+    if (progressPct >= 80) return { color: "green", bg: "green-a2", message: "Almost there! Keep pushing.", emoji: "💪" };
+    if (progressPct >= 50) return { color: "amber", bg: "amber-a2", message: "Halfway done! Keep going.", emoji: "⚡" };
+    return { color: "red", bg: "red-a2", message: "Keep pushing! You're just getting started.", emoji: "🚀" };
+  };
+
+  const status = getStatusColor();
+  const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  return (
+    <Box pt="4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        {/* Header */}
+        <Flex justify="between" align="center" mb="4">
+          <Heading size="5" weight="bold">Today's Sales Performance</Heading>
+          <Text size="2" color="gray">{today}</Text>
+        </Flex>
+
+        {/* Hero: Circular progress + Stat Cards */}
+        <Grid columns={{ initial: "1", md: "3" }} gap="4" mb="6">
+          {/* Circular Progress Ring */}
+          <Card
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "32px",
+              background: `var(--${status.color}-a2)`,
+              border: `2px solid var(--${status.color}-a5)`,
+              minHeight: 300,
+            }}
+          >
+            <Box style={{ position: "relative", width: 140, height: 140, marginBottom: "16px" }}>
+              <svg width={140} height={140} style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
+                <circle cx={70} cy={70} r={60} fill="none" stroke="var(--gray-a3)" strokeWidth={10} />
+                <motion.circle
+                  initial={{ strokeDashoffset: 377 }}
+                  animate={{ strokeDashoffset: 377 - (377 * progressPct) / 100 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  cx={70}
+                  cy={70}
+                  r={60}
+                  fill="none"
+                  stroke={`var(--${status.color}-11)`}
+                  strokeWidth={10}
+                  strokeDasharray={377}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <Flex justify="center" align="center" style={{ position: "absolute", inset: 0, fontSize: 28, fontWeight: "bold", color: `var(--${status.color}-11)` }}>
+                {salesLoading ? <Spinner size="3" /> : (reached ? "🎯" : `${Math.round(progressPct)}%`)}
+              </Flex>
+            </Box>
+            <Text size="3" weight="bold" style={{ color: `var(--${status.color}-11)`, marginBottom: "8px" }}>
+              {status.emoji} {status.message}
+            </Text>
+            <Text size="1" color="gray" align="center">
+              {formatCurrency(currentAmount)} of {formatCurrency(targetAmount)}
+            </Text>
+          </Card>
+
+          {/* Current Sales Card */}
+          <Card
+            style={{
+              padding: "24px",
+              background: `var(--indigo-a2)`,
+              border: `1px solid var(--indigo-a5)`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 180,
+            }}
+          >
+            <Flex direction="column" gap="3" align="center">
+              <Flex align="center" gap="2">
+                <TrendingUpOutlined style={{ fontSize: 20, color: "var(--indigo-11)" }} />
+                <Text size="2" weight="medium" color="gray">Current Sales</Text>
+              </Flex>
+              <Text size="8" weight="bold" align="center" style={{ color: "var(--indigo-11)", lineHeight: 1 }}>
+                {formatCurrency(currentAmount)}
+              </Text>
+              <Text size="2" color="gray" align="center">
+                {salesCount.toLocaleString()} transactions
+              </Text>
+            </Flex>
+          </Card>
+
+          {/* Target Card */}
+          <Card
+            style={{
+              padding: "24px",
+              background: `var(--gray-a2)`,
+              border: `1px solid var(--gray-a4)`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 180,
+            }}
+          >
+            <Flex direction="column" gap="3" align="center">
+              <Flex align="center" gap="2">
+                <AssessmentOutlined style={{ fontSize: 20, color: "var(--gray-11)" }} />
+                <Text size="2" weight="medium" color="gray">Daily Target</Text>
+              </Flex>
+              <Text size="8" weight="bold" align="center" style={{ color: "var(--gray-11)", lineHeight: 1 }}>
+                {formatCurrency(targetAmount)}
+              </Text>
+              {!reached && (
+                <Text size="2" color="gray" align="center">
+                  Remaining: {formatCurrency(remaining)}
+                </Text>
+              )}
+              {reached && (
+                <Text size="2" align="center" style={{ color: "var(--jade-11)" }}>
+                  ✓ Completed
+                </Text>
+              )}
+            </Flex>
+          </Card>
+        </Grid>
+
+        {/* Progress Bar */}
+        <Box mb="4">
+          <Flex justify="between" align="center" mb="2">
+            <Text size="1" weight="medium" color="gray">Progress</Text>
+            <Text size="1" weight="bold">{Math.round(progressPct)}%</Text>
+          </Flex>
+          <Box style={{ height: 8, background: "var(--gray-a3)", borderRadius: "var(--radius-3)", overflow: "hidden" }}>
+            <motion.div
+              initial={{ width: "0%" }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              style={{
+                height: "100%",
+                background: `linear-gradient(90deg, var(--${status.color}-10), var(--${status.color}-11))`,
+                borderRadius: "var(--radius-3)",
+              }}
+            />
+          </Box>
+        </Box>
+
+        {/* Settings Shortcut */}
+        <Callout.Root mb="6" style={{ background: `var(--${status.color}-a2)`, borderColor: `var(--${status.color}-a5)` }}>
+          <InfoOutlined style={{ fontSize: 16 }} />
+          <Callout.Text>
+            <strong>Target Configuration:</strong> Daily target is set to <strong>{formatCurrency(targetAmount)}</strong>. To adjust this, visit your <Button
+              variant="ghost"
+              size="1"
+              style={{ cursor: "pointer", paddingInline: "4px" }}
+              onClick={() => router.push("/admin/hub/settings")}
+            >
+              Settings
+            </Button>
+          </Callout.Text>
+        </Callout.Root>
+
+        <Separator my="6" />
+
+        {/* Date Range Filter */}
+        <Card style={{ padding: "16px", marginBottom: "24px", background: "var(--gray-a1)" }}>
+          <Flex align="center" gap="3" wrap="wrap">
+            <CalendarIcon width={18} height={18} style={{ color: "var(--gray-11)" }} />
+            <Text size="1" weight="medium" color="gray">From:</Text>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              style={{
+                padding: "6px 8px",
+                borderRadius: "var(--radius-2)",
+                border: "1px solid var(--gray-a4)",
+                fontSize: "13px",
+                fontFamily: "inherit",
+                color: "var(--gray-12)",
+                backgroundColor: "var(--color-background)",
+              }}
+            />
+            <Text size="1" weight="medium" color="gray">To:</Text>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              style={{
+                padding: "6px 8px",
+                borderRadius: "var(--radius-2)",
+                border: "1px solid var(--gray-a4)",
+                fontSize: "13px",
+                fontFamily: "inherit",
+                color: "var(--gray-12)",
+                backgroundColor: "var(--color-background)",
+              }}
+            />
+            <Button
+              size="1"
+              variant="soft"
+              onClick={() => {
+                setFromDate(getDaysAgoIso(0));
+                setToDate(getDaysAgoIso(0));
+              }}
+            >
+              Reset to Today
+            </Button>
+          </Flex>
+        </Card>
+
+        {/* Daily Sales vs Target Chart */}
+        <Card mb="5" style={{ padding: "20px" }}>
+          <Flex justify="between" align="center" mb="3">
+            <Text size="3" weight="bold">Daily Sales vs Target</Text>
+            <Badge color="amber" variant="soft" size="1">
+              Target: {formatCurrency(targetAmount)}
+            </Badge>
+          </Flex>
+
+          {rangeChart.loading ? (
+            <ChartLoader />
+          ) : chartData.length === 0 ? (
+            <Flex justify="center" align="center" style={{ height: 200 }}>
+              <Text size="2" color="gray">No data for this range</Text>
+            </Flex>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <ComposedChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a4)" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "var(--gray-11)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tickFormatter={(v) => formatCurrency(v)}
+                  tick={{ fontSize: 11, fill: "var(--gray-11)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={80}
+                />
+                <RechartsTooltip
+                  formatter={(value, name) => {
+                    const numValue = typeof value === 'number' ? value : 0;
+                    if (name === "actual") {
+                      const hit = numValue >= targetAmount;
+                      return [
+                        `${formatCurrency(numValue)} ${hit ? "✓ Hit" : "↓ Below"}`,
+                        "Sales",
+                      ];
+                    }
+                    return [formatCurrency(numValue), name as string];
+                  }}
+                  contentStyle={{
+                    background: "var(--color-panel-solid)",
+                    border: "1px solid var(--gray-a4)",
+                    borderRadius: "var(--radius-2)",
+                    fontSize: 12,
+                  }}
+                />
+                <ReferenceLine
+                  y={targetAmount}
+                  stroke="var(--amber-10)"
+                  strokeDasharray="5 3"
+                  strokeWidth={2}
+                  label={{
+                    value: "Target",
+                    position: "insideTopRight",
+                    fontSize: 11,
+                    fill: "var(--amber-11)",
+                    fontWeight: 600,
+                  }}
+                />
+                <Bar dataKey="actual" radius={[4, 4, 0, 0]} maxBarSize={48}>
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={
+                        entry.actual >= targetAmount
+                          ? "var(--jade-9)"
+                          : "var(--indigo-9)"
+                      }
+                    />
+                  ))}
+                </Bar>
+              </ComposedChart>
+            </ResponsiveContainer>
+          )}
+
+          <Flex gap="4" mt="3" justify="center">
+            <Flex align="center" gap="1">
+              <Box style={{ width: 10, height: 10, borderRadius: 2, background: "var(--jade-9)" }} />
+              <Text size="1" color="gray">Hit target</Text>
+            </Flex>
+            <Flex align="center" gap="1">
+              <Box style={{ width: 10, height: 10, borderRadius: 2, background: "var(--indigo-9)" }} />
+              <Text size="1" color="gray">Below target</Text>
+            </Flex>
+            <Flex align="center" gap="1">
+              <Box style={{ width: 16, height: 2, background: "var(--amber-10)" }} />
+              <Text size="1" color="gray">Target line</Text>
+            </Flex>
+          </Flex>
+        </Card>
+
+        <Text size="2" weight="bold" mb="3">
+          Daily Performance
+        </Text>
+        <Box>
+          <style>{`
+            .daily-target-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+            .daily-target-table thead tr { background: var(--gray-a2); border-bottom: 1px solid var(--gray-a4); }
+            .daily-target-table th { padding: 12px 16px; text-align: left; font-weight: 500; color: var(--gray-11); }
+            .daily-target-table th:nth-child(2),
+            .daily-target-table th:nth-child(3),
+            .daily-target-table th:nth-child(4) { text-align: center; }
+            .daily-target-table tbody tr { border-bottom: 1px solid var(--gray-a3); transition: background 80ms ease; cursor: pointer; }
+            .daily-target-table tbody tr:hover { background: var(--gray-a2); }
+            .daily-target-table td { padding: 12px 16px; color: var(--gray-12); }
+            .daily-target-table td:nth-child(2),
+            .daily-target-table td:nth-child(3),
+            .daily-target-table td:nth-child(4) { text-align: center; }
+          `}</style>
+
+          <Card style={{ padding: 0, overflow: "hidden" }}>
+            <Box style={{ overflowX: "auto" }}>
+              <table className="daily-target-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Sales</th>
+                    <th>Progress</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...rangeRows]
+                    .reverse()
+                    .map(({ date, label, amount }) => {
+                      const isToday = date === getDaysAgoIso(0);
+                      const pct =
+                        amount !== null && amount > 0 && targetAmount > 0
+                          ? Math.min((amount / targetAmount) * 100, 100)
+                          : 0;
+                      const hitTarget =
+                        amount !== null &&
+                        amount > 0 &&
+                        targetAmount > 0 &&
+                        amount >= targetAmount;
+
+                      return (
+                        <tr
+                          key={date}
+                          onClick={() => date && setSelectedDate(date)}
+                          style={{ cursor: date ? "pointer" : "default" }}
+                        >
+                          <td>
+                            <strong>{label}</strong>
+                            {isToday && (
+                              <span
+                                style={{
+                                  marginLeft: "8px",
+                                  fontSize: 11,
+                                  color: "var(--amber-11)",
+                                }}
+                              >
+                                TODAY
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ fontWeight: 500 }}>
+                            {rangeChart.loading ? (
+                              <Box
+                                style={{
+                                  width: "80px",
+                                  height: "16px",
+                                  background: "var(--gray-a3)",
+                                  borderRadius: "var(--radius-1)",
+                                  margin: "0 auto",
+                                  animation: "pulse 2s infinite",
+                                }}
+                              />
+                            ) : amount > 0 ? (
+                              formatCurrency(amount)
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td>
+                            {rangeChart.loading ? (
+                              <Box
+                                style={{
+                                  width: "120px",
+                                  height: "6px",
+                                  background: "var(--gray-a3)",
+                                  borderRadius: "var(--radius-1)",
+                                  margin: "0 auto",
+                                  animation: "pulse 2s infinite",
+                                }}
+                              />
+                            ) : amount > 0 ? (
+                              <div
+                                style={{
+                                  height: 6,
+                                  width: 120,
+                                  background: "var(--gray-a3)",
+                                  borderRadius: "var(--radius-2)",
+                                  margin: "0 auto",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    height: "100%",
+                                    width: `${pct}%`,
+                                    background: hitTarget
+                                      ? "var(--jade-10)"
+                                      : "var(--indigo-10)",
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td>
+                            {rangeChart.loading ? (
+                              <Box
+                                style={{
+                                  width: "80px",
+                                  height: "20px",
+                                  background: "var(--gray-a3)",
+                                  borderRadius: "var(--radius-1)",
+                                  margin: "0 auto",
+                                  animation: "pulse 2s infinite",
+                                }}
+                              />
+                            ) : amount > 0 ? (
+                              hitTarget ? (
+                                <Badge color="jade" size="1">
+                                  ✓ Hit
+                                </Badge>
+                              ) : (
+                                <Badge color="amber" size="1">
+                                  ◐ In Progress
+                                </Badge>
+                              )
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </Box>
+          </Card>
+        </Box>
+
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+          }
+        `}</style>
+
+        {/* Daily Transactions Panel */}
+        <DailyTransactionsPanel
+          date={selectedDate}
+          summary={selectedDateSummary}
+          onClose={() => setSelectedDate(null)}
+        />
+      </motion.div>
+    </Box>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const AdminReportsPage: React.FC = () => {
+  const router = useRouter();
   const { currencyCode, inventory, theme } = usePublicSettings();
   const { isMobile } = useResolution();
   const [period, setPeriod] = useState<ChartPeriod>("30d");
+
+  const initialTabIndex = useMemo(() => {
+    if (router.query.tab === "daily_target") return 2;
+    return 0;
+  }, [router.query.tab]);
 
   // useDeferredValue means the charts re-render with a lower priority when the
   // period changes — KPI cards and the header update instantly while charts
   // catch up without blocking the main thread.
   const deferredPeriod = useDeferredValue(period);
   const isTransitioning = period !== deferredPeriod;
+  const [refreshDialogOpen, setRefreshDialogOpen] = useState(false);
 
   // ── Data fetches (all run in parallel on mount) ───────────────────────────
 
   const salesChart = useChart({ chartKey: "sales-by-day", period });
   const dailySummaryApi = useApi((api) => api.commons.salesDailySummary(), []);
+  const dailySummaryResponse = dailySummaryApi.result?.data?.response;
+  const byCashierGross = (dailySummaryResponse?.byCashier ?? []).reduce((sum, c) => sum + c.totalAmount, 0);
+  const todayTotal = byCashierGross > 0
+    ? byCashierGross
+    : (dailySummaryResponse?.totalAmount ?? 0);
+  const salesCount = dailySummaryResponse?.salesCount ?? 0;
   const dailySummaryAmount = dailySummaryApi.result?.data?.response?.totalAmount ?? null;
   const grossSales = period === "today"
     ? dailySummaryAmount
@@ -713,6 +1629,33 @@ export const AdminReportsPage: React.FC = () => {
     if (grossSales === null || procurementCost === null) return null;
     return grossSales - procurementCost;
   }, [grossSales, procurementCost]);
+
+  const isRefreshing =
+    dailySummaryApi.loading ||
+    productsApi.loading ||
+    saleListApi.loading ||
+    invoiceApi.loading ||
+    businessExpenseApi.loading ||
+    lowStockApi.loading ||
+    salesChart.loading;
+
+  const handleRefresh = useCallback(() => {
+    setRefreshDialogOpen(true);
+    dailySummaryApi.execute();
+    productsApi.execute();
+    saleListApi.execute();
+    invoiceApi.execute();
+    businessExpenseApi.execute();
+    lowStockApi.execute();
+    salesChart.refresh();
+  }, [dailySummaryApi, productsApi, saleListApi, invoiceApi, businessExpenseApi, lowStockApi, salesChart]);
+
+  useEffect(() => {
+    if (!isRefreshing && refreshDialogOpen) {
+      const t = setTimeout(() => setRefreshDialogOpen(false), 800);
+      return () => clearTimeout(t);
+    }
+  }, [isRefreshing, refreshDialogOpen]);
 
   // ── KPI tiles ─────────────────────────────────────────────────────────────
 
@@ -1126,6 +2069,11 @@ export const AdminReportsPage: React.FC = () => {
           </Box>
         ),
       },
+      {
+        key: "daily_target",
+        label: "Daily Sales Target",
+        content: <DailySalesTargetTab todayTotal={todayTotal} salesCount={salesCount} salesLoading={dailySummaryApi.loading} />,
+      },
     ],
     [
       deferredPeriod,
@@ -1147,6 +2095,9 @@ export const AdminReportsPage: React.FC = () => {
       saleListApi.loading,
       lowStockApi.loading,
       procurementCost,
+      dailySummaryApi.result,
+      todayTotal,
+      salesCount,
     ],
   );
 
@@ -1300,6 +2251,21 @@ export const AdminReportsPage: React.FC = () => {
                 </Flex>
 
                 <Flex align="center" gap="2" className="no-print">
+                  <Button
+                    variant="soft"
+                    size="2"
+                    disabled={refreshDialogOpen}
+                    onClick={handleRefresh}
+                    style={{
+                      background: "rgba(255,255,255,0.16)",
+                      color: "white",
+                      border: "1px solid rgba(255,255,255,0.25)",
+                      gap: 6,
+                    }}
+                  >
+                    <RefreshOutlined style={{ fontSize: 15 }} />
+                    Refresh All
+                  </Button>
                   <Button
                     variant="soft"
                     size="2"
@@ -1595,7 +2561,7 @@ export const AdminReportsPage: React.FC = () => {
 
           {/* ── Tabs Container ────────────────────────────────────────────── */}
           <div className="no-print">
-            <TabsContextProvider>
+            <TabsContextProvider initialIndex={initialTabIndex}>
               {isMobile ? (
                 <TabsHeaderMobile id="reports_tabs_mobile" tabs={tabs} />
               ) : (
@@ -1615,6 +2581,80 @@ export const AdminReportsPage: React.FC = () => {
           </div>
         </Box>
       </Box>
+
+      {/* Refresh all dialog */}
+      <Dialog.Root open={refreshDialogOpen}>
+        <Dialog.Content
+          style={{
+            maxWidth: 340,
+            textAlign: "center",
+            padding: "48px 32px 40px",
+            borderRadius: 20,
+            overflow: "visible",
+          }}
+          aria-describedby={undefined}
+        >
+          <Flex direction="column" align="center" gap="5">
+
+            {/* Animated icon stack */}
+            <Box style={{ position: "relative", width: 96, height: 96 }}>
+              {/* Outer slow-spinning ring */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: "50%",
+                  border: "3px dashed var(--accent-6)",
+                  opacity: 0.7,
+                }}
+              />
+              {/* Inner fast-spinning ring */}
+              <motion.div
+                animate={{ rotate: -360 }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                style={{
+                  position: "absolute",
+                  inset: 10,
+                  borderRadius: "50%",
+                  border: "3px solid transparent",
+                  borderTopColor: "var(--accent-9)",
+                  borderRightColor: "var(--accent-7)",
+                }}
+              />
+              {/* Center icon */}
+              <Flex
+                align="center"
+                justify="center"
+                style={{
+                  position: "absolute",
+                  inset: 18,
+                  borderRadius: "50%",
+                  background: "var(--accent-3)",
+                }}
+              >
+                <RefreshOutlined style={{ fontSize: 28, color: "var(--accent-9)" }} />
+              </Flex>
+            </Box>
+
+            {/* Text */}
+            <Flex direction="column" gap="2" align="center">
+              <Heading size="4" weight="bold">
+                Refreshing Reports
+              </Heading>
+              <Text
+                size="2"
+                color="gray"
+                style={{ animation: "pulse 1.8s ease-in-out infinite" }}
+              >
+                Updating all your data, please wait…
+              </Text>
+            </Flex>
+
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
     </>
   );
 };

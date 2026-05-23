@@ -24,6 +24,7 @@ import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import { JSX } from "react";
 
 export interface MenuItem {
@@ -224,6 +225,13 @@ export const menuItems: MenuItem[] = [
     icon: <AccessTimeRoundedIcon />,
     path: "/admin/hub/shift-management",
     permissionKey: "shiftManagement",
+  },
+  {
+    id: "promo-management",
+    text: "Promo Management",
+    icon: <LocalOfferRoundedIcon />,
+    path: "/admin/hub/promo-management",
+    permissionKey: "promoManagement",
   },
   {
     id: "sales",

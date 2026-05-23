@@ -15,6 +15,9 @@ export interface ProductListProps {
   onView: (product: ProductDataList) => void;
   onEdit: (product: ProductDataList) => void;
   onDelete: (product: ProductDataList) => void;
+  selectedIds: Set<string>;
+  onSelectProduct: (id: string) => void;
+  onSelectAll: () => void;
 }
 
 export interface StatusInfo {
@@ -28,7 +31,7 @@ export interface CategoryInfo {
   label: string;
 }
 
-export type ProductTypeFilter = "all" | "menuItem" | "ingredient";
+export type ProductTypeFilter = "all" | "menuItem" | "ingredient" | "supply";
 
 export interface FilterState {
   searchTerm: string;
@@ -41,6 +44,7 @@ export interface StatsData {
   activeProducts: number;
   menuItems: number;
   ingredients: number;
+  businessSupplies: number;
 }
 
 export interface StatusOption {
