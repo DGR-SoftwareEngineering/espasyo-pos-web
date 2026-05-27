@@ -14,6 +14,7 @@ export interface ShiftListProps {
   onPreviousPage: () => void;
   onView: (shift: CashierShiftDto) => void;
   onClose: (shift: CashierShiftDto) => void;
+  mode?: "admin" | "cashier";
 }
 
 export type StatusFilter = "all" | "Open" | "Closed";

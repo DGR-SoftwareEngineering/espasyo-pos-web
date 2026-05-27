@@ -43,9 +43,10 @@ const formatDateTime = (iso: string | null) => {
 
 interface Props {
   onAfterClose?: () => Promise<void>;
+  mode?: "admin" | "cashier";
 }
 
-export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose }) => {
+export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "admin" }) => {
   const { showToast } = useToastContext();
 
   const [shifts, setShifts] = useState<CashierShiftDto[]>([]);
@@ -261,7 +262,10 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose }) => {
 
       {/* History Card */}
       <Card variant="surface" size="3" mb="4">
-        <HeaderV2 title="Shift Management" subtitle="All cashier shift records" />
+        <HeaderV2
+          title="Shift Management"
+          subtitle={mode === "cashier" ? "Your shift history" : "All cashier shift records"}
+        />
 
         <Flex gap="3" mt="4" wrap="wrap">
           <StatsCard label="Total Shifts" value={stats.total} color="primary" />
@@ -269,13 +273,15 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose }) => {
           <StatsCard label="Closed" value={stats.closed} color="info" />
         </Flex>
 
-        <Callout.Root color="blue" variant="surface" size="1" mt="4">
-          <Callout.Icon><InfoCircledIcon /></Callout.Icon>
-          <Callout.Text>
-            Admin intervention is optional. Cashiers can close their own shift from the Cashier Portal.
-            Use this panel to assist or intervene if a cashier forgot to close their shift.
-          </Callout.Text>
-        </Callout.Root>
+        {mode !== "cashier" && (
+          <Callout.Root color="blue" variant="surface" size="1" mt="4">
+            <Callout.Icon><InfoCircledIcon /></Callout.Icon>
+            <Callout.Text>
+              Admin intervention is optional. Cashiers can close their own shift from the Cashier Portal.
+              Use this panel to assist or intervene if a cashier forgot to close their shift.
+            </Callout.Text>
+          </Callout.Root>
+        )}
 
         <Box
           mt="4"
@@ -355,6 +361,7 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose }) => {
           onPreviousPage={() => setPageNumber((p) => p - 1)}
           onView={handleView}
           onClose={handleClose}
+          mode={mode}
         />
       </Card>
 

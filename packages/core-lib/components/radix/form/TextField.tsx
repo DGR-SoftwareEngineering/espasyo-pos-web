@@ -91,7 +91,7 @@ const TextFieldComponent = <T extends FieldValues>({
     ? showPassword
       ? "text"
       : "password"
-    : type;
+    : (type as "number" | "search" | "time" | "text" | "hidden" | "tel" | "url" | "email" | "date" | "datetime-local" | "month" | "password" | "week" | undefined);
   const hasError = !!fieldState.error?.message;
   const errorMessage = fieldState.error?.message;
   const testId = rest["data-testid"] ?? `${field.name}-field`;

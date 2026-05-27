@@ -224,7 +224,6 @@ export const DialogContextModal: React.FC<Props> = ({
           onClose={onClose!}
         />
       );
-
     case "SupplierView":
       return (
         <SupplierViewDialogContent supplier={dialogData as SupplierDto} />

@@ -5,12 +5,15 @@ import {
   CheckCircleOutlined,
   DeleteOutlined,
   LockOutlined,
+  PushPinOutlined,
   SmartToyOutlined,
 } from "@mui/icons-material";
 import { PromoDto } from "core-lib/api/commons/types";
+import { CustomerSegment } from "core-lib/api/crm";
 import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
 import { formatCurrency } from "core-lib/business/strings";
 import { STATUS_CONFIG, TYPE_CONFIG } from "../constants";
+import { SEGMENT_CONFIG } from "../../crm/constants";
 
 interface Props {
   row: PromoDto;
@@ -56,21 +59,51 @@ export const PromoTableRow: React.FC<Props> = ({
     {
       id: "title",
       width: "22%",
-      render: () => (
-        <Flex align="center" gap="2">
-          <Text size="2" weight="medium" style={{ wordBreak: "break-word" }}>
-            {row.title}
-          </Text>
-          {row.isAiGenerated && (
-            <Tooltip content="AI-Generated Suggestion">
-              <Badge color="violet" variant="surface" size="1" radius="full">
-                <SmartToyOutlined style={{ fontSize: 10 }} />
-                AI
-              </Badge>
-            </Tooltip>
-          )}
-        </Flex>
-      ),
+      render: () => {
+        const segCfg =
+          row.targetSegment != null
+            ? SEGMENT_CONFIG[row.targetSegment as CustomerSegment]
+            : null;
+        return (
+          <Flex align="center" gap="2" wrap="wrap">
+            <Text size="2" weight="medium" style={{ wordBreak: "break-word" }}>
+              {row.title}
+            </Text>
+            {row.isAiGenerated && (
+              <Tooltip content="AI-Generated Suggestion">
+                <Badge color="violet" variant="surface" size="1" radius="full">
+                  <SmartToyOutlined style={{ fontSize: 10 }} />
+                  AI
+                </Badge>
+              </Tooltip>
+            )}
+            {row.targetCustomerCount > 0 && (
+              <Tooltip
+                content={`${row.targetCustomerCount} pinned customer(s) qualify in addition to the segment rule.`}
+              >
+                <Badge color="cyan" variant="soft" size="1" radius="full">
+                  <PushPinOutlined style={{ fontSize: 10 }} />
+                  Pinned {row.targetCustomerCount}
+                </Badge>
+              </Tooltip>
+            )}
+            {segCfg && (
+              <Tooltip content={`Restricted to ${segCfg.label} customers`}>
+                <Badge color={segCfg.color} variant="soft" size="1" radius="full">
+                  {segCfg.label} only
+                </Badge>
+              </Tooltip>
+            )}
+            {row.minLoyaltyStamps != null && row.minLoyaltyStamps > 0 && (
+              <Tooltip content={`Customer needs at least ${row.minLoyaltyStamps} stamps`}>
+                <Badge color="amber" variant="soft" size="1" radius="full">
+                  ≥{row.minLoyaltyStamps} stamps
+                </Badge>
+              </Tooltip>
+            )}
+          </Flex>
+        );
+      },
     },
     {
       id: "type",

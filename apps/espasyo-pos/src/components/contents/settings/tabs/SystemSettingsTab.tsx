@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
+  Callout,
   Card,
   Flex,
   Heading,
@@ -23,8 +24,12 @@ import {
   ToggleOnOutlined,
   AutorenewOutlined,
   LocalOfferOutlined,
+  PointOfSaleRounded,
+  LinkOutlined,
+  PlayCircleOutlined,
+  CardMembershipOutlined,
 } from "@mui/icons-material";
-import { useApi, useApiCallback, useMpinStatus } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useMpinStatus, useCashDrawer } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
 import {
@@ -52,6 +57,7 @@ const CATEGORY_ORDER: string[] = [
   SETTING_CATEGORIES.Inventory,
   SETTING_CATEGORIES.Security,
   SETTING_CATEGORIES.Features,
+  SETTING_CATEGORIES.Crm,
 ];
 
 const CATEGORY_META: Record<
@@ -103,6 +109,12 @@ const CATEGORY_META: Record<
     icon: <LocalOfferOutlined fontSize="small" />,
     description:
       "Promotional pricing rules: auto-apply toggle, POS badge display, and viability thresholds.",
+  },
+  CRM: {
+    label: "CRM",
+    icon: <CardMembershipOutlined fontSize="small" />,
+    description:
+      "Loyalty program configuration, including stamp requirements for free drink rewards.",
   },
 };
 
@@ -406,6 +418,8 @@ export const SystemSettingsTab: React.FC = () => {
           </Tabs.Content>
         ))}
       </Tabs.Root>
+
+      <CashDrawerSection />
     </Flex>
   );
 };
@@ -542,5 +556,125 @@ const SettingRow: React.FC<SettingRowProps> = ({
         )}
       </Box>
     </Flex>
+  );
+};
+
+// ─── Cash Drawer ──────────────────────────────────────────────────────────────
+
+const CashDrawerSection: React.FC = () => {
+  const {
+    isSupported,
+    isConnected,
+    isConnecting,
+    isGloballyEnabled,
+    connect,
+    testKick,
+  } = useCashDrawer();
+
+  return (
+    <Box mt="2">
+      <Card variant="surface" size="3">
+        <Flex align="center" gap="2" mb="3">
+          <Box style={{ color: "var(--accent-11)" }}>
+            <PointOfSaleRounded fontSize="small" />
+          </Box>
+          <Heading size="4">Cash Drawer</Heading>
+        </Flex>
+        <Text size="2" color="gray">
+          Automatically open a connected cash drawer when a cash payment is
+          confirmed. Uses the Web Serial API — requires Chrome or Edge.
+        </Text>
+
+        {!isSupported ? (
+          <Box mt="4">
+            <Callout.Root color="gray" variant="surface" size="1">
+              <Callout.Text>
+                Web Serial is not supported in this browser. Use Chrome or
+                Microsoft Edge to enable cash drawer integration.
+              </Callout.Text>
+            </Callout.Root>
+          </Box>
+        ) : (
+          <Box mt="4">
+            <Flex direction="column" gap="4">
+              {!isGloballyEnabled && (
+                <Callout.Root color="amber" variant="surface" size="1">
+                  <Callout.Text>
+                    Cash Drawer Integration is globally disabled by admin
+                    settings. Enable it in Settings → System Settings → POS →
+                    <strong> Cash Drawer Integration</strong>.
+                  </Callout.Text>
+                </Callout.Root>
+              )}
+
+              {/* Connection status + controls */}
+              <Flex
+                align={{ initial: "stretch", sm: "center" }}
+                direction={{ initial: "column", sm: "row" }}
+                justify="between"
+                gap="3"
+              >
+                <Flex align="center" gap="2">
+                  <Box
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      background: isConnected
+                        ? "var(--green-9)"
+                        : "var(--gray-7)",
+                      boxShadow: isConnected
+                        ? "0 0 0 3px var(--green-a4)"
+                        : undefined,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Text size="2" weight="medium">
+                    {isConnected ? "Connected" : "Not connected"}
+                  </Text>
+                  <Text size="1" color="gray">
+                    {isConnected
+                      ? "Port is open and ready to kick."
+                      : "Select a port to connect the cash drawer."}
+                  </Text>
+                </Flex>
+
+                <Flex gap="2" wrap="wrap">
+                  <Button
+                    type="Secondary"
+                    onClick={connect}
+                    disabled={isConnecting}
+                    loading={isConnecting}
+                  >
+                    <Flex align="center" gap="2">
+                      <LinkOutlined fontSize="small" />
+                      {isConnected ? "Change port" : "Connect port"}
+                    </Flex>
+                  </Button>
+                  {isConnected && (
+                    <Button type="Primary" onClick={testKick}>
+                      <Flex align="center" gap="2">
+                        <PlayCircleOutlined fontSize="small" />
+                        Test kick
+                      </Flex>
+                    </Button>
+                  )}
+                </Flex>
+              </Flex>
+
+              <Callout.Root color="blue" variant="soft" size="1">
+                <Callout.Text>
+                  Connect your receipt printer (USB) or use a USB-to-serial
+                  adapter. The drawer must be plugged into the printer&apos;s
+                  RJ11 kick port or connected directly via serial. Click
+                  &quot;Connect port&quot; to grant browser access — this is a
+                  one-time step per device.
+                </Callout.Text>
+              </Callout.Root>
+            </Flex>
+          </Box>
+        )}
+      </Card>
+    </Box>
   );
 };

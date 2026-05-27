@@ -1,22 +1,25 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertDialog, Box, Button, Callout, Flex, Heading, IconButton, Text } from "@radix-ui/themes";
+import { AlertDialog, Box, Button, Callout, Flex, Heading, IconButton, Text, Tooltip } from "@radix-ui/themes";
 import { InfoCircledIcon, ExitIcon } from "@radix-ui/react-icons";
-import { FullscreenOutlined, LockOpenOutlined } from "@mui/icons-material";
+import { FullscreenOutlined, LockOpenOutlined, PointOfSaleRounded } from "@mui/icons-material";
 import {
   useToastContext,
   usePublicSettings,
   useDialogContext,
 } from "core-lib/core/contexts";
-import { useApi, useApiCallback, useLogout } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useLogout, useCashDrawer } from "core-lib/core/hooks";
 import { ConfettiCanvas, ConfettiHandle } from "core-lib/components/confetti";
+import { cashDrawerService } from "core-lib/business/cashDrawer";
 import {
   CloseShiftParams,
   CreateSaleParams,
   PromoDto,
   SaleDetailDto,
+  SalesPaymentMethodDto,
   SellableProductDto,
   ShiftSummaryDto,
 } from "core-lib/api/commons/types";
+import { RedeemableProductDto } from "core-lib/api/crm";
 import type {
   PosChargePayload,
   PostSaleDialogData,
@@ -26,7 +29,7 @@ import { ProductGrid } from "./ProductGrid";
 import { CartPanel } from "./CartPanel";
 import { PromoSelectDialog } from "./PromoSelectDialog";
 import { VariantAddOnDialog } from "./VariantAddOnDialog";
-import { computeTotals, useCartState } from "./hooks";
+import { AddProductOptions, computeTotals, useCartState } from "./hooks";
 import { SaleReceiptPrintable } from "../printables/SaleReceiptPrintable";
 import { useTargetSales } from "./useTargetSales";
 import { CloseShiftFormBlock } from "../../shift-management/forms/CloseShiftFormBlock";
@@ -85,15 +88,25 @@ export const PosRegisterBlock: React.FC = () => {
   const { systemName, theme, currencyCode, pos, settingsMap } = usePublicSettings();
   const { openDialog } = useDialogContext();
   const { logout } = useLogout();
+  const { isSupported: drawerSupported, isConnected: drawerConnected, testKick: openDrawer } = useCashDrawer();
   const confettiRef = useRef<ConfettiHandle>(null);
   const [isPosMode, setIsPosMode] = useState(false);
   const [orderSource, setOrderSource] = useState<'store' | 'online'>('store');
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1280,
+  );
   const targetSales = useTargetSales();
 
   // CSS-based fullscreen toggle — avoids the native requestFullscreen() API which
   // isolates the rendering layer and hides Radix UI portals (dialogs, dropdowns).
   const togglePosMode = useCallback(() => {
     setIsPosMode((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
   // Close shift flow
@@ -227,6 +240,9 @@ export const PosRegisterBlock: React.FC = () => {
   const createCb = useApiCallback(async (api, args: CreateSaleParams) =>
     api.commons.createSale(args),
   );
+  const confirmRedeemCb = useApiCallback(async (api, id: string) =>
+    api.crm.confirmRedeem(id),
+  );
 
   // Close POS mode on Escape key
   useEffect(() => {
@@ -236,6 +252,13 @@ export const PosRegisterBlock: React.FC = () => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isPosMode]);
+
+  const handleRedeemProductSelected = useCallback(
+    (product: RedeemableProductDto, options: AddProductOptions) => {
+      cart.addRedeemedProduct(product, options);
+    },
+    [cart],
+  );
 
   const handleAdd = useCallback(
     (product: SellableProductDto) => {
@@ -254,6 +277,7 @@ export const PosRegisterBlock: React.FC = () => {
   const submitSale = useCallback(
     async (payload: PosChargePayload) => {
       const params: CreateSaleParams = {
+        customerID: cart.selectedCustomer?.customerID ?? null,
         items: cart.lines.map((l) => ({
           productID: l.productID,
           productVariantID: l.productVariantID ?? null,
@@ -262,6 +286,7 @@ export const PosRegisterBlock: React.FC = () => {
           quantity: l.quantity,
           unitPrice: l.unitPrice,
           discount: l.discount > 0 ? l.discount : null,
+          isRedemptionLine: l.isRedeemed ?? false,
         })),
         discountAmount: cart.orderDiscount > 0 ? cart.orderDiscount : null,
         taxRate: cart.taxRate,
@@ -291,7 +316,28 @@ export const PosRegisterBlock: React.FC = () => {
           if (showPromoBadge) {
             showToast("Promo discount applied to this order!", "success");
           }
+
+          // Capture before clearing — isRedeemed lines disappear after clear()
+          const hasRedeemedLine = cart.lines.some((l) => l.isRedeemed);
+          const redeemCustomerID = cart.selectedCustomer?.customerID ?? null;
+
           cart.clear();
+
+          if (hasRedeemedLine && redeemCustomerID) {
+            confirmRedeemCb.execute(redeemCustomerID).catch(() => {
+              showToast(
+                "Sale recorded but reward confirmation failed. Notify a manager.",
+                "error",
+              );
+            });
+          }
+
+          const hasCash = params.payments.some(
+            (p) => p.method === SalesPaymentMethodDto.Cash,
+          );
+          if (hasCash && pos.cashDrawerEnabled && cashDrawerService.isConnected()) {
+            cashDrawerService.kickDrawer().catch(() => {});
+          }
 
           // Refresh daily total (non-blocking — don't await so it doesn't delay the dialog)
           targetSales.refresh().catch(() => {});
@@ -398,8 +444,8 @@ export const PosRegisterBlock: React.FC = () => {
           p="3"
           style={{
             height: 60,
-            background: "linear-gradient(135deg, var(--indigo-9), var(--violet-9))",
-            borderBottom: "1px solid var(--indigo-a6)",
+            background: "linear-gradient(135deg, var(--espasyo-primary, var(--indigo-9)), var(--espasyo-secondary, var(--violet-9)))",
+            borderBottom: "1px solid rgba(0,0,0,0.15)",
           }}
         >
           <Flex align="center" gap="3">
@@ -420,23 +466,55 @@ export const PosRegisterBlock: React.FC = () => {
             <Text size="2" style={{ color: "white", opacity: 0.9 }}>
               ⚡ POS Mode
             </Text>
+            {drawerSupported && (
+              <Flex align="center" gap="1">
+                <Box
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: drawerConnected ? "var(--green-9)" : "var(--gray-6)",
+                    boxShadow: drawerConnected ? "0 0 0 2px var(--green-a4)" : undefined,
+                    flexShrink: 0,
+                  }}
+                />
+                <Text size="1" style={{ color: "var(--white-a9)" }}>
+                  {drawerConnected ? "Drawer" : "No drawer"}
+                </Text>
+              </Flex>
+            )}
           </Flex>
           <Flex align="center" gap="2">
+            {drawerSupported && (
+              <Tooltip content="Open cash drawer">
+                <IconButton
+                  variant="ghost"
+                  color="gray"
+                  size="2"
+                  disabled={!drawerConnected}
+                  onClick={openDrawer}
+                  style={{ color: "var(--white-a11)" }}
+                >
+                  <PointOfSaleRounded fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
             <Button
-              variant="soft"
-              color="red"
+              variant="ghost"
               size="2"
               onClick={() => setCloseShiftConfirmOpen(true)}
+              style={{ color: "var(--red-4)" }}
             >
               <LockOpenOutlined style={{ fontSize: 16 }} />
               End Shift
             </Button>
             <IconButton
-              variant="soft"
+              variant="ghost"
               color="gray"
               onClick={togglePosMode}
               aria-label="Exit POS mode"
               title="Exit POS mode (or press Esc)"
+              style={{ color: "var(--white-a11)" }}
             >
               <ExitIcon />
             </IconButton>
@@ -503,34 +581,52 @@ export const PosRegisterBlock: React.FC = () => {
       )}
 
       <Box
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(380px, 440px)",
-          gap: 16,
-          flex: 1,
-          minHeight: 0,
-        }}
+        style={
+          windowWidth < 768
+            ? {
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                flex: 1,
+                minHeight: 0,
+              }
+            : {
+                display: "grid",
+                gridTemplateColumns:
+                  windowWidth < 1024
+                    ? "minmax(0, 1fr) minmax(300px, 340px)"
+                    : "minmax(0, 1fr) minmax(380px, 440px)",
+                gap: 16,
+                flex: 1,
+                minHeight: 0,
+              }
+        }
       >
-        <ProductGrid
-          onAdd={handleAdd}
-          cartCountByProductID={cartCountByProductID}
-          eligiblePromosFor={eligiblePromosFor}
-          onPromoClick={setPromoDialogProduct}
-        />
-        <CartPanel
-          state={cart}
-          totals={totals}
-          onClear={cart.clear}
-          onCharge={handleCharge}
-          submitting={submitting}
-          orderSource={orderSource}
-          onOrderSourceChange={setOrderSource}
-          targetSalesEnabled={targetSales.enabled && targetSales.targetAmount > 0}
-          targetSalesCurrentAmount={targetSales.currentAmount}
-          targetSalesTargetAmount={targetSales.targetAmount}
-          targetSalesProgressPct={targetSales.progressPct}
-          targetSalesReached={targetSales.reached}
-        />
+        <Box style={windowWidth < 768 ? { flex: "0 0 55%", minHeight: 0 } : { minHeight: 0, display: "contents" }}>
+          <ProductGrid
+            onAdd={handleAdd}
+            cartCountByProductID={cartCountByProductID}
+            eligiblePromosFor={eligiblePromosFor}
+            onPromoClick={setPromoDialogProduct}
+          />
+        </Box>
+        <Box style={windowWidth < 768 ? { flex: "0 0 45%", minHeight: 0 } : { minHeight: 0, display: "contents" }}>
+          <CartPanel
+            state={cart}
+            totals={totals}
+            onClear={cart.clear}
+            onCharge={handleCharge}
+            submitting={submitting}
+            orderSource={orderSource}
+            onOrderSourceChange={setOrderSource}
+            targetSalesEnabled={targetSales.enabled && targetSales.targetAmount > 0}
+            targetSalesCurrentAmount={targetSales.currentAmount}
+            targetSalesTargetAmount={targetSales.targetAmount}
+            targetSalesProgressPct={targetSales.progressPct}
+            targetSalesReached={targetSales.reached}
+            onRedeemProductSelected={handleRedeemProductSelected}
+          />
+        </Box>
       </Box>
       </Box>
 

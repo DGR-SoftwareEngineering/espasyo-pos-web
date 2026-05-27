@@ -28,9 +28,11 @@ import {
   LanguageOutlined,
 } from "@mui/icons-material";
 import { usePublicSettings } from "core-lib/core/contexts";
+import { RedeemableProductDto } from "core-lib/api/crm";
 import { formatCurrency } from "../format";
-import { CartLine, CartTotals, UseCartState } from "./hooks";
+import { AddProductOptions, CartLine, CartTotals, UseCartState } from "./hooks";
 import { TargetSalesIndicator } from "./TargetSalesIndicator";
+import { CustomerAttachWidget } from "./CustomerAttachWidget";
 
 interface Props {
   state: UseCartState;
@@ -45,6 +47,7 @@ interface Props {
   targetSalesTargetAmount?: number;
   targetSalesProgressPct?: number;
   targetSalesReached?: boolean;
+  onRedeemProductSelected: (product: RedeemableProductDto, options: AddProductOptions) => void;
 }
 
 export const CartPanel: React.FC<Props> = ({
@@ -60,10 +63,16 @@ export const CartPanel: React.FC<Props> = ({
   targetSalesTargetAmount,
   targetSalesProgressPct,
   targetSalesReached,
+  onRedeemProductSelected,
 }) => {
   const { currencyCode, pos } = usePublicSettings();
   const hasLines = state.lines.length > 0;
   const itemUnits = state.lines.reduce((s, l) => s + l.quantity, 0);
+  const redeemedLine = state.lines.find((l) => l.isRedeemed);
+  const hasRedeemedInCart = !!redeemedLine;
+  const handleCancelRedeem = () => {
+    if (redeemedLine) state.removeLine(redeemedLine.lineId);
+  };
 
   return (
     <Flex
@@ -124,61 +133,74 @@ export const CartPanel: React.FC<Props> = ({
         )}
       </Flex>
 
-      <Box style={{ flex: 1, minHeight: 0 }}>
+      <Box style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
         {orderSource === 'store' ? (
-          <ScrollArea type="auto" scrollbars="vertical" style={{ height: "100%" }}>
-            {!hasLines ? (
-              <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                gap="2"
-                style={{
-                  height: "100%",
-                  minHeight: 260,
-                  padding: 24,
-                  opacity: 0.6,
-                }}
-              >
-                <Box
+          <>
+            <Box p="3" pb="0">
+              <CustomerAttachWidget
+                selected={state.selectedCustomer}
+                onAttach={state.setSelectedCustomer}
+                onDetach={() => state.setSelectedCustomer(null)}
+                onRefresh={state.setSelectedCustomer}
+                onRedeemProductSelected={onRedeemProductSelected}
+                hasRedeemedInCart={hasRedeemedInCart}
+                onCancelRedeem={handleCancelRedeem}
+                defaultCollapsed={hasLines}
+              />
+            </Box>
+            <ScrollArea type="auto" scrollbars="vertical" style={{ flex: 1, minHeight: 0 }}>
+              {!hasLines ? (
+                <Flex
+                  direction="column"
+                  align="center"
+                  justify="center"
+                  gap="2"
                   style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 16,
-                    background:
-                      "linear-gradient(135deg, var(--indigo-a3) 0%, var(--violet-a3) 100%)",
-                    color: "var(--indigo-11)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 6,
+                    minHeight: 200,
+                    padding: 24,
+                    opacity: 0.6,
                   }}
                 >
-                  <LocalCafeOutlined style={{ fontSize: 36 }} />
-                </Box>
-                <Text size="3" weight="bold">
-                  Cart is empty
-                </Text>
-                <Text size="2" color="gray" align="center" style={{ maxWidth: 220 }}>
-                  Tap a product on the left to start the order.
-                </Text>
-              </Flex>
-            ) : (
-              <Flex direction="column" p="3" gap="1">
-                {state.lines.map((line) => (
-                  <CartRow
-                    key={line.lineId}
-                    line={line}
-                    currencyCode={currencyCode}
-                    allowDiscounts={pos.allowDiscounts}
-                    onQuantity={(q) => state.setLineQuantity(line.lineId, q)}
-                    onDiscount={(d) => state.setLineDiscount(line.lineId, d)}
-                    onRemove={() => state.removeLine(line.lineId)}
-                  />
-                ))}
-              </Flex>
-            )}
-          </ScrollArea>
+                  <Box
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: 16,
+                      background:
+                        "linear-gradient(135deg, var(--indigo-a3) 0%, var(--violet-a3) 100%)",
+                      color: "var(--indigo-11)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <LocalCafeOutlined style={{ fontSize: 36 }} />
+                  </Box>
+                  <Text size="3" weight="bold">
+                    Cart is empty
+                  </Text>
+                  <Text size="2" color="gray" align="center" style={{ maxWidth: 220 }}>
+                    Tap a product on the left to start the order.
+                  </Text>
+                </Flex>
+              ) : (
+                <Flex direction="column" p="3" gap="1">
+                  {state.lines.map((line) => (
+                    <CartRow
+                      key={line.lineId}
+                      line={line}
+                      currencyCode={currencyCode}
+                      allowDiscounts={pos.allowDiscounts}
+                      onQuantity={(q) => state.setLineQuantity(line.lineId, q)}
+                      onDiscount={(d) => state.setLineDiscount(line.lineId, d)}
+                      onRemove={() => state.removeLine(line.lineId)}
+                    />
+                  ))}
+                </Flex>
+              )}
+            </ScrollArea>
+          </>
         ) : (
           <OnlineOrdersPanel />
         )}
@@ -305,7 +327,7 @@ export const CartPanel: React.FC<Props> = ({
         <button
           type="button"
           onClick={onCharge}
-          disabled={!hasLines || submitting || !pos.allowSales}
+          disabled={!hasLines || submitting || !pos.allowSales || totals.totalAmount <= 0}
           style={{
             width: "100%",
             height: 56,
@@ -315,14 +337,14 @@ export const CartPanel: React.FC<Props> = ({
             fontSize: 15,
             fontWeight: 700,
             cursor:
-              !hasLines || submitting || !pos.allowSales
+              !hasLines || submitting || !pos.allowSales || totals.totalAmount <= 0
                 ? "not-allowed"
                 : "pointer",
-            opacity: !hasLines || submitting || !pos.allowSales ? 0.55 : 1,
+            opacity: !hasLines || submitting || !pos.allowSales || totals.totalAmount <= 0 ? 0.55 : 1,
             background:
               "linear-gradient(135deg, var(--indigo-9) 0%, var(--violet-9) 100%)",
             boxShadow:
-              !hasLines || submitting || !pos.allowSales
+              !hasLines || submitting || !pos.allowSales || totals.totalAmount <= 0
                 ? "none"
                 : "0 8px 20px var(--indigo-a6)",
             transition: "all 0.16s ease",
@@ -719,11 +741,15 @@ const CartRow: React.FC<{
                 >
                   {line.productName}
                 </Text>
-                {line.promoLabel && (
+                {line.isRedeemed ? (
+                  <Badge color="green" variant="soft" size="1">
+                    🎁 Free Drink
+                  </Badge>
+                ) : line.promoLabel ? (
                   <Badge color="amber" variant="soft" size="1">
                     🏷️ {line.promoLabel}
                   </Badge>
-                )}
+                ) : null}
               </Flex>
               {line.variantName && (
                 <Text size="1" color="indigo" as="div" weight="medium" style={{ marginBottom: 2 }}>

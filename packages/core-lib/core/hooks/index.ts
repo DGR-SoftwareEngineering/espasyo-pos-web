@@ -23,5 +23,6 @@ export * from "./useEmotionCache";
 export * from "./useMapErrors";
 export * from "./useMpinStatus";
 export * from "./useNotificationFeed";
+export * from "./useCashDrawer";
 /* non-hook */
 export * from "./form-validation/field";

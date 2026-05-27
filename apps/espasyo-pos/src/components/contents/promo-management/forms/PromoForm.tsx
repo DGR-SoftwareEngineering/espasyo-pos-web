@@ -8,12 +8,14 @@ import {
   Flex,
   IconButton,
   Separator,
+  Skeleton,
   Text,
 } from "@radix-ui/themes";
 import {
   AddCircleOutlined,
   AutoGraphOutlined,
   CalendarTodayOutlined,
+  CategoryOutlined,
   DeleteOutlined,
   InfoOutlined,
   LocalOfferOutlined,
@@ -34,6 +36,7 @@ import { formatCurrency } from "core-lib/business/strings";
 import { usePromoForm } from "../hooks";
 import { TYPE_CONFIG, SUBMISSION_KEYS } from "../constants";
 import { PromoFormProps } from "./types";
+import { CustomerTargetingSection } from "./CustomerTargetingSection";
 
 const FIELD_LABELS: Record<string, string> = {
   title: "Title",
@@ -93,6 +96,10 @@ export const PromoForm: React.FC<PromoFormProps> = ({
   onCalculate,
   calcLoading,
   onValuesChange,
+  variantsByProductId = {},
+  onLoadVariants,
+  variantsLoading = {},
+  allVariantsLoaded = false,
 }) => {
   const {
     control,
@@ -115,7 +122,7 @@ export const PromoForm: React.FC<PromoFormProps> = ({
     const hasProducts =
       watchedValues.items.length > 0 &&
       watchedValues.items.some(
-        (i) => !!i.productID || !!i.productCategoryID,
+        (i) => !!i.productID || !!i.productCategoryID || !!i.productVariantID,
       );
     const hasDiscountField =
       (promoType === 1 && !!watchedValues.discountPercent) ||
@@ -143,6 +150,12 @@ export const PromoForm: React.FC<PromoFormProps> = ({
     label: p.name,
   }));
 
+  const variantProductOptions = allVariantsLoaded
+    ? products
+        .filter((p) => (variantsByProductId[p.productID] ?? []).length > 0)
+        .map((p) => ({ value: p.productID, label: p.name }))
+    : [];
+
   const categoryOptions = productCategories.map((c) => ({
     value: c.productCategoryID,
     label: c.parentProductCategoryName
@@ -155,6 +168,8 @@ export const PromoForm: React.FC<PromoFormProps> = ({
       targetMode: "product",
       productID: "",
       productCategoryID: null,
+      productVariantID: null,
+      variantProductID: null,
       quantity: 1,
       isFreeItem: false,
     });
@@ -300,16 +315,15 @@ export const PromoForm: React.FC<PromoFormProps> = ({
                     name={`items.${index}.targetMode`}
                     control={control}
                     render={({ field: modeField }) => (
-                      <Flex gap="1" align="center">
+                      <Flex gap="1" align="center" wrap="wrap">
                         <TargetModeChip
                           active={modeField.value === "product"}
                           label="Specific Product"
                           onClick={() => {
                             modeField.onChange("product");
-                            setValue(
-                              `items.${index}.productCategoryID` as const,
-                              null,
-                            );
+                            setValue(`items.${index}.productCategoryID` as const, null);
+                            setValue(`items.${index}.productVariantID` as const, null);
+                            setValue(`items.${index}.variantProductID` as const, null);
                           }}
                         />
                         <TargetModeChip
@@ -317,10 +331,20 @@ export const PromoForm: React.FC<PromoFormProps> = ({
                           label="Whole Category"
                           onClick={() => {
                             modeField.onChange("category");
-                            setValue(
-                              `items.${index}.productID` as const,
-                              "",
-                            );
+                            setValue(`items.${index}.productID` as const, "");
+                            setValue(`items.${index}.productVariantID` as const, null);
+                            setValue(`items.${index}.variantProductID` as const, null);
+                          }}
+                        />
+                        <TargetModeChip
+                          active={modeField.value === "variant"}
+                          label="Specific Variant"
+                          color="violet"
+                          onClick={() => {
+                            modeField.onChange("variant");
+                            setValue(`items.${index}.productID` as const, "");
+                            setValue(`items.${index}.productCategoryID` as const, null);
+                            setValue(`items.${index}.productVariantID` as const, null);
                           }}
                         />
                       </Flex>
@@ -329,8 +353,100 @@ export const PromoForm: React.FC<PromoFormProps> = ({
 
                   <Flex gap="2" align="end">
                     <Box style={{ flex: 1 }}>
-                      {(watchedValues.items?.[index]?.targetMode ?? "product") ===
-                      "category" ? (
+                      {(watchedValues.items?.[index]?.targetMode ?? "product") === "variant" ? (
+                        /* ── Variant targeting: two-step selection ── */
+                        <Flex direction="column" gap="2">
+                          {!allVariantsLoaded ? (
+                            <Box>
+                              <Text size="1" color="gray" style={{ display: "block", marginBottom: 4 }}>
+                                Product
+                              </Text>
+                              <Skeleton height="36px" />
+                            </Box>
+                          ) : variantProductOptions.length === 0 ? (
+                            <Callout.Root color="gray" size="1">
+                              <Callout.Icon>
+                                <InfoOutlined style={{ fontSize: 14 }} />
+                              </Callout.Icon>
+                              <Callout.Text size="1">
+                                No products with variants found. Add variants to products first.
+                              </Callout.Text>
+                            </Callout.Root>
+                          ) : (
+                            <SelectField
+                              name={`items.${index}.variantProductID`}
+                              control={control}
+                              label="Product"
+                              options={variantProductOptions}
+                              placeholder="Select product to browse variants…"
+                              onSelectOption={(option) => {
+                                if (option.value) onLoadVariants?.(option.value);
+                                setValue(`items.${index}.productVariantID` as const, null);
+                              }}
+                            />
+                          )}
+                          {watchedValues.items?.[index]?.variantProductID && (() => {
+                            const pid = watchedValues.items[index].variantProductID!;
+                            const variantList = variantsByProductId[pid] ?? [];
+                            const isLoadingVariants = variantsLoading[pid];
+                            const selectedVariantId = watchedValues.items[index].productVariantID;
+                            const selectedVariant = variantList.find(
+                              (v) => v.productVariantID === selectedVariantId,
+                            );
+                            return (
+                              <>
+                                {isLoadingVariants ? (
+                                  <Skeleton height="36px" />
+                                ) : variantList.length === 0 ? (
+                                  <Callout.Root color="amber" size="1">
+                                    <Callout.Icon>
+                                      <InfoOutlined style={{ fontSize: 14 }} />
+                                    </Callout.Icon>
+                                    <Callout.Text size="1">
+                                      No active variants found for this product.
+                                    </Callout.Text>
+                                  </Callout.Root>
+                                ) : (
+                                  <SelectField
+                                    name={`items.${index}.productVariantID`}
+                                    control={control}
+                                    label="Variant"
+                                    options={variantList.map((v) => ({
+                                      value: v.productVariantID,
+                                      label: `${v.name} — ₱${v.price.toFixed(2)}`,
+                                    }))}
+                                    placeholder="Select variant…"
+                                  />
+                                )}
+                                {selectedVariant && (
+                                  <Card
+                                    variant="surface"
+                                    style={{
+                                      background: "var(--violet-a2)",
+                                      border: "1px solid var(--violet-a5)",
+                                      padding: "8px 12px",
+                                    }}
+                                  >
+                                    <Flex align="center" justify="between">
+                                      <Flex align="center" gap="2">
+                                        <CategoryOutlined
+                                          style={{ fontSize: 14, color: "var(--violet-11)" }}
+                                        />
+                                        <Text size="2" weight="medium">
+                                          {selectedVariant.name}
+                                        </Text>
+                                      </Flex>
+                                      <Badge color="violet" variant="soft" size="2">
+                                        ₱{selectedVariant.price.toFixed(2)}
+                                      </Badge>
+                                    </Flex>
+                                  </Card>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </Flex>
+                      ) : (watchedValues.items?.[index]?.targetMode ?? "product") === "category" ? (
                         <SelectField
                           name={`items.${index}.productCategoryID`}
                           control={control}
@@ -435,6 +551,8 @@ export const PromoForm: React.FC<PromoFormProps> = ({
         </FormSection>
       </Box>
 
+      <CustomerTargetingSection control={control} />
+
       {/* Details */}
       <Box mt="4">
         <FormSection
@@ -491,7 +609,7 @@ export const PromoForm: React.FC<PromoFormProps> = ({
               variant="outline"
               color="indigo"
               size="2"
-              onClick={onCalculate}
+              onClick={() => onCalculate?.(getValues())}
               loading={!!calcLoading}
               disabled={!canCalculate || !onCalculate}
             >
@@ -651,24 +769,28 @@ const TargetModeChip: React.FC<{
   active: boolean;
   label: string;
   onClick: () => void;
-}> = ({ active, label, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    style={{
-      cursor: "pointer",
-      padding: "4px 10px",
-      borderRadius: 999,
-      fontSize: 11,
-      fontWeight: 600,
-      border: active
-        ? "1px solid var(--accent-9)"
-        : "1px solid var(--gray-a5)",
-      background: active ? "var(--accent-a3)" : "var(--color-panel-solid)",
-      color: active ? "var(--accent-12)" : "var(--gray-11)",
-      transition: "all 0.12s ease",
-    }}
-  >
-    {label}
-  </button>
-);
+  color?: "violet";
+}> = ({ active, label, onClick, color }) => {
+  const activeColor = color ?? "accent";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        cursor: "pointer",
+        padding: "4px 10px",
+        borderRadius: 999,
+        fontSize: 11,
+        fontWeight: 600,
+        border: active
+          ? `1px solid var(--${activeColor}-9)`
+          : "1px solid var(--gray-a5)",
+        background: active ? `var(--${activeColor}-a3)` : "var(--color-panel-solid)",
+        color: active ? `var(--${activeColor}-12)` : "var(--gray-11)",
+        transition: "all 0.12s ease",
+      }}
+    >
+      {label}
+    </button>
+  );
+};

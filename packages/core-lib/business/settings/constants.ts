@@ -26,6 +26,10 @@ export const SETTING_KEYS = {
   PosTargetSalesAmountPerDay: "POS.TargetSalesAmount",
   PosTargetSalesConfettiEnabled: "POS.TargetSalesConfettiEnabled",
 
+  PosCashDrawerEnabled: "POS.CashDrawerEnabled",
+  PosCashDrawerBaudRate: "POS.CashDrawerBaudRate",
+  PosCashDrawerKickPin: "POS.CashDrawerKickPin",
+
   CurrencyCode: "Currency.Code",
 
   InventoryLowStockAlertEnabled: "Inventory.LowStockAlertEnabled",
@@ -75,6 +79,18 @@ export const SETTING_KEYS = {
   PromoAiSuggestionEnabled: "Promo.AI.SuggestionEnabled",
   PromoAiMinViableMarginPercent: "Promo.AI.MinViableMarginPercent",
   PromoAiMaxSuggestionsReturned: "Promo.AI.MaxSuggestionsReturned",
+
+  CrmLoyaltyStampRequirement: "CRM.LoyaltyStampRequirement",
+  CrmMaxStampsPerDay: "CRM.MaxStampsPerDay",
+
+  // Localization
+  LocalizationTimezone: "System.Timezone",
+  LocalizationTimezoneMultiEnabled: "System.Timezone.MultiEnabled",
+  LocalizationTimezoneList: "System.Timezone.List",
+  LocalizationDateFormat: "System.DateFormat",
+  LocalizationTimeFormat: "System.TimeFormat",
+  LocalizationDateTimeSource: "System.DateTime.Source",
+  LocalizationDateTimeApiUrl: "System.DateTime.ApiUrl",
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -138,6 +154,7 @@ export const SETTING_CATEGORIES = {
   Notifications: "Notifications",
   Procurement: "Procurement",
   Promo: "Promo",
+  Crm: "CRM",
 } as const;
 
 export type SettingCategory =

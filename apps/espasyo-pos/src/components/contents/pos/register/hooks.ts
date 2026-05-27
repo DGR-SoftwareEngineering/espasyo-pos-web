@@ -4,6 +4,7 @@ import {
   SalesPaymentMethodDto,
   PromoDto,
 } from "core-lib/api/commons/types";
+import { CustomerSearchResultDto, RedeemableProductDto } from "core-lib/api/crm";
 
 export interface CartLineAddOn {
   productAddOnGroupID: string;
@@ -28,6 +29,7 @@ export interface CartLine {
   promoID?: string;
   promoLabel?: string;
   originalPrice?: number;
+  isRedeemed?: boolean;
   // Variant snapshot
   productVariantID?: string | null;
   variantName?: string | null;
@@ -129,18 +131,21 @@ export interface UseCartState {
   orderDiscount: number;
   taxRate: number;
   notes: string;
+  selectedCustomer: CustomerSearchResultDto | null;
   addProduct: (product: SellableProductDto) => void;
   addProductWithOptions: (
     product: SellableProductDto,
     options: AddProductOptions,
   ) => void;
   applyPromo: (product: SellableProductDto, promo: PromoDto) => void;
+  addRedeemedProduct: (product: RedeemableProductDto, options?: AddProductOptions) => void;
   setLineQuantity: (lineId: string, quantity: number) => void;
   setLineDiscount: (lineId: string, discount: number) => void;
   removeLine: (lineId: string) => void;
   setOrderDiscount: (value: number) => void;
   setTaxRate: (value: number) => void;
   setNotes: (value: string) => void;
+  setSelectedCustomer: (c: CustomerSearchResultDto | null) => void;
   clear: () => void;
 }
 
@@ -149,6 +154,8 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
   const [orderDiscount, setOrderDiscount] = useState(0);
   const [taxRate, setTaxRate] = useState(defaultTaxRate);
   const [notes, setNotes] = useState("");
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<CustomerSearchResultDto | null>(null);
 
   const addProduct = useCallback((product: SellableProductDto) => {
     setLines((prev) => {
@@ -362,6 +369,32 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
     });
   }, []);
 
+  const addRedeemedProduct = useCallback((product: RedeemableProductDto, options?: AddProductOptions) => {
+    const addOnIds = (options?.addOnItems ?? []).map((a) => a.productAddOnItemID);
+    setLines((prev) => [
+      ...prev,
+      {
+        lineId: genLineId(),
+        productID: product.productID,
+        productName: product.name,
+        unitID: "",
+        unitName: "",
+        imageUrl: product.imageUrl,
+        quantity: 1,
+        unitPrice: 0,
+        originalPrice: product.unitPrice,
+        discount: 0,
+        currentStock: 9999,
+        isRedeemed: true,
+        promoLabel: "Loyalty Reward",
+        productVariantID: options?.productVariantID ?? null,
+        variantName: options?.variantName ?? null,
+        addOnItemIDs: addOnIds.length > 0 ? addOnIds : undefined,
+        addOnSummary: options?.addOnItems,
+      },
+    ]);
+  }, []);
+
   const setLineQuantity = useCallback((lineId: string, quantity: number) => {
     setLines((prev) =>
       prev
@@ -389,6 +422,7 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
     setOrderDiscount(0);
     setNotes("");
     setTaxRate(defaultTaxRate);
+    setSelectedCustomer(null);
   }, [defaultTaxRate]);
 
   return {
@@ -396,15 +430,18 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
     orderDiscount,
     taxRate,
     notes,
+    selectedCustomer,
     addProduct,
     addProductWithOptions,
     applyPromo,
+    addRedeemedProduct,
     setLineQuantity,
     setLineDiscount,
     removeLine,
     setOrderDiscount,
     setTaxRate,
     setNotes,
+    setSelectedCustomer,
     clear,
   };
 };

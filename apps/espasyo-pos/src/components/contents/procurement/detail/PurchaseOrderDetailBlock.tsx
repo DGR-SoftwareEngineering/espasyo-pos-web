@@ -35,6 +35,7 @@ import { usePublicSettings } from "core-lib/core/contexts";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import {
   FulfillmentMethodDto,
+  PaymentDto,
   PurchaseOrderStatusDto,
   ReceiptDto,
   SupplierInvoiceDetailDto,
@@ -57,15 +58,21 @@ import type { DialogContentType } from "core-lib/api/content/types/common";
 import { PrintPreviewDialog } from "core-lib/components/print";
 import { StatusTimeline } from "./StatusTimeline";
 import {
+  CombinedReceivingPrintable,
   PurchaseOrderPrintable,
   ReceiptPrintable,
   SupplierInvoicePrintable,
 } from "../printables";
+import {
+  UnifiedReceiveDialogContent,
+  UnifiedReceiveResult,
+} from "./UnifiedReceiveDialogContent";
 
 type PrintTarget =
   | { kind: "purchaseOrder" }
   | { kind: "receipt"; receipt: ReceiptDto }
-  | { kind: "invoice"; invoice: SupplierInvoiceDetailDto };
+  | { kind: "invoice"; invoice: SupplierInvoiceDetailDto }
+  | { kind: "combined"; receipt: ReceiptDto; invoice?: SupplierInvoiceDetailDto; payment?: PaymentDto };
 
 interface Props {
   purchaseOrderID: string;
@@ -80,6 +87,7 @@ export const PurchaseOrderDetailBlock: React.FC<Props> = ({
   const { openDialog } = useDialogContext();
   const [reloadToken, setReloadToken] = useState(0);
   const [printTarget, setPrintTarget] = useState<PrintTarget | null>(null);
+  const [unifiedReceiveOpen, setUnifiedReceiveOpen] = useState(false);
 
   const detailApi = useApi(
     (api) => api.commons.purchaseOrderGetById(purchaseOrderID),
@@ -151,12 +159,13 @@ export const PurchaseOrderDetailBlock: React.FC<Props> = ({
 
   const openReceive = () => {
     if (!po) return;
-    openDialog({
-      title: "Receive items",
-      dialogContentType: "PurchaseOrderReceive" as unknown as DialogContentType,
-      data: po,
-      onSuccess: refresh,
-    });
+    setUnifiedReceiveOpen(true);
+  };
+
+  const handleUnifiedReceiveSuccess = (result: UnifiedReceiveResult) => {
+    setUnifiedReceiveOpen(false);
+    refresh();
+    setPrintTarget({ kind: "combined", ...result });
   };
 
   const openAddInvoice = () => {
@@ -699,7 +708,9 @@ export const PurchaseOrderDetailBlock: React.FC<Props> = ({
               ? `Receipt · ${printTarget.receipt.receiptNumber}`
               : printTarget?.kind === "invoice"
                 ? `Invoice · ${printTarget.invoice.invoiceNumber}`
-                : "Print preview"
+                : printTarget?.kind === "combined"
+                  ? `Receiving · ${printTarget.receipt.receiptNumber}`
+                  : "Print preview"
         }
       >
         {printTarget?.kind === "purchaseOrder" && (
@@ -720,6 +731,17 @@ export const PurchaseOrderDetailBlock: React.FC<Props> = ({
         {printTarget?.kind === "invoice" && (
           <SupplierInvoicePrintable
             invoice={printTarget.invoice}
+            businessName={systemName}
+            currencyCode={currencyCode}
+            logoUrl={theme?.logoUrl ?? null}
+          />
+        )}
+        {printTarget?.kind === "combined" && (
+          <CombinedReceivingPrintable
+            receipt={printTarget.receipt}
+            purchaseOrder={po}
+            invoice={printTarget.invoice}
+            payment={printTarget.payment}
             businessName={systemName}
             currencyCode={currencyCode}
             logoUrl={theme?.logoUrl ?? null}
@@ -765,6 +787,28 @@ export const PurchaseOrderDetailBlock: React.FC<Props> = ({
               Cancel PO
             </Button>
           </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+
+      <Dialog.Root open={unifiedReceiveOpen} onOpenChange={setUnifiedReceiveOpen}>
+        <Dialog.Content
+          maxWidth="680px"
+          style={{
+            maxHeight: "90vh",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Dialog.Title>Receive items</Dialog.Title>
+          <Separator size="4" mb="3" />
+          {po && unifiedReceiveOpen && (
+            <UnifiedReceiveDialogContent
+              purchaseOrder={po}
+              onSuccess={handleUnifiedReceiveSuccess}
+              onClose={() => setUnifiedReceiveOpen(false)}
+            />
+          )}
         </Dialog.Content>
       </Dialog.Root>
     </Box>
