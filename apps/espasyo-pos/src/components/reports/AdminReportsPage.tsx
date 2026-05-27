@@ -46,6 +46,8 @@ import {
   SavingsOutlined,
   InfoOutlined,
   RefreshOutlined,
+  ExpandMoreOutlined,
+  ExpandLessOutlined,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import {
@@ -79,17 +81,23 @@ import { usePublicSettings } from "core-lib/core/contexts";
 import { useRouter } from "core-lib/core/router";
 import { useDialogContext } from "core-lib";
 import { FinancialSummaryTable } from "./FinancialSummaryTable";
+import { ShiftDetailsTab } from "./ShiftDetailsTab";
+import { SalesForecastingTab } from "./SalesForecastingTab";
+import { ProductVariantTab } from "./ProductVariantTab";
 import {
   SupplierInvoiceDto,
   SupplierInvoiceStatusDto,
   OrderDto,
   SaleStatusDto,
   SaleDetailDto,
+  FinancialReportProductRevenueItemDto,
+  FinancialReportVariantRevenueDto,
 } from "core-lib/api/commons/types";
 import type { OrderDetailDialogData } from "core-lib/api/content/types/common";
 import { INVOICE_STATUS_META } from "../contents/procurement/constants";
 import { formatCurrency } from "../contents/procurement/format";
 import { SaleReceiptPrintable } from "../contents/pos/printables/SaleReceiptPrintable";
+import { PrintPreviewDialog, PrintableDocument } from "core-lib/components/print";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -120,6 +128,37 @@ const PERIODS: { label: string; value: ChartPeriod }[] = [
   { label: "YTD", value: "ytd" },
   { label: "This Year", value: "year" },
 ];
+
+function periodToDateRange(period: ChartPeriod): { from: string; to: string } {
+  const today = new Date();
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  const to = fmt(today);
+  switch (period) {
+    case "today":
+      return { from: to, to };
+    case "7d": {
+      const d = new Date(today); d.setDate(d.getDate() - 6);
+      return { from: fmt(d), to };
+    }
+    case "30d": {
+      const d = new Date(today); d.setDate(d.getDate() - 29);
+      return { from: fmt(d), to };
+    }
+    case "90d": {
+      const d = new Date(today); d.setDate(d.getDate() - 89);
+      return { from: fmt(d), to };
+    }
+    case "ytd": {
+      return { from: `${today.getFullYear()}-01-01`, to };
+    }
+    case "year": {
+      const y = today.getFullYear();
+      return { from: `${y}-01-01`, to: `${y}-12-31` };
+    }
+    default:
+      return { from: to, to };
+  }
+}
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
@@ -707,21 +746,26 @@ const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
   const pageSize = 20;
 
   const ordersApi = useApi(
-    (api) =>
-      date
-        ? api.commons.orderList({
-            fromDate: date,
-            toDate: date,
-            pageNumber,
-            pageSize,
-          })
-        : Promise.resolve(null),
+    (api) => {
+      if (!date) return Promise.resolve(null);
+      const d = new Date(date + "T12:00:00");
+      d.setDate(d.getDate() + 1);
+      const exclusiveToDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return api.commons.orderList({
+        fromDate: date,
+        toDate: exclusiveToDate,
+        pageNumber,
+        pageSize,
+      });
+    },
     [date, pageNumber],
   );
 
   const orders = (ordersApi.result?.data?.response?.items ?? []) as OrderDto[];
   const pagination = ordersApi.result?.data?.response;
   const totalPages = pagination?.totalPages ?? 1;
+  const actualSalesCount = (pagination as any)?.totalCount ?? orders.length;
+  const actualDayTotal = orders.reduce((sum, o) => sum + ((o as any).totalAmount ?? 0), 0);
 
   const renderReceipt = useCallback(
     (sale: SaleDetailDto) => (
@@ -753,7 +797,7 @@ const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
   );
 
   const dateFormatted = date
-    ? new Date(date + "T00:00:00Z").toLocaleDateString("en-US", {
+    ? new Date(date + "T12:00:00").toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -795,7 +839,7 @@ const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
                 Daily Total
               </Text>
               <Text size="3" weight="bold" style={{ color: "var(--indigo-11)" }}>
-                {formatCurrency(summary?.totalAmount ?? 0)}
+                {formatCurrency(ordersApi.loading ? (summary?.totalAmount ?? 0) : actualDayTotal)}
               </Text>
             </Flex>
           </Card>
@@ -811,7 +855,7 @@ const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
                 Transactions
               </Text>
               <Text size="3" weight="bold" style={{ color: "var(--amber-11)" }}>
-                {summary?.salesCount ?? 0}
+                {ordersApi.loading ? (summary?.salesCount ?? 0) : actualSalesCount}
               </Text>
             </Flex>
           </Card>
@@ -875,7 +919,7 @@ const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
                         <td>{order.paymentSummary}</td>
                         <td>
                           <Badge size="1" color={badge.color}>
-                            {badge.label}
+                            {order.statusName || badge.label}
                           </Badge>
                         </td>
                         <td style={{ fontWeight: 500 }}>
@@ -950,7 +994,7 @@ interface DailySalesTargetTabProps {
 }
 
 const DailySalesTargetTab: React.FC<DailySalesTargetTabProps> = ({ todayTotal, salesCount, salesLoading }) => {
-  const { pos } = usePublicSettings();
+  const { pos, currencyCode: tabCurrencyCode } = usePublicSettings();
   const router = useRouter();
   const { openDialog } = useDialogContext();
 
@@ -958,16 +1002,24 @@ const DailySalesTargetTab: React.FC<DailySalesTargetTabProps> = ({ todayTotal, s
   const targetAmount = pos.targetSalesAmountPerDay;
   const currentAmount = todayTotal;
 
-  // Date range state — table only (defaults to today)
-  const [fromDate, setFromDate] = useState(() => getDaysAgoIso(0));
+  // Date range state — table only (defaults to last 7 days)
+  const [fromDate, setFromDate] = useState(() => getDaysAgoIso(6));
   const [toDate, setToDate] = useState(() => getDaysAgoIso(0));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [printOpen, setPrintOpen] = useState(false);
+
+  // Backend uses exclusive upper bound (SaleDate < toDate), so add 1 day for API calls
+  const apiToDate = useMemo(() => {
+    const d = new Date(toDate + "T12:00:00");
+    d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, [toDate]);
 
   // Chart-based per-day data for table rows (admin-wide, not user-scoped)
   const rangeChart = useChart({
     chartKey: "sales-by-day",
     fromDate,
-    toDate,
+    toDate: apiToDate,
   });
 
   const progressPct = useMemo(() => {
@@ -980,15 +1032,24 @@ const DailySalesTargetTab: React.FC<DailySalesTargetTabProps> = ({ todayTotal, s
 
   // Transform chart points to table rows (must be before conditional return — Rules of Hooks)
   const rangeRows = useMemo(() => {
+    const todayIso = getDaysAgoIso(0);
     const points = rangeChart.data?.points ?? [];
-    return points.map((p) => {
-      const isoDate = p.timestamp
-        ? new Date(p.timestamp).toISOString().split("T")[0]
-        : null;
-      const amount = Object.values(p.values)[0] ?? 0;
-      return { date: isoDate, label: p.label, amount };
-    });
-  }, [rangeChart.data]);
+    return points
+      .map((p) => {
+        const isoDate = p.timestamp
+          ? (() => {
+              const d = new Date(p.timestamp);
+              return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+            })()
+          : null;
+        const rawAmount = (Object.values(p.values)[0] ?? 0) as number;
+        // Chart groups by CompletedAt UTC and sums SubTotal — override today's row with the
+        // accurate salesDailySummary total (uses SaleDate equality, includes all local-time txns)
+        const amount = isoDate === todayIso && todayTotal > 0 ? todayTotal : rawAmount;
+        return { date: isoDate, label: p.label, amount };
+      })
+      .filter((r) => !r.date || (r.date >= fromDate && r.date <= toDate));
+  }, [rangeChart.data, fromDate, toDate, todayTotal]);
 
   const chartData = useMemo(
     () =>
@@ -1242,11 +1303,21 @@ const DailySalesTargetTab: React.FC<DailySalesTargetTabProps> = ({ todayTotal, s
               size="1"
               variant="soft"
               onClick={() => {
-                setFromDate(getDaysAgoIso(0));
+                setFromDate(getDaysAgoIso(6));
                 setToDate(getDaysAgoIso(0));
               }}
             >
-              Reset to Today
+              Reset (7 Days)
+            </Button>
+            <Button
+              size="1"
+              variant="soft"
+              color="indigo"
+              style={{ marginLeft: "auto" }}
+              onClick={() => setPrintOpen(true)}
+            >
+              <PrintOutlined style={{ fontSize: 13 }} />
+              Print
             </Button>
           </Flex>
         </Card>
@@ -1517,6 +1588,105 @@ const DailySalesTargetTab: React.FC<DailySalesTargetTabProps> = ({ todayTotal, s
           onClose={() => setSelectedDate(null)}
         />
       </motion.div>
+
+      {/* ── Print Preview ── */}
+      <PrintPreviewDialog
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+        title={`Daily Sales Target · ${new Date().toLocaleDateString()}`}
+      >
+        <PrintableDocument
+          businessName=""
+          documentLabel="Daily Sales Target"
+          documentNumber={new Date().toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+        >
+          {/* Today's Performance Summary */}
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#444", fontWeight: 700, marginBottom: 10 }}>
+            Today&apos;s Performance
+          </div>
+          <Box style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+            <Box style={{ padding: "10px 12px", background: "#eef2ff", border: "1px solid #c7d2fe", borderRadius: 6 }}>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1, color: "#888", fontWeight: 700, marginBottom: 3 }}>Current Sales</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#4338ca" }}>{formatCurrency(currentAmount, tabCurrencyCode)}</div>
+            </Box>
+            <Box style={{ padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }}>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1, color: "#888", fontWeight: 700, marginBottom: 3 }}>Daily Target</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#334155" }}>{formatCurrency(targetAmount, tabCurrencyCode)}</div>
+            </Box>
+            <Box style={{ padding: "10px 12px", background: reached ? "#f0fdf4" : progressPct >= 50 ? "#fffbeb" : "#fef2f2", border: "1px solid " + (reached ? "#bbf7d0" : progressPct >= 50 ? "#fde68a" : "#fecaca"), borderRadius: 6 }}>
+              <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1, color: "#888", fontWeight: 700, marginBottom: 3 }}>Progress</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: reached ? "#16a34a" : progressPct >= 50 ? "#d97706" : "#dc2626" }}>{progressPct.toFixed(1)}%</div>
+            </Box>
+          </Box>
+          <p style={{ fontSize: 11, color: reached ? "#16a34a" : "#64748b", marginBottom: 20, fontWeight: reached ? 600 : 400 }}>
+            {reached
+              ? `✓ Target reached — exceeded by ${formatCurrency(currentAmount - targetAmount, tabCurrencyCode)}`
+              : targetAmount > 0
+                ? `Remaining: ${formatCurrency(remaining, tabCurrencyCode)} to reach today's target`
+                : "Daily sales target not configured"}
+          </p>
+
+          {/* Daily Performance Table */}
+          {rangeRows.length > 0 && (
+            <>
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#444", fontWeight: 700, marginBottom: 8 }}>
+                Daily Performance — {fromDate} to {toDate}
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #111" }}>
+                    <th style={{ padding: "6px 8px", textAlign: "left", textTransform: "uppercase", fontSize: 10, color: "#666", fontWeight: 700 }}>Date</th>
+                    <th style={{ padding: "6px 8px", textAlign: "right", textTransform: "uppercase", fontSize: 10, color: "#666", fontWeight: 700 }}>Revenue</th>
+                    {targetAmount > 0 && <th style={{ padding: "6px 8px", textAlign: "right", textTransform: "uppercase", fontSize: 10, color: "#666", fontWeight: 700 }}>% of Target</th>}
+                    {targetAmount > 0 && <th style={{ padding: "6px 8px", textAlign: "center", textTransform: "uppercase", fontSize: 10, color: "#666", fontWeight: 700 }}>Status</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...rangeRows].reverse().map(({ date, label, amount }) => {
+                    const isToday = date === getDaysAgoIso(0);
+                    const pct = amount > 0 && targetAmount > 0 ? (amount / targetAmount) * 100 : 0;
+                    const hit = amount > 0 && targetAmount > 0 && amount >= targetAmount;
+                    return (
+                      <tr key={date} style={{ borderBottom: "1px solid #eee", background: isToday ? "#fffbeb" : "transparent" }}>
+                        <td style={{ padding: "5px 8px" }}>
+                          <strong>{label}</strong>
+                          {isToday && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: "#b45309", textTransform: "uppercase" }}>Today</span>}
+                        </td>
+                        <td style={{ padding: "5px 8px", textAlign: "right", fontWeight: 500 }}>
+                          {amount > 0 ? formatCurrency(amount, tabCurrencyCode) : "—"}
+                        </td>
+                        {targetAmount > 0 && (
+                          <td style={{ padding: "5px 8px", textAlign: "right", color: hit ? "#16a34a" : "#64748b" }}>
+                            {amount > 0 ? `${pct.toFixed(1)}%` : "—"}
+                          </td>
+                        )}
+                        {targetAmount > 0 && (
+                          <td style={{ padding: "5px 8px", textAlign: "center" }}>
+                            {amount > 0 ? (
+                              <span style={{ display: "inline-block", fontSize: 9, fontWeight: 700, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3, background: hit ? "#dcfce7" : "#fef9c3", color: hit ? "#166534" : "#854d0e" }}>
+                                {hit ? "✓ Hit" : "In Progress"}
+                              </span>
+                            ) : "—"}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr style={{ borderTop: "2px solid #111" }}>
+                    <td style={{ padding: "6px 8px", fontWeight: 700 }}>Total ({rangeRows.length} days)</td>
+                    <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "#4338ca" }}>
+                      {formatCurrency(rangeRows.reduce((s, r) => s + (r.amount || 0), 0), tabCurrencyCode)}
+                    </td>
+                    {targetAmount > 0 && <td colSpan={2} />}
+                  </tr>
+                </tfoot>
+              </table>
+            </>
+          )}
+        </PrintableDocument>
+      </PrintPreviewDialog>
     </Box>
   );
 };
@@ -1525,12 +1695,12 @@ const DailySalesTargetTab: React.FC<DailySalesTargetTabProps> = ({ todayTotal, s
 
 export const AdminReportsPage: React.FC = () => {
   const router = useRouter();
-  const { currencyCode, inventory, theme } = usePublicSettings();
+  const { currencyCode, inventory, theme, systemName } = usePublicSettings();
   const { isMobile } = useResolution();
   const [period, setPeriod] = useState<ChartPeriod>("30d");
 
   const initialTabIndex = useMemo(() => {
-    if (router.query.tab === "daily_target") return 2;
+    if (router.query.tab === "daily_target") return 3;
     return 0;
   }, [router.query.tab]);
 
@@ -1540,6 +1710,7 @@ export const AdminReportsPage: React.FC = () => {
   const deferredPeriod = useDeferredValue(period);
   const isTransitioning = period !== deferredPeriod;
   const [refreshDialogOpen, setRefreshDialogOpen] = useState(false);
+  const [tabPrint, setTabPrint] = useState<"chart" | "financial" | null>(null);
 
   // ── Data fetches (all run in parallel on mount) ───────────────────────────
 
@@ -1630,6 +1801,19 @@ export const AdminReportsPage: React.FC = () => {
     return grossSales - procurementCost;
   }, [grossSales, procurementCost]);
 
+  const { from: financialFrom, to: financialTo } = useMemo(
+    () => periodToDateRange(period),
+    [period],
+  );
+  const financialReportApi = useApi(
+    (api) => api.commons.financialReport({ From: financialFrom, To: financialTo }),
+    [financialFrom, financialTo],
+  );
+  const revenueByProduct: FinancialReportProductRevenueItemDto[] =
+    financialReportApi.result?.data?.response?.revenueByProduct ?? [];
+
+  const salesForecastApi = useApi((api) => api.commons.salesForecast(), []);
+
   const isRefreshing =
     dailySummaryApi.loading ||
     productsApi.loading ||
@@ -1637,6 +1821,7 @@ export const AdminReportsPage: React.FC = () => {
     invoiceApi.loading ||
     businessExpenseApi.loading ||
     lowStockApi.loading ||
+    financialReportApi.loading ||
     salesChart.loading;
 
   const handleRefresh = useCallback(() => {
@@ -1647,8 +1832,10 @@ export const AdminReportsPage: React.FC = () => {
     invoiceApi.execute();
     businessExpenseApi.execute();
     lowStockApi.execute();
+    financialReportApi.execute();
     salesChart.refresh();
-  }, [dailySummaryApi, productsApi, saleListApi, invoiceApi, businessExpenseApi, lowStockApi, salesChart]);
+    salesForecastApi.execute();
+  }, [dailySummaryApi, productsApi, saleListApi, invoiceApi, businessExpenseApi, lowStockApi, financialReportApi, salesChart, salesForecastApi]);
 
   useEffect(() => {
     if (!isRefreshing && refreshDialogOpen) {
@@ -1758,6 +1945,12 @@ export const AdminReportsPage: React.FC = () => {
         label: "Reports Chart",
         content: (
           <Box pt="4">
+            <Flex justify="end" mb="3">
+              <Button size="1" variant="soft" color="indigo" onClick={() => setTabPrint("chart")}>
+                <PrintOutlined style={{ fontSize: 13 }} />
+                Print this report
+              </Button>
+            </Flex>
             {/* ── Info Alert ────────────────────────────────────────────────– */}
             <Callout.Root color="blue" mb="4">
               <InfoOutlined style={{ fontSize: 18 }} />
@@ -2037,6 +2230,12 @@ export const AdminReportsPage: React.FC = () => {
         label: "Financial Summary",
         content: (
           <Box pt="4">
+            <Flex justify="end" mb="3">
+              <Button size="1" variant="soft" color="indigo" onClick={() => setTabPrint("financial")}>
+                <PrintOutlined style={{ fontSize: 13 }} />
+                Print this report
+              </Button>
+            </Flex>
             {/* ── Info Alert ────────────────────────────────────────────────– */}
             <Callout.Root color="teal" mb="4">
               <InfoOutlined style={{ fontSize: 18 }} />
@@ -2066,13 +2265,42 @@ export const AdminReportsPage: React.FC = () => {
                 }}
               />
             </motion.div>
+
           </Box>
+        ),
+      },
+      {
+        key: "product_variant",
+        label: "Product by Variant",
+        content: (
+          <ProductVariantTab
+            data={revenueByProduct}
+            loading={financialReportApi.loading}
+            currencyCode={currencyCode}
+            periodLabel={periodLabel}
+          />
         ),
       },
       {
         key: "daily_target",
         label: "Daily Sales Target",
         content: <DailySalesTargetTab todayTotal={todayTotal} salesCount={salesCount} salesLoading={dailySummaryApi.loading} />,
+      },
+      {
+        key: "shift_details",
+        label: "Shift Details",
+        content: <ShiftDetailsTab />,
+      },
+      {
+        key: "sales_forecast",
+        label: "Sales Forecast",
+        content: (
+          <SalesForecastingTab
+            currencyCode={currencyCode}
+            businessName={systemName}
+            logoUrl={theme?.logoUrl ?? null}
+          />
+        ),
       },
     ],
     [
@@ -2098,6 +2326,11 @@ export const AdminReportsPage: React.FC = () => {
       dailySummaryApi.result,
       todayTotal,
       salesCount,
+      systemName,
+      theme?.logoUrl,
+      financialReportApi.loading,
+      financialReportApi.result,
+      revenueByProduct,
     ],
   );
 
@@ -2655,6 +2888,162 @@ export const AdminReportsPage: React.FC = () => {
           </Flex>
         </Dialog.Content>
       </Dialog.Root>
+
+      {/* ── Per-Tab Print Previews ── */}
+      {tabPrint === "chart" && (
+        <PrintPreviewDialog
+          open
+          onOpenChange={() => setTabPrint(null)}
+          title={`Reports Chart · ${periodLabel}`}
+        >
+          <PrintableDocument
+            businessName={systemName}
+            logoUrl={theme?.logoUrl ?? null}
+            documentLabel="Reports Chart"
+            documentNumber={periodLabel}
+          >
+            {/* ── Financial Overview ── */}
+            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#444", fontWeight: 700, marginBottom: 10 }}>Financial Overview</div>
+            <Box style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 24 }}>
+              {[
+                { label: "Gross Sales", value: formatCurrency(grossSales, currencyCode), color: "#4338ca", bg: "#eef2ff", border: "#c7d2fe" },
+                { label: "Gross Profit", value: grossProfit !== null ? formatCurrency(grossProfit, currencyCode) : "—", color: grossProfit !== null && grossProfit >= 0 ? "#16a34a" : "#dc2626", bg: grossProfit !== null && grossProfit >= 0 ? "#f0fdf4" : "#fef2f2", border: grossProfit !== null && grossProfit >= 0 ? "#bbf7d0" : "#fecaca" },
+                { label: "Transactions", value: totalTransactions?.toLocaleString() ?? "—", color: "#0f766e", bg: "#f0fdfa", border: "#99f6e4" },
+                { label: "Operational Expenses", value: formatCurrency(operationalExpenses, currencyCode), color: "#b45309", bg: "#fffbeb", border: "#fde68a" },
+                { label: "Business Supply Expenses", value: formatCurrency(businessSupplyExpenses, currencyCode), color: "#ea580c", bg: "#fff7ed", border: "#fed7aa" },
+                { label: "Low Stock Items", value: inventory.lowStockAlertEnabled ? (lowStockCount?.toLocaleString() ?? "—") : "Alert disabled", color: lowStockCount ? "#d97706" : "#16a34a", bg: lowStockCount ? "#fffbeb" : "#f0fdf4", border: lowStockCount ? "#fde68a" : "#bbf7d0" },
+              ].map(({ label, value, color, bg, border }) => (
+                <Box key={label} style={{ padding: "10px 12px", background: bg, border: `1px solid ${border}`, borderRadius: 6 }}>
+                  <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1, color: "#888", fontWeight: 700, marginBottom: 3 }}>{label}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color }}>{value}</div>
+                </Box>
+              ))}
+            </Box>
+
+            {/* ── Revenue by Day ── */}
+            {(() => {
+              const revenueRows = (salesChart.data?.points ?? [])
+                .map((p) => ({
+                  label: p.label,
+                  amount: (Object.values(p.values)[0] ?? 0) as number,
+                }))
+                .filter((r) => r.amount > 0);
+              const periodTotal = revenueRows.reduce((s, r) => s + r.amount, 0);
+              if (revenueRows.length === 0) return null;
+              return (
+                <Box mb="4">
+                  <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#444", fontWeight: 700, marginBottom: 8 }}>
+                    Revenue by Day — {periodLabel}
+                  </div>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid #111" }}>
+                        <th style={{ padding: "6px 8px", textAlign: "left", textTransform: "uppercase", fontSize: 10, color: "#666", fontWeight: 700 }}>Date</th>
+                        <th style={{ padding: "6px 8px", textAlign: "right", textTransform: "uppercase", fontSize: 10, color: "#666", fontWeight: 700 }}>Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {revenueRows.map((r, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
+                          <td style={{ padding: "5px 8px" }}>{r.label}</td>
+                          <td style={{ padding: "5px 8px", textAlign: "right", fontWeight: 500 }}>{formatCurrency(r.amount, currencyCode)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: "2px solid #111" }}>
+                        <td style={{ padding: "6px 8px", fontWeight: 700 }}>Total</td>
+                        <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "#4338ca" }}>{formatCurrency(periodTotal, currencyCode)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </Box>
+              );
+            })()}
+
+            {/* ── Procurement & Expenses ── */}
+            {(() => {
+              const paidInvoices = (invoiceApi.result?.data?.response?.items ?? [])
+                .filter((inv) => (inv.paidAmount ?? 0) > 0)
+                .slice(0, 20);
+              const procTotal = paidInvoices.reduce((s, inv) => s + (inv.paidAmount ?? 0), 0);
+              if (paidInvoices.length === 0) return null;
+              return (
+                <Box mb="4">
+                  <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#444", fontWeight: 700, marginBottom: 8 }}>
+                    Procurement & Paid Invoices
+                  </div>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid #111" }}>
+                        <th style={{ padding: "6px 8px", textAlign: "left", textTransform: "uppercase", fontSize: 10, color: "#666", fontWeight: 700 }}>Supplier</th>
+                        <th style={{ padding: "6px 8px", textAlign: "left", textTransform: "uppercase", fontSize: 10, color: "#666", fontWeight: 700 }}>Invoice #</th>
+                        <th style={{ padding: "6px 8px", textAlign: "right", textTransform: "uppercase", fontSize: 10, color: "#666", fontWeight: 700 }}>Paid Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paidInvoices.map((inv) => (
+                        <tr key={inv.supplierInvoiceID} style={{ borderBottom: "1px solid #eee" }}>
+                          <td style={{ padding: "5px 8px" }}>{inv.supplierName}</td>
+                          <td style={{ padding: "5px 8px", color: "#64748b" }}>{inv.invoiceNumber}</td>
+                          <td style={{ padding: "5px 8px", textAlign: "right", fontWeight: 500 }}>{formatCurrency(inv.paidAmount ?? 0, currencyCode)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: "2px solid #111" }}>
+                        <td colSpan={2} style={{ padding: "6px 8px", fontWeight: 700 }}>Total Procurement</td>
+                        <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "#b45309" }}>{formatCurrency(procTotal, currencyCode)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                  {paidInvoices.length === 20 && (
+                    <p style={{ fontSize: 10, color: "#94a3b8", fontStyle: "italic", marginTop: 4 }}>
+                      * Showing top 20 paid invoices. View all in Procurement → Invoices.
+                    </p>
+                  )}
+                </Box>
+              );
+            })()}
+
+            <p style={{ fontSize: 10, color: "#94a3b8", fontStyle: "italic", marginTop: 8 }}>
+              * Visual charts (bar, line, donut) are available in the web application.
+            </p>
+          </PrintableDocument>
+        </PrintPreviewDialog>
+      )}
+
+      {tabPrint === "financial" && (
+        <PrintPreviewDialog
+          open
+          onOpenChange={() => setTabPrint(null)}
+          title={`Financial Summary · ${periodLabel}`}
+        >
+          <PrintableDocument
+            businessName={systemName}
+            logoUrl={theme?.logoUrl ?? null}
+            documentLabel="Financial Summary"
+            documentNumber={periodLabel}
+          >
+            <FinancialSummaryTable
+              data={{
+                currencyCode,
+                grossSales,
+                cogs: operationalExpenses,
+                grossProfit,
+                operationalExpenses: businessSupplyExpenses,
+                businessSupplyExpenses,
+                totalExpenses,
+                netProfit,
+                totalTransactions,
+                inventoryValue: null,
+                lowStockCount,
+              }}
+            />
+          </PrintableDocument>
+        </PrintPreviewDialog>
+      )}
+
     </>
   );
 };

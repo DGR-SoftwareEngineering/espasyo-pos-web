@@ -5,6 +5,7 @@ import { AccessApi } from "../../api/access/api";
 import { Api } from "../../api/api";
 import { AuthenticationApi } from "../../api/authentication/api";
 import { CommonsApi } from "../../api/commons/api";
+import { CrmApi } from "../../api/crm/api";
 import Http, { HttpOptions } from "../http-client";
 import { getItem } from "../session-storage";
 import { config } from "../../config";
@@ -103,6 +104,7 @@ function createApi(client: AxiosInstance, httpSsrClient: AxiosInstance) {
     new AuthenticationApi(client, httpSsrClient),
     new CommonsApi(client, httpSsrClient),
     new AccessApi(client),
+    new CrmApi(client),
   );
 }
 

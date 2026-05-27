@@ -48,7 +48,12 @@ export const AccessProvider: React.FC<React.PropsWithChildren> = ({
     menu: MenuItemDto[];
     permissions: AccessPermissionsMap;
     ready: boolean;
-  }>({ role: null, menu: [], permissions: {}, ready: false });
+  }>({
+    role: null,
+    menu: [],
+    permissions: {},
+    ready: false,
+  });
   const [error, setError] = useState<string | null>(null);
 
   const cb = useApiCallback((api) => api.access.me());
@@ -81,7 +86,12 @@ export const AccessProvider: React.FC<React.PropsWithChildren> = ({
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setState({ role: null, menu: [], permissions: {}, ready: false });
+      setState({
+        role: null,
+        menu: [],
+        permissions: {},
+        ready: false,
+      });
       setError(null);
       return;
     }

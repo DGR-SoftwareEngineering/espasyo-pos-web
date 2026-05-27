@@ -13,6 +13,7 @@ import { usePublicSettings } from "core-lib/core/contexts";
 import { OPERATIONAL_STATUS_META } from "core-lib/business/settings";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { SystemSettingsTab } from "./tabs/SystemSettingsTab";
+import { LocalizationSettingsTab } from "./tabs/LocalizationSettingsTab";
 import { ContentBlocksTab } from "./tabs/ContentBlocksTab";
 import { AuditLogTab } from "./tabs/AuditLogTab";
 import { AccessControlTab } from "./tabs/AccessControlTab";
@@ -33,6 +34,11 @@ export const SettingsManagementBlock: React.FC = () => {
         key: "settings_system",
         label: "System Settings",
         content: <SystemSettingsTab />,
+      },
+      {
+        key: "settings_localization",
+        label: "Localization",
+        content: <LocalizationSettingsTab />,
       },
       {
         key: "settings_access",

@@ -86,6 +86,14 @@ export interface PublicPosConfig {
   targetSalesEnabled: boolean;
   targetSalesAmountPerDay: number;
   targetSalesConfettiEnabled: boolean;
+  cashDrawerEnabled: boolean;
+  cashDrawerBaudRate: number;
+  cashDrawerKickPin: number;
+}
+
+export interface PublicCrmConfig {
+  /** Maximum stamps a customer can earn per day. 0 = unlimited. */
+  maxStampsPerDay: number;
 }
 
 export interface PublicSecurityPolicy {
@@ -122,6 +130,7 @@ export interface PublicSettingsValue {
   notifications: PublicNotificationsConfig;
   procurement: PublicProcurementConfig;
   pos: PublicPosConfig;
+  crm: PublicCrmConfig;
   settingsMap: Map<string, SystemSettingDto>;
   refresh: () => Promise<void>;
 }
@@ -160,6 +169,9 @@ const DEFAULTS: Omit<
     targetSalesEnabled: false,
     targetSalesAmountPerDay: 0,
     targetSalesConfettiEnabled: true,
+    cashDrawerEnabled: false,
+    cashDrawerBaudRate: 9600,
+    cashDrawerKickPin: 2,
   },
   security: {
     sessionTimeoutMinutes: 30,
@@ -200,6 +212,9 @@ const DEFAULTS: Omit<
     invoiceDueDaysDefault: 30,
     allowOverReceipt: true,
     warnOnInvoiceVariance: true,
+  },
+  crm: {
+    maxStampsPerDay: 3,
   },
 };
 
@@ -382,6 +397,19 @@ const buildState = (settings: SystemSettingDto[]) => {
         SETTING_KEYS.PosTargetSalesConfettiEnabled,
         DEFAULTS.pos.targetSalesConfettiEnabled,
       ),
+      cashDrawerEnabled: get<boolean>(
+        SETTING_KEYS.PosCashDrawerEnabled,
+        DEFAULTS.pos.cashDrawerEnabled,
+      ),
+      cashDrawerBaudRate: clampInt(
+        get<number>(SETTING_KEYS.PosCashDrawerBaudRate, DEFAULTS.pos.cashDrawerBaudRate),
+        1200,
+        230400,
+      ),
+      cashDrawerKickPin: get<number>(
+        SETTING_KEYS.PosCashDrawerKickPin,
+        DEFAULTS.pos.cashDrawerKickPin,
+      ) === 5 ? 5 : 2,
     },
     security: {
       sessionTimeoutMinutes: get<number>(
@@ -474,6 +502,13 @@ const buildState = (settings: SystemSettingDto[]) => {
       warnOnInvoiceVariance: get<boolean>(
         SETTING_KEYS.ProcurementWarnOnInvoiceVariance,
         DEFAULTS.procurement.warnOnInvoiceVariance,
+      ),
+    },
+    crm: {
+      maxStampsPerDay: clampInt(
+        get<number>(SETTING_KEYS.CrmMaxStampsPerDay, DEFAULTS.crm.maxStampsPerDay),
+        0,
+        100,
       ),
     },
   };
@@ -603,6 +638,7 @@ export const PublicSettingsProvider: React.FC<
       notifications: state.notifications,
       procurement: state.procurement,
       pos: state.pos,
+      crm: state.crm,
       settingsMap: state.settingsMap,
       refresh,
     }),

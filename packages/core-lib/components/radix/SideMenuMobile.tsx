@@ -153,7 +153,7 @@ export const SideMenuMobile: React.FC<Props> = ({
         <Separator size="4" />
 
         <Box px="3" py="2" style={{ flexShrink: 0 }}>
-          <CardAlert />
+          <CardAlert><></></CardAlert>
         </Box>
 
         <Box

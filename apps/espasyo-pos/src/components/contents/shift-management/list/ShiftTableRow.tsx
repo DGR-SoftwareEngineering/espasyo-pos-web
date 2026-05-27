@@ -11,6 +11,7 @@ interface Props {
   row: CashierShiftDto;
   onView: (shift: CashierShiftDto) => void;
   onClose: (shift: CashierShiftDto) => void;
+  mode?: "admin" | "cashier";
 }
 
 const formatDateTime = (iso: string | null) => {
@@ -24,7 +25,7 @@ const formatDateTime = (iso: string | null) => {
   });
 };
 
-export const ShiftTableRow: React.FC<Props> = ({ row, onView, onClose }) => {
+export const ShiftTableRow: React.FC<Props> = ({ row, onView, onClose, mode = "admin" }) => {
   const statusCfg = STATUS_CONFIG[row.status];
 
   const columns = [
@@ -110,7 +111,7 @@ export const ShiftTableRow: React.FC<Props> = ({ row, onView, onClose }) => {
               <EyeOpenIcon />
             </IconButton>
           </Tooltip>
-          {row.status === "Open" && (
+          {row.status === "Open" && mode !== "cashier" && (
             <Tooltip content={DIALOG_TITLES.close}>
               <IconButton
                 size="1"

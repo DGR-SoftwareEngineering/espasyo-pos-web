@@ -1445,6 +1445,7 @@ export interface CreateSaleItemParams {
   quantity: number;
   unitPrice: number;
   discount?: number | null;
+  isRedemptionLine?: boolean;
 }
 
 export interface CreateSalePaymentParams {
@@ -1663,12 +1664,15 @@ export type PromoStatus = "Draft" | "Active" | "Inactive" | "Scheduled" | "Expir
 
 export interface PromoItemDto {
   promoItemID: string;
-  /** Set when this item targets a specific product. Null when it targets a category. */
+  /** Set when this item targets a specific product. Null when it targets a category or variant. */
   productID: string | null;
   productName: string | null;
   /** Set when this item targets a whole category (auto-expands to sub-categories at sale time). */
   productCategoryID: string | null;
   productCategoryName: string | null;
+  /** Set when this item targets a specific product variant. Null when targeting product or category. */
+  productVariantID: string | null;
+  productVariantName: string | null;
   quantity: number;
   isFreeItem: boolean;
 }
@@ -1696,7 +1700,24 @@ export interface PromoDto {
   reason: string | null;
   createdAt: string;
   items: PromoItemDto[];
+  /** CRM targeting: restrict to a customer segment (1=New, 2=Regular, 3=VIP, 4=Occasional, 5=AtRisk). Null = all customers. */
+  targetSegment: number | null;
+  /** CRM targeting: customer must have totalStamps >= this value. Null = no requirement. */
+  minLoyaltyStamps: number | null;
+  /** Count of customers explicitly pinned to this promo. Drives the "Pinned N" badge in the list. */
+  targetCustomerCount: number;
 }
+
+/** Customer pinned to a promo (returned by GET /Promo/{id}/customers). */
+export interface AssignedCustomerDto {
+  customerID: string;
+  customerNumber: string;
+  fullName: string;
+  phone: string | null;
+  segment: number;
+}
+
+export type AssignedCustomerListResponse = ApiResponse<AssignedCustomerDto[]>;
 
 export interface PromoSuggestionDto {
   promoType: number;
@@ -1711,9 +1732,10 @@ export interface PromoSuggestionDto {
 }
 
 export interface PromoItemInput {
-  /** Exactly one of productID / productCategoryID must be set per item (backend rejects both/neither with 400). */
+  /** Exactly one of productID / productCategoryID / productVariantID must be set per item. */
   productID?: string | null;
   productCategoryID?: string | null;
+  productVariantID?: string | null;
   quantity: number;
   isFreeItem: boolean;
 }
@@ -1753,6 +1775,9 @@ export interface CreatePromoParams {
   reason?: string | null;
   isAiGenerated: boolean;
   items: PromoItemInput[];
+  targetSegment?: number | null;
+  minLoyaltyStamps?: number | null;
+  targetCustomerIds?: string[];
 }
 
 export interface UpdatePromoParams {
@@ -1761,6 +1786,13 @@ export interface UpdatePromoParams {
   imageUrl?: string | null;
   startDate?: string | null;
   endDate?: string | null;
+  targetSegment?: number | null;
+  minLoyaltyStamps?: number | null;
+  targetCustomerIds?: string[];
+}
+
+export interface AssignPromoCustomersParams {
+  customerIds: string[];
 }
 
 export type PromoResponse = ApiResponse<PromoDto>;
@@ -2033,3 +2065,135 @@ export interface ApplyAddOnTemplateParams {
   templateID: string;
 }
 export type ApplyAddOnTemplateResponse = ApiResponse<number>;
+
+// ===== Product Performance =====
+export interface ProductVariantPerformanceDto {
+  productVariantID: string | null;
+  variantName: string;
+  quantitySold: number;
+  revenue: number;
+  transactionCount: number;
+}
+
+export interface ProductAddOnPerformanceDto {
+  productAddOnItemID: string | null;
+  groupName: string;
+  itemName: string;
+  timesOrdered: number;
+  revenue: number;
+}
+
+export interface ProductPerformanceItemDto {
+  productID: string;
+  productName: string;
+  categoryName: string | null;
+  quantitySold: number;
+  revenue: number;
+  transactionCount: number;
+  movementTag: "slow" | "normal" | "fast";
+  variants: ProductVariantPerformanceDto[];
+  addOns: ProductAddOnPerformanceDto[];
+}
+export interface ProductPerformanceReportDto {
+  from: string;
+  to: string;
+  slowThreshold: number;
+  fastThreshold: number;
+  totalMenuItems: number;
+  slowMovingCount: number;
+  normalCount: number;
+  fastMovingCount: number;
+  items: ProductPerformanceItemDto[];
+}
+export interface SlowMovingPromoSuggestionDto extends PromoSuggestionDto {
+  productID: string;
+  productName: string;
+  quantitySold: number;
+  revenue: number;
+}
+export interface ProductPerformanceQueryParams {
+  From?: string;
+  To?: string;
+  SlowThreshold?: number;
+  FastThreshold?: number;
+}
+export interface SlowMovingPromoQueryParams {
+  From?: string;
+  To?: string;
+  SlowThreshold?: number;
+  MaxSuggestions?: number;
+}
+export type ProductPerformanceReportResponse = ApiResponse<ProductPerformanceReportDto>;
+export type SlowMovingPromoSuggestionListResponse = ApiResponse<SlowMovingPromoSuggestionDto[]>;
+
+// ─── Financial Report ─────────────────────────────────────────────────────────
+
+export interface FinancialReportVariantRevenueDto {
+  variantName: string;
+  quantitySold: number;
+  revenue: number;
+}
+
+export interface FinancialReportProductRevenueItemDto {
+  productID: string;
+  productName: string;
+  categoryName: string | null;
+  quantitySold: number;
+  revenue: number;
+  variants: FinancialReportVariantRevenueDto[];
+}
+
+export interface FinancialReportDto {
+  from: string;
+  to: string;
+  grossSale: number;
+  completedSalesCount: number;
+  operationalExpenses: number;
+  operationalExpensesPending: number;
+  businessSupplyExpenses: number;
+  businessSupplyExpensesPending: number;
+  totalExpenses: number;
+  totalExpensesPending: number;
+  paidInvoiceCount: number;
+  businessSupplyInvoiceCount: number;
+  directStockValue: number;
+  directStockItemCount: number;
+  totalInventoryItems: number;
+  outOfStockCount: number;
+  lowStockCount: number;
+  costOfGoodsSold: number;
+  grossProfit: number;
+  netProfit: number;
+  revenueByProduct: FinancialReportProductRevenueItemDto[];
+}
+
+export interface FinancialReportQueryParams {
+  From?: string;
+  To?: string;
+}
+
+export type FinancialReportResponse = ApiResponse<FinancialReportDto>;
+
+// ─── Sales Forecast ──────────────────────────────────────────────────────────
+
+export interface SalesForecastDailyDto {
+  date: string;
+  dayOfWeek: string;
+  actualRevenue: number | null;
+  forecastedRevenue: number;
+}
+
+export interface SalesForecastResponseDto {
+  forecastWeekStart: string;
+  forecastWeekEnd: string;
+  totalForecastedRevenue: number;
+  previousWeekRevenue: number;
+  trendPercent: number;
+  trendDirection: "up" | "down" | "flat";
+  days: SalesForecastDailyDto[];
+  insight: string | null;
+  isAiGenerated: boolean;
+  generatedAt: string;
+}
+
+export type SalesForecastResponse = ApiResponse<SalesForecastResponseDto>;

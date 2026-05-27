@@ -145,6 +145,15 @@ import {
   PromoListResponse,
   PromoSuggestionListResponse,
   PromoCalculateResponse,
+  AssignedCustomerListResponse,
+  AssignPromoCustomersParams,
+  ProductPerformanceQueryParams,
+  ProductPerformanceReportResponse,
+  SlowMovingPromoQueryParams,
+  SlowMovingPromoSuggestionListResponse,
+  FinancialReportQueryParams,
+  FinancialReportResponse,
+  SalesForecastResponse,
   CreateProductVariantDto,
   UpdateProductVariantDto,
   ProductVariantResponse,
@@ -1412,6 +1421,8 @@ export class CommonsApi {
     if (params.startDate != null) form.append("startDate", params.startDate);
     if (params.endDate != null) form.append("endDate", params.endDate);
     if (params.reason != null) form.append("reason", params.reason);
+    if (params.targetSegment != null) form.append("targetSegment", String(params.targetSegment));
+    if (params.minLoyaltyStamps != null) form.append("minLoyaltyStamps", String(params.minLoyaltyStamps));
     if (params.imageFile instanceof File) form.append("imageFile", params.imageFile, params.imageFile.name);
     params.items.forEach((item, idx) => {
       if (item.productID) {
@@ -1423,10 +1434,40 @@ export class CommonsApi {
           item.productCategoryID,
         );
       }
+      if (item.productVariantID) {
+        form.append(
+          `items[${idx}].productVariantID`,
+          item.productVariantID,
+        );
+      }
       form.append(`items[${idx}].quantity`, String(item.quantity));
       form.append(`items[${idx}].isFreeItem`, String(item.isFreeItem));
     });
+    (params.targetCustomerIds ?? []).forEach((id, idx) => {
+      form.append(`targetCustomerIds[${idx}]`, id);
+    });
     return this.axios.post<PromoResponse>(`/api/v1/promo-api/promo`, form);
+  }
+
+  // ─── Promo Customer Assignment (CRM targeting) ──────────────────────────────
+
+  public promoCustomersList(promoId: string) {
+    return this.axios.get<AssignedCustomerListResponse>(
+      `/api/v1/promo-api/promo/${encodeURIComponent(promoId)}/customers`,
+    );
+  }
+
+  public promoCustomersAssign(promoId: string, params: AssignPromoCustomersParams) {
+    return this.axios.post<AssignedCustomerListResponse>(
+      `/api/v1/promo-api/promo/${encodeURIComponent(promoId)}/customers`,
+      params,
+    );
+  }
+
+  public promoCustomerRemove(promoId: string, customerId: string) {
+    return this.axios.delete<ApiResponse<string>>(
+      `/api/v1/promo-api/promo/${encodeURIComponent(promoId)}/customers/${encodeURIComponent(customerId)}`,
+    );
   }
 
   public promoList() {
@@ -1601,5 +1642,35 @@ export class CommonsApi {
       `/api/v1/product-api/ProductAddOnTemplate/apply`,
       params,
     );
+  }
+
+  // ─── Product Performance API ──────────────────────────────────────────────────
+  public productPerformanceReport(params: ProductPerformanceQueryParams = {}) {
+    const queryStr = qs.stringify(params, { skipNull: true, skipEmptyString: true });
+    return this.axios.get<ProductPerformanceReportResponse>(
+      `/api/v1/report-api/ProductPerformance${queryStr ? `?${queryStr}` : ""}`,
+    );
+  }
+
+  public productPerformancePromoSuggestions(params: SlowMovingPromoQueryParams = {}) {
+    const queryStr = qs.stringify(params, { skipNull: true, skipEmptyString: true });
+    return this.axios.get<SlowMovingPromoSuggestionListResponse>(
+      `/api/v1/report-api/ProductPerformance/promo-suggestions${queryStr ? `?${queryStr}` : ""}`,
+    );
+  }
+
+  // ─── Financial Report API ────────────────────────────────────────────────────
+
+  public financialReport(params: FinancialReportQueryParams = {}) {
+    const queryStr = qs.stringify(params, { skipNull: true, skipEmptyString: true });
+    return this.axios.get<FinancialReportResponse>(
+      `/api/v1/report-api/FinancialReport${queryStr ? `?${queryStr}` : ""}`,
+    );
+  }
+
+  // ─── Smart API ───────────────────────────────────────────────────────────────
+
+  public salesForecast() {
+    return this.axios.get<SalesForecastResponse>(`/api/v1/smart-api/SalesForecast`);
   }
 }

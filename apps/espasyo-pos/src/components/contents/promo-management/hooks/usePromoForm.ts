@@ -16,6 +16,9 @@ const defaultValues: PromoForm = {
   endDate: null,
   reason: null,
   items: [],
+  targetSegment: null,
+  minLoyaltyStamps: null,
+  assignedCustomerIds: [],
 };
 
 interface UsePromoFormProps {

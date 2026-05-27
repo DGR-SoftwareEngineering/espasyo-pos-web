@@ -5,17 +5,17 @@ import { UserDto } from "core-lib/api/commons/types";
 import { UserTableRow } from "./UserTableRow";
 
 const TABLE_HEADERS = [
-  { id: "user", name: "User", align: "left" as const, width: "32%" },
-  { id: "role", name: "Role", align: "center" as const, width: "13%" },
-  { id: "contact", name: "Contact", align: "left" as const, width: "22%" },
+  { id: "user", name: "User", align: "left" as const, width: "28%" },
+  { id: "role", name: "Role", align: "center" as const, width: "11%" },
+  { id: "contact", name: "Contact", align: "left" as const, width: "20%" },
   {
     id: "lastLogin",
     name: "Last Login",
     align: "center" as const,
-    width: "13%",
+    width: "12%",
   },
-  { id: "status", name: "Status", align: "center" as const, width: "10%" },
-  { id: "actions", name: "Actions", align: "right" as const, width: "10%" },
+  { id: "status", name: "Status", align: "center" as const, width: "8%" },
+  { id: "actions", name: "Actions", align: "right" as const, width: "12%" },
 ];
 
 interface Props {

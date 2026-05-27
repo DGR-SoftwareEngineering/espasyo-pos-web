@@ -20,6 +20,7 @@ import { FilterBar } from "core-lib/components/radix/FilterBar";
 import { DialogBox } from "core-lib/components/radix/dialog/DialogBox";
 import { PromoList } from "./PromoList";
 import { PromoSuggestionsPanel } from "./PromoSuggestionsPanel";
+import { SlowMovingPromoPanel } from "./SlowMovingPromoPanel";
 import { usePromoFilters } from "./hooks";
 import { PaginationMeta } from "./types";
 import { STATUS_TABS, DIALOG_TITLES, StatusFilter } from "../constants";
@@ -295,6 +296,9 @@ export const PromoListBlock: React.FC = () => {
           </Flex>
         </Flex>
       </Card>
+
+      {/* Slow-Mover Suggestions */}
+      <SlowMovingPromoPanel onUseSuggestion={handleUseSuggestion} />
 
       {/* AI Suggestions */}
       <PromoSuggestionsPanel

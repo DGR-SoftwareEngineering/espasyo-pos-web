@@ -4,11 +4,14 @@ const itemSchema = yup
   .object({
     /** Form-local UI state; not sent to the backend. */
     targetMode: yup
-      .mixed<"product" | "category">()
-      .oneOf(["product", "category"])
+      .mixed<"product" | "category" | "variant">()
+      .oneOf(["product", "category", "variant"])
       .default("product"),
     productID: yup.string().nullable().optional().default(null),
     productCategoryID: yup.string().nullable().optional().default(null),
+    productVariantID: yup.string().nullable().optional().default(null),
+    /** UI-only: which product was selected to load variants from (variant mode). Not sent to backend. */
+    variantProductID: yup.string().nullable().optional().default(null),
     quantity: yup
       .number()
       .typeError("Quantity must be a number")
@@ -17,10 +20,11 @@ const itemSchema = yup
       .min(1, "Quantity must be at least 1"),
     isFreeItem: yup.boolean().required().default(false),
   })
-  .test("target-required", "Pick a product or a category", (obj) => {
-    const hasProduct = !!obj?.productID;
-    const hasCategory = !!obj?.productCategoryID;
-    return hasProduct !== hasCategory; // XOR
+  .test("target-required", "Pick a product, category, or specific variant", (obj) => {
+    const targets = [obj?.productID, obj?.productCategoryID, obj?.productVariantID].filter(
+      (v) => !!v,
+    );
+    return targets.length === 1; // Exactly one targeting field must be set
   });
 
 export const promoFormSchema = yup.object({
@@ -131,6 +135,28 @@ export const promoFormSchema = yup.object({
     .of(itemSchema)
     .min(1, "At least one product is required")
     .required()
+    .default([]),
+
+  // CRM targeting fields
+  targetSegment: yup
+    .number()
+    .transform((v) => (v === "" || v === undefined || v === null ? null : Number(v)))
+    .nullable()
+    .oneOf([null, 1, 2, 3, 4, 5], "Invalid segment")
+    .default(null),
+
+  minLoyaltyStamps: yup
+    .number()
+    .transform((v) => (v === "" || v === undefined || v === null ? null : Number(v)))
+    .nullable()
+    .min(0, "Must be 0 or greater")
+    .integer("Must be a whole number")
+    .default(null),
+
+  assignedCustomerIds: yup
+    .array()
+    .of(yup.string().required())
+    .max(100, "You can pin at most 100 customers")
     .default([]),
 });
 

@@ -46,7 +46,7 @@ export const UserTableRow: React.FC<Props> = ({
   const columns = [
     {
       id: "user",
-      width: "32%",
+      width: "28%",
       render: () => (
         <Flex align="center" gap="3">
           <ImageReader
@@ -72,7 +72,7 @@ export const UserTableRow: React.FC<Props> = ({
     {
       id: "role",
       align: "center" as const,
-      width: "13%",
+      width: "11%",
       render: () => (
         <Badge color={roleAccent} variant="soft" radius="full" size="2">
           {row.roleName ?? "—"}
@@ -81,7 +81,7 @@ export const UserTableRow: React.FC<Props> = ({
     },
     {
       id: "contact",
-      width: "22%",
+      width: "20%",
       render: () => (
         <Flex direction="column" gap="0">
           <Text size="2" as="div" truncate>
@@ -96,7 +96,7 @@ export const UserTableRow: React.FC<Props> = ({
     {
       id: "lastLogin",
       align: "center" as const,
-      width: "13%",
+      width: "12%",
       render: () => (
         <Tooltip content={row.lastLogin ?? "No login yet"}>
           <Box>
@@ -120,7 +120,7 @@ export const UserTableRow: React.FC<Props> = ({
     {
       id: "status",
       align: "center" as const,
-      width: "10%",
+      width: "8%",
       render: () => (
         <Badge
           color={row.isActive ? "green" : "gray"}
@@ -135,7 +135,7 @@ export const UserTableRow: React.FC<Props> = ({
     {
       id: "actions",
       align: "right" as const,
-      width: "10%",
+      width: "12%",
       render: () => (
         <ActionButtons
           onView={() => onView(row)}

@@ -4,6 +4,7 @@ import { useApiCallback } from "core-lib/core/hooks";
 import { PosRegisterBlock } from "../../components/contents/pos";
 
 const PosPage = () => {
+  //TODO: Transfer this to proxy.ts
   const router = useRouter();
   const shiftCb = useApiCallback(async (api) => api.commons.getActiveShift());
 

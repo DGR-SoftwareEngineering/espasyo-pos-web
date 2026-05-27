@@ -8,7 +8,9 @@
       "Bash(git log *)",
       "Bash(xargs grep -l \"chartKey.*=\")",
       "Bash(node -e \"const yup = require\\('./node_modules/yup'\\); console.log\\(yup.version || 'no version export'\\); const s = yup.object\\({ mode: yup.mixed\\(\\).oneOf\\(['a','b']\\).when\\('mode', { is: \\(v\\) => v === 'a', then: \\(s\\) => s }\\) }\\); console.log\\('yup when+fn OK'\\);\")",
-      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "mcp__ide__getDiagnostics",
+      "Bash(yarn add *)"
     ]
   }
 }
