@@ -3,6 +3,7 @@ import {
   Badge,
   Box,
   Button,
+  Callout,
   Card,
   Flex,
   IconButton,
@@ -31,18 +32,19 @@ import { RemoveStampDialog } from "../../crm/components/RemoveStampDialog";
 import { SegmentBadge } from "../../crm/components/SegmentBadge";
 import { CustomerPickerDialog } from "./CustomerPickerDialog";
 import { RedeemRewardDialog } from "./RedeemRewardDialog";
+import { CustomerPromoProductDto, CustomerPromoProductItemDto } from "core-lib/api/commons/types";
 
 interface CustomerAttachWidgetProps {
   selected: CustomerSearchResultDto | null;
   onAttach: (c: CustomerSearchResultDto) => void;
   onDetach: () => void;
-  /** Called whenever the attached customer's underlying detail changes (e.g. after stamp). */
   onRefresh?: (refreshed: CustomerSearchResultDto) => void;
   onRedeemProductSelected: (product: RedeemableProductDto, options: AddProductOptions) => void;
   hasRedeemedInCart: boolean;
   onCancelRedeem: () => void;
-  /** When true, start the widget collapsed (compact strip) if a customer is attached. */
   defaultCollapsed?: boolean;
+  onAttachPromoProduct?: (item: CustomerPromoProductItemDto, promo: CustomerPromoProductDto) => void;
+  addedExclusiveIds?: Set<string>
 }
 
 const getInitials = (name: string): string => {
@@ -62,6 +64,7 @@ const summaryFromDetail = (
   totalStamps: detail.loyaltyCard?.totalStamps ?? 0,
   availableRewards: detail.loyaltyCard?.availableRewards ?? 0,
   segment: detail.segment,
+  hasPhysicalCard: detail.hasPhysicalCard,
 });
 
 export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
@@ -73,8 +76,12 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
   hasRedeemedInCart,
   onCancelRedeem,
   defaultCollapsed,
+  onAttachPromoProduct,
+  addedExclusiveIds = new Set(),
 }) => {
   const { showToast } = useToastContext();
+
+  // State hooks
   const [pickerOpen, setPickerOpen] = useState(false);
   const [redeemDialogOpen, setRedeemDialogOpen] = useState(false);
   const [stampDialogSlot, setStampDialogSlot] = useState<number | null>(null);
@@ -83,8 +90,21 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
   const [removeLoading, setRemoveLoading] = useState(false);
   const [latestDetail, setLatestDetail] = useState<CustomerDetailDto | null>(null);
   const [isExpanded, setIsExpanded] = useState(defaultCollapsed ?? false);
+  const [enrollmentLoading, setEnrollmentLoading] = useState(false);
+  const [promoProducts, setPromoProducts] = useState<CustomerPromoProductDto[]>([]);
+  const [promoProductsLoading, setPromoProductsLoading] = useState(false);
 
+  // Track previous selected ID to prevent unnecessary API calls
+  const prevSelectedIdRef = useRef<string | null>(null);
+
+  // API callbacks - these should be stable if useApiCallback is implemented correctly
   const detailCb = useApiCallback(async (api, id: string) => api.crm.getById(id));
+  const promoProductsCb = useApiCallback(async (api, id: string) =>
+    api.commons.promoProductsForCustomer(id),
+  );
+  // Extract the stable execute ref — the callback container object is recreated each
+  // render and must NOT go in an effect dependency array (caused an infinite loop).
+  const promoProductsExecute = promoProductsCb.execute;
   const stampCb = useApiCallback(
     async (api, args: { id: string; reason: string | null }) =>
       api.crm.addStamp(args.id, { reason: args.reason }),
@@ -93,68 +113,123 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
     async (api, args: { id: string; reason: string | null }) =>
       api.crm.removeStamp(args.id, { reason: args.reason }),
   );
+  const enrollCb = useApiCallback(
+    async (api, args: { id: string; hasCard: boolean }) =>
+      api.crm.update(args.id, { hasPhysicalCard: args.hasCard }),
+  );
 
-  // Load the full detail (for the mini loyalty card) when a search result is attached.
-  React.useEffect(() => {
-    let cancelled = false;
-    if (!selected) {
+  // Effect to load customer details - fixed dependency issue
+  useEffect(() => {
+    // Only fetch if we have a selected customer
+    if (!selected?.customerID) {
       setLatestDetail(null);
       return;
     }
-    detailCb
-      .execute(selected.customerID)
-      .then((r) => {
-        if (!cancelled && r?.data?.response) {
-          setLatestDetail(r.data.response);
-        }
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected?.customerID]);
 
-  // Build a synthetic loyalty card from the search result when the backend
-  // hasn't created a card record yet — fixes off-by-one stamp display bug.
-  const card: CustomerLoyaltyCardDto | null =
-    latestDetail?.loyaltyCard ??
-    (selected
-      ? {
-          customerLoyaltyCardID: "",
-          totalStamps: selected.totalStamps,
-          availableRewards: selected.availableRewards,
-          totalRewardsEarned: selected.availableRewards,
-          totalRewardsRedeemed: 0,
-          lastStampedAt: null,
-          lastRedeemedAt: null,
-          stampsUntilNextReward:
-            selected.totalStamps === 0
-              ? 6
-              : selected.totalStamps % 6 === 0
-                ? 0
-                : 6 - (selected.totalStamps % 6),
-          // Derived positional fields (computed locally until server responds)
-          stampsInCurrentCard: selected.totalStamps % 12,
-          nextStampPosition: (selected.totalStamps % 12) + 1,
-          remainingStamps: 12 - (selected.totalStamps % 12),
-          canStampToday: true,
-          dailyStampLimit: 0,
-          dailyStampsRemaining: 0,
-          stampsToday: 0,
+    // Prevent duplicate fetches for the same customer
+    if (prevSelectedIdRef.current === selected.customerID) {
+      return;
+    }
+
+    prevSelectedIdRef.current = selected.customerID;
+    
+    let isMounted = true;
+
+    const fetchCustomerDetail = async () => {
+      try {
+        const result = await detailCb.execute(selected.customerID);
+        if (isMounted && result?.data?.response) {
+          setLatestDetail(result.data.response);
         }
-      : null);
+      } catch (error) {
+        console.error("Failed to fetch customer details:", error);
+        if (isMounted) {
+          setLatestDetail(null);
+        }
+      }
+    };
+
+    fetchCustomerDetail();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selected?.customerID, detailCb]); // Only depend on customerID and detailCb
+
+  // Load exclusive promo products for selected customer
+  useEffect(() => {
+    if (!selected?.customerID) {
+      setPromoProducts([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchPromoProducts = async () => {
+      setPromoProductsLoading(true);
+      try {
+        const result = await promoProductsExecute(selected.customerID);
+        if (isMounted && result?.data?.response) {
+          setPromoProducts(result.data.response);
+        }
+      } catch {
+        if (isMounted) setPromoProducts([]);
+      } finally {
+        if (isMounted) setPromoProductsLoading(false);
+      }
+    };
+
+    fetchPromoProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selected?.customerID, promoProductsExecute]);
+
+  // Helper function
+  const errorMessage = (e: unknown, fallback: string): string => {
+    if (Array.isArray(e) && e.length > 0 && typeof e[0] === "string") return e[0];
+    return fallback;
+  };
+
+  // Build card object - memoize to prevent unnecessary re-renders
+  const card = React.useMemo((): CustomerLoyaltyCardDto | null => {
+    if (latestDetail?.loyaltyCard) {
+      return latestDetail.loyaltyCard;
+    }
+    
+    if (!selected) return null;
+    
+    return {
+      customerLoyaltyCardID: "",
+      totalStamps: selected.totalStamps,
+      availableRewards: selected.availableRewards,
+      totalRewardsEarned: selected.availableRewards,
+      totalRewardsRedeemed: 0,
+      lastStampedAt: null,
+      lastRedeemedAt: null,
+      stampsUntilNextReward:
+        selected.totalStamps === 0
+          ? 6
+          : selected.totalStamps % 6 === 0
+            ? 0
+            : 6 - (selected.totalStamps % 6),
+      stampsInCurrentCard: selected.totalStamps % 12,
+      nextStampPosition: (selected.totalStamps % 12) + 1,
+      remainingStamps: 12 - (selected.totalStamps % 12),
+      canStampToday: true,
+      dailyStampLimit: 0,
+      dailyStampsRemaining: 0,
+      stampsToday: 0,
+    };
+  }, [latestDetail, selected]);
 
   const availableRewards = card?.availableRewards ?? 0;
   const totalStamps = card?.totalStamps ?? 0;
   const canStampToday = card?.canStampToday ?? true;
   const dailyStampLimit = card?.dailyStampLimit ?? 0;
 
-  const errorMessage = (e: unknown, fallback: string): string => {
-    if (Array.isArray(e) && e.length > 0 && typeof e[0] === "string") return e[0];
-    return fallback;
-  };
-
+  // All useCallbacks
   const handleStamp = useCallback(
     async (reason: string | null) => {
       if (!selected) return;
@@ -167,7 +242,7 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
           setLatestDetail(refreshedDetail);
           onRefresh?.(summaryFromDetail(refreshedDetail));
         } else {
-          // Optimistic fallback — use the currently displayed card as the base
+          // Optimistic update
           const oldCard = card ?? {
             customerLoyaltyCardID: "",
             totalStamps: selected.totalStamps ?? 0,
@@ -239,7 +314,6 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
           setLatestDetail(refreshedDetail);
           onRefresh?.(summaryFromDetail(refreshedDetail));
         } else {
-          // Optimistic fallback — use the currently displayed card as the base
           const oldCard = card ?? {
             customerLoyaltyCardID: "",
             totalStamps: selected.totalStamps ?? 0,
@@ -288,7 +362,57 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
     [selected, removeStampCb, card, latestDetail, onRefresh, showToast],
   );
 
-  // ─── No customer attached ─────────────────────────────────────────────
+  const handleEnroll = useCallback(
+    async (customerId: string) => {
+      setEnrollmentLoading(true);
+      try {
+        const result = await enrollCb.execute({ id: customerId, hasCard: true });
+        if (!result?.data?.success || !result?.data?.response) {
+          const msg =
+            Array.isArray(result?.data?.errors) && result.data.errors.length > 0
+              ? (result.data.errors as string[])[0]
+              : result?.data?.message ?? "Failed to enroll customer";
+          showToast(msg, "error");
+          return;
+        }
+        setLatestDetail(result.data.response);
+        onRefresh?.(summaryFromDetail(result.data.response));
+        showToast("Customer enrolled in loyalty program", "success");
+      } catch {
+        showToast("Failed to enroll customer", "error");
+      } finally {
+        setEnrollmentLoading(false);
+      }
+    },
+    [enrollCb, onRefresh, showToast],
+  );
+
+  const handleRevoke = useCallback(
+    async (customerId: string) => {
+      setEnrollmentLoading(true);
+      try {
+        const result = await enrollCb.execute({ id: customerId, hasCard: false });
+        if (!result?.data?.success || !result?.data?.response) {
+          const msg =
+            Array.isArray(result?.data?.errors) && result.data.errors.length > 0
+              ? (result.data.errors as string[])[0]
+              : result?.data?.message ?? "Failed to pause enrollment";
+          showToast(msg, "error");
+          return;
+        }
+        setLatestDetail(result.data.response);
+        onRefresh?.(summaryFromDetail(result.data.response));
+        showToast("Loyalty enrollment paused", "success");
+      } catch {
+        showToast("Failed to pause enrollment", "error");
+      } finally {
+        setEnrollmentLoading(false);
+      }
+    },
+    [enrollCb, onRefresh, showToast],
+  );
+
+  // Conditional returns (after all hooks)
   if (!selected) {
     return (
       <>
@@ -325,28 +449,37 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
             onAttach(c);
             setPickerOpen(false);
           }}
+          onAttachPromoProduct={(c, item, promo) => {
+            onAttach(c);
+            onAttachPromoProduct?.(item, promo);
+            setPickerOpen(false);
+          }}
         />
       </>
     );
   }
 
-  // ─── Customer attached ────────────────────────────────────────────────
   const hasReward = availableRewards > 0;
+  const isEnrolled = latestDetail?.hasPhysicalCard ?? selected?.hasPhysicalCard ?? false;
+  const isPaused =
+    !isEnrolled &&
+    (latestDetail
+      ? latestDetail.loyaltyCard !== null
+      : (selected?.totalStamps ?? 0) > 0);
+  const hasCard = isEnrolled || isPaused;
 
-  // ─── Compact strip (collapsed) ───────────────────────────────────────
   if (!isExpanded) {
     return (
       <>
         <Card variant="surface" size="1" mb="2">
           <Flex align="center" gap="2" style={{ minHeight: 36 }}>
-            {/* Initials avatar */}
             <Box
               style={{
                 width: 32,
                 height: 32,
                 borderRadius: "50%",
-                background: hasReward ? "var(--amber-a3)" : "var(--indigo-a3)",
-                color: hasReward ? "var(--amber-11)" : "var(--indigo-11)",
+                background: hasReward && isEnrolled ? "var(--amber-a3)" : "var(--indigo-a3)",
+                color: hasReward && isEnrolled ? "var(--amber-11)" : "var(--indigo-11)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -358,7 +491,6 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
               {getInitials(selected.fullName)}
             </Box>
 
-            {/* Name + Segment */}
             <Flex align="center" gap="1" style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
               <Text size="2" weight="medium" truncate style={{ maxWidth: "100%" }}>
                 {selected.fullName}
@@ -366,15 +498,24 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
               <SegmentBadge segment={selected.segment} size="1" />
             </Flex>
 
-            {/* Stamp count */}
-            {totalStamps > 0 && (
+            {!hasCard && (
+              <Text size="1" color="gray" style={{ flexShrink: 0 }}>
+                Not enrolled
+              </Text>
+            )}
+            {isPaused && (
+              <Badge color="orange" variant="soft" size="1" style={{ flexShrink: 0 }}>
+                Loyalty paused
+              </Badge>
+            )}
+
+            {isEnrolled && totalStamps > 0 && (
               <Badge color="indigo" variant="soft" size="1" style={{ flexShrink: 0 }}>
                 ★ {totalStamps}
               </Badge>
             )}
 
-            {/* Reward badge — clickable to open redeem */}
-            {availableRewards > 0 && (
+            {isEnrolled && availableRewards > 0 && (
               <Badge
                 color="amber"
                 variant="solid"
@@ -386,8 +527,7 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
               </Badge>
             )}
 
-            {/* Cancel Redeem (compact) */}
-            {hasRedeemedInCart && (
+            {isEnrolled && hasRedeemedInCart && (
               <Badge
                 color="red"
                 variant="soft"
@@ -399,14 +539,12 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
               </Badge>
             )}
 
-            {/* Daily limit badge */}
-            {!canStampToday && dailyStampLimit > 0 && (
+            {isEnrolled && !canStampToday && dailyStampLimit > 0 && (
               <Badge color="red" variant="soft" size="1" style={{ flexShrink: 0 }}>
                 ⏱ Daily limit
               </Badge>
             )}
 
-            {/* Expand button */}
             <Tooltip content="View loyalty details">
               <IconButton
                 variant="ghost"
@@ -419,7 +557,6 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
               </IconButton>
             </Tooltip>
 
-            {/* Detach button */}
             <Tooltip content="Detach customer">
               <IconButton
                 variant="ghost"
@@ -448,7 +585,6 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
     );
   }
 
-  // ─── Expanded state ───────────────────────────────────────────────────
   return (
     <>
       <Card
@@ -511,61 +647,209 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
             </Flex>
           </Flex>
 
-          {/* Compact loyalty strip */}
-          <Box>
-            <LoyaltyCard
-              card={card}
-              customerName={selected.fullName}
-              mode="cashier"
-              compact
-              loading={stampLoading || removeLoading}
-              onStampClick={(slot) => setStampDialogSlot(slot)}
-              onRedeemClick={() => setRedeemDialogOpen(true)}
-            />
-          </Box>
+          {isEnrolled ? (
+            <>
+              <Box>
+                <LoyaltyCard
+                  card={card}
+                  customerName={selected.fullName}
+                  mode="cashier"
+                  compact
+                  loading={stampLoading || removeLoading}
+                  onStampClick={(slot) => setStampDialogSlot(slot)}
+                  onRedeemClick={() => setRedeemDialogOpen(true)}
+                />
+              </Box>
 
-          {hasRedeemedInCart ? (
-            <Button
-              color="red"
-              variant="soft"
-              size="2"
-              onClick={onCancelRedeem}
-              style={{ width: "100%" }}
-            >
-              <EmojiEventsOutlined style={{ fontSize: 16 }} />
-              Cancel Redeem
-            </Button>
-          ) : hasReward ? (
-            <Button
-              color="amber"
-              variant="solid"
-              size="2"
-              onClick={() => setRedeemDialogOpen(true)}
-              style={{ width: "100%" }}
-            >
-              <EmojiEventsOutlined style={{ fontSize: 16 }} />
-              Redeem Free Drink ({availableRewards})
-            </Button>
-          ) : null}
+              {hasRedeemedInCart ? (
+                <Button
+                  color="red"
+                  variant="soft"
+                  size="2"
+                  onClick={onCancelRedeem}
+                  style={{ width: "100%" }}
+                >
+                  <EmojiEventsOutlined style={{ fontSize: 16 }} />
+                  Cancel Redeem
+                </Button>
+              ) : hasReward ? (
+                <Button
+                  color="amber"
+                  variant="solid"
+                  size="2"
+                  onClick={() => setRedeemDialogOpen(true)}
+                  style={{ width: "100%" }}
+                >
+                  <EmojiEventsOutlined style={{ fontSize: 16 }} />
+                  Redeem Free Drink ({availableRewards})
+                </Button>
+              ) : null}
 
-          {!hasReward && totalStamps > 0 && (
-            <Flex justify="between" align="center" gap="2">
-              <Text size="1" color="gray">
-                <LocalCafeOutlined style={{ fontSize: 12, verticalAlign: "middle" }} />{" "}
-                {totalStamps} stamps · this sale will add 1 stamp on completion
-              </Text>
+              {!hasReward && totalStamps > 0 && (
+                <Flex justify="between" align="center" gap="2">
+                  <Text size="1" color="gray">
+                    <LocalCafeOutlined style={{ fontSize: 12, verticalAlign: "middle" }} />{" "}
+                    {totalStamps} stamps · this sale will add 1 stamp on completion
+                  </Text>
+                  <Button
+                    variant="ghost"
+                    color="red"
+                    size="1"
+                    disabled={stampLoading || removeLoading}
+                    onClick={() => setRemoveDialogOpen(true)}
+                  >
+                    <UndoOutlined style={{ fontSize: 13 }} />
+                    Remove last stamp
+                  </Button>
+                </Flex>
+              )}
+
+              <Flex justify="end">
+                <Button
+                  variant="ghost"
+                  color="red"
+                  size="1"
+                  loading={enrollmentLoading}
+                  onClick={() => handleRevoke(selected.customerID)}
+                >
+                  Pause Enrollment
+                </Button>
+              </Flex>
+            </>
+          ) : isPaused ? (
+            <>
+              <Box>
+                <LoyaltyCard
+                  card={card}
+                  customerName={selected.fullName}
+                  mode="cashier"
+                  compact
+                  onRedeemClick={undefined}
+                />
+              </Box>
+
+              <Callout.Root color="orange" variant="soft" size="1">
+                <Callout.Text>
+                  Loyalty program paused — stamps preserved
+                </Callout.Text>
+              </Callout.Root>
+
               <Button
-                variant="ghost"
-                color="red"
-                size="1"
-                disabled={stampLoading || removeLoading}
-                onClick={() => setRemoveDialogOpen(true)}
+                size="2"
+                color="indigo"
+                loading={enrollmentLoading}
+                onClick={() => handleEnroll(selected.customerID)}
+                style={{ width: "100%" }}
               >
-                <UndoOutlined style={{ fontSize: 13 }} />
-                Remove last stamp
+                Re-enroll in Loyalty Card
               </Button>
-            </Flex>
+            </>
+          ) : (
+            <>
+              <Box style={{ padding: "12px 16px", background: "var(--gray-a3)", borderRadius: 6 }}>
+                <Text size="1" color="gray">
+                  Not enrolled in loyalty program
+                </Text>
+              </Box>
+
+              {latestDetail && latestDetail.totalVisits >= 5 ? (
+                <Button
+                  size="2"
+                  color="indigo"
+                  loading={enrollmentLoading}
+                  onClick={() => handleEnroll(selected.customerID)}
+                  style={{ width: "100%" }}
+                >
+                  Enroll in Loyalty Card
+                </Button>
+              ) : latestDetail ? (
+                <Text size="1" color="gray" style={{ textAlign: "center" }}>
+                  {latestDetail.totalVisits} / 5 purchases · {5 - latestDetail.totalVisits} more {(5 - latestDetail.totalVisits) === 1 ? "purchase" : "purchases"} required
+                </Text>
+              ) : null}
+            </>
           )}
+
+          {/* Exclusive Offers — customer-specific promos (independent of loyalty) */}
+{!promoProductsLoading && promoProducts.length > 0 && (
+  <Box
+    mt="4"
+    pt="4"
+    style={{ borderTop: "1px solid var(--gray-a4)" }}
+  >
+    <Flex align="center" gap="2" mb="2">
+      <EmojiEventsOutlined
+        style={{ fontSize: 16, color: "var(--teal-11)" }}
+      />
+      <Text size="2" weight="bold" style={{ color: "var(--teal-11)" }}>
+        Exclusive Offers
+      </Text>
+    </Flex>
+
+    <Flex direction="column" gap="2">
+      {promoProducts.flatMap((promo) =>
+        promo.items.map((item: any) => {
+          const isAdded = addedExclusiveIds.has(item.productID);
+          return (
+            <Flex
+              key={`${promo.promoID}-${item.productID}`}
+              justify="between"
+              align="center"
+              gap="2"
+              p="2"
+              style={{
+                background: isAdded ? "var(--gray-a3)" : "var(--teal-a2)",
+                borderRadius: 8,
+                border: isAdded ? "1px solid var(--gray-a5)" : "1px solid var(--teal-a4)",
+                opacity: isAdded ? 0.7 : 1,
+              }}
+            >
+              <Flex direction="column" gap="1" style={{ flex: 1, minWidth: 0 }}>
+                <Text size="1" weight="bold" truncate>
+                  {item.productName}
+                </Text>
+                <Flex gap="2" align="center" wrap="wrap">
+                  <Text
+                    size="1"
+                    color="gray"
+                    style={{ textDecoration: "line-through" }}
+                  >
+                    {item.originalPrice.toFixed(2)}
+                  </Text>
+                  <Text
+                    size="2"
+                    weight="bold"
+                    style={{ color: isAdded ? "var(--gray-11)" : "var(--teal-11)" }}
+                  >
+                    {item.adjustedPrice.toFixed(2)}
+                  </Text>
+                </Flex>
+              </Flex>
+              {isAdded ? (
+                <Badge color="green" variant="soft" size="1" style={{ flexShrink: 0 }}>
+                  Added ✓
+                </Badge>
+              ) : (
+                <Button
+                  size="1"
+                  color="teal"
+                  variant="solid"
+                  style={{ flexShrink: 0 }}
+                  onClick={() => {
+                    onAttachPromoProduct?.(item, promo);
+                    setIsExpanded(false);
+                  }}
+                >
+                  Add
+                </Button>
+              )}
+            </Flex>
+          );
+        }),
+      )}
+    </Flex>
+  </Box>
+)}
         </Flex>
       </Card>
 
@@ -597,7 +881,6 @@ export const CustomerAttachWidget: React.FC<CustomerAttachWidgetProps> = ({
           setRedeemDialogOpen(false);
         }}
       />
-
     </>
   );
 };

@@ -11,8 +11,10 @@ import {
   RefreshParams,
   RefreshTokenResponse,
   VerifyMpinParams,
+  CustomerRegistrationParams,
 } from "./types";
 import { ApiResponse } from "../types";
+import { config } from "../../config";
 
 export class AuthenticationApi {
   constructor(
@@ -43,6 +45,19 @@ export class AuthenticationApi {
     return this.axios.post(
       `/authentication-api/api/sso/session/create-session`,
       params,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Platform-Key": config.value.PLATFORMKEY,
+        }
+      }
+    );
+  }
+
+  public createAuthCustomer(params: CustomerRegistrationParams) {
+    return this.axios.post<ApiResponse>(
+      `/authentication-api/api/authentication/create-customer-auth`,
+      params,
     );
   }
 
@@ -54,6 +69,12 @@ export class AuthenticationApi {
     return this.axios.post<RefreshTokenResponse>(
       `/authentication-api/api/authentication/refresh-token`,
       params,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Platform-Key": config.value.PLATFORMKEY,
+        }
+      }
     );
   }
 

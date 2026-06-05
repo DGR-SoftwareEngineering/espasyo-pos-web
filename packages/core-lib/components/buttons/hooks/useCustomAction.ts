@@ -25,6 +25,7 @@ export const useCustomAction = ({
     case "create-recipe-submission":
     case "create-unit-conversion-submission":
     case "edit-unit-conversion-submission":
+    case "create-customer-registration-submission":
       return useFormSubmissionAction();
   }
 };

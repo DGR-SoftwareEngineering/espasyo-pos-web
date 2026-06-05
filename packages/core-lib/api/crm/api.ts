@@ -83,6 +83,27 @@ export class CrmApi {
     );
   }
 
+  // ───── Deleted Customers ─────────────────────────────────────────────────
+
+  public listDeleted(params: CustomerQueryParams = {}) {
+    const search = qs.stringify(params, { skipEmptyString: true, skipNull: true });
+    return this.axios.get<CustomerListResponse>(
+      `${BASE}/Customers/deleted${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public restore(id: string) {
+    return this.axios.post<ApiResponse<string>>(
+      `${BASE}/Customers/${encodeURIComponent(id)}/restore`,
+    );
+  }
+
+  public permanentDelete(id: string) {
+    return this.axios.delete<ApiResponse<string>>(
+      `${BASE}/Customers/${encodeURIComponent(id)}/permanent`,
+    );
+  }
+
   // ───── Purchases ─────────────────────────────────────────────────────────
 
   public getPurchases(id: string, params: CustomerPurchasesQueryParams = {}) {

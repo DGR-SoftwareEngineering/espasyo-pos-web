@@ -104,9 +104,13 @@ import {
   ContentBlockListResponse,
   ContentBlockResponse,
   CreateContentBlockParams,
+  CreateDocumentationParams,
+  DocumentationListResponse,
+  DocumentationResponse,
   SystemSettingListResponse,
   SystemSettingResponse,
   UpdateContentBlockParams,
+  UpdateDocumentationParams,
   UpdateSystemSettingParams,
   UploadSettingImageParams,
 } from "./types";
@@ -147,6 +151,7 @@ import {
   PromoCalculateResponse,
   AssignedCustomerListResponse,
   AssignPromoCustomersParams,
+  CustomerPromoProductListResponse,
   ProductPerformanceQueryParams,
   ProductPerformanceReportResponse,
   SlowMovingPromoQueryParams,
@@ -181,6 +186,18 @@ import {
   UpdateAddOnTemplateParams,
   ApplyAddOnTemplateParams,
   ApplyAddOnTemplateResponse,
+} from "./types";
+import {
+  CustomerCheckoutParams,
+  CustomerLoyaltyResponse,
+  CustomerMenuQueryParams,
+  CustomerMenuResponse,
+  CustomerOrderListResponse,
+  CustomerOrderQueryParams,
+  CustomerOrderResponse,
+  CustomerPromoListResponse,
+  UpdateOrderStatusParams,
+  SetPaymentReferenceParams,
 } from "./types";
 
 export class CommonsApi {
@@ -1474,6 +1491,12 @@ export class CommonsApi {
     return this.axios.get<PromoListResponse>(`/api/v1/promo-api/promo`);
   }
 
+  public promoProductsForCustomer(customerId: string) {
+    return this.axios.get<CustomerPromoProductListResponse>(
+      `/api/v1/promo-api/promo/customer/${encodeURIComponent(customerId)}/promo-products`,
+    );
+  }
+
   public promoGetById(id: string) {
     return this.axios.get<PromoResponse>(
       `/api/v1/promo-api/promo/${encodeURIComponent(id)}`,
@@ -1672,5 +1695,118 @@ export class CommonsApi {
 
   public salesForecast() {
     return this.axios.get<SalesForecastResponse>(`/api/v1/smart-api/SalesForecast`);
+  }
+
+  // ─── Customer Dashboard API ────────────────────────────────────────────────────
+  // Self-service customer portal (role: Customer). Base: /api/v1/customer-api/customerdashboard.
+
+  public customerDashboardPromos() {
+    return this.axios.get<CustomerPromoListResponse>(
+      `/api/v1/customer-api/customerdashboard/promos`,
+    );
+  }
+
+  public customerDashboardMenu(params: CustomerMenuQueryParams = {}) {
+    const search = qs.stringify(params, { skipNull: true, skipEmptyString: true });
+    return this.axios.get<CustomerMenuResponse>(
+      `/api/v1/customer-api/customerdashboard/menu${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public customerDashboardLoyalty() {
+    return this.axios.get<CustomerLoyaltyResponse>(
+      `/api/v1/customer-api/customerdashboard/loyalty`,
+    );
+  }
+
+  public customerDashboardOrders(params: CustomerOrderQueryParams = {}) {
+    const search = qs.stringify(params, { skipNull: true, skipEmptyString: true });
+    return this.axios.get<CustomerOrderListResponse>(
+      `/api/v1/customer-api/customerdashboard/orders${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public customerDashboardOrderById(id: string) {
+    return this.axios.get<CustomerOrderResponse>(
+      `/api/v1/customer-api/customerdashboard/orders/${encodeURIComponent(id)}`,
+    );
+  }
+
+  /** Place a pickup order. Does not deduct inventory or take payment — the cashier
+   *  records payment and advances status to PaymentReceived at the counter. */
+  public customerCheckout(params: CustomerCheckoutParams) {
+    return this.axios.post<CustomerOrderResponse>(
+      `/api/v1/customer-api/customerdashboard/checkout`,
+      params,
+    );
+  }
+
+  /** List customer online orders for the cashier panel. */
+  public cashierListCustomerOrders(params: CustomerOrderQueryParams = {}) {
+    const search = qs.stringify(params, { skipNull: true, skipEmptyString: true });
+    return this.axios.get<CustomerOrderListResponse>(
+      `/api/v1/customer-order-api/customerorders${search ? `?${search}` : ""}`,
+    );
+  }
+
+  public cashierGetCustomerOrderById(id: string) {
+    return this.axios.get<CustomerOrderResponse>(
+      `/api/v1/customer-order-api/customerorders/${encodeURIComponent(id)}`,
+    );
+  }
+
+  /** Advancing to PaymentReceived (status=3) triggers inventory deduction on the backend. */
+  public cashierUpdateOrderStatus(id: string, params: UpdateOrderStatusParams) {
+    return this.axios.put<CustomerOrderResponse>(
+      `/api/v1/customer-order-api/customerorders/${encodeURIComponent(id)}/status`,
+      params,
+    );
+  }
+
+  public cashierSetPaymentReference(id: string, params: SetPaymentReferenceParams) {
+    return this.axios.put<CustomerOrderResponse>(
+      `/api/v1/customer-order-api/customerorders/${encodeURIComponent(id)}/reference`,
+      params,
+    );
+  }
+
+  // ===== Documentation =====
+
+  public documentationList() {
+    return this.axios.get<DocumentationListResponse>(
+      `/api/v1/settings-api/Documentation`,
+    );
+  }
+
+  public documentationGetById(id: string) {
+    return this.axios.get<DocumentationResponse>(
+      `/api/v1/settings-api/Documentation/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public documentationByRole(role: "Admin" | "Cashier" | "Both") {
+    return this.axios.get<DocumentationListResponse>(
+      `/api/v1/settings-api/Documentation/by-role/${encodeURIComponent(role)}`,
+    );
+  }
+
+  public createDocumentation(params: CreateDocumentationParams) {
+    return this.axios.post<DocumentationResponse>(
+      `/api/v1/settings-api/Documentation`,
+      params,
+    );
+  }
+
+  public updateDocumentation(params: UpdateDocumentationParams) {
+    return this.axios.put<DocumentationResponse>(
+      `/api/v1/settings-api/Documentation`,
+      params,
+    );
+  }
+
+  public deleteDocumentation(id: string) {
+    return this.axios.delete<DocumentationResponse>(
+      `/api/v1/settings-api/Documentation/${encodeURIComponent(id)}`,
+    );
   }
 }

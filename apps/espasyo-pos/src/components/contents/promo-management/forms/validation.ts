@@ -140,7 +140,7 @@ export const promoFormSchema = yup.object({
   // CRM targeting fields
   targetSegment: yup
     .number()
-    .transform((v) => (v === "" || v === undefined || v === null ? null : Number(v)))
+    .transform((v) => (v === "" || v === "all" || v === undefined || v === null ? null : Number(v)))
     .nullable()
     .oneOf([null, 1, 2, 3, 4, 5], "Invalid segment")
     .default(null),

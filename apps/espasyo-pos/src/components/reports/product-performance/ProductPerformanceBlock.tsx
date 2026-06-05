@@ -11,6 +11,8 @@ import {
   IconButton,
   Skeleton,
   Text,
+  Tooltip,
+  Separator,
 } from "@radix-ui/themes";
 import {
   AssessmentOutlined,
@@ -19,6 +21,8 @@ import {
   TrendingDownOutlined,
   TrendingUpOutlined,
   WarningOutlined,
+  InfoOutlined,
+  TimelineOutlined,
 } from "@mui/icons-material";
 import {
   ResponsiveContainer,
@@ -198,9 +202,14 @@ export const ProductPerformanceBlock: React.FC = () => {
           </Flex>
 
           <Flex direction="column" gap="1">
-            <Text size="1" weight="medium" color="gray">
-              Slow Threshold
-            </Text>
+            <Flex align="center" gap="1">
+              <Text size="1" weight="medium" color="gray">
+                Slow Threshold
+              </Text>
+              <Tooltip content="Products selling LESS than this quantity are marked as 'Slow Moving'">
+                <InfoOutlined style={{ fontSize: 12, color: "var(--gray-9)" }} />
+              </Tooltip>
+            </Flex>
             <input
               type="number"
               value={slowThreshold}
@@ -219,9 +228,14 @@ export const ProductPerformanceBlock: React.FC = () => {
           </Flex>
 
           <Flex direction="column" gap="1">
-            <Text size="1" weight="medium" color="gray">
-              Fast Threshold
-            </Text>
+            <Flex align="center" gap="1">
+              <Text size="1" weight="medium" color="gray">
+                Fast Threshold
+              </Text>
+              <Tooltip content="Products selling MORE than or equal to this quantity are marked as 'Fast Moving'">
+                <InfoOutlined style={{ fontSize: 12, color: "var(--gray-9)" }} />
+              </Tooltip>
+            </Flex>
             <input
               type="number"
               value={fastThreshold}
@@ -258,6 +272,53 @@ export const ProductPerformanceBlock: React.FC = () => {
             </Button>
           </Flex>
         </Flex>
+
+        {/* Threshold explanation card - added below filters */}
+        <Box mt="4">
+          <Card variant="surface" size="1" style={{ background: "var(--gray-a2)" }}>
+            <Flex align="center" gap="2" mb="2">
+              <TimelineOutlined style={{ fontSize: 16, color: "var(--gray-10)" }} />
+              <Text size="2" weight="bold">
+                Understanding Movement Tags
+              </Text>
+            </Flex>
+            <Grid columns="3" gap="3" mb="2">
+              <Flex align="center" gap="2">
+                <Box style={{ width: 12, height: 12, borderRadius: 2, background: "var(--red-9)" }} />
+                <Text size="1">
+                  <strong>Slow</strong>: Quantity &lt; {slowThreshold}
+                </Text>
+              </Flex>
+              <Flex align="center" gap="2">
+                <Box style={{ width: 12, height: 12, borderRadius: 2, background: "var(--gray-8)" }} />
+                <Text size="1">
+                  <strong>Normal</strong>: {slowThreshold} ≤ Quantity &lt; {fastThreshold}
+                </Text>
+              </Flex>
+              <Flex align="center" gap="2">
+                <Box style={{ width: 12, height: 12, borderRadius: 2, background: "var(--green-9)" }} />
+                <Text size="1">
+                  <strong>Fast</strong>: Quantity ≥ {fastThreshold}
+                </Text>
+              </Flex>
+            </Grid>
+            <Separator my="1" />
+            <Flex gap="3" mt="2">
+              <Flex align="center" gap="1">
+                <TrendingDownOutlined style={{ fontSize: 14, color: "var(--red-10)" }} />
+                <Text size="1" color="gray">
+                  Slow items may need promotions, bundling, or removal consideration
+                </Text>
+              </Flex>
+              <Flex align="center" gap="1">
+                <TrendingUpOutlined style={{ fontSize: 14, color: "var(--green-10)" }} />
+                <Text size="1" color="gray">
+                  Fast items are your best sellers — ensure adequate stock
+                </Text>
+              </Flex>
+            </Flex>
+          </Card>
+        </Box>
       </Card>
 
       {/* Error state */}
@@ -279,21 +340,33 @@ export const ProductPerformanceBlock: React.FC = () => {
               value={report.totalMenuItems}
               color="primary"
             />
-            <StatsCard
-              label="Fast Moving"
-              value={report.fastMovingCount}
-              color="success"
-            />
-            <StatsCard
-              label="Normal"
-              value={report.normalCount}
-              color="info"
-            />
-            <StatsCard
-              label="Slow Moving"
-              value={report.slowMovingCount}
-              color="error"
-            />
+            <Tooltip content={`Products selling ${fastThreshold}+ units (Fast threshold: ≥${fastThreshold})`}>
+              <Box>
+                <StatsCard
+                  label="Fast Moving"
+                  value={report.fastMovingCount}
+                  color="success"
+                />
+              </Box>
+            </Tooltip>
+            <Tooltip content={`Products selling between ${slowThreshold} and ${fastThreshold - 1} units`}>
+              <Box>
+                <StatsCard
+                  label="Normal"
+                  value={report.normalCount}
+                  color="info"
+                />
+              </Box>
+            </Tooltip>
+            <Tooltip content={`Products selling less than ${slowThreshold} units (Slow threshold: <${slowThreshold})`}>
+              <Box>
+                <StatsCard
+                  label="Slow Moving"
+                  value={report.slowMovingCount}
+                  color="error"
+                />
+              </Box>
+            </Tooltip>
           </Flex>
         </Card>
       )}
@@ -543,7 +616,19 @@ export const ProductPerformanceBlock: React.FC = () => {
                           )}
                         </td>
                         <td style={{ padding: "12px 16px", fontWeight: 500, color: "var(--gray-12)" }}>
-                          {item.productName}
+                          <Tooltip 
+                            content={
+                              item.movementTag === "slow" 
+                                ? `Selling less than ${slowThreshold} units. Consider promotion or bundling.`
+                                : item.movementTag === "fast"
+                                ? `Selling ${fastThreshold}+ units! Top performer.`
+                                : `Selling between ${slowThreshold} and ${fastThreshold - 1} units.`
+                            }
+                          >
+                            <span style={{ cursor: "help", borderBottom: "1px dotted var(--gray-7)" }}>
+                              {item.productName}
+                            </span>
+                          </Tooltip>
                         </td>
                         <td style={{ padding: "12px 16px", color: "var(--gray-11)" }}>
                           {item.categoryName || "—"}
@@ -579,19 +664,25 @@ export const ProductPerformanceBlock: React.FC = () => {
                         </td>
                         <td style={{ padding: "12px 16px", textAlign: "center" }}>
                           {item.movementTag === "slow" ? (
-                            <Badge color="red" variant="surface" size="1">
-                              <TrendingDownOutlined style={{ fontSize: 12 }} />
-                              Slow
-                            </Badge>
+                            <Tooltip content={`Below ${slowThreshold} units sold — needs attention`}>
+                              <Badge color="red" variant="surface" size="1">
+                                <TrendingDownOutlined style={{ fontSize: 12 }} />
+                                Slow
+                              </Badge>
+                            </Tooltip>
                           ) : item.movementTag === "fast" ? (
-                            <Badge color="green" variant="surface" size="1">
-                              <TrendingUpOutlined style={{ fontSize: 12 }} />
-                              Fast
-                            </Badge>
+                            <Tooltip content={`${fastThreshold}+ units sold — best seller!`}>
+                              <Badge color="green" variant="surface" size="1">
+                                <TrendingUpOutlined style={{ fontSize: 12 }} />
+                                Fast
+                              </Badge>
+                            </Tooltip>
                           ) : (
-                            <Badge color="gray" variant="surface" size="1">
-                              Normal
-                            </Badge>
+                            <Tooltip content={`Between ${slowThreshold} and ${fastThreshold - 1} units — steady performer`}>
+                              <Badge color="gray" variant="surface" size="1">
+                                Normal
+                              </Badge>
+                            </Tooltip>
                           )}
                         </td>
                       </tr>

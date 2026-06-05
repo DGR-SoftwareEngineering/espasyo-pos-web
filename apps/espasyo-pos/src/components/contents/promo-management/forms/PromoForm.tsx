@@ -184,7 +184,7 @@ export const PromoForm: React.FC<PromoFormProps> = ({
       {/* Promo Type */}
       <FormSection
         icon={<LocalOfferOutlined style={{ color: "var(--accent-11)" }} />}
-        title="Promo Type"
+        title="Promo Types"
         description="Choose the type of promotion you want to create."
       >
         <Box style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>

@@ -39,8 +39,6 @@ const getPromoDiscountText = (promo: PromoDto) => {
   }
 };
 
-import { StarIcon } from "@radix-ui/react-icons";
-
 export const PromoSelectDialog: React.FC<Props> = ({
   product,
   promos,

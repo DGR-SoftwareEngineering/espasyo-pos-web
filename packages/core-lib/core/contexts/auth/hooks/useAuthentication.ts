@@ -12,6 +12,7 @@ import { useSSOCookie } from "../../../hooks/useCookie";
 import { useAccessToken, useRefreshToken } from "../hooks";
 import { useSessionIdleTimer } from "./useSessionIdleTimer";
 import { parseTokenId, safeDecode } from "../access-token";
+import { config } from "../../../../config";
 
 // Claim-type URLs are not constants in the codebase — they're constructed from
 // env vars (same pattern as src/proxy.ts) so the schema host stays out of git.
@@ -255,7 +256,7 @@ export const useAuthentication = (): AuthService => {
       try {
         const result = await loginCb.execute({
           userName: userName,
-          password: password,
+          password: password
         });
         setAccessToken(result.data.response.accessToken);
         setRefreshToken(result.data.response.refreshToken);

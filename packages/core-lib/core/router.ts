@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { resolveTitle } from "./route-titles";
 
 type StaticRoutes = Record<
-  "home" | "hub" | "page_not_found" | "second_tab_redirect",
+  "home" | "customerLogin" | "customerRegister" | "hub" | "page_not_found" | "second_tab_redirect",
   string
 >;
 type TransitionOptions = ArgumentTypes<NextRouter["push"]>[2];
@@ -20,6 +20,8 @@ type NavigateFn = ReturnType<typeof navigate>;
 
 export const STATIC_ROUTES: StaticRoutes = {
   home: "/",
+  customerLogin: "/login",
+  customerRegister: "/customer-engagement-registration/account-creation",
   hub: "/hub",
   page_not_found: "/404",
   second_tab_redirect: "/duplicate-session",

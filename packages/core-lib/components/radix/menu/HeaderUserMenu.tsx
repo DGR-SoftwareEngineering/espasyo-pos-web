@@ -133,10 +133,11 @@ export const HeaderUserMenu: React.FC<Props> = ({
 
           <DropdownMenu.Separator />
 
-          <DropdownMenu.Item>
+          {/* TODO: Coming soon - Profile Management */}
+          {/* <DropdownMenu.Item>
             <PersonIcon />
             Profile
-          </DropdownMenu.Item>
+          </DropdownMenu.Item> */}
           <DropdownMenu.Item onSelect={() => setMpinOpen(true)}>
             <LockClosedIcon />
             MPIN Security

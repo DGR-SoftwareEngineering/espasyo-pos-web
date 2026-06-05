@@ -138,6 +138,7 @@ export interface UseCartState {
     options: AddProductOptions,
   ) => void;
   applyPromo: (product: SellableProductDto, promo: PromoDto) => void;
+  applyPromoProduct: (product: any, promo: any) => void;
   addRedeemedProduct: (product: RedeemableProductDto, options?: AddProductOptions) => void;
   setLineQuantity: (lineId: string, quantity: number) => void;
   setLineDiscount: (lineId: string, discount: number) => void;
@@ -369,6 +370,27 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
     });
   }, []);
 
+  const applyPromoProduct = useCallback((product: any, promo: any) => {
+    setLines((prev) => [
+      ...prev,
+      {
+        lineId: genLineId(),
+        productID: product.productID,
+        productName: product.productName,
+        unitID: "",
+        unitName: "",
+        imageUrl: product.imageUrl,
+        quantity: 1,
+        unitPrice: product.adjustedPrice,
+        discount: 0,
+        currentStock: 9999,
+        promoID: promo.promoID,
+        promoLabel: promo.title,
+        originalPrice: product.originalPrice,
+      },
+    ]);
+  }, []);
+
   const addRedeemedProduct = useCallback((product: RedeemableProductDto, options?: AddProductOptions) => {
     const addOnIds = (options?.addOnItems ?? []).map((a) => a.productAddOnItemID);
     setLines((prev) => [
@@ -434,6 +456,7 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
     addProduct,
     addProductWithOptions,
     applyPromo,
+    applyPromoProduct,
     addRedeemedProduct,
     setLineQuantity,
     setLineDiscount,

@@ -36,8 +36,6 @@ interface Props {
   onPromoClick?: (product: SellableProductDto) => void;
 }
 
-const RECIPE_LIST_PATH = "/admin/hub/product/recipe/recipe-list";
-
 const buildTileTooltip = (
   product: SellableProductDto,
   allowMenuItemsWithoutRecipe: boolean,
