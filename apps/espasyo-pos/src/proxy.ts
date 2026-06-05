@@ -51,6 +51,7 @@ type AuthState = {
   isAuthenticated: boolean;
   role: string | null;
   userId: string | null;
+  hasActiveShift: boolean;
 };
 
 function extractRoleFromJwt(token: string | null | undefined): string | null {
@@ -276,9 +277,24 @@ async function handleRouteProtection(
     return res;
   }
 
+  if (pathname.startsWith("/cashier") && authState.role === "cashier") {
+    if (pathname === "/cashier/shift/open") {
+      return null;
+    }
+    
+    if (!authState.hasActiveShift) {
+      return NextResponse.redirect(new URL("/cashier/shift/open", request.url));
+    }
+  }
+
   if (pathname === "/") {
     if (authState.isAuthenticated && isRoleValid(authState.role)) {
-      const home = getHomePathByRole(authState.role);
+      let home = getHomePathByRole(authState.role);
+      
+      if (authState.role === "cashier" && !authState.hasActiveShift) {
+        home = "/cashier/shift/open";
+      }
+      
       return safeRedirect(request, home);
     }
     return null;
@@ -305,23 +321,21 @@ async function handleRouteProtection(
   return null;
 }
 
-async function getAuthState(request: NextRequest) {
+async function getAuthState(request: NextRequest): Promise<AuthState> {
   const token = request.cookies.get("ac")?.value;
   const cachedAuth = request.cookies.get("auth_valid")?.value;
   const role = extractRoleFromJwt(token);
   const userId = extractUserIdFromJwt(token);
 
   if (cachedAuth === "true") {
-    return { isAuthenticated: true, role, userId };
+    const hasActiveShift = await checkActiveShift(token || "");
+    return { isAuthenticated: true, role, userId, hasActiveShift };
   }
 
   const isAuthenticated = token ? await validateToken(token) : false;
+  const hasActiveShift = isAuthenticated ? await checkActiveShift(token || "") : false;
 
-  if (isAuthenticated) {
-    return { isAuthenticated, role, userId };
-  }
-
-  return { isAuthenticated, role: null, userId: null };
+  return { isAuthenticated, role, userId, hasActiveShift };
 }
 
 async function validateToken(token: string): Promise<boolean> {
@@ -356,6 +370,31 @@ async function validateToken(token: string): Promise<boolean> {
     }
     return true;
   } catch (error) {
+    return false;
+  }
+}
+
+async function checkActiveShift(token: string): Promise<boolean> {
+  if (!token) return false;
+
+  try {
+    const url = `${API_URL}/api/v1/shift-api/CashierShift/active`;
+    
+    const response = await fetch(url, {
+      headers: {
+        ...SECURITY_HEADERS,
+        Authorization: `Bearer ${token}`,
+        "Cache-Control": "no-cache",
+      },
+      signal: AbortSignal.timeout(5000), // 5 second timeout
+    });
+
+    if (!response.ok) return false;
+    
+    const data = await response.json();
+    return !!data?.response; // Returns true if active shift exists
+  } catch (error) {
+    console.error("Active shift check failed:", error);
     return false;
   }
 }

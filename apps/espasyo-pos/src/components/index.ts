@@ -6,6 +6,7 @@ export * from "./contents/user-management";
 export * from "./contents/supplier-management";
 export * from "./contents/people-management";
 export * from "./contents/settings";
+export * from "./contents/platform-management";
 export * from "./IngredientAddForm";
 export * from "./IngredientListItem";
 export * from "./IngredientDetail";

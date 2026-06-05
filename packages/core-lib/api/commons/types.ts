@@ -1054,6 +1054,43 @@ export interface BulkUpdateContentBlockParams {
 export type ContentBlockResponse = ApiResponse<ContentBlockDto>;
 export type ContentBlockListResponse = ApiResponse<ContentBlockDto[]>;
 
+// ===== Documentation =====
+
+export interface DocumentationDto {
+  documentationID: string;
+  title: string;
+  subtitle: string | null;
+  author: string;
+  contentHtml: string;
+  targetRole: "Admin" | "Cashier" | "Both";
+  isPublished: boolean;
+  displayOrder: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface CreateDocumentationParams {
+  title: string;
+  subtitle?: string | null;
+  contentHtml: string;
+  targetRole: "Admin" | "Cashier" | "Both";
+  isPublished: boolean;
+  displayOrder: number;
+}
+
+export interface UpdateDocumentationParams {
+  documentationID: string;
+  title: string;
+  subtitle?: string | null;
+  contentHtml: string;
+  targetRole: "Admin" | "Cashier" | "Both";
+  isPublished: boolean;
+  displayOrder: number;
+}
+
+export type DocumentationResponse = ApiResponse<DocumentationDto>;
+export type DocumentationListResponse = ApiResponse<DocumentationDto[]>;
+
 // ===== Audit Log =====
 
 export interface AuditLogDto {
@@ -1706,6 +1743,8 @@ export interface PromoDto {
   minLoyaltyStamps: number | null;
   /** Count of customers explicitly pinned to this promo. Drives the "Pinned N" badge in the list. */
   targetCustomerCount: number;
+  /** True if this promo has explicit customer assignments (customer-specific); false if it applies to all customers. */
+  isCustomerSpecific: boolean;
 }
 
 /** Customer pinned to a promo (returned by GET /Promo/{id}/customers). */
@@ -1718,6 +1757,26 @@ export interface AssignedCustomerDto {
 }
 
 export type AssignedCustomerListResponse = ApiResponse<AssignedCustomerDto[]>;
+
+export interface CustomerPromoProductItemDto {
+  productID: string;
+  productName: string;
+  imageUrl: string | null;
+  originalPrice: number;
+  adjustedPrice: number;
+  isFreeItem: boolean;
+}
+
+export interface CustomerPromoProductDto {
+  promoID: string;
+  title: string;
+  type: PromoType;
+  discountPercent: number | null;
+  discountAmount: number | null;
+  items: CustomerPromoProductItemDto[];
+}
+
+export type CustomerPromoProductListResponse = ApiResponse<CustomerPromoProductDto[]>;
 
 export interface PromoSuggestionDto {
   promoType: number;
@@ -2197,3 +2256,167 @@ export interface SalesForecastResponseDto {
 }
 
 export type SalesForecastResponse = ApiResponse<SalesForecastResponseDto>;
+
+// ─── Customer Dashboard API ────────────────────────────────────────────────────
+// Self-service customer portal endpoints under /api/v1/customer-api/customerdashboard.
+// These DTOs are intentionally separate from the staff DTOs above: the customer
+// surface hides stock/cost and returns numeric promo/order codes.
+
+/** Customer-facing promo. Note `type`/`status` are numeric codes here (unlike the
+ *  staff `PromoDto` which uses string unions). 1=Percentage,2=Fixed,3=BuyXGetY,4=Bundle;
+ *  status 2=Active,4=Scheduled. */
+export interface CustomerPromoDto {
+  promoID: string;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  type: number;
+  status: number;
+  discountPercent: number | null;
+  discountAmount: number | null;
+  buyQuantity: number | null;
+  getQuantity: number | null;
+  bundlePrice: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  targetSegment: number | null;
+}
+export type CustomerPromoListResponse = ApiResponse<CustomerPromoDto[]>;
+
+export interface CustomerMenuAddOnItemDto {
+  productAddOnItemID: string;
+  name: string;
+  additionalPrice: number;
+}
+export interface CustomerMenuAddOnGroupDto {
+  productAddOnGroupID: string;
+  name: string;
+  isRequired: boolean;
+  items: CustomerMenuAddOnItemDto[];
+}
+export interface CustomerMenuVariantDto {
+  productVariantID: string;
+  name: string;
+  price: number;
+}
+/** A menu item as seen by customers. No stock/cost fields are exposed; `isAvailable`
+ *  is the only stock signal (true only when in stock). */
+export interface CustomerMenuItemDto {
+  productID: string;
+  name: string;
+  description?: string | null;
+  sellingPrice: number;  // Change from 'price' to 'sellingPrice'
+  price?: number; // Keep for compatibility if needed
+  imageUrl: string | null;
+  categoryID: string | null;
+  categoryName: string | null;
+  isAvailable: boolean;
+  isOutOfStock: boolean;
+  currentStock: number;
+  variants: CustomerMenuVariantDto[];
+  addOnGroups: CustomerMenuAddOnGroupDto[];
+}
+
+export type CustomerMenuResponse = ApiResponse<PaginatedResponse<CustomerMenuItemDto>>;
+
+export interface CustomerMenuQueryParams {
+  categoryId?: string;
+  search?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export enum CustomerOrderStatus {
+  OrderReceived = 1,
+  OrderTaken = 2,
+  PaymentReceived = 3,
+  OrderConfirmed = 4,
+  OrderQueued = 5,
+  OrderAccepted = 6,
+  InPreparation = 7,
+  FinalizingOrder = 8,
+  ReadyForPickup = 9,
+  PickedUp = 10,
+  OrderCompleted = 11,
+  Cancelled = 12,
+  Remake = 13,
+}
+
+export interface CustomerOrderItemDto {
+  customerOrderItemID: string;
+  productID: string;
+  productName: string;
+  productVariantID: string | null;
+  variantName: string | null;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+  /** JSON string of applied add-ons, e.g. '[{"AddOnItemID":"..","Name":"..","Price":25}]'. Null when none. */
+  addOnsJson: string | null;
+}
+
+export interface CustomerOrderDto {
+  customerOrderID: string;
+  orderNumber: string;
+  status: CustomerOrderStatus;
+  statusLabel: string;
+  paymentReference: string | null;
+  specialInstructions: string | null;
+  totalAmount: number;
+  createdAt: string;
+  items: CustomerOrderItemDto[];
+}
+
+/** Returned by checkout and single-order endpoints; adds the resolved customer name. */
+export interface CustomerOrderDetailDto extends CustomerOrderDto {
+  customerName: string;
+}
+
+export type CustomerOrderListResponse = ApiResponse<CustomerOrderDto[]>;
+export type CustomerOrderResponse = ApiResponse<CustomerOrderDetailDto>;
+
+export interface CustomerOrderQueryParams {
+  status?: number;
+  search?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface UpdateOrderStatusParams {
+  status: number;
+}
+
+export interface SetPaymentReferenceParams {
+  paymentReference: string;
+}
+
+export interface CustomerLoyaltyCardDto {
+  customerLoyaltyCardID: string;
+  totalStamps: number;
+  availableRewards: number;
+  totalRewardsEarned: number;
+  totalRewardsRedeemed: number;
+  lastStampedAt: string | null;
+  lastRedeemedAt: string | null;
+  stampsUntilNextReward: number;
+}
+
+export interface CustomerLoyaltyDto {
+  customerID: string;
+  firstName: string;
+  lastName: string;
+  loyaltyCard: CustomerLoyaltyCardDto | null;
+}
+export type CustomerLoyaltyResponse = ApiResponse<CustomerLoyaltyDto>;
+
+export interface CustomerCheckoutItemParams {
+  productID: string;
+  productVariantID?: string | null;
+  quantity: number;
+  unitPrice: number;
+  addOnsJson?: string | null;
+}
+export interface CustomerCheckoutParams {
+  items: CustomerCheckoutItemParams[];
+  specialInstructions?: string | null;
+}

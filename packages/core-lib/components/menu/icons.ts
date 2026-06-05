@@ -24,6 +24,7 @@ import AddIcon from "@mui/icons-material/Add";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
+import HubIcon from "@mui/icons-material/Hub";
 
 import type { SvgIconComponent } from "@mui/icons-material";
 
@@ -54,6 +55,7 @@ export const ICON_REGISTRY: Record<string, SvgIconComponent> = {
   LocalShipping: LocalShippingRoundedIcon,
   Payments: PaymentsRoundedIcon,
   AccountBalanceWallet: AccountBalanceWalletRoundedIcon,
+  Hub: HubIcon,
 };
 
 export const ICON_NAMES = Object.keys(ICON_REGISTRY);

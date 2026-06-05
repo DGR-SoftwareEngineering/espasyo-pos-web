@@ -6,6 +6,7 @@ import { Api } from "../../api/api";
 import { AuthenticationApi } from "../../api/authentication/api";
 import { CommonsApi } from "../../api/commons/api";
 import { CrmApi } from "../../api/crm/api";
+import { PlatformApi } from "../../api/platform/api";
 import Http, { HttpOptions } from "../http-client";
 import { getItem } from "../session-storage";
 import { config } from "../../config";
@@ -44,14 +45,16 @@ export const httpClient = new Http({
   baseURL: config.value.APIURL,
 });
 
+const getBaseURL = () => {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+};
+
 export const httpSsrClient = new Http({
   ...HTTP_OPTIONS,
-  baseURL:
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:3000"
-      : typeof window !== "undefined"
-        ? window.location.origin
-        : undefined,
+  baseURL: getBaseURL(),
 });
 
 export const httpSsrRefreshedClient = (url: string) =>
@@ -105,6 +108,7 @@ function createApi(client: AxiosInstance, httpSsrClient: AxiosInstance) {
     new CommonsApi(client, httpSsrClient),
     new AccessApi(client),
     new CrmApi(client),
+    new PlatformApi(client),
   );
 }
 

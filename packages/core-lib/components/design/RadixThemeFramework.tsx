@@ -14,6 +14,14 @@ import { Toastify } from "../toast/Toastify";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { PermissionProvider } from "../menu/contexts/PermissionContext";
 import { RadixDashboard } from "../radix/Dashboard";
+import { CustomerShell } from "../radix/customer";
+
+/**
+ * Which product the framework renders for. Drives the authenticated shell:
+ * "POS" → admin/cashier sidebar dashboard; "CustomerEngagement" → customer top-nav.
+ * Defaults to POS when unset so the existing POS app is unaffected.
+ */
+export type Platform = "POS" | "CustomerEngagement";
 
 export interface RadixThemeFrameworkProps {
   isAuthenticated: boolean;
@@ -28,6 +36,7 @@ export interface RadixThemeFrameworkProps {
   role?: string;
   initials?: string;
   email?: string;
+  platform?: Platform;
   children: ReactNode;
 }
 
@@ -44,6 +53,7 @@ export const RadixThemeFramework: React.FC<RadixThemeFrameworkProps> = ({
   role,
   initials,
   email,
+  platform,
   children,
 }) => {
   return (
@@ -70,21 +80,32 @@ export const RadixThemeFramework: React.FC<RadixThemeFrameworkProps> = ({
                         background: "var(--gray-2)",
                       }}
                     >
-                      {isAuthenticated ? (
-                        <PermissionProvider roleName={role ?? ""}>
-                          <RadixDashboard
-                            logout={logout}
-                            loading={loading}
-                            role={role}
-                            initials={initials}
-                            email={email}
-                          >
-                            {children}
-                          </RadixDashboard>
-                        </PermissionProvider>
-                      ) : (
-                        <>{children}</>
-                      )}
+                      <PermissionProvider roleName={role ?? ""}>
+                        {isAuthenticated ? (
+                          platform === "CustomerEngagement" ? (
+                            <CustomerShell
+                              logout={logout}
+                              loading={loading}
+                              initials={initials}
+                              email={email}
+                            >
+                              {children}
+                            </CustomerShell>
+                          ) : (
+                            <RadixDashboard
+                              logout={logout}
+                              loading={loading}
+                              role={role}
+                              initials={initials}
+                              email={email}
+                            >
+                              {children}
+                            </RadixDashboard>
+                          )
+                        ) : (
+                          <>{children}</>
+                        )}
+                      </PermissionProvider>
                     </Flex>
                   </FormSubmissionContextProvider>
                 </NotificationsContextProvider>

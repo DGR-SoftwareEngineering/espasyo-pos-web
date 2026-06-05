@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
 import { Cross1Icon } from "@radix-ui/react-icons";
 import { PersonSearchOutlined } from "@mui/icons-material";
-import { Control, Controller } from "react-hook-form";
+import { Control, Controller, useWatch } from "react-hook-form";
 import { CustomerSegment, CustomerSearchResultDto } from "core-lib/api/crm";
 import { useApiCallback } from "core-lib/core/hooks";
 import { TextField } from "core-lib/components/radix/form/TextField";
@@ -13,7 +13,7 @@ import { CustomerSearchInput } from "../../crm/components/CustomerSearchInput";
 import { PromoForm } from "./validation";
 
 const SEGMENT_OPTIONS = [
-  { value: "", label: "All customers (no segment restriction)" },
+  { value: "all", label: "All customers (no segment restriction)" },
   { value: String(CustomerSegment.New), label: "New" },
   { value: String(CustomerSegment.Regular), label: "Regular" },
   { value: String(CustomerSegment.VIP), label: "VIP" },
@@ -31,6 +31,9 @@ export const CustomerTargetingSection: React.FC<CustomerTargetingSectionProps> =
   control,
   preloadedAssigned,
 }) => {
+  const targetSegment = useWatch({ control, name: "targetSegment" });
+  const segmentFilter = targetSegment != null ? String(targetSegment) : "all";
+
   return (
     <Box mt="4">
       <FormSection
@@ -67,6 +70,7 @@ export const CustomerTargetingSection: React.FC<CustomerTargetingSectionProps> =
                 value={(field.value as string[]) ?? []}
                 onChange={(ids) => field.onChange(ids)}
                 preloaded={preloadedAssigned}
+                segment={segmentFilter}
               />
             )}
           />
@@ -80,6 +84,7 @@ interface AssignedCustomersInputProps {
   value: string[];
   onChange: (ids: string[]) => void;
   preloaded?: CustomerSearchResultDto[];
+  segment?: string;
 }
 
 /**
@@ -90,6 +95,7 @@ const AssignedCustomersInput: React.FC<AssignedCustomersInputProps> = ({
   value,
   onChange,
   preloaded,
+  segment,
 }) => {
   const [pinned, setPinned] = useState<CustomerSearchResultDto[]>(
     preloaded ?? [],
@@ -168,6 +174,8 @@ const AssignedCustomersInput: React.FC<AssignedCustomersInputProps> = ({
           excludeIds={value}
           onSelect={handleAdd}
           hint="Pinned customers always qualify for this promo, even outside the segment."
+          adminMode
+          filterSegment={segment}
         />
       </Box>
     </Box>

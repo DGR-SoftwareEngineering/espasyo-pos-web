@@ -87,6 +87,7 @@ export * from "./SideMenu";
 export * from "./SideMenuMobile";
 export * from "./Header";
 export * from "./Dashboard";
+export * from "./customer";
 export * from "./menu/RadixMenuContent";
 export * from "./menu/RadixOptionsMenu";
 

@@ -125,6 +125,7 @@ export const CustomerListBlock: React.FC = () => {
       const result = await deleteCb.execute(deleteTarget.customerID);
       if (result?.data?.success) {
         showToast(`${deleteTarget.fullName} removed`, "success");
+        setCustomers((prev) => prev.filter((c) => c.customerID !== deleteTarget.customerID));
         setDeleteTarget(null);
         handleRefresh();
         return;
@@ -167,6 +168,14 @@ export const CustomerListBlock: React.FC = () => {
             subtitle="Profiles, loyalty cards, notes, and tags"
           />
           <Flex gap="2">
+            <Button
+              variant="soft"
+              color="gray"
+              size="2"
+              onClick={() => router.push("/admin/hub/crm/deleted-customers")}
+            >
+              Deleted
+            </Button>
             <Button
               variant="soft"
               color="gray"

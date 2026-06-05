@@ -92,6 +92,7 @@ import {
   SaleDetailDto,
   FinancialReportProductRevenueItemDto,
   FinancialReportVariantRevenueDto,
+  BusinessExpenseDto,
 } from "core-lib/api/commons/types";
 import type { OrderDetailDialogData } from "core-lib/api/content/types/common";
 import { INVOICE_STATUS_META } from "../contents/procurement/constants";
@@ -158,6 +159,22 @@ function periodToDateRange(period: ChartPeriod): { from: string; to: string } {
     default:
       return { from: to, to };
   }
+}
+
+// ─── Helper to filter expenses by date range ─────────────────────────────────
+
+function filterExpensesByPeriod(expenses: BusinessExpenseDto[], fromDate: string, toDate: string): BusinessExpenseDto[] {
+  return expenses.filter(expense => {
+    const expenseDate = expense.expenseDate;
+    return expenseDate >= fromDate && expenseDate <= toDate;
+  });
+}
+
+function filterInvoicesByPeriod(invoices: SupplierInvoiceDto[], fromDate: string, toDate: string): SupplierInvoiceDto[] {
+  return invoices.filter(inv => {
+    const invoiceDate = inv.invoiceDate?.split('T')[0];
+    return invoiceDate && invoiceDate >= fromDate && invoiceDate <= toDate;
+  });
 }
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
@@ -1737,10 +1754,16 @@ export const AdminReportsPage: React.FC = () => {
       .map((p) => ({ id: p.productID, name: p.name }));
   }, [productsApi.result]);
 
+  // Filter expenses and invoices based on selected period
+  const { from: periodFrom, to: periodTo } = useMemo(
+    () => periodToDateRange(period),
+    [period],
+  );
+
   // Only fetch count (pageSize: 1) — we only need totalItems
   const saleListApi = useApi(
-    (api) => api.commons.saleList({ pageNumber: 1, pageSize: 1, status: 1 }),
-    [],
+    (api) => api.commons.saleList({ pageNumber: 1, pageSize: 1, status: 1, fromDate: periodFrom, toDate: periodTo }),
+    [periodFrom, periodTo],
   );
   const totalTransactions =
     saleListApi.result?.data?.response?.totalItems ?? null;
@@ -1751,37 +1774,38 @@ export const AdminReportsPage: React.FC = () => {
     [],
   );
 
-  const procurementCost = useMemo(() => {
-    const items = invoiceApi.result?.data?.response?.items;
-    if (!Array.isArray(items)) return null;
-    return items.reduce((sum, inv) => sum + (inv.paidAmount ?? 0), 0);
-  }, [invoiceApi.result]);
-
   // Fetch business expenses from the dedicated BusinessExpense table
   const businessExpenseApi = useApi(
     (api) => api.commons.businessExpenseList(),
     [],
   );
 
-  const { operationalExpenses, businessSupplyExpenses } = useMemo(() => {
+  const filteredInvoices = useMemo(() => {
     const invoiceItems = invoiceApi.result?.data?.response?.items;
-    const expenseItems = businessExpenseApi.result?.data?.response;
+    if (!Array.isArray(invoiceItems)) return [];
+    return filterInvoicesByPeriod(invoiceItems, periodFrom, periodTo);
+  }, [invoiceApi.result, periodFrom, periodTo]);
 
-    // Operational expenses = all paid invoices (no longer filtered by type)
-    const operationalExpensesTotal = Array.isArray(invoiceItems)
-      ? invoiceItems.reduce((sum, inv) => sum + (inv.paidAmount ?? 0), 0)
-      : null;
+  const filteredBusinessExpenses = useMemo(() => {
+    const expenses = businessExpenseApi.result?.data?.response;
+    if (!Array.isArray(expenses)) return [];
+    return filterExpensesByPeriod(expenses, periodFrom, periodTo);
+  }, [businessExpenseApi.result, periodFrom, periodTo]);
 
-    // Business supply expenses = sum from BusinessExpenses table (response is an array)
-    const businessSupplyExpensesTotal = Array.isArray(expenseItems)
-      ? expenseItems.reduce((sum, expense) => sum + (expense.amount ?? 0), 0)
-      : null;
+  const procurementCost = useMemo(() => {
+    if (filteredInvoices.length === 0) return null;
+    return filteredInvoices.reduce((sum, inv) => sum + (inv.paidAmount ?? 0), 0);
+  }, [filteredInvoices]);
 
-    return {
-      operationalExpenses: operationalExpensesTotal,
-      businessSupplyExpenses: businessSupplyExpensesTotal,
-    };
-  }, [invoiceApi.result, businessExpenseApi.result]);
+  const operationalExpenses = useMemo(() => {
+    if (filteredInvoices.length === 0) return null;
+    return filteredInvoices.reduce((sum, inv) => sum + (inv.paidAmount ?? 0), 0);
+  }, [filteredInvoices]);
+
+  const businessSupplyExpenses = useMemo(() => {
+    if (filteredBusinessExpenses.length === 0) return null;
+    return filteredBusinessExpenses.reduce((sum, expense) => sum + (expense.amount ?? 0), 0);
+  }, [filteredBusinessExpenses]);
 
   // Conditional — only fires when low stock alert is enabled
   const lowStockApi = useApi(
@@ -1801,13 +1825,19 @@ export const AdminReportsPage: React.FC = () => {
     return grossSales - procurementCost;
   }, [grossSales, procurementCost]);
 
-  const { from: financialFrom, to: financialTo } = useMemo(
-    () => periodToDateRange(period),
-    [period],
-  );
+  const totalExpenses = useMemo(() => {
+    if (operationalExpenses === null || businessSupplyExpenses === null) return null;
+    return operationalExpenses + businessSupplyExpenses;
+  }, [operationalExpenses, businessSupplyExpenses]);
+
+  const netProfit = useMemo(() => {
+    if (grossSales === null || totalExpenses === null) return null;
+    return grossSales - totalExpenses;
+  }, [grossSales, totalExpenses]);
+
   const financialReportApi = useApi(
-    (api) => api.commons.financialReport({ From: financialFrom, To: financialTo }),
-    [financialFrom, financialTo],
+    (api) => api.commons.financialReport({ From: periodFrom, To: periodTo }),
+    [periodFrom, periodTo],
   );
   const revenueByProduct: FinancialReportProductRevenueItemDto[] =
     financialReportApi.result?.data?.response?.revenueByProduct ?? [];
@@ -1881,10 +1911,10 @@ export const AdminReportsPage: React.FC = () => {
       {
         label: "Business Supply Expenses",
         value: formatCurrency(businessSupplyExpenses, currencyCode),
-        hint: "Non-sellable items & overhead",
+        hint: `Non-sellable items & overhead · ${periodLabel}`,
         accent: "orange",
         icon: <AccountBalanceWalletOutlined style={{ fontSize: 18 }} />,
-        loading: invoiceApi.loading,
+        loading: businessExpenseApi.loading,
       },
       {
         label: "Transactions",
@@ -1916,6 +1946,7 @@ export const AdminReportsPage: React.FC = () => {
       lowStockCount,
       salesLoading,
       invoiceApi.loading,
+      businessExpenseApi.loading,
       saleListApi.loading,
       lowStockApi.loading,
       currencyCode,
@@ -1925,17 +1956,6 @@ export const AdminReportsPage: React.FC = () => {
   );
 
   const handlePrint = useCallback(() => window.print(), []);
-
-  // Calculate total expenses and net profit for financial summary table
-  const totalExpenses = useMemo(() => {
-    if (operationalExpenses === null || businessSupplyExpenses === null) return null;
-    return operationalExpenses + businessSupplyExpenses;
-  }, [operationalExpenses, businessSupplyExpenses]);
-
-  const netProfit = useMemo(() => {
-    if (grossSales === null || totalExpenses === null) return null;
-    return grossSales - totalExpenses;
-  }, [grossSales, totalExpenses]);
 
   // Build tabs
   const tabs = useMemo<TabOption[]>(
@@ -2075,12 +2095,12 @@ export const AdminReportsPage: React.FC = () => {
             >
               <Grid columns={{ initial: "1", md: "2" }} gap="3">
                 <ProcurementTrendCard
-                  invoices={invoiceApi.result?.data?.response?.items ?? []}
+                  invoices={filteredInvoices}
                   loading={invoiceApi.loading}
                   currencyCode={currencyCode}
                 />
                 <InvoiceStatusCard
-                  invoices={invoiceApi.result?.data?.response?.items ?? []}
+                  invoices={filteredInvoices}
                   loading={invoiceApi.loading}
                   currencyCode={currencyCode}
                 />
@@ -2255,12 +2275,12 @@ export const AdminReportsPage: React.FC = () => {
                   grossSales,
                   cogs: operationalExpenses,
                   grossProfit,
-                  operationalExpenses: businessSupplyExpenses,
+                  operationalExpenses,
                   businessSupplyExpenses,
                   totalExpenses,
                   netProfit,
                   totalTransactions,
-                  inventoryValue: null,
+                  inventoryValue: financialReportApi.result?.data?.response?.directStockValue ?? null,
                   lowStockCount,
                 }}
               />
@@ -2320,6 +2340,7 @@ export const AdminReportsPage: React.FC = () => {
       periodLabel,
       salesLoading,
       invoiceApi.loading,
+      businessExpenseApi.loading,
       saleListApi.loading,
       lowStockApi.loading,
       procurementCost,
@@ -2331,6 +2352,7 @@ export const AdminReportsPage: React.FC = () => {
       financialReportApi.loading,
       financialReportApi.result,
       revenueByProduct,
+      filteredInvoices,
     ],
   );
 
@@ -2963,7 +2985,7 @@ export const AdminReportsPage: React.FC = () => {
 
             {/* ── Procurement & Expenses ── */}
             {(() => {
-              const paidInvoices = (invoiceApi.result?.data?.response?.items ?? [])
+              const paidInvoices = filteredInvoices
                 .filter((inv) => (inv.paidAmount ?? 0) > 0)
                 .slice(0, 20);
               const procTotal = paidInvoices.reduce((s, inv) => s + (inv.paidAmount ?? 0), 0);
@@ -3031,12 +3053,12 @@ export const AdminReportsPage: React.FC = () => {
                 grossSales,
                 cogs: operationalExpenses,
                 grossProfit,
-                operationalExpenses: businessSupplyExpenses,
+                operationalExpenses,
                 businessSupplyExpenses,
                 totalExpenses,
                 netProfit,
                 totalTransactions,
-                inventoryValue: null,
+                inventoryValue: financialReportApi.result?.data?.response?.directStockValue ?? null,
                 lowStockCount,
               }}
             />

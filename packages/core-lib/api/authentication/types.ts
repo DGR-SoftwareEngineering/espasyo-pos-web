@@ -12,6 +12,7 @@ export interface SsoSessionParams {
 export interface LoginParams {
   userName: string;
   password: string;
+  platformKey?: string;
 }
 
 export type LogoutParams = AuthTokens;
@@ -45,6 +46,14 @@ export interface MpinStatusDto {
 export interface AdminConfirmationParams {
   password: string;
   mpin: string;
+}
+
+export type CustomerRegistrationParams = {
+    username: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    email: string;
 }
 
 export type MpinStatusResponse = ApiResponse<MpinStatusDto>;

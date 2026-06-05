@@ -27,6 +27,7 @@ interface Props {
     | "scaling"
     | "panelBackground"
   >;
+  platform?: "POS" | "CustomerEngagement";
 }
 
 const renderFallback = () => (
@@ -73,6 +74,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
   framework = "Radix",
   radixTheme,
   children,
+  platform = "POS",
 }) => {
   const { logout } = useLogout();
   const { isAuthenticated, loading, email, role, initials } = useAuthContext();
@@ -104,6 +106,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
           radius={radixTheme?.radius ?? "medium"}
           scaling={radixTheme?.scaling ?? "100%"}
           panelBackground={radixTheme?.panelBackground ?? "solid"}
+          platform={platform}
         >
           {children}
         </RadixThemeFramework>

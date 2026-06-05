@@ -40,8 +40,10 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
   const active = isSelected || hasSelectedChild;
 
   const handleClick = () => {
+    // Navigate if the item has a direct path (even if it also has children)
+    if (item.path) onSelect(item.path);
+    // Toggle children independently of navigation
     if (hasNested) onToggle(item.id);
-    else if (item.path) onSelect(item.path);
   };
 
   return (

@@ -5,6 +5,7 @@ import {
   Flex,
   ScrollArea,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import {
   DownloadIcon,
@@ -134,26 +135,17 @@ export const BulkProductCreationBlock: React.FC = () => {
   };
 
   const handleDownloadTemplate = async () => {
-    try {
-      const res = await downloadTemplateCallback.execute(undefined);
-      if (!res) return;
-      const blob = new Blob([res.data as BlobPart]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "product-import-template.xlsx";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      showToast("Failed to download template.", "error");
-    }
+    // Disabled - coming soon
+    showToast("Excel import/export feature is coming soon!", "info");
   };
 
   const handleImportExcelClick = () => {
-    fileInputRef.current?.click();
+    // Disabled - coming soon
+    showToast("Excel import/export feature is coming soon!", "info");
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // This will never be called as the button is disabled, but kept for future
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
@@ -374,29 +366,39 @@ export const BulkProductCreationBlock: React.FC = () => {
           </Box>
 
           <Flex gap="2" wrap="wrap" style={{ flexShrink: 0 }}>
-            <Button
-              type="Secondary"
-              onClick={handleDownloadTemplate}
-              loading={downloadTemplateCallback.loading}
-              disabled={isLoading}
-            >
-              <Flex align="center" gap="2">
-                <DownloadIcon />
-                Download Template
-              </Flex>
-            </Button>
+            {/* Download Template Button - Disabled with Tooltip */}
+            <Tooltip content="Coming soon">
+              <div style={{ display: "inline-flex" }}>
+                <Button
+                  type="Secondary"
+                  onClick={handleDownloadTemplate}
+                  disabled={true}
+                  style={{ opacity: 0.6, cursor: "not-allowed" }}
+                >
+                  <Flex align="center" gap="2">
+                    <DownloadIcon />
+                    Download Template
+                  </Flex>
+                </Button>
+              </div>
+            </Tooltip>
 
-            <Button
-              type="Secondary"
-              onClick={handleImportExcelClick}
-              loading={importExcelCallback.loading}
-              disabled={isLoading}
-            >
-              <Flex align="center" gap="2">
-                <UploadIcon />
-                Import from Excel
-              </Flex>
-            </Button>
+            {/* Import from Excel Button - Disabled with Tooltip */}
+            <Tooltip content="Coming soon">
+              <div style={{ display: "inline-flex" }}>
+                <Button
+                  type="Secondary"
+                  onClick={handleImportExcelClick}
+                  disabled={true}
+                  style={{ opacity: 0.6, cursor: "not-allowed" }}
+                >
+                  <Flex align="center" gap="2">
+                    <UploadIcon />
+                    Import from Excel
+                  </Flex>
+                </Button>
+              </div>
+            </Tooltip>
           </Flex>
         </Flex>
 

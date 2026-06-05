@@ -34,6 +34,7 @@ export interface CustomerDto {
   totalSpend: number;
   loyaltyStamps: number;
   lastVisitAt: string | null;
+  hasPhysicalCard: boolean;
   isActive: boolean;
 }
 
@@ -80,6 +81,7 @@ export interface CustomerDetailDto {
   totalSpend: number;
   firstVisitAt: string | null;
   lastVisitAt: string | null;
+  hasPhysicalCard: boolean;
   loyaltyCard: CustomerLoyaltyCardDto | null;
   notes: CustomerNoteDto[];
   createdAt: string | null;
@@ -96,6 +98,7 @@ export interface CustomerSearchResultDto {
   totalStamps: number;
   availableRewards: number;
   segment: CustomerSegment;
+  hasPhysicalCard: boolean;
 }
 
 export interface TopCustomerDto {
@@ -167,6 +170,7 @@ export interface UpdateCustomerParams {
   address?: string | null;
   city?: string | null;
   birthday?: string | null;
+  hasPhysicalCard?: boolean;
 }
 
 export interface AddCustomerNoteParams {

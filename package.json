@@ -7,6 +7,7 @@
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "dev:espasyo": "turbo run dev --filter=espasyo-pos",
+    "dev:espasyo-customer": "turbo run dev --filter=espasyo-customer-engagement",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch"
   },

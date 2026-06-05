@@ -1,5 +1,5 @@
-import React from "react";
-import { Box, Card, Flex, Grid, Text } from "@radix-ui/themes";
+import React, { useState } from "react";
+import { Box, Card, Flex, Grid, Text, Button, Callout } from "@radix-ui/themes";
 import {
   LocalCafeOutlined,
   EmojiEventsOutlined,
@@ -10,6 +10,8 @@ import {
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { CustomerDetailDto, RedeemableProductDto } from "core-lib/api/crm";
+import { useApiCallback } from "core-lib/core/hooks";
+import { useToastContext } from "core-lib";
 import { formatCurrency } from "core-lib/business/strings";
 import { LoyaltyCardBlock } from "../components/LoyaltyCardBlock";
 import { StampHistorySection } from "./StampHistorySection";
@@ -76,7 +78,190 @@ export const LoyaltyTab: React.FC<LoyaltyTabProps> = ({
   refreshKey = 0,
   redeemableProducts = [],
 }) => {
+  const { showToast } = useToastContext();
+  const [enrollLoading, setEnrollLoading] = useState(false);
+
+  // Fix: Use a single args object instead of multiple parameters
+  const enrollCb = useApiCallback(
+    async (api, args: { id: string; hasCard: boolean }) =>
+      api.crm.update(args.id, { hasPhysicalCard: args.hasCard }),
+  );
+
+  const handleEnroll = async () => {
+    setEnrollLoading(true);
+    try {
+      const result = await enrollCb.execute({ id: customer.customerID, hasCard: true });
+      if (!result?.data?.success || !result?.data?.response) {
+        const msg =
+          Array.isArray(result?.data?.errors) && result.data.errors.length > 0
+            ? (result.data.errors as string[])[0]
+            : result?.data?.message ?? "Failed to enroll customer";
+        showToast(msg, "error");
+        return;
+      }
+      onCustomerRefresh(result.data.response);
+      showToast("Customer enrolled in loyalty program", "success");
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      showToast("Failed to enroll customer", "error");
+    } finally {
+      setEnrollLoading(false);
+    }
+  };
+
+  const handleRevoke = async () => {
+    setEnrollLoading(true);
+    try {
+      const result = await enrollCb.execute({ id: customer.customerID, hasCard: false });
+      if (!result?.data?.success || !result?.data?.response) {
+        const msg =
+          Array.isArray(result?.data?.errors) && result.data.errors.length > 0
+            ? (result.data.errors as string[])[0]
+            : result?.data?.message ?? "Failed to pause enrollment";
+        showToast(msg, "error");
+        return;
+      }
+      onCustomerRefresh(result.data.response);
+      showToast("Loyalty enrollment paused", "success");
+    } catch (error) {
+      console.error("Revoke error:", error);
+      showToast("Failed to pause enrollment", "error");
+    } finally {
+      setEnrollLoading(false);
+    }
+  };
+
   const card = customer.loyaltyCard;
+  const isEnrolled = customer.hasPhysicalCard;
+  const eligibleForEnrollment = customer.totalVisits >= 5;
+  const visitsRemaining = Math.max(0, 5 - customer.totalVisits);
+
+  // State A: Not enrolled, no card yet
+  if (!isEnrolled && !card) {
+    return (
+      <Flex direction="column" gap="4">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0 }}>
+          <Callout.Root color={eligibleForEnrollment ? "blue" : "gray"}>
+            <Callout.Text>
+              {eligibleForEnrollment
+                ? "Customer is eligible for loyalty card enrollment"
+                : `Not enrolled in the loyalty program — ${visitsRemaining} more ${visitsRemaining === 1 ? "purchase" : "purchases"} required`}
+            </Callout.Text>
+          </Callout.Root>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.08 }}>
+          <Card variant="surface" size="3">
+            <Flex direction="column" gap="3">
+              <Box>
+                <Flex justify="between" align="center" gap="2" mb="2">
+                  <Text size="2" weight="bold">Purchase Progress</Text>
+                  <Text size="1" color="gray">{customer.totalVisits} / 5</Text>
+                </Flex>
+                <Box
+                  style={{
+                    width: "100%",
+                    height: 10,
+                    borderRadius: 6,
+                    background: "var(--gray-a3)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Box
+                    style={{
+                      height: "100%",
+                      width: `${(customer.totalVisits / 5) * 100}%`,
+                      background: "var(--blue-9)",
+                      transition: "width 0.6s ease",
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              <Button
+                size="2"
+                color="indigo"
+                disabled={!eligibleForEnrollment || enrollLoading}
+                onClick={handleEnroll}
+                style={{ alignSelf: "flex-start" }}
+              >
+                {enrollLoading ? "Enrolling..." : "Enroll in Loyalty Card"}
+              </Button>
+
+              {!eligibleForEnrollment && (
+                <Text size="1" color="gray">
+                  Customer needs {visitsRemaining} more {visitsRemaining === 1 ? "purchase" : "purchases"} to become eligible for enrollment
+                </Text>
+              )}
+            </Flex>
+          </Card>
+        </motion.div>
+      </Flex>
+    );
+  }
+
+  // State B: Not enrolled but previously had a card
+  if (!isEnrolled && card) {
+    return (
+      <Flex direction="column" gap="4">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0 }}>
+          <Callout.Root color="orange">
+            <Callout.Text>
+              Loyalty program paused — previous stamp history preserved
+            </Callout.Text>
+          </Callout.Root>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.08 }}>
+          <Card variant="surface" size="3">
+            <Flex direction="column" gap="3">
+              <Text size="2" weight="bold">
+                Previous Card Stats
+              </Text>
+              <Grid columns={{ initial: "1", sm: "2" }} gap="3">
+                <StatItem
+                  label="Total Stamps Earned"
+                  value={String(card.totalStamps)}
+                  icon={<LocalCafeOutlined style={{ fontSize: 16 }} />}
+                  color="brown"
+                />
+                <StatItem
+                  label="Rewards Earned"
+                  value={String(card.totalRewardsEarned)}
+                  icon={<EmojiEventsOutlined style={{ fontSize: 16 }} />}
+                  color="amber"
+                />
+                <StatItem
+                  label="Rewards Redeemed"
+                  value={String(card.totalRewardsRedeemed)}
+                  icon={<CardGiftcardOutlined style={{ fontSize: 16 }} />}
+                  color="indigo"
+                />
+                <StatItem
+                  label="Last Activity"
+                  value={formatRelativeDate(card.lastStampedAt || card.lastRedeemedAt)}
+                  icon={<AccessTimeRounded style={{ fontSize: 16 }} />}
+                  color="gray"
+                />
+              </Grid>
+
+              <Button
+                size="2"
+                color="indigo"
+                disabled={enrollLoading}
+                onClick={handleEnroll}
+                style={{ alignSelf: "flex-start" }}
+              >
+                {enrollLoading ? "Re-enrolling..." : "Re-enroll in Loyalty Card"}
+              </Button>
+            </Flex>
+          </Card>
+        </motion.div>
+      </Flex>
+    );
+  }
+
+  // State C: Fully enrolled with active card
   const stampsInCurrentCard = (card?.totalStamps ?? 0) % 6;
   const stampsToNextReward = card?.availableRewards && card.availableRewards > 0 ? 0 : 6 - stampsInCurrentCard;
   const progressPercent = stampsInCurrentCard > 0 ? (stampsInCurrentCard / 6) * 100 : 0;
@@ -292,6 +477,20 @@ export const LoyaltyTab: React.FC<LoyaltyTabProps> = ({
           customerId={customer.customerID}
           refreshKey={refreshKey}
         />
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.48 }}>
+        <Flex justify="end">
+          <Button
+            variant="ghost"
+            color="red"
+            size="2"
+            loading={enrollLoading}
+            onClick={handleRevoke}
+          >
+            Pause Enrollment
+          </Button>
+        </Flex>
       </motion.div>
     </Flex>
   );

@@ -1,15 +1,18 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   Badge,
   Box,
+  Button,
   Callout,
   Flex,
   Heading,
   IconButton,
   ScrollArea,
   Separator,
+  Spinner,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import {
   Cross2Icon,
@@ -17,6 +20,8 @@ import {
   MinusIcon,
   InfoCircledIcon,
   ReloadIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from "@radix-ui/react-icons";
 import {
   ReceiptLongOutlined,
@@ -28,7 +33,9 @@ import {
   LanguageOutlined,
 } from "@mui/icons-material";
 import { usePublicSettings } from "core-lib/core/contexts";
+import { useApiCallback } from "core-lib/core/hooks";
 import { RedeemableProductDto } from "core-lib/api/crm";
+import { CustomerOrderDto, CustomerOrderStatus, CustomerPromoProductDto, CustomerPromoProductItemDto, PromoDto, SellableProductDto } from "core-lib/api/commons/types";
 import { formatCurrency } from "../format";
 import { AddProductOptions, CartLine, CartTotals, UseCartState } from "./hooks";
 import { TargetSalesIndicator } from "./TargetSalesIndicator";
@@ -48,6 +55,8 @@ interface Props {
   targetSalesProgressPct?: number;
   targetSalesReached?: boolean;
   onRedeemProductSelected: (product: RedeemableProductDto, options: AddProductOptions) => void;
+  onAttachPromoProduct?: (product: CustomerPromoProductItemDto, promo: CustomerPromoProductDto) => void;
+  addedExclusiveIds?: Set<string>
 }
 
 export const CartPanel: React.FC<Props> = ({
@@ -64,6 +73,8 @@ export const CartPanel: React.FC<Props> = ({
   targetSalesProgressPct,
   targetSalesReached,
   onRedeemProductSelected,
+  onAttachPromoProduct,
+  addedExclusiveIds = new Set(),
 }) => {
   const { currencyCode, pos } = usePublicSettings();
   const hasLines = state.lines.length > 0;
@@ -146,6 +157,8 @@ export const CartPanel: React.FC<Props> = ({
                 hasRedeemedInCart={hasRedeemedInCart}
                 onCancelRedeem={handleCancelRedeem}
                 defaultCollapsed={hasLines}
+                onAttachPromoProduct={onAttachPromoProduct}
+                addedExclusiveIds={addedExclusiveIds}
               />
             </Box>
             <ScrollArea type="auto" scrollbars="vertical" style={{ flex: 1, minHeight: 0 }}>
@@ -423,6 +436,7 @@ const OrderSourceTabs: React.FC<{
       width: "fit-content",
     }}
   >
+    {/* Store Tab - Enabled */}
     <button
       type="button"
       onClick={() => onSourceChange('store')}
@@ -455,150 +469,444 @@ const OrderSourceTabs: React.FC<{
       <ReceiptLongOutlined style={{ fontSize: 16 }} />
       Store
     </button>
-    <button
-      type="button"
-      onClick={() => onSourceChange('online')}
-      style={{
-        borderRadius: 999,
-        padding: "6px 16px",
-        border: "none",
-        background: source === 'online' ? 'linear-gradient(135deg, var(--teal-9), var(--cyan-9))' : 'transparent',
-        color: source === 'online' ? 'white' : 'var(--gray-11)',
-        cursor: "pointer",
-        fontSize: 13,
-        fontWeight: 600,
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        transition: "all 0.15s ease",
-        boxShadow: source === 'online' ? "0 2px 6px rgba(13, 148, 136, 0.3)" : "none",
-      }}
-      onMouseEnter={(e) => {
-        if (source !== 'online') {
-          (e.currentTarget as HTMLButtonElement).style.background = 'var(--gray-a3)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (source !== 'online') {
-          (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-        }
-      }}
-    >
-      <LanguageOutlined style={{ fontSize: 16 }} />
-      Online
-    </button>
+
+    {/* Online Tab - Disabled with Tooltip */}
+    <Tooltip content="Coming soon">
+      <div style={{ display: "inline-flex" }}>
+        <button
+          type="button"
+          disabled
+          style={{
+            borderRadius: 999,
+            padding: "6px 16px",
+            border: "none",
+            background: source === 'online' ? 'linear-gradient(135deg, var(--teal-9), var(--cyan-9))' : 'transparent',
+            color: source === 'online' ? 'white' : 'var(--gray-11)',
+            cursor: "not-allowed",
+            fontSize: 13,
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            transition: "all 0.15s ease",
+            boxShadow: source === 'online' ? "0 2px 6px rgba(13, 148, 136, 0.3)" : "none",
+            opacity: 0.6,
+          }}
+        >
+          <LanguageOutlined style={{ fontSize: 16 }} />
+          Online
+        </button>
+      </div>
+    </Tooltip>
   </Flex>
 );
 
-const OnlineOrdersPanel: React.FC = () => (
-  <Flex direction="column" style={{ height: "100%", minHeight: 0 }}>
+const STATUS_LABEL: Record<number, string> = {
+  1: "Received",
+  2: "Taken",
+  3: "Paid",
+  4: "Confirmed",
+  5: "Queued",
+  6: "Accepted",
+  7: "Preparing",
+  8: "Finalizing",
+  9: "Ready",
+  10: "Picked Up",
+  11: "Completed",
+  12: "Cancelled",
+  13: "Remake",
+};
+
+const STATUS_COLOR: Record<number, "orange" | "blue" | "green" | "indigo" | "teal" | "gray" | "red"> = {
+  1: "orange",
+  2: "blue",
+  3: "green",
+  4: "green",
+  5: "indigo",
+  6: "indigo",
+  7: "indigo",
+  8: "indigo",
+  9: "teal",
+  10: "gray",
+  11: "gray",
+  12: "red",
+  13: "red",
+};
+
+const NEXT_STATUS: Record<number, { label: string; value: number } | null> = {
+  1: { label: "Accept Order", value: CustomerOrderStatus.OrderTaken },
+  2: { label: "Confirm Payment", value: CustomerOrderStatus.PaymentReceived },
+  3: { label: "Mark Preparing", value: CustomerOrderStatus.InPreparation },
+  7: { label: "Mark Ready", value: CustomerOrderStatus.ReadyForPickup },
+  9: { label: "Mark Picked Up", value: CustomerOrderStatus.PickedUp },
+  10: { label: "Complete Order", value: CustomerOrderStatus.OrderCompleted },
+};
+
+interface OrderCardProps {
+  order: CustomerOrderDto;
+  expanded: boolean;
+  onToggle: () => void;
+  onStatusUpdate: (id: string, status: number) => Promise<void>;
+  onSaveRef: (id: string, ref: string) => Promise<void>;
+}
+
+const OrderCard: React.FC<OrderCardProps> = ({ order, expanded, onToggle, onStatusUpdate, onSaveRef }) => {
+  const [refInput, setRefInput] = useState(order.paymentReference ?? "");
+  const [savingRef, setSavingRef] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const next = NEXT_STATUS[order.status] ?? null;
+  const isTerminal = order.status === CustomerOrderStatus.OrderCompleted
+    || order.status === CustomerOrderStatus.Cancelled
+    || order.status === CustomerOrderStatus.Remake;
+
+  const handleStatusClick = async () => {
+    if (!next) return;
+    setUpdatingStatus(true);
+    await onStatusUpdate(order.customerOrderID, next.value);
+    setUpdatingStatus(false);
+  };
+
+  const handleSaveRef = async () => {
+    if (!refInput.trim()) return;
+    setSavingRef(true);
+    await onSaveRef(order.customerOrderID, refInput.trim());
+    setSavingRef(false);
+  };
+
+  let addOns: { Name?: string; Price?: number }[] = [];
+  return (
     <Box
       style={{
-        borderBottom: "1px solid var(--teal-a4)",
-        background: "var(--teal-a2)",
-        padding: "10px 16px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 12,
+        border: "1px solid var(--gray-a4)",
+        borderRadius: 8,
+        overflow: "hidden",
+        background: "var(--color-panel-solid)",
       }}
     >
-      <Flex align="center" gap="2">
-        <Box
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: 999,
-            background: "var(--teal-9)",
-            boxShadow: "0 0 8px var(--teal-9)",
-            animation: "pulse 2s ease-in-out infinite",
-          }}
-        />
-        <Text size="1" style={{ color: "var(--teal-11)", fontWeight: 500 }}>
-          Awaiting orders
-        </Text>
-      </Flex>
-      <IconButton
-        variant="ghost"
-        color="gray"
-        size="1"
-        aria-label="Refresh"
-        title="Refresh"
+      {/* Card header row — always visible */}
+      <Box
+        onClick={onToggle}
+        style={{ padding: "10px 12px", cursor: "pointer" }}
       >
-        <ReloadIcon width={16} height={16} />
-      </IconButton>
-    </Box>
+        <Flex align="center" justify="between" gap="2">
+          <Flex direction="column" gap="1" style={{ flex: 1, minWidth: 0 }}>
+            <Flex align="center" gap="2">
+              <Text size="2" weight="bold" style={{ color: "var(--gray-12)" }}>
+                #{order.orderNumber}
+              </Text>
+              <Badge color={STATUS_COLOR[order.status] ?? "gray"} variant="soft" radius="full" size="1">
+                {STATUS_LABEL[order.status] ?? order.statusLabel}
+              </Badge>
+            </Flex>
+            <Text size="1" color="gray">
+              {order.items.length} item{order.items.length !== 1 ? "s" : ""} ·{" "}
+              {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </Text>
+          </Flex>
+          <Flex align="center" gap="2">
+            <Text size="2" weight="bold" style={{ color: "var(--teal-11)" }}>
+              {order.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </Text>
+            {expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+          </Flex>
+        </Flex>
+      </Box>
 
-    <ScrollArea type="auto" scrollbars="vertical" style={{ flex: 1, minHeight: 0 }}>
-      <Flex
-        direction="column"
-        align="center"
-        justify="center"
-        gap="3"
+      {/* Expanded detail */}
+      {expanded && (
+        <Box style={{ borderTop: "1px solid var(--gray-a3)", padding: "10px 12px" }}>
+          {/* Items */}
+          <Flex direction="column" gap="1" style={{ marginBottom: 10 }}>
+            {order.items.map((item) => {
+              try {
+                addOns = item.addOnsJson ? JSON.parse(item.addOnsJson) : [];
+              } catch {
+                addOns = [];
+              }
+              return (
+                <Box key={item.customerOrderItemID}>
+                  <Flex justify="between" align="start" gap="2">
+                    <Box style={{ flex: 1, minWidth: 0 }}>
+                      <Text size="1" weight="medium" style={{ color: "var(--gray-12)" }}>
+                        {item.quantity}× {item.productName}
+                        {item.variantName ? ` (${item.variantName})` : ""}
+                      </Text>
+                      {addOns.length > 0 && (
+                        <Text size="1" color="gray" style={{ display: "block" }}>
+                          + {addOns.map((a) => a.Name).filter(Boolean).join(", ")}
+                        </Text>
+                      )}
+                    </Box>
+                    <Text size="1" color="gray" style={{ whiteSpace: "nowrap" }}>
+                      {item.lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </Text>
+                  </Flex>
+                </Box>
+              );
+            })}
+          </Flex>
+
+          {/* Special instructions */}
+          {order.specialInstructions && (
+            <Callout.Root color="teal" size="1" style={{ marginBottom: 10 }}>
+              <Callout.Icon>
+                <InfoCircledIcon />
+              </Callout.Icon>
+              <Callout.Text>{order.specialInstructions}</Callout.Text>
+            </Callout.Root>
+          )}
+
+          {/* Payment reference */}
+          {!isTerminal && (
+            <Box style={{ marginBottom: 10 }}>
+              {order.paymentReference ? (
+                <Flex align="center" gap="2">
+                  <Text size="1" color="gray">Ref:</Text>
+                  <Text size="1" weight="medium" style={{ color: "var(--gray-12)" }}>
+                    {order.paymentReference}
+                  </Text>
+                </Flex>
+              ) : (
+                <Flex gap="2" align="center">
+                  <TextField.Root
+                    size="1"
+                    placeholder="Payment reference (e.g. GCash)"
+                    value={refInput}
+                    onChange={(e) => setRefInput(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    size="1"
+                    variant="soft"
+                    color="teal"
+                    disabled={!refInput.trim() || savingRef}
+                    onClick={handleSaveRef}
+                  >
+                    {savingRef ? <Spinner size="1" /> : "Save"}
+                  </Button>
+                </Flex>
+              )}
+            </Box>
+          )}
+
+          {/* Next status action */}
+          {next && !isTerminal && (
+            <Button
+              size="2"
+              color="teal"
+              style={{ width: "100%" }}
+              disabled={updatingStatus}
+              onClick={handleStatusClick}
+            >
+              {updatingStatus ? <Spinner size="1" /> : next.label}
+            </Button>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+const OnlineOrdersPanel: React.FC = () => {
+  const [orders, setOrders] = useState<CustomerOrderDto[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const { execute: fetchOrders } = useApiCallback(
+    (api) => api.commons.cashierListCustomerOrders({ pageSize: 50 })
+  );
+  const { execute: updateStatus } = useApiCallback(
+    (api, args: { id: string; status: number }) =>
+      api.commons.cashierUpdateOrderStatus(args.id, { status: args.status })
+  );
+  const { execute: setRef } = useApiCallback(
+    (api, args: { id: string; ref: string }) =>
+      api.commons.cashierSetPaymentReference(args.id, { paymentReference: args.ref })
+  );
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetchOrders();
+      if (res?.data?.response) setOrders(res.data.response);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchOrders]);
+
+  useEffect(() => {
+    refresh();
+    const interval = setInterval(refresh, 30_000);
+    return () => clearInterval(interval);
+  }, [refresh]);
+
+  const handleStatusUpdate = useCallback(async (id: string, status: number) => {
+    await updateStatus({ id, status });
+    await refresh();
+  }, [updateStatus, refresh]);
+
+  const handleSaveRef = useCallback(async (id: string, ref: string) => {
+    await setRef({ id, ref });
+    await refresh();
+  }, [setRef, refresh]);
+
+  const activeOrders = orders.filter(
+    (o) => o.status !== CustomerOrderStatus.OrderCompleted
+      && o.status !== CustomerOrderStatus.Cancelled
+      && o.status !== CustomerOrderStatus.Remake
+  );
+  const doneOrders = orders.filter(
+    (o) => o.status === CustomerOrderStatus.OrderCompleted
+      || o.status === CustomerOrderStatus.Cancelled
+      || o.status === CustomerOrderStatus.Remake
+  );
+
+  return (
+    <Flex direction="column" style={{ height: "100%", minHeight: 0 }}>
+      {/* Header */}
+      <Box
         style={{
-          minHeight: "100%",
-          padding: 32,
+          borderBottom: "1px solid var(--teal-a4)",
+          background: "var(--teal-a2)",
+          padding: "10px 16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
         }}
       >
-        <Box
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: 20,
-            background: "var(--teal-a3)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--teal-11)",
-          }}
-        >
-          <LanguageOutlined style={{ fontSize: 36 }} />
-        </Box>
-
-        <Box style={{ textAlign: "center" }}>
-          <Heading size="3" weight="bold" style={{ color: "var(--gray-12)", marginBottom: 4 }}>
-            No online orders yet
-          </Heading>
-          <Text size="2" color="gray" style={{ maxWidth: 220, lineHeight: 1.5 }}>
-            Orders from the Customer Engagement System will appear here in real-time.
-          </Text>
-        </Box>
-
-        <Box
-          style={{
-            borderRadius: 999,
-            border: "1px solid var(--teal-a6)",
-            background: "var(--teal-a2)",
-            padding: "10px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            color: "var(--teal-11)",
-          }}
-        >
+        <Flex align="center" gap="2">
           <Box
             style={{
-              width: 6,
-              height: 6,
+              width: 8,
+              height: 8,
               borderRadius: 999,
-              background: "var(--teal-9)",
+              background: orders.length > 0 ? "var(--green-9)" : "var(--teal-9)",
+              boxShadow: `0 0 8px ${orders.length > 0 ? "var(--green-9)" : "var(--teal-9)"}`,
+              animation: "pulse 2s ease-in-out infinite",
             }}
           />
-          <Text size="1" weight="medium">
-            Awaiting Connection
+          <Text size="1" style={{ color: "var(--teal-11)", fontWeight: 500 }}>
+            {loading && orders.length === 0 ? "Loading…" : activeOrders.length > 0 ? `${activeOrders.length} active order${activeOrders.length !== 1 ? "s" : ""}` : "No active orders"}
           </Text>
-        </Box>
-      </Flex>
-    </ScrollArea>
+        </Flex>
+        <IconButton
+          variant="ghost"
+          color="gray"
+          size="1"
+          aria-label="Refresh"
+          title="Refresh"
+          disabled={loading}
+          onClick={() => refresh()}
+        >
+          {loading ? <Spinner size="1" /> : <ReloadIcon width={16} height={16} />}
+        </IconButton>
+      </Box>
 
-    <style>{`
-      @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.6; }
-      }
-    `}</style>
-  </Flex>
-);
+      <ScrollArea type="auto" scrollbars="vertical" style={{ flex: 1, minHeight: 0 }}>
+        {/* Loading initial state */}
+        {loading && orders.length === 0 ? (
+          <Flex align="center" justify="center" style={{ padding: 48 }}>
+            <Spinner size="3" />
+          </Flex>
+        ) : orders.length === 0 ? (
+          /* Empty state */
+          <Flex
+            direction="column"
+            align="center"
+            justify="center"
+            gap="3"
+            style={{ minHeight: "100%", padding: 32 }}
+          >
+            <Box
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 20,
+                background: "var(--teal-a3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--teal-11)",
+              }}
+            >
+              <LanguageOutlined style={{ fontSize: 36 }} />
+            </Box>
+            <Box style={{ textAlign: "center" }}>
+              <Heading size="3" weight="bold" style={{ color: "var(--gray-12)", marginBottom: 4 }}>
+                No online orders yet
+              </Heading>
+              <Text size="2" color="gray" style={{ maxWidth: 220, lineHeight: 1.5 }}>
+                Orders from the Customer Engagement System will appear here.
+              </Text>
+            </Box>
+            <Box
+              style={{
+                borderRadius: 999,
+                border: "1px solid var(--teal-a6)",
+                background: "var(--teal-a2)",
+                padding: "10px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                color: "var(--teal-11)",
+              }}
+            >
+              <Box style={{ width: 6, height: 6, borderRadius: 999, background: "var(--teal-9)" }} />
+              <Text size="1" weight="medium">Connected</Text>
+            </Box>
+          </Flex>
+        ) : (
+          /* Order list */
+          <Flex direction="column" gap="2" style={{ padding: 12 }}>
+            {/* Active orders */}
+            {activeOrders.map((order) => (
+              <OrderCard
+                key={order.customerOrderID}
+                order={order}
+                expanded={expandedId === order.customerOrderID}
+                onToggle={() => setExpandedId(
+                  expandedId === order.customerOrderID ? null : order.customerOrderID
+                )}
+                onStatusUpdate={handleStatusUpdate}
+                onSaveRef={handleSaveRef}
+              />
+            ))}
+
+            {/* Completed / cancelled — collapsed section */}
+            {doneOrders.length > 0 && (
+              <>
+                <Separator size="4" style={{ marginTop: 4, marginBottom: 4 }} />
+                <Text size="1" color="gray" style={{ paddingLeft: 2 }}>
+                  Completed / Cancelled ({doneOrders.length})
+                </Text>
+                {doneOrders.map((order) => (
+                  <OrderCard
+                    key={order.customerOrderID}
+                    order={order}
+                    expanded={expandedId === order.customerOrderID}
+                    onToggle={() => setExpandedId(
+                      expandedId === order.customerOrderID ? null : order.customerOrderID
+                    )}
+                    onStatusUpdate={handleStatusUpdate}
+                    onSaveRef={handleSaveRef}
+                  />
+                ))}
+              </>
+            )}
+          </Flex>
+        )}
+      </ScrollArea>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+      `}</style>
+    </Flex>
+  );
+};
 
 const CartRow: React.FC<{
   line: CartLine;
@@ -698,8 +1006,7 @@ const CartRow: React.FC<{
         transform: `translateX(${swipeX}px)`,
         transition: swipeX === 0 ? "transform 0.15s ease" : "none",
       }}>
-        <Box
-          style={{
+        <Box          style={{
             width: 48,
             height: 48,
             borderRadius: 10,

@@ -11,6 +11,7 @@ import {
   SupplierInvoiceDetailDto,
   UserDto,
 } from "../../commons/types";
+import { PlatformDto } from "../../platform/types";
 
 type AsyncFunction = () => Promise<void>;
 
@@ -204,6 +205,11 @@ export type DialogDataType = {
   PosVoidSale: PosVoidSaleDialogData;
   PostSale: PostSaleDialogData;
   OrderDetail: OrderDetailDialogData;
+
+  PlatformView: PlatformDto;
+  PlatformCreate: undefined;
+  PlatformEdit: PlatformDto;
+  AssignUserDialogContent: PlatformDto;
 };
 
 // Dialog content type as a union

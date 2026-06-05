@@ -340,7 +340,7 @@ export const PromoListBlock: React.FC = () => {
         open={createOpen}
         onClose={() => { setCreateOpen(false); setFromSuggestion(null); }}
         title={DIALOG_TITLES.create}
-        maxWidth="md"
+        maxWidth="lg"
       >
         <PromoFormBlock
           fromSuggestion={fromSuggestion}

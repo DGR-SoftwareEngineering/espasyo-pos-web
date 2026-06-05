@@ -10,8 +10,7 @@ interface Props {
   onSessionExpired: AsyncFunction;
 }
 
-const startSessionCheckAfterMinutes =
-  process.env.NODE_ENV === "development" ? 10 : 1;
+const startSessionCheckAfterMinutes = 43200; // 30 days — effectively never fires
 
 export const useSessionIdleTimer = ({ onSessionExpired, sessionId }: Props) => {
   const sessionCb = useApiCallback((api) => api.authentication.session());

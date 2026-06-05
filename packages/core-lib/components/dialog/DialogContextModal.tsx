@@ -65,6 +65,8 @@ import {
   PostSaleDialogContent,
   VoidSaleDialogContent,
 } from "./contents/pos";
+import { PlatformDto } from "../../api/platform/types";
+import { AssignUserDialogContent, PlatformCreateDialogContent, PlatformEditDialogContent, PlatformViewDialogContent } from "./contents/platform-management";
 
 interface Props {
   dialogFormType?: DialogContentType;
@@ -309,6 +311,36 @@ export const DialogContextModal: React.FC<Props> = ({
         />
       );
 
+    case "PlatformView":
+      return (
+        <PlatformViewDialogContent
+          data={dialogData as PlatformDto}
+          onClose={onClose!}
+        />
+      );
+    case "PlatformCreate":
+      return (
+        <PlatformCreateDialogContent
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "PlatformEdit":
+      return (
+        <PlatformEditDialogContent
+          data={dialogData as PlatformDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "AssignUserDialogContent":
+      return (
+        <AssignUserDialogContent
+          data={dialogData as PlatformDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
     default:
       return null;
   }

@@ -13,6 +13,8 @@ import { cashDrawerService } from "core-lib/business/cashDrawer";
 import {
   CloseShiftParams,
   CreateSaleParams,
+  CustomerPromoProductDto,
+  CustomerPromoProductItemDto,
   PromoDto,
   SaleDetailDto,
   SalesPaymentMethodDto,
@@ -95,13 +97,25 @@ export const PosRegisterBlock: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 1280,
   );
+  const [addedExclusiveIds, setAddedExclusiveIds] = useState<Set<string>>(new Set());
   const targetSales = useTargetSales();
 
-  // CSS-based fullscreen toggle — avoids the native requestFullscreen() API which
-  // isolates the rendering layer and hides Radix UI portals (dialogs, dropdowns).
-  const togglePosMode = useCallback(() => {
-    setIsPosMode((prev) => !prev);
-  }, []);
+  // Browser fullscreen toggle
+  const togglePosMode = useCallback(async () => {
+    if (!isPosMode) {
+      setIsPosMode(true);
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch {
+        // User denied or browser doesn't support — CSS overlay still works
+      }
+    } else {
+      setIsPosMode(false);
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  }, [isPosMode]);
 
   useEffect(() => {
     const onResize = () => setWindowWidth(window.innerWidth);
@@ -168,15 +182,35 @@ export const PosRegisterBlock: React.FC = () => {
     [activeShiftSummary, closeShiftApiCb, logout, showToast],
   );
 
-  const promoData = useApi((api) => api.commons.promoList());
-  const activePromos = useMemo(
-    () => (promoData.result?.data.response ?? []).filter((p) => p.status === "Active"),
-    [promoData.result]
+  // ──── Cart state ──────────────────────────────────────────────────────
+  const cart = useCartState(pos.defaultTaxRate);
+
+  // Use a ref to always point to the latest cart without triggering re-renders
+  const cartRef = useRef(cart);
+  cartRef.current = cart;
+
+  const totals = useMemo(
+    () => computeTotals(cart.lines, cart.orderDiscount, cart.taxRate, []),
+    [cart.lines, cart.orderDiscount, cart.taxRate],
   );
 
-  // Build a child→parent category lookup so we can do BFS-ancestry matching
-  // for category-targeted promos (a promo on "Drinks" applies to products in
-  // "Coffee" / "Milk Base" / etc. — see backend spec).
+  const cartCountByProductID = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const l of cart.lines) map[l.productID] = l.quantity;
+    return map;
+  }, [cart.lines]);
+
+  // ──── Promos ──────────────────────────────────────────────────────────
+  const promoData = useApi((api) => api.commons.promoList());
+
+  // Filter: show only active promos that are NOT customer-specific
+  // (customer-specific promos only appear when that customer is selected in cart)
+  const generalPromos = useMemo(
+    () => (promoData.result?.data.response ?? [])
+      .filter((p) => p.status === "Active" && !p.isCustomerSpecific),
+    [promoData.result],
+  );
+
   const promoCategoriesData = useApi(
     (api) => api.commons.productCategoryList(),
     [],
@@ -191,8 +225,7 @@ export const PosRegisterBlock: React.FC = () => {
 
   const eligiblePromosFor = useCallback(
     (product: SellableProductDto): PromoDto[] => {
-      if (activePromos.length === 0) return [];
-      // Walk up the category tree starting from this product's direct category
+      if (generalPromos.length === 0) return [];
       const ancestors = new Set<string>();
       let cur = product.categoryID ?? null;
       while (cur && !ancestors.has(cur)) {
@@ -201,7 +234,7 @@ export const PosRegisterBlock: React.FC = () => {
       }
       const seen = new Set<string>();
       const out: PromoDto[] = [];
-      for (const promo of activePromos) {
+      for (const promo of generalPromos) {
         for (const item of promo.items) {
           const hitsProduct =
             !!item.productID && item.productID === product.productID;
@@ -218,23 +251,12 @@ export const PosRegisterBlock: React.FC = () => {
       }
       return out;
     },
-    [activePromos, categoryParents],
+    [generalPromos, categoryParents],
   );
+
+  // ──── Dialog state ────────────────────────────────────────────────────
   const [promoDialogProduct, setPromoDialogProduct] = useState<SellableProductDto | null>(null);
   const [pickerProduct, setPickerProduct] = useState<SellableProductDto | null>(null);
-
-  const cart = useCartState(pos.defaultTaxRate);
-  const totals = useMemo(
-    () => computeTotals(cart.lines, cart.orderDiscount, cart.taxRate, []),
-    [cart.lines, cart.orderDiscount, cart.taxRate],
-  );
-
-  const cartCountByProductID = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const l of cart.lines) map[l.productID] = l.quantity;
-    return map;
-  }, [cart.lines]);
-
   const [submitting, setSubmitting] = useState(false);
 
   const createCb = useApiCallback(async (api, args: CreateSaleParams) =>
@@ -247,18 +269,29 @@ export const PosRegisterBlock: React.FC = () => {
   // Close POS mode on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isPosMode) setIsPosMode(false);
+      if (e.key === "Escape" && isPosMode) {
+        setIsPosMode(false);
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isPosMode]);
 
-  const handleRedeemProductSelected = useCallback(
-    (product: RedeemableProductDto, options: AddProductOptions) => {
-      cart.addRedeemedProduct(product, options);
-    },
-    [cart],
-  );
+  // Sync state when user exits fullscreen via browser
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsPosMode(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  // ──── Stable callbacks (use cartRef to avoid depending on `cart`) ─────
 
   const handleAdd = useCallback(
     (product: SellableProductDto) => {
@@ -269,16 +302,32 @@ export const PosRegisterBlock: React.FC = () => {
         setPickerProduct(product);
         return;
       }
-      cart.addProduct(product);
+      cartRef.current.addProduct(product);
     },
-    [cart, pos.allowSales],
+    [pos.allowSales],
+  );
+
+  const handleRedeemProductSelected = useCallback(
+    (product: RedeemableProductDto, options: AddProductOptions) => {
+      cartRef.current.addRedeemedProduct(product, options);
+    },
+    [],
+  );
+
+  const handleAttachPromoProduct = useCallback(
+    (product: CustomerPromoProductItemDto, promo: CustomerPromoProductDto) => {
+      cartRef.current.applyPromoProduct(product, promo);
+      setAddedExclusiveIds(prev => new Set(prev).add(product.productID));
+    },
+    [],
   );
 
   const submitSale = useCallback(
     async (payload: PosChargePayload) => {
+      const currentCart = cartRef.current;
       const params: CreateSaleParams = {
-        customerID: cart.selectedCustomer?.customerID ?? null,
-        items: cart.lines.map((l) => ({
+        customerID: currentCart.selectedCustomer?.customerID ?? null,
+        items: currentCart.lines.map((l) => ({
           productID: l.productID,
           productVariantID: l.productVariantID ?? null,
           addOnItemIDs:
@@ -288,8 +337,8 @@ export const PosRegisterBlock: React.FC = () => {
           discount: l.discount > 0 ? l.discount : null,
           isRedemptionLine: l.isRedeemed ?? false,
         })),
-        discountAmount: cart.orderDiscount > 0 ? cart.orderDiscount : null,
-        taxRate: cart.taxRate,
+        discountAmount: currentCart.orderDiscount > 0 ? currentCart.orderDiscount : null,
+        taxRate: currentCart.taxRate,
         payments: payload.payments.map((p) => ({
           method: p.method,
           amount: p.amount,
@@ -317,11 +366,10 @@ export const PosRegisterBlock: React.FC = () => {
             showToast("Promo discount applied to this order!", "success");
           }
 
-          // Capture before clearing — isRedeemed lines disappear after clear()
-          const hasRedeemedLine = cart.lines.some((l) => l.isRedeemed);
-          const redeemCustomerID = cart.selectedCustomer?.customerID ?? null;
+          const hasRedeemedLine = currentCart.lines.some((l) => l.isRedeemed);
+          const redeemCustomerID = currentCart.selectedCustomer?.customerID ?? null;
 
-          cart.clear();
+          currentCart.clear();
 
           if (hasRedeemedLine && redeemCustomerID) {
             confirmRedeemCb.execute(redeemCustomerID).catch(() => {
@@ -339,11 +387,8 @@ export const PosRegisterBlock: React.FC = () => {
             cashDrawerService.kickDrawer().catch(() => {});
           }
 
-          // Refresh daily total (non-blocking — don't await so it doesn't delay the dialog)
           targetSales.refresh().catch(() => {});
 
-          // Wait for the charge dialog's close animation to finish before opening
-          // the receipt dialog. Radix Dialog ignores open=true while still animating out.
           setTimeout(() => {
             openDialog({
               title: `Receipt · ${sale.saleNumber}`,
@@ -387,7 +432,7 @@ export const PosRegisterBlock: React.FC = () => {
         setSubmitting(false);
       }
     },
-    [cart, createCb, showToast, openDialog, systemName, theme, currencyCode, pos, targetSales.refresh],
+    [createCb, showToast, openDialog, systemName, theme, currencyCode, pos, targetSales.refresh, settingsMap, confirmRedeemCb],
   );
 
   // Fire confetti exactly once per day when the daily target is first crossed
@@ -404,8 +449,15 @@ export const PosRegisterBlock: React.FC = () => {
     }
   }, [targetSales.reached, pos]);
 
+  useEffect(() => {
+    if (cart.lines.length === 0 || !cart.selectedCustomer) {
+      setAddedExclusiveIds(new Set());
+    }
+  }, [cart.lines.length, cart.selectedCustomer]);
+
   const handleCharge = useCallback(() => {
-    if (cart.lines.length === 0) return;
+    const currentCart = cartRef.current;
+    if (currentCart.lines.length === 0) return;
     openDialog({
       title: "Complete sale",
       dialogContentType: "PosCharge",
@@ -413,13 +465,15 @@ export const PosRegisterBlock: React.FC = () => {
         totalAmount: totals.totalAmount,
         subtotal: totals.subtotal,
         discountAmount: totals.discountTotal,
-        taxRate: cart.taxRate,
+        taxRate: currentCart.taxRate,
         taxAmount: totals.taxAmount,
-        itemCount: cart.lines.reduce((s, l) => s + l.quantity, 0),
+        itemCount: currentCart.lines.reduce((s, l) => s + l.quantity, 0),
         onConfirm: submitSale,
       },
     });
-  }, [cart.lines, cart.taxRate, totals, openDialog, submitSale]);
+  }, [totals, openDialog, submitSale]);
+
+  // ──── Render ──────────────────────────────────────────────────────────
 
   return (
     <Box
@@ -453,26 +507,17 @@ export const PosRegisterBlock: React.FC = () => {
               <img
                 src={theme.logoUrl}
                 alt={systemName}
-                style={{
-                  height: 40,
-                  objectFit: "contain",
-                }}
+                style={{ height: 40, objectFit: "contain" }}
               />
             ) : (
-              <Heading size="3" style={{ color: "white" }}>
-                {systemName}
-              </Heading>
+              <Heading size="3" style={{ color: "white" }}>{systemName}</Heading>
             )}
-            <Text size="2" style={{ color: "white", opacity: 0.9 }}>
-              ⚡ POS Mode
-            </Text>
+            <Text size="2" style={{ color: "white", opacity: 0.9 }}>⚡ POS Mode</Text>
             {drawerSupported && (
               <Flex align="center" gap="1">
                 <Box
                   style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
+                    width: 8, height: 8, borderRadius: "50%",
                     background: drawerConnected ? "var(--green-9)" : "var(--gray-6)",
                     boxShadow: drawerConnected ? "0 0 0 2px var(--green-a4)" : undefined,
                     flexShrink: 0,
@@ -487,35 +532,15 @@ export const PosRegisterBlock: React.FC = () => {
           <Flex align="center" gap="2">
             {drawerSupported && (
               <Tooltip content="Open cash drawer">
-                <IconButton
-                  variant="ghost"
-                  color="gray"
-                  size="2"
-                  disabled={!drawerConnected}
-                  onClick={openDrawer}
-                  style={{ color: "var(--white-a11)" }}
-                >
+                <IconButton variant="ghost" color="gray" size="2" disabled={!drawerConnected} onClick={openDrawer} style={{ color: "var(--white-a11)" }}>
                   <PointOfSaleRounded fontSize="small" />
                 </IconButton>
               </Tooltip>
             )}
-            <Button
-              variant="ghost"
-              size="2"
-              onClick={() => setCloseShiftConfirmOpen(true)}
-              style={{ color: "var(--red-4)" }}
-            >
-              <LockOpenOutlined style={{ fontSize: 16 }} />
-              End Shift
+            <Button variant="ghost" size="2" onClick={() => setCloseShiftConfirmOpen(true)} style={{ color: "var(--red-4)" }}>
+              <LockOpenOutlined style={{ fontSize: 16 }} /> End Shift
             </Button>
-            <IconButton
-              variant="ghost"
-              color="gray"
-              onClick={togglePosMode}
-              aria-label="Exit POS mode"
-              title="Exit POS mode (or press Esc)"
-              style={{ color: "var(--white-a11)" }}
-            >
+            <IconButton variant="ghost" color="gray" onClick={togglePosMode} aria-label="Exit POS mode" title="Exit POS mode (or press Esc)" style={{ color: "var(--white-a11)" }}>
               <ExitIcon />
             </IconButton>
           </Flex>
@@ -524,149 +549,91 @@ export const PosRegisterBlock: React.FC = () => {
       <Box
         style={
           isPosMode
-            ? {
-                flex: 1,
-                minHeight: 0,
-                padding: 16,
-                display: "flex",
-                flexDirection: "column",
-              }
+            ? { flex: 1, minHeight: 0, padding: 16, display: "flex", flexDirection: "column" }
             : {
-                height: "calc(100vh - 120px)",
-                minHeight: 560,
-                margin: "-24px -32px",
-                padding: 20,
-                background:
-                  "radial-gradient(ellipse 80% 60% at 50% 0%, var(--indigo-a2) 0%, transparent 60%), var(--gray-2)",
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
+                height: "calc(100vh - 120px)", minHeight: 560, margin: "-24px -32px", padding: 20,
+                background: "radial-gradient(ellipse 80% 60% at 50% 0%, var(--indigo-a2) 0%, transparent 60%), var(--gray-2)",
+                position: "relative", display: "flex", flexDirection: "column", gap: 12,
               }
         }
       >
-      {!isPosMode && !pos.allowSales && (
-        <Callout.Root color="red" variant="surface" size="1">
-          <Callout.Icon>
-            <InfoCircledIcon />
-          </Callout.Icon>
-          <Callout.Text>
-            Sales are currently disabled by admin settings. The register is
-            visible but cannot record new transactions.
-          </Callout.Text>
-        </Callout.Root>
-      )}
+        {!isPosMode && !pos.allowSales && (
+          <Callout.Root color="red" variant="surface" size="1">
+            <Callout.Icon><InfoCircledIcon /></Callout.Icon>
+            <Callout.Text>
+              Sales are currently disabled by admin settings. The register is visible but cannot record new transactions.
+            </Callout.Text>
+          </Callout.Root>
+        )}
 
-      {!isPosMode && (
-        <Flex justify="end" align="center" gap="2">
-          <Button
-            variant="soft"
-            color="red"
-            size="2"
-            onClick={() => setCloseShiftConfirmOpen(true)}
-          >
-            <LockOpenOutlined style={{ fontSize: 16 }} />
-            End Shift
-          </Button>
-          <IconButton
-            variant="soft"
-            color="indigo"
-            onClick={togglePosMode}
-            aria-label="Enter POS mode"
-            title="Enter fullscreen POS mode"
-          >
-            <FullscreenOutlined fontSize="small" />
-          </IconButton>
-        </Flex>
-      )}
+        {!isPosMode && (
+          <Flex justify="end" align="center" gap="2">
+            <Button variant="soft" color="red" size="2" onClick={() => setCloseShiftConfirmOpen(true)}>
+              <LockOpenOutlined style={{ fontSize: 16 }} /> End Shift
+            </Button>
+            <IconButton variant="soft" color="indigo" onClick={togglePosMode} aria-label="Enter POS mode" title="Enter fullscreen POS mode">
+              <FullscreenOutlined fontSize="small" />
+            </IconButton>
+          </Flex>
+        )}
 
-      <Box
-        style={
-          windowWidth < 768
-            ? {
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
-                flex: 1,
-                minHeight: 0,
-              }
-            : {
-                display: "grid",
-                gridTemplateColumns:
-                  windowWidth < 1024
-                    ? "minmax(0, 1fr) minmax(300px, 340px)"
-                    : "minmax(0, 1fr) minmax(380px, 440px)",
-                gap: 16,
-                flex: 1,
-                minHeight: 0,
-              }
-        }
-      >
-        <Box style={windowWidth < 768 ? { flex: "0 0 55%", minHeight: 0 } : { minHeight: 0, display: "contents" }}>
-          <ProductGrid
-            onAdd={handleAdd}
-            cartCountByProductID={cartCountByProductID}
-            eligiblePromosFor={eligiblePromosFor}
-            onPromoClick={setPromoDialogProduct}
-          />
+        <Box
+          style={
+            windowWidth < 768
+              ? { display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0 }
+              : { display: "grid", gridTemplateColumns: windowWidth < 1024 ? "minmax(0, 1fr) minmax(300px, 340px)" : "minmax(0, 1fr) minmax(380px, 440px)", gap: 16, flex: 1, minHeight: 0 }
+          }
+        >
+          <Box style={windowWidth < 768 ? { flex: "0 0 55%", minHeight: 0 } : { minHeight: 0, display: "contents" }}>
+            <ProductGrid
+              onAdd={handleAdd}
+              cartCountByProductID={cartCountByProductID}
+              eligiblePromosFor={eligiblePromosFor}
+              onPromoClick={setPromoDialogProduct}
+            />
+          </Box>
+          <Box style={windowWidth < 768 ? { flex: "0 0 45%", minHeight: 0 } : { minHeight: 0, display: "contents" }}>
+            <CartPanel
+              state={cart}
+              totals={totals}
+              onClear={cart.clear}
+              onCharge={handleCharge}
+              submitting={submitting}
+              orderSource={orderSource}
+              onOrderSourceChange={setOrderSource}
+              targetSalesEnabled={targetSales.enabled && targetSales.targetAmount > 0}
+              targetSalesCurrentAmount={targetSales.currentAmount}
+              targetSalesTargetAmount={targetSales.targetAmount}
+              targetSalesProgressPct={targetSales.progressPct}
+              targetSalesReached={targetSales.reached}
+              onRedeemProductSelected={handleRedeemProductSelected}
+              onAttachPromoProduct={handleAttachPromoProduct}
+              addedExclusiveIds={addedExclusiveIds}
+            />
+          </Box>
         </Box>
-        <Box style={windowWidth < 768 ? { flex: "0 0 45%", minHeight: 0 } : { minHeight: 0, display: "contents" }}>
-          <CartPanel
-            state={cart}
-            totals={totals}
-            onClear={cart.clear}
-            onCharge={handleCharge}
-            submitting={submitting}
-            orderSource={orderSource}
-            onOrderSourceChange={setOrderSource}
-            targetSalesEnabled={targetSales.enabled && targetSales.targetAmount > 0}
-            targetSalesCurrentAmount={targetSales.currentAmount}
-            targetSalesTargetAmount={targetSales.targetAmount}
-            targetSalesProgressPct={targetSales.progressPct}
-            targetSalesReached={targetSales.reached}
-            onRedeemProductSelected={handleRedeemProductSelected}
-          />
-        </Box>
-      </Box>
       </Box>
 
       {/* Close Shift — Confirmation */}
-      <AlertDialog.Root
-        open={closeShiftConfirmOpen}
-        onOpenChange={(open) => { if (!open && !fetchingShift) setCloseShiftConfirmOpen(false); }}
-      >
+      <AlertDialog.Root open={closeShiftConfirmOpen} onOpenChange={(open) => { if (!open && !fetchingShift) setCloseShiftConfirmOpen(false); }}>
         <AlertDialog.Content style={{ maxWidth: 440, zIndex: 9999 }}>
           <AlertDialog.Title>End your shift?</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            Closing your shift will log you out automatically. Make sure all
-            transactions are complete before proceeding.
+            Closing your shift will log you out automatically. Make sure all transactions are complete before proceeding.
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
-              <Button variant="soft" color="gray" disabled={fetchingShift}>
-                Cancel
-              </Button>
+              <Button variant="soft" color="gray" disabled={fetchingShift}>Cancel</Button>
             </AlertDialog.Cancel>
-            <Button
-              color="red"
-              loading={fetchingShift}
-              onClick={handleConfirmCloseShift}
-            >
-              <LockOpenOutlined style={{ fontSize: 16 }} />
-              Close Shift &amp; Log Out
+            <Button color="red" loading={fetchingShift} onClick={handleConfirmCloseShift}>
+              <LockOpenOutlined style={{ fontSize: 16 }} /> Close Shift &amp; Log Out
             </Button>
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
 
       {/* Close Shift — Form */}
-      <DialogBox
-        open={closeShiftFormOpen}
-        onClose={(_e, _reason) => { if (!closeShiftLoading) setCloseShiftFormOpen(false); }}
-        title="Close Shift"
-        maxWidth="sm"
-        disableDismiss={closeShiftLoading}
-      >
+      <DialogBox open={closeShiftFormOpen} onClose={(_e, _reason) => { if (!closeShiftLoading) setCloseShiftFormOpen(false); }} title="Close Shift" maxWidth="sm" disableDismiss={closeShiftLoading}>
         {closeShiftFormOpen && (
           <CloseShiftFormBlock
             onSubmit={handleCloseShiftSubmit}
@@ -684,17 +651,9 @@ export const PosRegisterBlock: React.FC = () => {
           product={promoDialogProduct}
           promos={eligiblePromosFor(promoDialogProduct)}
           onApply={(promo) => {
-            cart.applyPromo(promoDialogProduct, promo);
-            // Bundle promos with category-targeted items can't be auto-resolved
-            // client-side — surface a hint so the cashier adds eligible items.
-            if (
-              promo.type === "Bundle" &&
-              promo.items.some((i) => !!i.productCategoryID)
-            ) {
-              showToast(
-                "Bundle includes category items — add eligible products to the cart manually. The discount applies at checkout.",
-                "success",
-              );
+            cartRef.current.applyPromo(promoDialogProduct, promo);
+            if (promo.type === "Bundle" && promo.items.some((i) => !!i.productCategoryID)) {
+              showToast("Bundle includes category items — add eligible products to the cart manually. The discount applies at checkout.", "success");
             }
             setPromoDialogProduct(null);
           }}
@@ -707,7 +666,7 @@ export const PosRegisterBlock: React.FC = () => {
         <VariantAddOnDialog
           product={pickerProduct}
           onConfirm={(payload) => {
-            cart.addProductWithOptions(pickerProduct, {
+            cartRef.current.addProductWithOptions(pickerProduct, {
               productVariantID: payload.variant?.productVariantID ?? null,
               variantName: payload.variant?.name ?? null,
               unitPrice: payload.unitPrice,
