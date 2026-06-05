@@ -9,7 +9,7 @@ export const config = {
         ";"
       ),
       SSO_COOKIE: process.env.NEXT_PUBLIC_SSO_COOKIE!,
-      APIURL: process.env.NEXT_PUBLIC_API_URL!,
+      APIURL: process.env.NEXT_PRIVATE_API_URL!,
       PLATFORMKEY: process.env.NEXT_PRIVATE_PLATFORM_KEY!,
     };
   },

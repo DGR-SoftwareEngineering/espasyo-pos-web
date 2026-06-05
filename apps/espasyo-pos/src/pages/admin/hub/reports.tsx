@@ -1,6 +1,7 @@
 import { Flex, Text } from "@radix-ui/themes";
-import { useAuthContext } from "core-lib";
+import { SSRWithContentSecurityPolicy, useAuthContext } from "core-lib";
 import { AdminReportsPage } from "../../../components/reports/AdminReportsPage";
+import { GetServerSideProps } from "next";
 
 const ReportsPage = () => {
   const { loading } = useAuthContext();
@@ -15,5 +16,6 @@ const ReportsPage = () => {
 
   return <AdminReportsPage />;
 };
-
+export const getServerSideProps: GetServerSideProps =
+  SSRWithContentSecurityPolicy();
 export default ReportsPage;

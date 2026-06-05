@@ -41,9 +41,9 @@ export class Http {
     private setupInterceptors() {
         this.client.interceptors.request.use(
             req => {
-                (typeof window !== 'undefined' ? console : console).info( //change ? console -> datadog logger for much detailed logs
-                    `${req.method} ${req.url}${qs.stringify(req.params, { arrayFormat: 'repeat'})}`
-                ); 
+                // (typeof window !== 'undefined' ? console : console).info( //change ? console -> datadog logger for much detailed logs
+                //     `${req.method} ${req.url}${qs.stringify(req.params, { arrayFormat: 'repeat'})}`
+                // ); 
                 this.options.onRequest?.(req);
                 return req;
             },
