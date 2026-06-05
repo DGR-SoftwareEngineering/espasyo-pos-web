@@ -50,3 +50,10 @@ export interface DataTableSx {
     cell?: SxProps<Theme>;
   };
 }
+
+export interface CustomFilterProps<T = {}> {
+  column: { id: string };
+  onChange: (filter: { id: string; value: unknown }) => void;
+  filterValue?: unknown;
+  labelPrefix?: string;
+}

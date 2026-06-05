@@ -7,7 +7,6 @@ import {
 } from "../core/hooks";
 import { hexToRadixAccent } from "../business/colors";
 import { DuplicationSessionBlock } from "./blocks";
-import { MuiThemeFramework } from "./design/MuiThemeFramework";
 import {
   RadixThemeFramework,
   RadixThemeFrameworkProps,
@@ -17,7 +16,6 @@ import { ErrorBoundary } from "./ErrorBoundary";
 export type Framework = "Radix" | "MUI";
 
 interface Props {
-  framework?: Framework;
   radixTheme?: Pick<
     RadixThemeFrameworkProps,
     | "appearance"
@@ -71,7 +69,6 @@ const renderFallback = () => (
 );
 
 export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
-  framework = "Radix",
   radixTheme,
   children,
   platform = "POS",
@@ -114,26 +111,9 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
     </Suspense>
   );
 
-  const renderMui = () => (
-    <Suspense fallback={renderFallback()}>
-      <ErrorBoundary errorMessage="MUI Framework Error">
-        <MuiThemeFramework
-          isAuthenticated={isAuthenticated}
-          loading={loading}
-          logout={logout}
-          email={email}
-          role={role}
-          initials={initials}
-        >
-          {children}
-        </MuiThemeFramework>
-      </ErrorBoundary>
-    </Suspense>
-  );
-
   return (
     <ErrorBoundary errorMessage="Layout Error">
-      {framework === "MUI" ? renderMui() : renderRadix()}
+      {renderRadix()}
     </ErrorBoundary>
   );
 };

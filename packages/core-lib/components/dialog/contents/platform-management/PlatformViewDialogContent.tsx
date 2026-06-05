@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Text, Badge, Flex } from "@radix-ui/themes";
-import { PlatformDto } from "../../../api/platform/types";
+import { PlatformDto } from "../../../../api/platform/types";
 
 interface PlatformViewDialogContentProps {
   data: PlatformDto;
