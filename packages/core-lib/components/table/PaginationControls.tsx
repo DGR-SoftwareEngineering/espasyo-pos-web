@@ -22,7 +22,7 @@ export function PaginationControls<T extends Record<string, unknown>>({
     canPreviousPage,
     canNextPage,
     pageOptions,
-  } = instance;
+  } = instance as any;
 
   const hasPreviousPage = paginationData
     ? paginationData.hasPreviousPage

@@ -20,7 +20,7 @@ const Page: React.FC<React.PropsWithChildren<Props>> = ({
         <BrandingHead />
         <ThemeColorVars />
         <AuthProvider authMethod="STANDARD_AUTH">
-          <Layout framework="Radix" platform="CustomerEngagement">
+          <Layout platform="CustomerEngagement">
             {children}
           </Layout>
         </AuthProvider>

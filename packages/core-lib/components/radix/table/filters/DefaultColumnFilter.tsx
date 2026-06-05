@@ -3,11 +3,17 @@ import { TextField as RadixTextField } from "@radix-ui/themes";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { FilterProps } from "react-table";
 
+interface DefaultColumnFilterProps<T extends Record<string, unknown>> extends Omit<FilterProps<T>, "column"> {
+  onChange: (filter: { id: string; value: string }) => void;
+  column: { id: string };
+  filterValue?: string;
+}
+
 export function DefaultColumnFilter<T extends Record<string, unknown>>({
   column: { id },
   onChange,
   filterValue = "",
-}: FilterProps<T>) {
+}: DefaultColumnFilterProps<T>) {
   const [value, setValue] = useState(filterValue);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {

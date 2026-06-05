@@ -1,6 +1,5 @@
 import { KeyboardArrowDown } from "@mui/icons-material";
-import { FormControl, Grid, MenuItem, Select, Typography } from "@mui/material";
-import { SelectProps } from "@mui/material/Select/Select";
+import { FormControl, Grid, MenuItem, Select, Typography, type SelectProps } from "@mui/material";
 import { JSX, useState } from "react";
 import {
   Control,

@@ -11,6 +11,12 @@ import { formatDate, isValidDate } from "../../../../business/dates";
 
 type DateRange = [Date | null, Date | null];
 
+interface DateRangeFilterProps extends Omit<FilterProps<{}>, "column"> {
+  onChange: (filter: { id: string; value: DateRange | null }) => void;
+  column: { id: string };
+  filterValue?: DateRange;
+}
+
 const formatValue = (value: DateRange) =>
   value[0] || value[1]
     ? `${value[0] ? formatDate(value[0]) : ""} - ${
@@ -18,7 +24,7 @@ const formatValue = (value: DateRange) =>
       }`
     : "";
 
-export const DateRangeColumnFilter: React.FC<FilterProps<{}>> = ({
+export const DateRangeColumnFilter: React.FC<DateRangeFilterProps> = ({
   onChange,
   column: { id },
   filterValue = [null, null],
@@ -26,7 +32,7 @@ export const DateRangeColumnFilter: React.FC<FilterProps<{}>> = ({
   const [value, setValue] = useState<DateRange>(filterValue);
   const [open, setOpen] = useState(false);
 
-  const handleChange: CalendarProps["onChange"] = (newValue) => {
+  const handleChange: CalendarProps["onChange"] = (newValue: any) => {
     const tuple = (Array.isArray(newValue) ? newValue : [newValue, null]) as
       | [Date]
       | DateRange;

@@ -122,7 +122,7 @@ export const TableContent = <T extends Record<string, unknown>>({
                           index === headerGroup.headers.length - 2 ? 0 : 16,
                       }}
                     >
-                      {column.canFilter ? column.render("Filter") : null}
+                      {(column as any).canFilter ? column.render("Filter") : null}
                       {column.id === "_actions" && (
                         <Box display="flex" gap={4}>
                           <PrimaryButton
@@ -169,8 +169,8 @@ export const TableContent = <T extends Record<string, unknown>>({
                   <Grid container alignItems="center" wrap="nowrap">
                     <Grid>{column.render("Header")}</Grid>
                     <Grid pt={2}>
-                      {column.isSorted ? (
-                        column.isSortedDesc ? (
+                      {(column as any).isSorted ? (
+                        (column as any).isSortedDesc ? (
                           <KeyboardArrowDown fontSize="medium" />
                         ) : (
                           <KeyboardArrowUp fontSize="medium" />
@@ -188,14 +188,14 @@ export const TableContent = <T extends Record<string, unknown>>({
         <TableBody {...tableInstance.getTableBodyProps()}>
           {isLoading && (
             <TableRow>
-              <TableCell colSpan={tableInstance.visibleColumns.length}>
+              <TableCell colSpan={(tableInstance as any).visibleColumns.length}>
                 <ListLoader loadersCount={4} isFullWidth spacing={4} />
               </TableCell>
             </TableRow>
           )}
-          {!tableInstance.page.length && !isLoading && (
+          {!(tableInstance as any).page.length && !isLoading && (
             <TableRow data-testid="table-data-not-found-row">
-              <TableCell colSpan={tableInstance.visibleColumns.length}>
+              <TableCell colSpan={(tableInstance as any).visibleColumns.length}>
                 <ErrorBox
                   mb={0}
                   label={filters.length ? noDataFoundText : noDataText}
@@ -204,7 +204,7 @@ export const TableContent = <T extends Record<string, unknown>>({
             </TableRow>
           )}
           {!isLoading &&
-            tableInstance.page.map((row) => {
+            (tableInstance as any).page.map((row: any) => {
               tableInstance.prepareRow(row);
               return (
                 <TableRow
@@ -219,7 +219,7 @@ export const TableContent = <T extends Record<string, unknown>>({
                   }}
                   data-testid="table-row"
                 >
-                  {row.cells.map((cell) => (
+                  {row.cells.map((cell: any) => (
                     <TableCell
                       {...cell.getCellProps()}
                       key={cell.getCellProps().key}

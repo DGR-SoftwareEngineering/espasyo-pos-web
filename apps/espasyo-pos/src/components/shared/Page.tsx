@@ -25,7 +25,7 @@ const Page: React.FC<React.PropsWithChildren<Props>> = ({
         <AuthProvider authMethod="STANDARD_AUTH">
           <AccessProvider>
             <MpinStatusProvider>
-              <Layout framework="Radix">{children}</Layout>
+              <Layout>{children}</Layout>
             </MpinStatusProvider>
           </AccessProvider>
         </AuthProvider>

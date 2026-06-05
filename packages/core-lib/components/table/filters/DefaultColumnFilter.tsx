@@ -1,15 +1,15 @@
 import { Search } from "@mui/icons-material";
 import { InputAdornment } from "@mui/material";
 import { useState } from "react";
-import { FilterProps } from "react-table";
 import { Input } from "../../form";
+import { CustomFilterProps } from "../types";
 
 export function DefaultColumnFilter<T extends Record<string, unknown>>({
   column: { id },
   onChange,
   filterValue = "",
   labelPrefix = "",
-}: FilterProps<T>) {
+}: CustomFilterProps<T>) {
   const [value, setValue] = useState(filterValue);
 
   return (

@@ -13,9 +13,10 @@ import CardAlert from "./CardAlert";
 interface Props {
   open: boolean | undefined;
   toggleDrawer: (newOpen: boolean) => () => void;
+  roleName?: string;
 }
 
-export default function SideMenuMobile({ open, toggleDrawer }: Props) {
+export default function SideMenuMobile({ open, toggleDrawer, roleName = "" }: Props) {
   return (
     <Drawer
       anchor="right"
@@ -56,7 +57,7 @@ export default function SideMenuMobile({ open, toggleDrawer }: Props) {
         </Stack>
         <Divider />
         <Stack sx={{ flexGrow: 1 }}>
-          <MenuContent />
+          <MenuContent roleName={roleName} />
           <Divider />
         </Stack>
         <CardAlert />

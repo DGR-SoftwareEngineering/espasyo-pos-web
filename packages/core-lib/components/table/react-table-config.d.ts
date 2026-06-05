@@ -1,3 +1,4 @@
+import React from "react";
 import {
   UseColumnOrderInstanceProps,
   UseColumnOrderState,
@@ -103,7 +104,9 @@ declare module "react-table" {
       UseGlobalFiltersColumnOptions<D>,
       UseGroupByColumnOptions<D>,
       UseResizeColumnsColumnOptions<D>,
-      UseSortByColumnOptions<D> {}
+      UseSortByColumnOptions<D> {
+    Filter?: React.FC<any>;
+  }
 
   export interface ColumnInstance<
     D extends Record<string, unknown> = Record<string, unknown>
