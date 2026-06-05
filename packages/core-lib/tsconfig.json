@@ -1,8 +1,28 @@
 {
   "extends": "../typescript-config/react-library.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true
   },
-  "include": ["."],
+  "include": [
+    ".",
+    "core/types/global.d.ts",
+    "core/types/react.d.ts",
+    "core/types/theme.d.ts",
+    "core/types/eva-icons.d.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

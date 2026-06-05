@@ -1,0 +1,129 @@
+/* Use @import instead of @tailwind for v4 */
+@import "tailwindcss";
+
+/* Define your theme variables */
+@theme {
+  --font-satoshi: "Satoshi", "sans-serif";
+
+  /* Define custom colors if needed */
+  --color-body: #1f2937;
+  --color-bodydark: #9ca3af;
+  --color-boxdark: #1f2937;
+  --color-stroke: #e5e7eb;
+  --color-strokedark: #374151;
+  --color-meta-4: #374151;
+  --color-bodydark1: #d1d5db;
+  --color-whiten: #f9fafb;
+  --color-primary: #c2410c;
+}
+
+/* Base styles without @apply */
+body {
+  margin: 0;
+  font-family: var(--font-satoshi), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--color-body, #1f2937);
+  background-color: var(--color-whiten, #f9fafb);
+  position: relative;
+  z-index: 1;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom utilities without @apply */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes shimmer-slide {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer-slide 1.5s infinite linear;
+}
+
+.hero-full-height {
+  height: 100vh;
+  height: 100svh;
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #c2410c, #ea580c);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ea580c, #f97316);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+  background: #c2410c;
+  color: white;
+}

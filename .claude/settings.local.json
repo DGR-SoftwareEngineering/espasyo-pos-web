@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\jmsevilla\\\\Documents\\\\espasyo\\\\web\\\\espasyo-pos-web\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(npx tsc *)",
+      "Bash(git log *)",
+      "Bash(xargs grep -l \"chartKey.*=\")",
+      "Bash(node -e \"const yup = require\\('./node_modules/yup'\\); console.log\\(yup.version || 'no version export'\\); const s = yup.object\\({ mode: yup.mixed\\(\\).oneOf\\(['a','b']\\).when\\('mode', { is: \\(v\\) => v === 'a', then: \\(s\\) => s }\\) }\\); console.log\\('yup when+fn OK'\\);\")",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "mcp__ide__getDiagnostics",
+      "Bash(yarn add *)",
+      "Bash(yarn dev *)",
+      "Bash(curl -s http://localhost:3001)",
+      "Bash(npm list *)",
+      "Bash(yarn list *)",
+      "Bash(yarn tsc *)",
+      "Bash(timeout 30 bash -c 'until curl -s http://localhost:3000 > /dev/null; do sleep 2; done')"
+    ]
+  }
+}

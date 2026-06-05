@@ -1,3 +1,7 @@
+NEXT_PRIVATE_WHITELISTED_COOKIES=""
+NEXT_PRIVATE_SSO_COOKIE="ssocookie"
+NEXT_PRIVATE_API_URL="https://localhost:7095"
+
 # Turborepo starter
 
 This Turborepo starter is maintained by the Turborepo core team.
