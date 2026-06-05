@@ -61,7 +61,9 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
           content="minimum-scale=1, initial-scale=1, width=device-width"
         />
       </Head>
-      <Page initialPublicSettings={initialPublicSettings}>{renderApp()}</Page>
+      <Page initialPublicSettings={initialPublicSettings} generatedNonce={pageProps?.generatedNonce as string}>
+        {renderApp()}
+      </Page>
     </CacheProvider>
   );
 }

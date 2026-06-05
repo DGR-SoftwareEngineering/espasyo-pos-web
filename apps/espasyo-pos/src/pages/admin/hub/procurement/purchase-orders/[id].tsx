@@ -1,6 +1,8 @@
-import { useRouter } from "next/router";
 import { Flex, Text } from "@radix-ui/themes";
 import { PurchaseOrderDetailBlock } from "../../../../../components/contents/procurement";
+import { GetServerSideProps } from "next";
+import { SSRWithContentSecurityPolicy } from "core-lib";
+import { useRouter } from "core-lib/core/router";
 
 const PurchaseOrderDetailPage = () => {
   const router = useRouter();
@@ -18,5 +20,6 @@ const PurchaseOrderDetailPage = () => {
 
   return <PurchaseOrderDetailBlock purchaseOrderID={id} />;
 };
-
+export const getServerSideProps: GetServerSideProps =
+  SSRWithContentSecurityPolicy();
 export default PurchaseOrderDetailPage;

@@ -37,3 +37,4 @@ export * from "./header";
 export * from "./FilterBar";
 export * from "./StatusChip";
 export * from "./confetti";
+export * from "./ContentSecurityPolicyHeader"

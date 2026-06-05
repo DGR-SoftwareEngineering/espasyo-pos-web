@@ -1,6 +1,7 @@
 import { Flex, Text } from "@radix-ui/themes";
-import { useAuthContext } from "core-lib";
+import { SSRWithContentSecurityPolicy, useAuthContext } from "core-lib";
 import { AdminDashboard } from "../../../components/dashboard/admin";
+import { GetServerSideProps } from "next";
 
 const AdminHub = () => {
   const { loading } = useAuthContext();
@@ -15,5 +16,6 @@ const AdminHub = () => {
 
   return <AdminDashboard />;
 };
-
+export const getServerSideProps: GetServerSideProps =
+  SSRWithContentSecurityPolicy();
 export default AdminHub;
