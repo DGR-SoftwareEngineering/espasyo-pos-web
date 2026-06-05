@@ -1,0 +1,78 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, development, 'feature/**']
+  pull_request:
+    branches: [development, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn turbo run lint --filter=espasyo-pos
+
+      - name: Build
+        run: yarn turbo run build --filter=espasyo-pos
+
+  deploy:
+    name: Deploy to ${{ github.ref == 'refs/heads/main' && 'Production' || 'Preview' }}
+    needs: ci
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/development' || github.ref == 'refs/heads/main')
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Vercel CLI
+        run: yarn global add vercel@latest
+
+      - name: Pull Vercel environment info
+        run: |
+          vercel pull --yes \
+            --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} \
+            --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build for Vercel
+        run: |
+          vercel build \
+            ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} \
+            --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        run: |
+          vercel deploy --prebuilt \
+            ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} \
+            --token=${{ secrets.VERCEL_TOKEN }}

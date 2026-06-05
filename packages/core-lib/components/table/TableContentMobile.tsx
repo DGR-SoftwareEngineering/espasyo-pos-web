@@ -82,7 +82,7 @@ export const TableContentMobile = <T extends Record<string, unknown>>({
     tableInstance.headerGroups.forEach((hg) =>
       hg.headers.forEach((col) => {
         if (Array.isArray(filters))
-          col.filterValue = filters.find((f) => f.id === col.id)?.value;
+          (col as any).filterValue = filters.find((f) => f.id === col.id)?.value;
       })
     );
   }, [filters, filtersMenuOpen]);
@@ -142,7 +142,7 @@ export const TableContentMobile = <T extends Record<string, unknown>>({
             )}
             {canDownload && (
               <TextButton
-                onClick={() => tableInstance.toggleAllRowsSelected(false)}
+                onClick={() => (tableInstance as any).toggleAllRowsSelected(false)}
                 sx={actionButtonStyle}
                 data-testid="clear-selections"
               >
@@ -185,14 +185,14 @@ export const TableContentMobile = <T extends Record<string, unknown>>({
         <TableBody {...tableInstance.getTableBodyProps()}>
           {isLoading && (
             <TableRow>
-              <TableCell colSpan={tableInstance.visibleColumns.length}>
+              <TableCell colSpan={(tableInstance as any).visibleColumns.length}>
                 <ListLoader loadersCount={4} isFullWidth={true} spacing={4} />
               </TableCell>
             </TableRow>
           )}
-          {!tableInstance.page.length && !isLoading && (
+          {!(tableInstance as any).page.length && !isLoading && (
             <TableRow data-testid="table-data-not-found-row">
-              <TableCell colSpan={tableInstance.visibleColumns.length}>
+              <TableCell colSpan={(tableInstance as any).visibleColumns.length}>
                 <ErrorBox
                   mb={0}
                   label={filters.length ? noDataFoundText : noDataText}
@@ -201,25 +201,28 @@ export const TableContentMobile = <T extends Record<string, unknown>>({
             </TableRow>
           )}
           {!isLoading &&
-            tableInstance.page.map((row) => {
+            (tableInstance as any).page.map((row: any) => {
               tableInstance.prepareRow(row);
+              const isRowSelected = row.getToggleRowSelectedProps().checked;
+              const isRowHighlighted = (row.original as any).isHighlight;
+
               return (
                 <TableRow
                   {...row.getRowProps()}
                   key={row.getRowProps().key}
                   style={{
-                    backgroundColor: row.isSelected
+                    backgroundColor: isRowSelected
                       ? theme.palette.primary.light
-                      : row.original.isHighlight
-                      ? theme.palette.grey.A100
-                      : undefined,
+                      : isRowHighlighted
+                        ? theme.palette.grey.A100
+                        : undefined,
                   }}
                   data-testid="table-row"
                 >
                   <TableCell
                     style={{
                       display: "flex",
-                      color: row.isSelected
+                      color: isRowSelected
                         ? theme.palette.primary.main
                         : undefined,
                       borderColor: theme.palette.grey.A400,
@@ -278,7 +281,7 @@ export const TableContentMobile = <T extends Record<string, unknown>>({
                 )?.label
               }
             </Typography>
-            {column.canFilter ? column.render("Filter") : null}
+            {(column as any).canFilter ? (column as any).render("Filter") : null}
           </Grid>
         ))
     );

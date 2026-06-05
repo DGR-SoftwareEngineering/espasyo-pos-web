@@ -82,7 +82,7 @@ const defaultColumn: Partial<Column> = {
   minWidth: 250,
   width: 252,
   maxWidth: 300,
-};
+} as any;
 const hooks = [
   useColumnOrder,
   useFilters,
@@ -166,7 +166,7 @@ export function PaginatedTable<T extends Record<string, unknown>>(
         filters: [...(filters ?? []), ...additionalFilter],
         sortBy: sortBy || [],
       },
-    },
+    } as any,
     ...hooks,
     (hooks: Hooks<T>) => {
       hooks.visibleColumns.push((columns) => [
@@ -174,7 +174,7 @@ export function PaginatedTable<T extends Record<string, unknown>>(
           id: "_selector",
           disableResizing: true,
           disableGroupBy: true,
-          Header: ({ getToggleAllPageRowsSelectedProps }: HeaderProps<T>) => (
+          Header: ({ getToggleAllPageRowsSelectedProps }: HeaderProps<T> & any) => (
             <Grid container alignItems="center" wrap="nowrap">
               <Grid>
                 <CheckboxCell
@@ -204,12 +204,12 @@ export function PaginatedTable<T extends Record<string, unknown>>(
               )}
             </Grid>
           ),
-          Cell: ({ row }: CellProps<T>) => (
+          Cell: ({ row }: CellProps<T> & any) => (
             <CheckboxCell
-              {...row.getToggleRowSelectedProps()}
+              {...(row as any).getToggleRowSelectedProps()}
               name="document_toggle"
               title={`${
-                row.getToggleRowSelectedProps().checked ? "Unselect" : "Select"
+                (row as any).getToggleRowSelectedProps().checked ? "Unselect" : "Select"
               }`}
             />
           ),
@@ -244,18 +244,18 @@ export function PaginatedTable<T extends Record<string, unknown>>(
         const selectionGroupHeader = headerGroups[0]?.headers[0];
 
         if (selectionGroupHeader) {
-          selectionGroupHeader.canResize = false;
+          (selectionGroupHeader as any).canResize = false;
         }
       });
     }
   );
   useEffect(() => {
-    onSortChange && onSortChange(tableInstance.state.sortBy);
-  }, [tableInstance.state.sortBy]);
+    onSortChange && onSortChange((tableInstance.state as any).sortBy);
+  }, [(tableInstance.state as any).sortBy]);
 
   useEffect(() => {
-    onRowSelect && onRowSelect(tableInstance.selectedFlatRows);
-  }, [onRowSelect, tableInstance.selectedFlatRows]);
+    onRowSelect && onRowSelect((tableInstance as any).selectedFlatRows);
+  }, [onRowSelect, (tableInstance as any).selectedFlatRows]);
 
   useEffect(() => {
     if (!filters?.length) {
@@ -321,7 +321,7 @@ export function PaginatedTable<T extends Record<string, unknown>>(
   );
 
   function handleSearchClick() {
-    tableInstance.setAllFilters([...filters, ...additionalFilter]);
+    (tableInstance as any).setAllFilters([...filters, ...additionalFilter]);
     onFilterChange && onFilterChange([...filters, ...additionalFilter]);
   }
 
@@ -338,13 +338,13 @@ export function PaginatedTable<T extends Record<string, unknown>>(
 
     if (!value) {
       setAdditionalFilter([]);
-      tableInstance.setAllFilters(filters);
+      (tableInstance as any).setAllFilters(filters);
       onFilterChange && onFilterChange(filters);
       return;
     }
 
     setAdditionalFilter([{ id: additionalFilterColumn, value }]);
-    tableInstance.setAllFilters([
+    (tableInstance as any).setAllFilters([
       ...filters,
       { id: additionalFilterColumn, value },
     ]);
@@ -353,7 +353,7 @@ export function PaginatedTable<T extends Record<string, unknown>>(
   }
 
   function handleClearFilters() {
-    tableInstance.setAllFilters([]);
+    (tableInstance as any).setAllFilters([]);
     onClearFilters && onClearFilters();
   }
 }

@@ -44,7 +44,7 @@ export const DataTablePaginatedFooter: React.FC<
           sx={{
             padding: 0,
             backgroundColor: (theme) =>
-              theme.colorSchemes.light?.palette.appColors.support60
+              theme.palette.appColors.support60
                 .transparentLight,
           }}
         >
@@ -69,7 +69,7 @@ export const DataTablePaginatedFooter: React.FC<
                   },
                   "& .MuiSelect-select.MuiSelect-outlined": {},
                   backgroundColor: (theme) =>
-                    theme.colorSchemes.light?.palette.appColors.incidental[
+                    theme.palette.appColors.incidental[
                       "000"
                     ],
                   borderRadius: "2px",

@@ -6,7 +6,7 @@ import { Toaster, ToasterProps } from "sonner";
  * `Toastify` so callers in `MuiThemeFramework` and `RadixThemeFramework` keep
  * compiling without changes. Sonner accepts the same strings.
  */
-export type ToastPosition = NonNullable<ToasterProps["position"]>;
+type ToastPosition = NonNullable<ToasterProps["position"]>;
 
 interface ToastProps {
   position?: ToastPosition;

@@ -8,12 +8,12 @@ import {
 import { Box, InputAdornment, Popover, styled, TextField } from "@mui/material";
 import React, { useState } from "react";
 import Calendar, { CalendarProps } from "react-calendar";
-import { FilterProps } from "react-table";
 import { formatDate, isValidDate } from "../../../business/dates";
+import { CustomFilterProps } from "../types";
 
 type DateRange = [Date | null, Date | null];
 
-export const DateRangeColumnFilter: React.FC<FilterProps<{}>> = ({
+export const DateRangeColumnFilter: React.FC<CustomFilterProps> = ({
   onChange,
   column: { id },
   filterValue = [null, null],
