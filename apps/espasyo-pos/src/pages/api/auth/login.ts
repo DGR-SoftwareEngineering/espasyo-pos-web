@@ -14,7 +14,9 @@ const handler: NextApiHandler = withSsrHttpClient(
         {
           headers: {
             "Content-Type": "application/json",
-            "X-Platform-Key": process.env.NEXT_PRIVATE_PLATFORM_KEY!,
+            ...(process.env.NEXT_PRIVATE_PLATFORM_KEY && {
+              "X-Platform-Key": process.env.NEXT_PRIVATE_PLATFORM_KEY,
+            }),
           }
         }
       );
