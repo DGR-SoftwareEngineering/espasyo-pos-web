@@ -4,10 +4,6 @@
       "source": "/(.*)",
       "headers": [
         {
-          "key": "Content-Security-Policy",
-          "value": "script-src 'self' https://www.gstatic.com http://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-        },
-        {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
         },
