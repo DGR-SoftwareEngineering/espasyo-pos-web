@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["core-lib"],
@@ -7,20 +9,25 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: process.env.NODE_ENV === "development",
   poweredByHeader: false,
   images: {
-    // Replace domains with remotePatterns
     remotePatterns: [
       {
         protocol: "https",
         hostname: "storage.googleapis.com",
         pathname: "**",
       },
-      // Add other domains if needed
-      // {
-      //   protocol: 'https',
-      //   hostname: 'example.com',
-      //   pathname: '**',
-      // },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `${API_URL}/api/v1/:path*`,
+      },
+      {
+        source: "/authentication-api/:path*",
+        destination: `${API_URL}/authentication-api/:path*`,
+      },
+    ];
   },
 };
 

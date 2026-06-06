@@ -8,29 +8,27 @@ type CSPDirective = {
 };
 
 const baseCSP: CSPDirective = {
-  "default-src": ["'self'"],
+  "default-src": ["'self'", "*.test.com"],
   "script-src": [
     "'self'",
-    "'unsafe-inline'",
-    "'unsafe-eval'",
     "https://www.gstatic.com",
     "http://cdnjs.cloudflare.com",
+    config.value.APIURL,
   ],
   "form-action": ["'self'"],
   "base-uri": ["'self'"],
-  "object-src": ["'none'"],  // Better security
+  "object-src": ["'self'"],
   "style-src": ["'self'", "'unsafe-inline'"],
   "connect-src": [
     "'self'",
+    "*.test.com",
     "blob:",
     "https://rum.browser-intake-datadoghq.eu",
     config.value.APIURL,
-    "https://espasyo-pos-api-bec38eeac3a3.herokuapp.com",
-    "*.herokuapp.com",
   ],
-  "img-src": ["'self'", "data:", "https:"],
+  "img-src": ["'self'"],
   "font-src": ["'self'", "data:"],
-  "frame-src": ["'self'"],
+  "frame-src": ["'self'", "*.test.com"],
   "frame-ancestors": ["'self'"],
 };
 
@@ -47,13 +45,8 @@ export function generateCSP(nonce: string): string {
 
 export const setCSPHeader = (res: ServerResponse, csp: string): void => {
   const isDevelopment = process.env.NODE_ENV === "development";
-  // Also set in development if you want to test CSP
-  if (res != null && !res.headersSent) {
+  if (res != null && !isDevelopment && !res.headersSent) {
     res.setHeader("Content-Security-Policy", csp);
-    // Add report-only mode for testing
-    if (isDevelopment) {
-      res.setHeader("Content-Security-Policy-Report-Only", csp);
-    }
   }
 };
 
@@ -89,7 +82,6 @@ export const SSRWithContentSecurityPolicy = (
         },
       };
     } catch (error: any) {
-      console.error("CSP Error:", error);
       return {
         props: { error: { message: error.message || "An error occured." } },
       };
