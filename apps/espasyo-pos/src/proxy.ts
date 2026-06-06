@@ -1,7 +1,6 @@
 import { ValidateAccessTokenResponse } from "core-lib/api/authentication/types";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { randomUUID } from "crypto";
 
 const ENV = process.env.NODE_ENV;
 const API_URL =
@@ -13,22 +12,16 @@ const SECURITY_HEADERS = {
   "Content-Type": "application/json",
 } as const;
 
-function generateNonce(): string {
-  return Buffer.from(randomUUID()).toString("base64");
-}
-
-function buildCsp(nonce: string): string {
-  return [
-    `script-src 'self' 'nonce-${nonce}' https://www.gstatic.com http://cdnjs.cloudflare.com`,
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-    `img-src 'self' data: https:`,
-    `font-src 'self' https://fonts.gstatic.com`,
-    `connect-src 'self' https://*`,
-    `frame-ancestors 'none'`,
-    `base-uri 'self'`,
-    `form-action 'self'`,
-  ].join("; ");
-}
+const CSP = [
+  `script-src 'self' 'unsafe-inline' https://www.gstatic.com http://cdnjs.cloudflare.com`,
+  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+  `img-src 'self' data: https:`,
+  `font-src 'self' https://fonts.gstatic.com`,
+  `connect-src 'self' https://*`,
+  `frame-ancestors 'none'`,
+  `base-uri 'self'`,
+  `form-action 'self'`,
+].join("; ");
 
 const BLOCKED_USER_AGENTS = [
   "curl",
@@ -173,13 +166,9 @@ function safeRedirect(
 
 export async function proxy(request: NextRequest) {
   const startTime = Date.now();
-  const nonce = generateNonce();
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-nonce", nonce);
-
   try {
     if (shouldSkipMiddleware(request)) {
-      return applyBasicSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
+      return applyBasicSecurityHeaders(NextResponse.next());
     }
 
     const [security, authState] = await Promise.all([
@@ -193,7 +182,7 @@ export async function proxy(request: NextRequest) {
 
     if (redirection) return redirection;
 
-    const response = applyFinalSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
+    const response = applyFinalSecurityHeaders(NextResponse.next());
 
     if (authState.userId) {
       response.cookies.set("uid", authState.userId, {
@@ -261,8 +250,8 @@ function fallbackResponse(request: NextRequest): NextResponse {
   return applyBasicSecurityHeaders(NextResponse.next());
 }
 
-function applyFinalSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
-  response.headers.set("Content-Security-Policy", buildCsp(nonce));
+function applyFinalSecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set("Content-Security-Policy", CSP);
   response.headers.set("Strict-Transport-Security", SECURITY_CONFIG.hsts);
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("Permissions-Policy", SECURITY_CONFIG.permissionsPolicy);
