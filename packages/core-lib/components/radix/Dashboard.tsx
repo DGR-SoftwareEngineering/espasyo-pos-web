@@ -101,10 +101,11 @@ export const RadixDashboard: React.FC<Props> = ({
     !(currentPageKey === PAGE_KEYS.Settings && isAdmin);
 
   // Pages that manage their own full-screen layout — skip the dashboard chrome.
-  const STANDALONE_ROUTES = ["/cashier/shift/open"];
-  const isStandaloneRoute = STANDALONE_ROUTES.some((r) =>
-    (router?.pathname ?? "").startsWith(r),
-  );
+  const STANDALONE_ROUTES = ["/cashier/shift/open", "/404"];
+  const isLoginPage = (router?.pathname ?? "") === "/";
+  const isStandaloneRoute =
+    isLoginPage ||
+    STANDALONE_ROUTES.some((r) => (router?.pathname ?? "").startsWith(r));
   if (isStandaloneRoute) {
     return <>{children}</>;
   }

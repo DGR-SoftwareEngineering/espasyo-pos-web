@@ -13,11 +13,11 @@ const SECURITY_HEADERS = {
 } as const;
 
 const CSP = [
-  `script-src 'self' 'unsafe-inline' https://www.gstatic.com http://cdnjs.cloudflare.com`,
+  `script-src 'self' 'unsafe-inline' https://www.gstatic.com http://cdnjs.cloudflare.com *.herokuapp.com`,
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
   `img-src 'self' data: https:`,
   `font-src 'self' https://fonts.gstatic.com`,
-  `connect-src 'self' https://*`,
+  `connect-src 'self' https://* *.herokuapp.com`,
   `frame-ancestors 'none'`,
   `base-uri 'self'`,
   `form-action 'self'`,
@@ -104,6 +104,24 @@ function extractUserIdFromJwt(token: string | null | undefined): string | null {
     const raw = payload[CLAIM];
     if (typeof raw !== "string") return null;
     return raw.trim().toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function extractExpFromJwt(token: string | null | undefined): number | null {
+  if (!token) return null;
+
+  try {
+    const [, payloadB64] = token.split(".");
+    if (!payloadB64) return null;
+
+    const json = base64UrlDecode(payloadB64);
+    const payload = JSON.parse(json) as Record<string, unknown>;
+
+    const exp = payload.exp;
+    if (typeof exp !== "number") return null;
+    return exp;
   } catch {
     return null;
   }
@@ -291,9 +309,11 @@ async function handleRouteProtection(
 
   if (pathname.startsWith("/cashier") && authState.role === "cashier") {
     if (pathname === "/cashier/shift/open") {
+      // Allow through; OpenShiftBlock handles the redirect client-side via
+      // router.replace to avoid polluting browser history with 307 redirects.
       return null;
     }
-    
+
     if (!authState.hasActiveShift) {
       return NextResponse.redirect(new URL("/cashier/shift/open", request.url));
     }
@@ -302,11 +322,11 @@ async function handleRouteProtection(
   if (pathname === "/") {
     if (authState.isAuthenticated && isRoleValid(authState.role)) {
       let home = getHomePathByRole(authState.role);
-      
-      if (authState.role === "cashier" && !authState.hasActiveShift) {
-        home = "/cashier/shift/open";
+
+      if (authState.role === "cashier") {
+        home = authState.hasActiveShift ? "/cashier/pos" : "/cashier/shift/open";
       }
-      
+
       return safeRedirect(request, home);
     }
     return null;
@@ -316,14 +336,19 @@ async function handleRouteProtection(
 
   if (isProtected) {
     if (!authState.isAuthenticated) {
-      const res = safeRedirect(request, "/404") ?? NextResponse.next();
+      const res = safeRedirect(request, "/") ?? NextResponse.next();
       res.cookies.delete("ac");
       return res;
     }
 
     const allowed = getAllowedPrefixesByRole(authState.role);
     if (!isPathUnderAny(pathname, allowed)) {
-      const home = getHomePathByRole(authState.role);
+      const home =
+        authState.role === "cashier"
+          ? authState.hasActiveShift
+            ? "/cashier/pos"
+            : "/cashier/shift/open"
+          : getHomePathByRole(authState.role);
       return NextResponse.redirect(new URL(home, request.url));
     }
 
@@ -338,6 +363,14 @@ async function getAuthState(request: NextRequest): Promise<AuthState> {
   const cachedAuth = request.cookies.get("auth_valid")?.value;
   const role = extractRoleFromJwt(token);
   const userId = extractUserIdFromJwt(token);
+
+  const exp = extractExpFromJwt(token);
+  const now = Math.floor(Date.now() / 1000);
+  const isExpired = exp && exp < now;
+
+  if (isExpired) {
+    return { isAuthenticated: false, role: null, userId: null, hasActiveShift: false };
+  }
 
   if (cachedAuth === "true") {
     const hasActiveShift = await checkActiveShift(token || "");
@@ -371,6 +404,8 @@ async function validateToken(token: string): Promise<boolean> {
       signal: controller.signal,
     });
 
+    // Rate-limited ≠ invalid token; assume token is still valid
+    if (response.status === 429) return true;
     if (!response.ok) return false;
 
     const data = (await response.json()) as ValidateAccessTokenResponse;
@@ -401,8 +436,10 @@ async function checkActiveShift(token: string): Promise<boolean> {
       signal: AbortSignal.timeout(5000), // 5 second timeout
     });
 
+    // Rate-limited ≠ no active shift; assume shift status is still valid
+    if (response.status === 429) return true;
     if (!response.ok) return false;
-    
+
     const data = await response.json();
     return !!data?.response; // Returns true if active shift exists
   } catch (error) {

@@ -11,10 +11,9 @@ import {
 } from "../../../../api/commons/types";
 import { useToastContext } from "../../../../core/contexts";
 import { useApi, useApiCallback } from "../../../../core/hooks";
+import { Api } from "../../../../api/api";
 import { Box } from "@radix-ui/themes";
 import { FormRenderer } from "../../../radix/form/FormRenderer";
-
-type ProductMode = "menuItem" | "ingredient" | "supply";
 
 interface FormVariant {
   productVariantID?: string | null;
@@ -43,7 +42,7 @@ interface FormAddOnGroup {
 interface ProductFormSubmitValues {
   name: string;
   description?: string | null;
-  productMode: ProductMode;
+  productMode: "menuItem" | "ingredient";
   categoryID?: string | null;
   unitPrice?: number;
   costPrice?: number;
@@ -88,14 +87,26 @@ export const ProductEditDialogContent: React.FC<{
     (api) =>
       product.isMenuItem
         ? api.commons.productVariantsByProduct(product.productID)
-        : Promise.resolve({ data: { success: true, response: [] } } as any),
+        : Promise.resolve({
+            data: { success: true, response: [] },
+            status: 200,
+            statusText: "OK",
+            headers: {},
+            config: {},
+          } as any),
     [product.productID, product.isMenuItem],
   );
   const addOnsApi = useApi(
     (api) =>
       product.isMenuItem
         ? api.commons.productAddOnGroupsByProduct(product.productID)
-        : Promise.resolve({ data: { success: true, response: [] } } as any),
+        : Promise.resolve({
+            data: { success: true, response: [] },
+            status: 200,
+            statusText: "OK",
+            headers: {},
+            config: {},
+          } as any),
     [product.productID, product.isMenuItem],
   );
 
@@ -130,7 +141,7 @@ export const ProductEditDialogContent: React.FC<{
   );
 
   const reconcileVariants = async (
-    api: any,
+    api: Api,
     submittedVariants: FormVariant[],
   ) => {
     const existingIds = new Set(existingVariants.map((v) => v.productVariantID));
@@ -177,7 +188,7 @@ export const ProductEditDialogContent: React.FC<{
   };
 
   const reconcileAddOnGroups = async (
-    api: any,
+    api: Api,
     submittedGroups: FormAddOnGroup[],
   ) => {
     const existingGroupById = new Map(
@@ -276,10 +287,10 @@ export const ProductEditDialogContent: React.FC<{
   };
 
   const reconcileCb = useApiCallback(
-    async (api, payload: { variants: FormVariant[]; groups: FormAddOnGroup[] }) => {
+    async (api: Api, payload: { variants: FormVariant[]; groups: FormAddOnGroup[] }) => {
       await reconcileVariants(api, payload.variants);
       await reconcileAddOnGroups(api, payload.groups);
-      return { data: { success: true } } as any;
+      return { status: 200, data: { success: true } };
     },
   );
 
@@ -288,40 +299,91 @@ export const ProductEditDialogContent: React.FC<{
       setSubmitting(true);
       const isMenuItem = formValues.productMode === "menuItem";
 
-      const payload: UpdateProductParams = {
-        productID: product.productID,
-        name: formValues.name,
-        description: formValues.description ?? "",
-        isMenuItem,
-        categoryID: formValues.categoryID ?? null,
-      };
+      // Determine if any product-level fields changed
+      const originalCategoryID =
+        (product.isMenuItem
+          ? product.productCategoryID
+          : product.ingredientCategoryID) ?? null;
 
-      if (isMenuItem) {
-        payload.unitPrice = formValues.unitPrice;
-        if (formValues.costPrice != null && formValues.costPrice > 0) {
-          payload.costPrice = formValues.costPrice;
-        }
+      const nameChanged = formValues.name !== product.name;
+      const descriptionChanged =
+        (formValues.description ?? "") !== (product.description ?? "");
+      const categoryChanged = (formValues.categoryID ?? null) !== originalCategoryID;
+      const priceChanged =
+        isMenuItem && formValues.unitPrice !== product.unitPrice;
+      const costChanged =
+        isMenuItem
+          ? (formValues.costPrice ?? null) !== (product.costPrice ?? null)
+          : formValues.costPrice !== product.costPrice;
+      const purchaseQtyChanged =
+        !isMenuItem && formValues.purchaseQuantity !== product.purchaseQuantity;
+      const purchaseUnitChanged =
+        !isMenuItem &&
+        (formValues.purchaseUnitID ?? "") !== (product.purchaseUnitID ?? "");
+      const stockUnitChanged =
+        !isMenuItem &&
+        (formValues.stockUnitID ?? "") !== (product.stockUnitID ?? "");
+      const imageChanged = formValues.imageFile instanceof File;
+      const removeImageChanged = formValues.removeImage === true;
+
+      const productFieldsChanged =
+        nameChanged ||
+        descriptionChanged ||
+        categoryChanged ||
+        priceChanged ||
+        costChanged ||
+        purchaseQtyChanged ||
+        purchaseUnitChanged ||
+        stockUnitChanged ||
+        imageChanged ||
+        removeImageChanged;
+
+      if (!productFieldsChanged) {
+        console.log("No product fields changed, skipping updateProduct");
       } else {
-        payload.costPrice = formValues.costPrice;
-        payload.purchaseQuantity = formValues.purchaseQuantity;
-        payload.purchaseUnitID = formValues.purchaseUnitID;
-        payload.stockUnitID = formValues.stockUnitID;
+        console.log(
+          "Product fields changed:",
+          { nameChanged, descriptionChanged, categoryChanged, priceChanged, costChanged },
+        );
       }
 
-      if (formValues.imageFile instanceof File) {
-        payload.imageFile = formValues.imageFile;
-      } else if (formValues.removeImage) {
-        payload.removeImage = true;
+      // Only call updateProduct if product fields changed
+      if (productFieldsChanged) {
+        const payload: UpdateProductParams = {
+          productID: product.productID,
+          name: formValues.name,
+          description: formValues.description ?? "",
+          isMenuItem,
+          categoryID: formValues.categoryID ?? null,
+        };
+
+        if (isMenuItem) {
+          payload.unitPrice = formValues.unitPrice;
+          if (formValues.costPrice != null && formValues.costPrice > 0) {
+            payload.costPrice = formValues.costPrice;
+          }
+        } else {
+          payload.costPrice = formValues.costPrice;
+          payload.purchaseQuantity = formValues.purchaseQuantity;
+          payload.purchaseUnitID = formValues.purchaseUnitID;
+          payload.stockUnitID = formValues.stockUnitID;
+        }
+
+        if (formValues.imageFile instanceof File) {
+          payload.imageFile = formValues.imageFile;
+        } else if (formValues.removeImage) {
+          payload.removeImage = true;
+        }
+
+        const result = await updateProductCb.execute(payload);
+
+        if (!(result.status === 200 && result.data.success)) {
+          showToast(result.data.message || "Failed to update product", "error");
+          return;
+        }
       }
 
-      const result = await updateProductCb.execute(payload);
-
-      if (!(result.status === 200 && result.data.success)) {
-        showToast(result.data.message || "Failed to update product", "error");
-        return;
-      }
-
-      // Reconcile variants and add-on groups for menu items
+      // Always reconcile variants and add-on groups for menu items
       if (isMenuItem) {
         try {
           await reconcileCb.execute({
@@ -340,7 +402,12 @@ export const ProductEditDialogContent: React.FC<{
         }
       }
 
-      showToast("Product updated successfully", "success");
+      showToast(
+        productFieldsChanged
+          ? "Product updated successfully"
+          : "Variants/add-ons updated successfully",
+        "success",
+      );
       onSuccess();
       onClose();
     } catch (error) {
@@ -351,7 +418,7 @@ export const ProductEditDialogContent: React.FC<{
     }
   };
 
-  const productMode: ProductMode = product.isMenuItem
+  const productMode: "menuItem" | "ingredient" = product.isMenuItem
     ? "menuItem"
     : "ingredient";
 

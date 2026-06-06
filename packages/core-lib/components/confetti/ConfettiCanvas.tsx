@@ -5,7 +5,7 @@ export interface ConfettiHandle {
   fire: () => void;
 }
 
-export const ConfettiCanvas = forwardRef<ConfettiHandle, {}>((_, ref) => {
+const ConfettiCanvasComponent = forwardRef<ConfettiHandle, {}>((_, ref) => {
   const fire = () => {
     confetti({
       particleCount: 80,
@@ -25,17 +25,7 @@ export const ConfettiCanvas = forwardRef<ConfettiHandle, {}>((_, ref) => {
     fire,
   }));
 
-  return (
-    <canvas
-      id="confetti-canvas"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        pointerEvents: "none",
-      }}
-    />
-  );
+  return null;
 });
 
-ConfettiCanvas.displayName = "ConfettiCanvas";
+export const ConfettiCanvas = ConfettiCanvasComponent;

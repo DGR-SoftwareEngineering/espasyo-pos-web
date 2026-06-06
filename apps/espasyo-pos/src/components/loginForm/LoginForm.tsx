@@ -614,7 +614,7 @@ export const LoginForm: React.FC<Props> = ({
                         Remember me
                       </Text>
                     </Flex>
-                    <Text
+                    {/* <Text
                       size="2"
                       weight="medium"
                       style={{
@@ -623,7 +623,7 @@ export const LoginForm: React.FC<Props> = ({
                       }}
                     >
                       Forgot password?
-                    </Text>
+                    </Text> */}
                   </Flex>
 
                   <Box mt="2">

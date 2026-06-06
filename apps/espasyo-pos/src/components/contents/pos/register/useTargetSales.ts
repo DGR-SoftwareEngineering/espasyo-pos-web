@@ -1,4 +1,5 @@
 import { usePublicSettings } from "core-lib";
+import { getDailySalesGross } from "core-lib/business";
 import { useApi } from "core-lib/core/hooks";
 
 export interface UseTargetSalesResult {
@@ -16,7 +17,7 @@ export const useTargetSales = (): UseTargetSalesResult => {
   const { pos } = usePublicSettings();
   const summary = useApi((api) => api.commons.salesDailySummary(), []);
 
-  const currentAmount = summary.result?.data?.response?.totalAmount ?? 0;
+  const currentAmount = getDailySalesGross(summary.result?.data?.response);
   const targetAmount = pos.targetSalesAmountPerDay;
 
   const progressPct = targetAmount > 0

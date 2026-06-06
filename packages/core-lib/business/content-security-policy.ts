@@ -1,4 +1,3 @@
-import { config } from "../config";
 import { GetServerSidePropsContext, GetServerSideProps } from "next";
 import { ServerResponse } from "http";
 import { nonce } from "./nonce";
@@ -8,37 +7,30 @@ type CSPDirective = {
 };
 
 const baseCSP: CSPDirective = {
-  "default-src": ["'self'", "*.test.com"],
+  "default-src": ["'self'"],
   "script-src": [
     "'self'",
     "https://www.gstatic.com",
     "http://cdnjs.cloudflare.com",
-    config.value.APIURL,
   ],
-  "form-action": ["'self'"],
+  "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "*.herokuapp.com"],
+  "img-src": ["'self'", "data:", "https:"],
+  "font-src": ["'self'", "https://fonts.gstatic.com"],
+  "connect-src": ["'self'", "https://*", "*.herokuapp.com"],
+  "object-src": ["'none'"],
+  "frame-src": ["'self'"],
+  "frame-ancestors": ["'none'"],
   "base-uri": ["'self'"],
-  "object-src": ["'self'"],
-  "style-src": ["'self'", "'unsafe-inline'"],
-  "connect-src": [
-    "'self'",
-    "*.test.com",
-    "blob:",
-    "https://rum.browser-intake-datadoghq.eu",
-    config.value.APIURL,
-  ],
-  "img-src": ["'self'"],
-  "font-src": ["'self'", "data:"],
-  "frame-src": ["'self'", "*.test.com"],
-  "frame-ancestors": ["'self'"],
+  "form-action": ["'self'"],
 };
 
-export function generateCSP(nonce: string): string {
-  const cspWithNonce = {
+export function generateCSP(_nonce: string): string {
+  const csp = {
     ...baseCSP,
-    "script-src": [...(baseCSP["script-src"] ?? []), `'nonce-${nonce}'`],
+    "script-src": [...(baseCSP["script-src"] ?? []), "'unsafe-inline'"],
   };
 
-  return Object.entries(cspWithNonce)
+  return Object.entries(csp)
     .map(([key, values]) => `${key} ${values.join(" ")}`)
     .join("; ");
 }

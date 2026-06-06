@@ -217,14 +217,16 @@ export const ProductTableRow: React.FC<Props> = ({
       align: "right" as const,
       width: "9%",
       render: () => (
-        <ActionButtons
-          onView={() => onView(row)}
-          onEdit={() => onEdit(row)}
-          onDelete={() => onDelete(row)}
-          viewTooltip={DIALOG_TITLES.view}
-          editTooltip={DIALOG_TITLES.edit}
-          deleteTooltip={DIALOG_TITLES.delete}
-        />
+        <div onClick={(e) => e.stopPropagation()}>
+          <ActionButtons
+            onView={() => onView(row)}
+            onEdit={() => onEdit(row)}
+            onDelete={() => onDelete(row)}
+            viewTooltip={DIALOG_TITLES.view}
+            editTooltip={DIALOG_TITLES.edit}
+            deleteTooltip={DIALOG_TITLES.delete}
+          />
+        </div>
       ),
     },
   ];
@@ -234,6 +236,7 @@ export const ProductTableRow: React.FC<Props> = ({
       data={row}
       rowKey={row.productID}
       columns={columns}
+      onRowClick={() => onView(row)}
       isSelectable={isSelectable}
       isChecked={isChecked}
       onSelect={onSelect}
