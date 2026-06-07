@@ -5,9 +5,46 @@ import { serialize } from "cookie";
 
 const isProd = process.env.NODE_ENV === "production";
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const [, payloadB64] = token.split(".");
+    if (!payloadB64) return false;
+    const b64 = payloadB64
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(payloadB64.length / 4) * 4, "=");
+    const json = Buffer.from(b64, "base64").toString("utf-8");
+    const payload = JSON.parse(json) as Record<string, unknown>;
+    const exp = payload.exp;
+    if (typeof exp !== "number") return false;
+    return exp < Math.floor(Date.now() / 1000);
+  } catch {
+    return false;
+  }
+}
+
 const handler: NextApiHandler = withSsrHttpClient(
   (client) => async (req, res) => {
     try {
+      const sessionCookie = req.cookies.session;
+      const acCookie = req.cookies.ac;
+
+      if (sessionCookie || acCookie) {
+        const shouldClearCookies =
+          (req as any).session?.accessToken && typeof (req as any).session.accessToken === "string"
+            ? isTokenExpired((req as any).session.accessToken)
+            : false;
+
+        if (shouldClearCookies || (!sessionCookie && acCookie)) {
+          res.setHeader("Set-Cookie", [
+            serialize("ac", "", { maxAge: 0, path: "/" }),
+            serialize("uid", "", { maxAge: 0, path: "/" }),
+            serialize("session", "", { maxAge: 0, path: "/" }),
+            serialize("sso_token", "", { maxAge: 0, path: "/" }),
+          ]);
+        }
+      }
+
       const result = await client.post<LoginResponse>(
         `/authentication-api/api/authentication/login`,
         req.body,

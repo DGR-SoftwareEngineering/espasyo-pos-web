@@ -189,12 +189,22 @@ export async function proxy(request: NextRequest) {
       return applyBasicSecurityHeaders(NextResponse.next());
     }
 
-    const [security, authState] = await Promise.all([
+    const [security, authState, shouldClearCookies] = await Promise.all([
       applySecurityHeaders(request),
       getAuthState(request),
+      detectInvalidCookies(request),
     ]);
 
     if (security) return security;
+
+    if (shouldClearCookies) {
+      const res = NextResponse.redirect(new URL(request.url));
+      res.cookies.delete("ac");
+      res.cookies.delete("uid");
+      res.cookies.delete("session");
+      res.cookies.delete("sso_token");
+      return res;
+    }
 
     const redirection = await handleRouteProtection(request, authState);
 
@@ -356,6 +366,32 @@ async function handleRouteProtection(
   }
 
   return null;
+}
+
+async function detectInvalidCookies(request: NextRequest): Promise<boolean> {
+  const token = request.cookies.get("ac")?.value;
+  const sessionCookie = request.cookies.get("session")?.value;
+
+  if (!token && !sessionCookie) return false;
+
+  if (token) {
+    try {
+      const parts = token.split(".");
+      if (parts.length !== 3) return true;
+
+      const [, payloadB64] = parts;
+      if (!payloadB64) return true;
+
+      const json = base64UrlDecode(payloadB64);
+      JSON.parse(json);
+
+      return false;
+    } catch {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 async function getAuthState(request: NextRequest): Promise<AuthState> {
