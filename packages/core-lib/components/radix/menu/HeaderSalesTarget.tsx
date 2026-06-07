@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { usePublicSettings } from "../../../core/contexts";
 import { useApi } from "../../../core/hooks";
 import { useRouter } from "../../../core/router";
-import { formatCurrency } from "../../../business";
+import { formatCurrency, getDailySalesGross } from "../../../business";
 
 const MotionButton = motion(Button);
 
@@ -37,10 +37,7 @@ export const HeaderSalesTarget: React.FC = () => {
 
   const targetAmount = pos.targetSalesAmountPerDay;
   const salesResponse = salesApi.result?.data?.response;
-  const byCashierGross = (salesResponse?.byCashier ?? []).reduce((sum, c) => sum + c.totalAmount, 0);
-  const currentAmount = byCashierGross > 0
-    ? byCashierGross
-    : (salesResponse?.totalAmount ?? 0);
+  const currentAmount = getDailySalesGross(salesResponse);
 
   const progressPct = useMemo(() => {
     if (targetAmount <= 0) return 0;

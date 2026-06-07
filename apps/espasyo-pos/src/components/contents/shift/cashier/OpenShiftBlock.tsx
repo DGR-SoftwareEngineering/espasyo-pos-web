@@ -71,6 +71,7 @@ export const OpenShiftBlock: React.FC = () => {
   const [loggingOut, setLoggingOut] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
   const [greeting, setGreeting] = useState('');
+  const [checkingShift, setCheckingShift] = useState(true);
 
   const activeShiftCb = useApiCallback(async (api) => api.commons.getActiveShift());
   const openShiftCb = useApiCallback(
@@ -78,9 +79,17 @@ export const OpenShiftBlock: React.FC = () => {
   );
 
   useEffect(() => {
-    activeShiftCb.execute().then((res) => {
-      if (res?.data?.response) router.replace("/cashier/pos");
-    });
+    activeShiftCb.execute()
+      .then((res) => {
+        if (res?.data?.response) {
+          router.replace("/cashier/pos");
+        } else {
+          setCheckingShift(false);
+        }
+      })
+      .catch(() => {
+        setCheckingShift(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -104,7 +113,7 @@ export const OpenShiftBlock: React.FC = () => {
             `Shift ${result.data.response.shiftNumber} opened successfully!`,
             "success",
           );
-          router.push("/cashier/pos");
+          router.replace("/cashier/pos");
           return;
         }
         const errorMsg =
@@ -132,6 +141,12 @@ export const OpenShiftBlock: React.FC = () => {
 
   const displayName = email?.split("@")[0] ?? initials ?? "Cashier";
   const resolvedAccent = hexToRadixAccent(theme.primaryColor, "indigo");
+
+  // While checking for an active shift, render nothing so the user never sees the
+  // form when they have a shift or when navigating back from /cashier/pos.
+  if (checkingShift) {
+    return null;
+  }
 
   return (
     <Theme appearance="light" accentColor={resolvedAccent} grayColor="slate" radius="large">

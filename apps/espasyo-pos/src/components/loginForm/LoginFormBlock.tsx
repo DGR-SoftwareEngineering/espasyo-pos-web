@@ -94,7 +94,7 @@ export const LoginFormBlock: React.FC<Props> = ({ contentBlocks = [] }) => {
         showToast("Successfully Logged in", "success");
       };
       nextRouter.events.on("routeChangeComplete", handleRouteChangeComplete);
-      await nextRouter.push(homePath);
+      await nextRouter.replace(homePath);
     } catch (error) {
       console.error("Problem during login", error);
       const messages = Array.isArray(error) ? (error as string[]) : [];

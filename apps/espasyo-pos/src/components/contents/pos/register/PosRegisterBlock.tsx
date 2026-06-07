@@ -53,8 +53,10 @@ const SALE_ERROR_FRIENDLY: Record<string, string> = {
     "Too many add-ons selected for one group.",
 };
 
-// Persist per-day so confetti doesn't re-fire after page refresh
-const CONFETTI_FIRED_KEY = "espasyo.pos.confettiFiredDate";
+// Persist per-day so confetti doesn't re-fire after page refresh.
+// The ".v2" suffix is a one-time cache-buster: it invalidates any stale flag
+// that was set before the fire/flag ordering below was corrected.
+const CONFETTI_FIRED_KEY = "espasyo.pos.confettiFiredDate.v2";
 const getConfettiFiredToday = (): boolean => {
   if (typeof window === "undefined") return false;
   return localStorage.getItem(CONFETTI_FIRED_KEY) === new Date().toISOString().split("T")[0];
@@ -435,17 +437,20 @@ export const PosRegisterBlock: React.FC = () => {
     [createCb, showToast, openDialog, systemName, theme, currencyCode, pos, targetSales.refresh, settingsMap, confirmRedeemCb],
   );
 
-  // Fire confetti exactly once per day when the daily target is first crossed
+  // Fire confetti exactly once per day when the daily target is first crossed.
+  // Fire first, then persist the flag — so a fire that never lands (e.g. canvas
+  // not yet mounted) doesn't permanently suppress confetti for the rest of the day.
   useEffect(() => {
     if (
       pos.targetSalesEnabled &&
       pos.targetSalesConfettiEnabled &&
       pos.targetSalesAmountPerDay > 0 &&
       targetSales.reached &&
-      !getConfettiFiredToday()
+      !getConfettiFiredToday() &&
+      confettiRef.current
     ) {
+      confettiRef.current.fire();
       setConfettiFiredToday();
-      confettiRef.current?.fire();
     }
   }, [targetSales.reached, pos]);
 

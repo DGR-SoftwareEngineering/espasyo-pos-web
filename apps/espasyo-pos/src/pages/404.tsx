@@ -34,7 +34,7 @@ const MotionDiv = motion.div;
 const homePathForRole = (role: string | null | undefined): string => {
   const normalized = (role ?? "").toLowerCase();
   if (normalized === "admin") return "/admin/hub";
-  if (normalized === "cashier") return "/hub";
+  if (normalized === "cashier") return "/cashier/pos";
   return "/";
 };
 

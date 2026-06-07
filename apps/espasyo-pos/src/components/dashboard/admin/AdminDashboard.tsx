@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { Box, Container } from "@radix-ui/themes";
 import { useAuthContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
+import { getDailySalesGross } from "core-lib/business";
 import { AdminHero } from "./AdminHero";
 import { AdminKpiRow } from "./AdminKpiRow";
 import { AdminChartsRow } from "./AdminChartsRow";
@@ -10,7 +11,9 @@ import { AdminSystemHealth } from "./AdminSystemHealth";
 import { SalesCelebrationModal } from "./SalesCelebrationModal";
 import { useApi } from "core-lib/core/hooks";
 
-const CELEBRATION_FIRED_TODAY_KEY = "espasyo.targetSales.celebrationFiredToday";
+// The ".v2" suffix is a one-time cache-buster: it invalidates any stale flag
+// set before the open/flag ordering below was corrected.
+const CELEBRATION_FIRED_TODAY_KEY = "espasyo.targetSales.celebrationFiredToday.v2";
 
 const getCelebrationFiredToday = (): boolean => {
   if (typeof window === "undefined") return false;
@@ -34,8 +37,13 @@ export const AdminDashboard: React.FC = () => {
   const [showCelebration, setShowCelebration] = useState(false);
   const dailySummary = useApi((api) => api.commons.salesDailySummary(), []);
 
-  const todaySales = dailySummary.result?.data?.response?.totalAmount ?? 0;
-  const todayTxCount = dailySummary.result?.data?.response?.salesCount ?? 0;
+  const response = dailySummary.result?.data?.response;
+  const todaySales = getDailySalesGross(response);
+  const byCashierCount = (response?.byCashier ?? []).reduce(
+    (sum, c) => sum + c.salesCount,
+    0,
+  );
+  const todayTxCount = byCashierCount > 0 ? byCashierCount : (response?.salesCount ?? 0);
 
   useEffect(() => {
     if (
@@ -45,8 +53,8 @@ export const AdminDashboard: React.FC = () => {
       pos.targetSalesAmountPerDay > 0 &&
       todaySales >= pos.targetSalesAmountPerDay
     ) {
-      setCelebrationFiredToday();
       setShowCelebration(true);
+      setCelebrationFiredToday();
     }
   }, [todaySales, pos]);
 

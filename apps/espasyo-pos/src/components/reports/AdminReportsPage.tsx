@@ -77,6 +77,7 @@ import {
   TabOption,
 } from "core-lib/components/radix/tabs";
 import { useApi, useResolution } from "core-lib/core/hooks";
+import { getDailySalesGross } from "core-lib/business";
 import { usePublicSettings } from "core-lib/core/contexts";
 import { useRouter } from "core-lib/core/router";
 import { useDialogContext } from "core-lib";
@@ -1734,10 +1735,7 @@ export const AdminReportsPage: React.FC = () => {
   const salesChart = useChart({ chartKey: "sales-by-day", period });
   const dailySummaryApi = useApi((api) => api.commons.salesDailySummary(), []);
   const dailySummaryResponse = dailySummaryApi.result?.data?.response;
-  const byCashierGross = (dailySummaryResponse?.byCashier ?? []).reduce((sum, c) => sum + c.totalAmount, 0);
-  const todayTotal = byCashierGross > 0
-    ? byCashierGross
-    : (dailySummaryResponse?.totalAmount ?? 0);
+  const todayTotal = getDailySalesGross(dailySummaryResponse);
   const salesCount = dailySummaryResponse?.salesCount ?? 0;
   const dailySummaryAmount = dailySummaryApi.result?.data?.response?.totalAmount ?? null;
   const grossSales = period === "today"

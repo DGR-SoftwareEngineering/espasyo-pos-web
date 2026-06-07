@@ -36,6 +36,13 @@ export const Header: React.FC<HeaderProps> = ({
   const router = useRouter();
   const { headerTitle } = safeHeaderTitle();
 
+  const homeHref = (() => {
+    const r = (user?.role ?? "").trim().toLowerCase();
+    if (r === "cashier") return "/cashier/pos";
+    if (r === "admin") return "/admin/hub";
+    return "/";
+  })();
+
   const segments = useMemo(() => {
     const path = (router.asPath ?? "/").split("?")[0]?.split("#")[0] ?? "/";
     const parts = path.split("/").filter(Boolean);
@@ -72,8 +79,12 @@ export const Header: React.FC<HeaderProps> = ({
                 <RadixLink
                   size="1"
                   color="gray"
-                  href="/"
-                  style={{ textDecoration: "none" }}
+                  href={homeHref}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push(homeHref);
+                  }}
+                  style={{ textDecoration: "none", cursor: "pointer" }}
                 >
                   Home
                 </RadixLink>
@@ -93,7 +104,11 @@ export const Header: React.FC<HeaderProps> = ({
                         size="1"
                         color="gray"
                         href={seg.href}
-                        style={{ textDecoration: "none" }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          router.push(seg.href);
+                        }}
+                        style={{ textDecoration: "none", cursor: "pointer" }}
                       >
                         {seg.label}
                       </RadixLink>

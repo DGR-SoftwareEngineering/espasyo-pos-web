@@ -534,7 +534,7 @@ export const LoginForm: React.FC<Props> = ({
                           Remember me
                         </Text>
                       </Flex>
-                      <motion.a
+                      {/* <motion.a
                         href="#"
                         whileHover={{ x: 3 }}
                         style={{ textDecoration: "none" }}
@@ -542,7 +542,7 @@ export const LoginForm: React.FC<Props> = ({
                         <Text size="2" weight="medium" style={{ color: "var(--accent-11)" }}>
                           Forgot password?
                         </Text>
-                      </motion.a>
+                      </motion.a> */}
                     </Flex>
 
                     <Box mt="2">
