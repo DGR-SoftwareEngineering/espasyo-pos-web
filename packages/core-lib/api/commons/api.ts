@@ -1564,10 +1564,15 @@ export class CommonsApi {
   }
 
   // ── Bulk product creation ──────────────────────────────────────────────────
-  public bulkCreateProducts(params: BulkCreateProductParams) {
+  public bulkCreateProducts(params: BulkCreateProductParams, imageFiles?: (File | null)[]) {
+    const form = new FormData();
+    form.append("productsJson", JSON.stringify(params));
+    imageFiles?.forEach((file, i) => {
+      if (file) form.append(`imageFiles[${i}]`, file, file.name);
+    });
     return this.axios.post<BulkCreateProductResponse>(
       `/api/v1/product-api/Product/bulk`,
-      params,
+      form,
     );
   }
 

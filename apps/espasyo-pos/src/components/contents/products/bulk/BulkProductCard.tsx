@@ -22,6 +22,7 @@ import {
 } from "react-hook-form";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import { SelectField } from "core-lib/components/radix/form/SelectField";
+import { ImageUploadField } from "core-lib/components/radix/form/ImageUploadField";
 import type {
   ProductCategoryDto,
   IngredientCategoryDto,
@@ -69,6 +70,7 @@ export interface ProductEntry {
   ingredientCategoryID: string;
   variants: VariantEntry[];
   addOnGroups: AddOnGroupEntry[];
+  imageFile: File | null;
 }
 
 export interface BulkProductForm {
@@ -227,6 +229,16 @@ export const BulkProductCard: React.FC<BulkProductCardProps> = ({
               rows={2}
             />
 
+            {/* Product Image */}
+            <ImageUploadField<BulkProductForm>
+              name={`products.${index}.imageFile` as any}
+              control={control}
+              label="Product Image"
+              description="Optional. Max 5 MB."
+              accept="image/*"
+              maxSizeBytes={5 * 1024 * 1024}
+            />
+
             {/* Main Category */}
             <Flex direction="column" gap="1">
               <Text as="label" size="2" weight="medium">
@@ -282,6 +294,17 @@ export const BulkProductCard: React.FC<BulkProductCardProps> = ({
                       : "Price customers pay at the POS."}
                   </Text>
                 </Box>
+
+                <TextField<BulkProductForm>
+                  name={`products.${index}.costPrice`}
+                  control={control}
+                  label="Material Cost (Optional)"
+                  type="number"
+                  placeholder="0.00"
+                />
+                <Text size="1" color="gray" as="div" mt="-2">
+                  Internal cost for this menu item (not shown to customers).
+                </Text>
 
                 <Separator size="4" />
 

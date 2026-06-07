@@ -80,6 +80,7 @@ export const ReviewStep: React.FC<Props> = ({
   const handleAddAnother = () => {
     resetContext();
     resetStep();
+    reset();
   };
 
   const handleGoToList = () => {
