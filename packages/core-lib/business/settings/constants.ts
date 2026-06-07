@@ -45,6 +45,7 @@ export const SETTING_KEYS = {
   FeaturesNotificationsEnabled: "Features.NotificationsEnabled",
   FeaturesSupplierPortalEnabled: "Features.SupplierPortalEnabled",
   FeaturesMultiLocationEnabled: "Features.MultiLocationEnabled",
+  FeaturesAuditLogsEnabled: "Features.AuditLogsEnabled",
 
   NotificationsRealtime: "Notifications.Realtime",
   NotificationsPollIntervalSeconds: "Notifications.PollIntervalSeconds",

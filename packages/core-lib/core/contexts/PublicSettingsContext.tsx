@@ -36,6 +36,7 @@ export interface MaintenanceState {
 export interface PublicFeatureFlags {
   loyaltyEnabled: boolean;
   notificationsEnabled: boolean;
+  auditLogsEnabled: boolean;
 }
 
 export interface PublicNotificationsConfig {
@@ -149,7 +150,7 @@ const DEFAULTS: Omit<
   },
   maintenance: { enabled: false, message: "", pages: [] },
   operationalStatus: OPERATIONAL_STATUSES.Operational,
-  features: { loyaltyEnabled: false, notificationsEnabled: false },
+  features: { loyaltyEnabled: false, notificationsEnabled: false, auditLogsEnabled: false },
   inventory: {
     lowStockAlertEnabled: true,
     autoDeductOnSale: true,
@@ -324,6 +325,7 @@ const buildState = (settings: SystemSettingDto[]) => {
         SETTING_KEYS.FeaturesNotificationsEnabled,
         false,
       ),
+      auditLogsEnabled: get<boolean>(SETTING_KEYS.FeaturesAuditLogsEnabled, false),
     },
     inventory: {
       lowStockAlertEnabled: get<boolean>(

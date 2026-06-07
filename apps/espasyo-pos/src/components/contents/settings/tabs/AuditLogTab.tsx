@@ -9,6 +9,7 @@ import {
   Heading,
   Select,
   Separator,
+  Switch,
   Text,
   TextField,
   Tooltip,
@@ -22,12 +23,14 @@ import {
 } from "@mui/icons-material";
 import { useApi, useApiCallback, useMpinStatus } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import { usePublicSettings } from "core-lib/core/contexts";
 import {
   AuditLogDto,
   AuditLogQueryParams,
+  BulkUpdateSystemSettingParams,
 } from "core-lib/api/commons/types";
 import { AdminConfirmationParams } from "core-lib/api/authentication/types";
-import { AUDIT_EVENT_TYPES } from "core-lib/business/settings";
+import { AUDIT_EVENT_TYPES, SETTING_KEYS } from "core-lib/business/settings";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import { AdminConfirmDialog } from "core-lib/components/radix/security";
 import { formatDateTime } from "core-lib/business/dates";
@@ -85,6 +88,15 @@ const EMPTY_FILTERS: Filters = {
 export const AuditLogTab: React.FC = () => {
   const { showToast } = useToastContext();
   const mpinStatus = useMpinStatus();
+  const publicSettings = usePublicSettings();
+  const auditLogsEnabled = publicSettings.features.auditLogsEnabled;
+  const settingsData = useApi((api) => api.commons.settingsList());
+  const allSettings = settingsData.result?.data.response ?? [];
+  const auditSettingDto = allSettings.find(
+    (s) => s.key === SETTING_KEYS.FeaturesAuditLogsEnabled,
+  );
+
+  const [pendingEnabled, setPendingEnabled] = useState(auditLogsEnabled);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState<Filters>(EMPTY_FILTERS);
   const [pageNumber, setPageNumber] = useState(1);
@@ -93,10 +105,53 @@ export const AuditLogTab: React.FC = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  useEffect(() => {
+    setPendingEnabled(auditLogsEnabled);
+  }, [auditLogsEnabled]);
+
+  const isDirty = pendingEnabled !== auditLogsEnabled;
+
   const deleteCb = useApiCallback(
     async (api, args: AdminConfirmationParams) =>
       await api.commons.deleteAllAuditLogs(args),
   );
+
+  const toggleCb = useApiCallback(
+    async (api, args: BulkUpdateSystemSettingParams) =>
+      await api.commons.bulkUpdateSettings(args),
+  );
+
+  const handleToggle = (checked: boolean) => {
+    setPendingEnabled(checked);
+  };
+
+  const handleSave = async () => {
+    if (!auditSettingDto) {
+      showToast("Audit logging setting not found", "error");
+      return;
+    }
+    try {
+      await toggleCb.execute({
+        settings: [
+          {
+            systemSettingID: auditSettingDto.systemSettingID,
+            value: String(pendingEnabled),
+          },
+        ],
+      });
+      await publicSettings.refresh();
+      showToast(
+        pendingEnabled ? "Audit logging enabled" : "Audit logging disabled",
+        "success",
+      );
+    } catch (error) {
+      showToast("Failed to update audit logging setting", "error");
+    }
+  };
+
+  const handleDiscard = () => {
+    setPendingEnabled(auditLogsEnabled);
+  };
 
   const hasMpin = mpinStatus.ready && !!mpinStatus.status?.hasMpin;
 
@@ -177,19 +232,79 @@ export const AuditLogTab: React.FC = () => {
   return (
     <Flex direction="column" gap="4">
       <Card variant="surface" size="2">
+        <Flex direction="column" gap="3">
+          <Flex align="center" justify="between">
+            <Box>
+              <Heading size="3">Audit Logging</Heading>
+              <Text size="2" color="gray">
+                When disabled, no new events will be recorded by the system.
+              </Text>
+            </Box>
+            <Flex align="center" gap="2">
+              <Text
+                size="2"
+                color={pendingEnabled ? "jade" : "gray"}
+                weight="medium"
+              >
+                {pendingEnabled ? "Enabled" : "Disabled"}
+              </Text>
+              <Switch
+                checked={pendingEnabled}
+                onCheckedChange={handleToggle}
+                disabled={toggleCb.loading || settingsData.loading}
+                color="jade"
+              />
+            </Flex>
+          </Flex>
+          {isDirty && (
+            <Flex gap="2" justify="end">
+              <Button
+                variant="soft"
+                onClick={handleDiscard}
+                disabled={toggleCb.loading}
+              >
+                Discard
+              </Button>
+              <Button onClick={handleSave} loading={toggleCb.loading}>
+                Save changes
+              </Button>
+            </Flex>
+          )}
+        </Flex>
+      </Card>
+
+      {!pendingEnabled ? (
         <Flex
-          align={{ initial: "stretch", md: "center" }}
-          justify="between"
-          gap="3"
-          direction={{ initial: "column", md: "row" }}
+          direction="column"
+          align="center"
+          justify="center"
+          py="9"
+          gap="2"
         >
-          <Box>
-            <Heading size="4">Audit Log</Heading>
-            <Text size="2" color="gray">
-              Append-only history of system events. Click a row to view the
-              full change payload.
-            </Text>
-          </Box>
+          <ManageHistory style={{ fontSize: 56, color: "var(--gray-9)" }} />
+          <Text size="3" weight="medium">
+            Audit logging is disabled.
+          </Text>
+          <Text size="2" color="gray">
+            Enable audit logging above to start recording system events.
+          </Text>
+        </Flex>
+      ) : (
+        <>
+          <Card variant="surface" size="2">
+            <Flex
+              align={{ initial: "stretch", md: "center" }}
+              justify="between"
+              gap="3"
+              direction={{ initial: "column", md: "row" }}
+            >
+              <Box>
+                <Heading size="4">Audit Log</Heading>
+                <Text size="2" color="gray">
+                  Append-only history of system events. Click a row to view the
+                  full change payload.
+                </Text>
+              </Box>
           <Flex align="center" gap="2" wrap="wrap">
             <Text size="2" color="gray">
               {page?.totalItems ?? logs.length} total
@@ -439,6 +554,8 @@ export const AuditLogTab: React.FC = () => {
         log={selected}
         onClose={() => setSelected(null)}
       />
+        </>
+      )}
     </Flex>
   );
 };
