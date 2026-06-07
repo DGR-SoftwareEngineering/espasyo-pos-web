@@ -47,6 +47,7 @@ const DEFAULT_PRODUCT_ENTRY = (isMenuItem: boolean): ProductEntry => ({
   ingredientCategoryID: "",
   variants: [],
   addOnGroups: [],
+  imageFile: null,
 });
 
 export const BulkProductCreationBlock: React.FC = () => {
@@ -235,8 +236,10 @@ export const BulkProductCreationBlock: React.FC = () => {
       return item;
     });
 
+    const imageFiles = validProducts.map((p) => p.imageFile ?? null);
+
     try {
-      const result = await bulkCreateCallback.execute({ products: items });
+      const result = await bulkCreateCallback.execute({ products: items }, imageFiles);
       if (result) {
         setImportResult(result);
         setResultsOpen(true);

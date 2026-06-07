@@ -78,7 +78,7 @@ export const ContactStep: React.FC<UserCreateStepProps> = ({
               />
             }
           />
-          <TextField
+          {/* <TextField
             name="licenseNumber"
             control={control}
             label="License Number (optional)"
@@ -88,7 +88,7 @@ export const ContactStep: React.FC<UserCreateStepProps> = ({
                 style={{ fontSize: 16, color: "var(--gray-10)" }}
               />
             }
-          />
+          /> */}
         </Grid>
         <Text size="1" color="gray">
           Email must be unique. The license number is only required for roles

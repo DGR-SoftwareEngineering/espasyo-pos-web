@@ -123,10 +123,7 @@ export const ProductFormBlock: React.FC = () => {
       const result = await productCb.execute(payload);
 
       if (result.status === 200 && result.data.success) {
-        const newProductId =
-          (result.data.response as unknown as string) ??
-          (result.data as any).response?.productID ??
-          null;
+        const newProductId = (result.data.response as any)?.productID ?? null;
 
         // Post initial variants and add-on groups (menu items only)
         if (isMenuItem && newProductId) {
