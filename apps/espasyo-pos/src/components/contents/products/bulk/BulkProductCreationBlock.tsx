@@ -111,8 +111,8 @@ export const BulkProductCreationBlock: React.FC = () => {
   );
 
   const bulkCreateCallback = useApiCallback(
-    async (api, params: { products: BulkCreateProductItem[] }) => {
-      const res = await api.commons.bulkCreateProducts(params);
+    async (api, params: { products: BulkCreateProductItem[], imageFiles?: (File | null)[] }) => {
+      const res = await api.commons.bulkCreateProducts(params, params.imageFiles);
       return res.data.response;
     },
   );
@@ -239,7 +239,7 @@ export const BulkProductCreationBlock: React.FC = () => {
     const imageFiles = validProducts.map((p) => p.imageFile ?? null);
 
     try {
-      const result = await bulkCreateCallback.execute({ products: items }, imageFiles);
+      const result = await bulkCreateCallback.execute({ products: items, imageFiles });
       if (result) {
         setImportResult(result);
         setResultsOpen(true);
