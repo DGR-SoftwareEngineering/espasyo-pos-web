@@ -203,29 +203,43 @@ export const useAuthentication = (): AuthService => {
   }, [isAuthenticated, accessToken]);
 
   const logout = useCallback(async () => {
-    try {
-      let currentAccessToken = accessToken;
-      let currentRefreshToken = refreshToken;
+    const currentAccessToken = accessToken;
+    const currentRefreshToken = refreshToken;
+    const currentSsoCookie = ssoCookie;
 
-      if (!currentAccessToken || !currentRefreshToken) {
-        if (!ssoCookie) {
+    if (!currentAccessToken && !currentRefreshToken && !currentSsoCookie) {
+      clearSession();
+      setIsAuthenticated(false);
+      setRole("");
+      setEmail("");
+      setUserInitials("");
+      authSessionIdleTimer.stop();
+      return;
+    }
+
+    try {
+      let tokenAccessToken = currentAccessToken;
+      let tokenRefreshToken = currentRefreshToken;
+
+      if (!tokenAccessToken || !tokenRefreshToken) {
+        if (!currentSsoCookie) {
           throw new Error(
             "SSO Cookie is not set. Cannot create session for logout",
           );
         }
 
         const { data } = await createSessionCb.execute({
-          id: ssoCookie,
+          id: currentSsoCookie,
         });
 
-        currentAccessToken = data.accessToken;
-        currentRefreshToken = data.refreshToken;
+        tokenAccessToken = data.accessToken;
+        tokenRefreshToken = data.refreshToken;
       }
 
-      if (currentAccessToken && currentRefreshToken) {
+      if (tokenAccessToken && tokenRefreshToken) {
         await logoutCb.execute({
-          refreshToken: currentRefreshToken,
-          accessToken: currentAccessToken,
+          refreshToken: tokenRefreshToken,
+          accessToken: tokenAccessToken,
         });
       }
     } catch (error) {
@@ -241,7 +255,7 @@ export const useAuthentication = (): AuthService => {
       setUserInitials("");
       authSessionIdleTimer.stop();
     }
-  }, [accessToken, refreshToken, createSessionCb, logoutCb]);
+  }, [accessToken, refreshToken, ssoCookie, createSessionCb, logoutCb]);
 
   const softLogout = useCallback(async () => {
     clearSession();

@@ -50,7 +50,10 @@ export const useSessionIdleTimer = ({ onSessionExpired, sessionId }: Props) => {
     crossTab: true,
     syncTimers: 400,
     name: sessionId,
-    onMessage: handleSessionExpiration,
+    onMessage: async () => {
+      if (!sessionId) return;
+      await handleSessionExpiration();
+    },
     timeout: startSessionCheckAfterMinutes * 60000,
   });
 
@@ -61,7 +64,9 @@ export const useSessionIdleTimer = ({ onSessionExpired, sessionId }: Props) => {
 
   function stopIdleTimer() {
     clearAliveCheck();
-    idleTimer.message({}, false);
+    if (sessionId) {
+      idleTimer.message({}, false);
+    }
     idleTimer.reset();
   }
 
