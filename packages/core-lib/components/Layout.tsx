@@ -74,7 +74,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
   platform = "POS",
 }) => {
   const { logout } = useLogout();
-  const { isAuthenticated, loading, email, role, initials } = useAuthContext();
+  const { isAuthenticated, loading, email, role, initials, isAuthReady } = useAuthContext();
   const { hasDuplicateSession } = usePreventDuplicateSession();
   const { theme: publicTheme } = usePublicSettings();
   useRefreshTokenHandler(logout);
@@ -92,6 +92,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
       <ErrorBoundary errorMessage="Radix Framework Error">
         <RadixThemeFramework
           isAuthenticated={isAuthenticated}
+          isAuthReady={isAuthReady}
           loading={loading}
           logout={logout}
           email={email}

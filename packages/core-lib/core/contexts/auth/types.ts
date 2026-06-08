@@ -31,6 +31,7 @@ export type AuthService = {
   loading: boolean;
   isAuthenticating: boolean;
   isAuthenticated: boolean;
+  isAuthReady: boolean;
   role: string;
   initials: string;
   email: string;

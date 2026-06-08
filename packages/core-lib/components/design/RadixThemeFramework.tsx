@@ -25,6 +25,7 @@ export type Platform = "POS" | "CustomerEngagement";
 
 export interface RadixThemeFrameworkProps {
   isAuthenticated: boolean;
+  isAuthReady?: boolean;
   loading?: boolean;
   appearance?: ThemeProps["appearance"];
   accentColor?: ThemeProps["accentColor"];
@@ -42,6 +43,7 @@ export interface RadixThemeFrameworkProps {
 
 export const RadixThemeFramework: React.FC<RadixThemeFrameworkProps> = ({
   isAuthenticated,
+  isAuthReady,
   loading,
   appearance = "light",
   accentColor = "indigo",
@@ -56,6 +58,12 @@ export const RadixThemeFramework: React.FC<RadixThemeFrameworkProps> = ({
   platform,
   children,
 }) => {
+  if (isAuthReady === false) {
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--gray-2)" }} />
+    );
+  }
+
   return (
     <Theme
       appearance={appearance}

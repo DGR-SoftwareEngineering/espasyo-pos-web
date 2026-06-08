@@ -1,6 +1,7 @@
 import { GetServerSidePropsContext, GetServerSideProps } from "next";
 import { ServerResponse } from "http";
 import { nonce } from "./nonce";
+import { validateAuth, clearAuthCookies } from "./lib/auth-utils";
 
 type CSPDirective = {
   [key: string]: string[];
@@ -43,15 +44,34 @@ export const setCSPHeader = (res: ServerResponse, csp: string): void => {
 };
 
 export const SSRWithContentSecurityPolicy = (
-  getServerSidePropsFn?: GetServerSideProps
+  getServerSidePropsFn?: GetServerSideProps,
+  options?: { requireAuth?: boolean; redirectTo?: string }
 ) => {
   return async (context: GetServerSidePropsContext) => {
     try {
+      if (options?.requireAuth) {
+        const { isValid, shouldClearCookies } = await validateAuth(context);
+        
+        if (shouldClearCookies) {
+          clearAuthCookies(context);
+        }
+        
+        if (!isValid) {
+          const redirectUrl = options.redirectTo || "/";
+          return {
+            redirect: {
+              destination: redirectUrl,
+              permanent: false,
+            },
+          };
+        }
+      }
+      
       const generatedNonce = nonce();
       const csp = generateCSP(generatedNonce);
-
+      
       setCSPHeader(context.res as ServerResponse, csp);
-
+      
       if (getServerSidePropsFn) {
         const result = await getServerSidePropsFn(context);
         if ("props" in result) {
@@ -66,7 +86,7 @@ export const SSRWithContentSecurityPolicy = (
         }
         return result;
       }
-
+      
       return {
         props: {
           generatedNonce,
@@ -74,8 +94,9 @@ export const SSRWithContentSecurityPolicy = (
         },
       };
     } catch (error: any) {
+      console.error("SSR Error:", error);
       return {
-        props: { error: { message: error.message || "An error occured." } },
+        props: { error: { message: error.message || "An error occurred." } },
       };
     }
   };

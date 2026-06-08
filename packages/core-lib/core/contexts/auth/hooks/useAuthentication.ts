@@ -58,6 +58,7 @@ export const useAuthentication = (): AuthService => {
   const [accessToken, setAccessToken, clearAccessToken] = useAccessToken();
   const [refreshToken, setRefreshToken, clearRefreshToken] = useRefreshToken();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [userInitials, setUserInitials] = useState("");
   const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
@@ -107,12 +108,23 @@ export const useAuthentication = (): AuthService => {
     validateTokenCb.loading;
 
   useEffect(() => {
-    if (validateTokenCb.result?.data.success !== undefined) {
-      setIsAuthenticated(
-        !!(accessToken && validateTokenCb.result.data.success),
-      );
+    if (!accessToken) {
+      if (!validateTokenCb.loading) {
+        setIsAuthenticated(false);
+        setIsAuthReady(true);
+      }
+      return;
     }
-  }, [accessToken, validateTokenCb.result]);
+    if (validateTokenCb.loading) return;
+
+    if (validateTokenCb.result?.data.success !== undefined) {
+      setIsAuthenticated(!!(accessToken && validateTokenCb.result.data.success));
+      setIsAuthReady(true);
+    } else if (validateTokenCb.error) {
+      setIsAuthenticated(false);
+      setIsAuthReady(true);
+    }
+  }, [accessToken, validateTokenCb.result, validateTokenCb.loading, validateTokenCb.error]);
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
@@ -246,6 +258,7 @@ export const useAuthentication = (): AuthService => {
   return {
     loading,
     isAuthenticated,
+    isAuthReady,
     login: async (options?: LoginOptions) => {
       const { userName, password } = options || {};
 

@@ -372,23 +372,46 @@ async function detectInvalidCookies(request: NextRequest): Promise<boolean> {
   const token = request.cookies.get("ac")?.value;
   const sessionCookie = request.cookies.get("session")?.value;
 
-  if (!token && !sessionCookie) return false;
+  if (!token && !sessionCookie) {
+    return false;
+  }
 
   if (token) {
     try {
       const parts = token.split(".");
-      if (parts.length !== 3) return true;
+      if (parts.length !== 3) {
+        return true;
+      }
 
       const [, payloadB64] = parts;
-      if (!payloadB64) return true;
-
       const json = base64UrlDecode(payloadB64);
-      JSON.parse(json);
+      const payload = JSON.parse(json);
+      
+      const exp = payload.exp;
+      if (exp && typeof exp === 'number') {
+        const now = Math.floor(Date.now() / 1000);
+        if (exp < now) {
+          return true;
+        }
+      }
 
+      // For non-expired tokens, verify with backend to ensure session is still valid
+      // This catches cases where token was revoked or session expired
+      const isValid = await validateToken(token);
+      
+      if (!isValid) {
+        return true;
+      }
+      
       return false;
-    } catch {
+    } catch (error) {
+      console.log('Error checking token:', error);
       return true;
     }
+  }
+
+  if (sessionCookie && !token) {
+    return true;
   }
 
   return false;
@@ -404,7 +427,7 @@ async function getAuthState(request: NextRequest): Promise<AuthState> {
   const now = Math.floor(Date.now() / 1000);
   const isExpired = exp && exp < now;
 
-  if (isExpired) {
+  if (isExpired || !token) {
     return { isAuthenticated: false, role: null, userId: null, hasActiveShift: false };
   }
 
@@ -413,8 +436,8 @@ async function getAuthState(request: NextRequest): Promise<AuthState> {
     return { isAuthenticated: true, role, userId, hasActiveShift };
   }
 
-  const isAuthenticated = token ? await validateToken(token) : false;
-  const hasActiveShift = isAuthenticated ? await checkActiveShift(token || "") : false;
+  const isAuthenticated = await validateToken(token);
+  const hasActiveShift = isAuthenticated ? await checkActiveShift(token) : false;
 
   return { isAuthenticated, role, userId, hasActiveShift };
 }
@@ -429,6 +452,7 @@ async function validateToken(token: string): Promise<boolean> {
     const url = `${API_URL}/authentication-api/api/authentication/validate-token`;
 
     var controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const response = await fetch(url, {
       headers: {
@@ -440,16 +464,17 @@ async function validateToken(token: string): Promise<boolean> {
       signal: controller.signal,
     });
 
+    clearTimeout(timeoutId);
+
     // Rate-limited ≠ invalid token; assume token is still valid
     if (response.status === 429) return true;
     if (!response.ok) return false;
+    if (response.status === 401) return false;
 
     const data = (await response.json()) as ValidateAccessTokenResponse;
 
     if (typeof data?.success === "boolean") {
-      if (!data.success) {
-        return false;
-      }
+      return data.success;
     }
     return true;
   } catch (error) {

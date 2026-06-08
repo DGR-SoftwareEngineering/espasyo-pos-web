@@ -4,9 +4,9 @@ import { AdminDashboard } from "../../../components/dashboard/admin";
 import { GetServerSideProps } from "next";
 
 const AdminHub = () => {
-  const { loading } = useAuthContext();
+  const { loading, isAuthenticated, isAuthReady } = useAuthContext();
 
-  if (loading) {
+  if (!isAuthReady || loading) {
     return (
       <Flex align="center" justify="center" style={{ minHeight: 240 }}>
         <Text color="gray">Loading…</Text>
@@ -14,8 +14,10 @@ const AdminHub = () => {
     );
   }
 
+  if (!isAuthenticated) return null;
+
   return <AdminDashboard />;
 };
 export const getServerSideProps: GetServerSideProps =
-  SSRWithContentSecurityPolicy();
+  SSRWithContentSecurityPolicy(undefined, { requireAuth: true });
 export default AdminHub;
