@@ -480,6 +480,6 @@ async function checkActiveShift(token: string): Promise<boolean> {
     return !!data?.response; // Returns true if active shift exists
   } catch (error) {
     console.error("Active shift check failed:", error);
-    return false;
+    return true; // fail-open: allow navigation; JWT auth is the real guard
   }
 }

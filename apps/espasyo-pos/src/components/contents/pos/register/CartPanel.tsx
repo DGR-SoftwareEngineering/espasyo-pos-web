@@ -54,6 +54,7 @@ interface Props {
   targetSalesTargetAmount?: number;
   targetSalesProgressPct?: number;
   targetSalesReached?: boolean;
+  onTargetSalesClick?: () => void;
   onRedeemProductSelected: (product: RedeemableProductDto, options: AddProductOptions) => void;
   onAttachPromoProduct?: (product: CustomerPromoProductItemDto, promo: CustomerPromoProductDto) => void;
   addedExclusiveIds?: Set<string>
@@ -72,6 +73,7 @@ export const CartPanel: React.FC<Props> = ({
   targetSalesTargetAmount,
   targetSalesProgressPct,
   targetSalesReached,
+  onTargetSalesClick,
   onRedeemProductSelected,
   onAttachPromoProduct,
   addedExclusiveIds = new Set(),
@@ -303,6 +305,7 @@ export const CartPanel: React.FC<Props> = ({
               reached={targetSalesReached ?? false}
               currencyCode={currencyCode}
               loading={false}
+              onClick={onTargetSalesClick}
             />
           </Box>
         )}
