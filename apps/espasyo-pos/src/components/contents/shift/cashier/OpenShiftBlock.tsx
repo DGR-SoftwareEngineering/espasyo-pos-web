@@ -122,7 +122,18 @@ export const OpenShiftBlock: React.FC = () => {
             : result?.data?.message ?? "Failed to open shift";
         showToast(errorMsg, "error");
       } catch {
-        showToast("Failed to open shift", "error");
+        // Shift open may have failed because one already exists (409 conflict).
+        // Check for an active shift before surfacing the generic error.
+        try {
+          const shiftRes = await activeShiftCb.execute();
+          if (shiftRes?.data?.response) {
+            router.replace("/cashier/pos");
+            return;
+          }
+        } catch {
+          // getActiveShift also failed — fall through to the error toast
+        }
+        showToast("Failed to open shift. Please try again.", "error");
       } finally {
         setSubmitting(false);
       }

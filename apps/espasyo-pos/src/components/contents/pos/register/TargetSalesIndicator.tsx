@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box, Flex, Text } from "@radix-ui/themes";
 import { motion } from "framer-motion";
 import { EmojiEvents } from "@mui/icons-material";
@@ -11,6 +11,7 @@ interface TargetSalesIndicatorProps {
   reached: boolean;
   currencyCode: string;
   loading?: boolean;
+  onClick?: () => void;
 }
 
 const getThreshold = (pct: number) => {
@@ -37,13 +38,32 @@ export const TargetSalesIndicator: React.FC<TargetSalesIndicatorProps> = ({
   reached,
   currencyCode,
   loading = false,
+  onClick,
 }) => {
   const threshold = getThreshold(progressPct);
+  const prevReachedRef = useRef(reached);
+  const [bouncing, setBouncing] = useState(false);
+
+  useEffect(() => {
+    if (reached && !prevReachedRef.current) {
+      setBouncing(true);
+      const t = setTimeout(() => setBouncing(false), 900);
+      return () => clearTimeout(t);
+    }
+    prevReachedRef.current = reached;
+  }, [reached]);
 
   return (
     <motion.div
-      animate={reached ? { scale: [1, 1.03, 1] } : {}}
-      transition={{ duration: 0.6, ease: "easeInOut" }}
+      animate={
+        bouncing
+          ? { y: [0, -14, 0, -7, 0, -3, 0], scale: [1, 1.04, 1, 1.02, 1] }
+          : {}
+      }
+      transition={{ duration: 0.85, ease: "easeOut" }}
+      whileHover={onClick ? { scale: 1.01 } : {}}
+      onClick={onClick}
+      style={{ cursor: onClick ? "pointer" : undefined }}
     >
       <Box
         style={{
@@ -75,9 +95,16 @@ export const TargetSalesIndicator: React.FC<TargetSalesIndicatorProps> = ({
               Today's Target
             </Text>
           </Flex>
-          <Text size="1" weight="bold">
-            {formatCurrency(targetAmount, currencyCode)}
-          </Text>
+          <Flex align="center" gap="2">
+            <Text size="1" weight="bold">
+              {formatCurrency(targetAmount, currencyCode)}
+            </Text>
+            {onClick && (
+              <Text size="1" color="gray" style={{ opacity: 0.6 }}>
+                ↗
+              </Text>
+            )}
+          </Flex>
         </Flex>
 
         <Box

@@ -107,6 +107,13 @@ import {
   CreateDocumentationParams,
   DocumentationListResponse,
   DocumentationResponse,
+  FacebookPageInfoResponse,
+  FacebookPostListResponse,
+  FacebookPostResponse,
+  FacebookConnectionStatusResponse,
+  CreateFacebookPostParams,
+  UpdateFacebookPostParams,
+  FacebookReconnectParams,
   SystemSettingListResponse,
   SystemSettingResponse,
   UpdateContentBlockParams,
@@ -1813,5 +1820,72 @@ export class CommonsApi {
     return this.axios.delete<DocumentationResponse>(
       `/api/v1/settings-api/Documentation/${encodeURIComponent(id)}`,
     );
+  }
+
+  // ===== Facebook Post Management =====
+
+  public facebookPostList() {
+    return this.axios.get<FacebookPostListResponse>(
+      `/api/v1/social-api/FacebookPost`,
+    );
+  }
+
+  public facebookPostById(id: string) {
+    return this.axios.get<FacebookPostResponse>(
+      `/api/v1/social-api/FacebookPost/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public facebookPageInfo() {
+    return this.axios.get<FacebookPageInfoResponse>(
+      `/api/v1/social-api/FacebookPost/page-info`,
+    );
+  }
+
+  public createFacebookPost(params: CreateFacebookPostParams) {
+    const form = new FormData();
+    form.append("Message", params.message);
+    form.append("Status", String(params.status));
+    if (params.scheduledAt) form.append("ScheduledAt", params.scheduledAt);
+    params.imageFiles?.forEach((file) => {
+      form.append("ImageFiles", file, file.name);
+    });
+    return this.axios.post<FacebookPostResponse>(
+      `/api/v1/social-api/FacebookPost`,
+      form,
+    );
+  }
+
+  public updateFacebookPost(params: UpdateFacebookPostParams) {
+    const form = new FormData();
+    form.append("FacebookPostID", params.facebookPostID);
+    if (params.message != null) form.append("Message", params.message);
+    if (params.status != null) form.append("Status", String(params.status));
+    if (params.scheduledAt) form.append("ScheduledAt", params.scheduledAt);
+    params.imageFiles?.forEach((file) => {
+      form.append("ImageFiles", file, file.name);
+    });
+    if (params.removeAllImages) form.append("RemoveAllImages", "true");
+    return this.axios.put<FacebookPostResponse>(
+      `/api/v1/social-api/FacebookPost`,
+      form,
+    );
+  }
+
+  public deleteFacebookPost(id: string) {
+    return this.axios.delete<ApiResponse<string>>(
+      `/api/v1/social-api/FacebookPost/${encodeURIComponent(id)}`,
+    );
+  }
+
+  public reconnectFacebook(params: FacebookReconnectParams) {
+    return this.axios.patch<FacebookConnectionStatusResponse>(
+      `/api/v1/social-api/FacebookPost/reconnect`,
+      params,
+    );
+  }
+
+  public disconnectFacebook() {
+    return this.axios.delete<ApiResponse<string>>(`/api/v1/social-api/FacebookPost/disconnect`);
   }
 }
