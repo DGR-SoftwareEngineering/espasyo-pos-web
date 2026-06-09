@@ -1,6 +1,7 @@
 import { usePublicSettings } from "core-lib";
 import { getDailySalesGross } from "core-lib/business";
 import { useApi } from "core-lib/core/hooks";
+import { DailySalesSummaryDto } from "core-lib/api/commons/types";
 
 export interface UseTargetSalesResult {
   enabled: boolean;
@@ -10,6 +11,7 @@ export interface UseTargetSalesResult {
   reached: boolean;
   confettiEnabled: boolean;
   loading: boolean;
+  summary: DailySalesSummaryDto | null;
   refresh: () => Promise<void>;
 }
 
@@ -38,6 +40,7 @@ export const useTargetSales = (): UseTargetSalesResult => {
     reached,
     confettiEnabled: pos.targetSalesConfettiEnabled,
     loading: summary.loading,
+    summary: summary.result?.data?.response ?? null,
     refresh,
   };
 };

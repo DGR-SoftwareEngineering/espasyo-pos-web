@@ -34,6 +34,7 @@ import { VariantAddOnDialog } from "./VariantAddOnDialog";
 import { AddProductOptions, computeTotals, useCartState } from "./hooks";
 import { SaleReceiptPrintable } from "../printables/SaleReceiptPrintable";
 import { useTargetSales } from "./useTargetSales";
+import { TargetSalesDetailDialog } from "./TargetSalesDetailDialog";
 import { CloseShiftFormBlock } from "../../shift-management/forms/CloseShiftFormBlock";
 import { CloseShiftForm } from "../../shift-management/forms/validation";
 
@@ -101,6 +102,7 @@ export const PosRegisterBlock: React.FC = () => {
   );
   const [addedExclusiveIds, setAddedExclusiveIds] = useState<Set<string>>(new Set());
   const targetSales = useTargetSales();
+  const [targetDialogOpen, setTargetDialogOpen] = useState(false);
 
   // Browser fullscreen toggle
   const togglePosMode = useCallback(async () => {
@@ -496,6 +498,18 @@ export const PosRegisterBlock: React.FC = () => {
       }
     >
       <ConfettiCanvas ref={confettiRef} />
+
+      <TargetSalesDetailDialog
+        open={targetDialogOpen}
+        onClose={() => setTargetDialogOpen(false)}
+        currentAmount={targetSales.currentAmount}
+        targetAmount={targetSales.targetAmount}
+        progressPct={targetSales.progressPct}
+        reached={targetSales.reached}
+        currencyCode={currencyCode}
+        summary={targetSales.summary}
+      />
+
       {isPosMode && (
         <Flex
           align="center"
@@ -611,6 +625,7 @@ export const PosRegisterBlock: React.FC = () => {
               targetSalesTargetAmount={targetSales.targetAmount}
               targetSalesProgressPct={targetSales.progressPct}
               targetSalesReached={targetSales.reached}
+              onTargetSalesClick={targetSales.enabled ? () => setTargetDialogOpen(true) : undefined}
               onRedeemProductSelected={handleRedeemProductSelected}
               onAttachPromoProduct={handleAttachPromoProduct}
               addedExclusiveIds={addedExclusiveIds}

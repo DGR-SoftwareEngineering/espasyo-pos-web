@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
@@ -24,6 +24,7 @@ import {
   ReceiptLongOutlined,
   ReplayOutlined,
 } from "@mui/icons-material";
+import { useRouter } from "next/router";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import { useApi } from "core-lib/core/hooks";
@@ -85,6 +86,7 @@ const STATUS_BADGE: Record<SaleStatusDto, { color: BadgeColor; label: string; ic
 export const OrdersBlock: React.FC = () => {
   const { currencyCode, pos, systemName, theme } = usePublicSettings();
   const { openDialog } = useDialogContext();
+  const router = useRouter();
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -94,6 +96,14 @@ export const OrdersBlock: React.FC = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [reloadToken, setReloadToken] = useState(0);
+
+  // Pre-fill date filter from URL query params (e.g. ?fromDate=2026-06-09&toDate=2026-06-09).
+  // Runs once on mount so direct links from the POS target sales dialog land filtered.
+  useEffect(() => {
+    const { fromDate: qFrom, toDate: qTo } = router.query;
+    if (typeof qFrom === "string" && qFrom) setFromDate(qFrom);
+    if (typeof qTo === "string" && qTo) setToDate(qTo);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const queryParams = useMemo<OrderQueryParams>(
     () => ({

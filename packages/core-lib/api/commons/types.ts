@@ -2420,3 +2420,64 @@ export interface CustomerCheckoutParams {
   items: CustomerCheckoutItemParams[];
   specialInstructions?: string | null;
 }
+
+// ===== Facebook Post Management =====
+
+export enum FacebookPostStatus {
+  Draft = 1,
+  Published = 2,
+  Scheduled = 3,
+}
+
+export interface FacebookPostDto {
+  facebookPostID: string;
+  message: string;
+  imageUrls: string[];
+  status: FacebookPostStatus;
+  statusName: string;
+  scheduledAt: string | null;
+  facebookGraphPostId: string | null;
+  postedAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface FacebookPageInfoDto {
+  pageId: string;
+  name: string;
+  pictureUrl: string | null;
+}
+
+export interface CreateFacebookPostParams {
+  message: string;
+  imageFiles?: File[];
+  status: FacebookPostStatus;
+  scheduledAt?: string | null;
+}
+
+export interface UpdateFacebookPostParams {
+  facebookPostID: string;
+  message?: string | null;
+  imageFiles?: File[];
+  removeAllImages?: boolean;
+  status?: FacebookPostStatus | null;
+  scheduledAt?: string | null;
+}
+
+export interface FacebookReconnectParams {
+  pageAccessToken: string;
+  pageId?: string;
+}
+
+export interface FacebookConnectionStatusDto {
+  isConnected: boolean;
+  pageName: string | null;
+  pageId: string | null;
+  pictureUrl: string | null;
+  errorMessage: string | null;
+}
+
+export type FacebookPostListResponse = ApiResponse<FacebookPostDto[]>;
+export type FacebookPostResponse = ApiResponse<FacebookPostDto>;
+export type FacebookPageInfoResponse = ApiResponse<FacebookPageInfoDto>;
+export type FacebookConnectionStatusResponse = ApiResponse<FacebookConnectionStatusDto>;
