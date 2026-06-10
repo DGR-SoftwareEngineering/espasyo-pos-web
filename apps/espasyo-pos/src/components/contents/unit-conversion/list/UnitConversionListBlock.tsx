@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Badge, Box, Card, Flex, Text } from "@radix-ui/themes";
+import { AlertDialog, Badge, Box, Card, Flex, Text } from "@radix-ui/themes";
 import {
   ReloadIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   SwitchIcon,
 } from "@radix-ui/react-icons";
-import { useApi } from "core-lib/core/hooks";
+import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useToastContext } from "core-lib";
 import { useDialogContext } from "core-lib";
 import { registerForm } from "core-lib/components/radix/form/FormRenderer";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
@@ -19,7 +20,7 @@ import {
   sortOptions,
   UnitConversionFilterState,
 } from "../constants";
-import { UnitConversion } from "core-lib/api/commons/types";
+import { UnitConversion, UnitConversionDependenciesDto } from "core-lib/api/commons/types";
 import { useUnitConversionStats } from "../hooks/useUnitConversionStats";
 import { UnitConversionForm } from "../forms/UnitConversionForm";
 import { formatNumber } from "core-lib/business";
@@ -29,17 +30,30 @@ registerForm("unit-conversion-form", UnitConversionForm);
 export const UnitConversionListBlock: React.FC = () => {
   // openDialog is wired but no actions trigger it for now — preserve future hooks
   useDialogContext();
+  const { showToast } = useToastContext();
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState<UnitConversionFilterState>({
     searchQuery: "",
     sortBy: "fromUnit",
   });
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [depsData, setDepsData] = useState<UnitConversionDependenciesDto | null>(null);
 
   const data = useApi((api) =>
     api.commons.getUnitConversions(pageNumber, pageSize),
   );
   const response = data.result?.data.response;
+
+  const getDependenciesCb = useApiCallback(
+    async (api, id: string) =>
+      api.commons.getUnitConversionDependencies(id),
+  );
+
+  const deleteCb = useApiCallback(
+    async (api, id: string) =>
+      api.commons.deleteUnitConversion(id),
+  );
 
   const conversions = useMemo((): UnitConversion[] => {
     return response?.items ?? [];
@@ -113,6 +127,37 @@ export const UnitConversionListBlock: React.FC = () => {
     setFilters({ searchQuery: "", sortBy: "fromUnit" });
     setPageNumber(1);
   }, []);
+
+  const handleDelete = useCallback(async (id: string) => {
+    setDeletingId(id);
+    const result = await getDependenciesCb.execute(id);
+
+    if (result?.data?.success && result.data.response) {
+      setDepsData(result.data.response);
+    } else {
+      setDeletingId(null);
+      showToast(
+        Array.isArray(result?.data?.errors) ? result.data.errors[0] : result?.data?.message ?? "Failed to load conversion dependencies.",
+        "error"
+      );
+    }
+  }, [getDependenciesCb, showToast]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deletingId) return;
+
+    const result = await deleteCb.execute(deletingId);
+
+    if (result?.data?.success) {
+      showToast("Unit conversion deleted successfully", "success");
+      setDeletingId(null);
+      setDepsData(null);
+      data.execute();
+    } else {
+      const msg = Array.isArray(result?.data?.errors) ? result.data.errors[0] : result?.data?.message ?? "Failed to delete conversion";
+      showToast(msg, "error");
+    }
+  }, [deletingId, deleteCb, data, showToast]);
 
   return (
     <Box style={{ width: "100%" }}>
@@ -215,9 +260,104 @@ export const UnitConversionListBlock: React.FC = () => {
           onPreviousPage={handlePreviousPage}
           onView={() => {}}
           onEdit={() => {}}
-          onDelete={() => {}}
+          onDelete={handleDelete}
         />
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog.Root open={deletingId !== null} onOpenChange={(open) => {
+        if (!open) {
+          setDeletingId(null);
+          setDepsData(null);
+        }
+      }}>
+        <AlertDialog.Content maxWidth="500px">
+          <AlertDialog.Title>Delete Unit Conversion</AlertDialog.Title>
+          {depsData && (
+            <Box my="3">
+              <Flex direction="column" gap="4">
+                <Box>
+                  <Text size="2" weight="bold" as="div" mb="2">
+                    {depsData.fromUnitName} → {depsData.toUnitName}
+                  </Text>
+                  <Text size="2" color="gray" as="div">
+                    Conversion rate: 1 {depsData.fromUnitName} = {formatNumber(depsData.conversionRate, 4)} {depsData.toUnitName}
+                  </Text>
+                </Box>
+
+                {depsData.hasDependencies ? (
+                  <Box>
+                    <Text size="2" weight="bold" color="red" as="div" mb="2">
+                      ⚠️ This conversion is used by:
+                    </Text>
+
+                    {depsData.affectedProducts.length > 0 && (
+                      <Box mb="3">
+                        <Text size="1" weight="bold" as="div" mb="1" color="gray">
+                          Products ({depsData.affectedProducts.length}):
+                        </Text>
+                        <Flex direction="column" gap="1">
+                          {depsData.affectedProducts.map((p) => (
+                            <Text key={p.productID} size="1" color="gray" as="div">
+                              • {p.name} ({p.fromUnit} → {p.toUnit})
+                            </Text>
+                          ))}
+                        </Flex>
+                      </Box>
+                    )}
+
+                    {depsData.affectedRecipes.length > 0 && (
+                      <Box>
+                        <Text size="1" weight="bold" as="div" mb="1" color="gray">
+                          Recipes ({depsData.affectedRecipes.length}):
+                        </Text>
+                        <Flex direction="column" gap="1">
+                          {depsData.affectedRecipes.map((r) => (
+                            <Text key={r.recipeID} size="1" color="gray" as="div">
+                              • {r.productName} (uses {r.unitName})
+                            </Text>
+                          ))}
+                        </Flex>
+                      </Box>
+                    )}
+
+                    <Text size="1" color="red" as="div" mt="3">
+                      Removing this conversion may cause calculation errors.
+                    </Text>
+                  </Box>
+                ) : (
+                  <Box p="3" style={{
+                    background: "var(--green-a3)",
+                    borderRadius: "var(--radius-3)",
+                    border: "1px solid var(--green-a5)",
+                  }}>
+                    <Text size="2" style={{ color: "var(--green-11)" }}>
+                      ✓ No products or recipes depend on this conversion.
+                    </Text>
+                  </Box>
+                )}
+              </Flex>
+            </Box>
+          )}
+
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button type="Secondary" onClick={() => {
+      setDeletingId(null);
+      setDepsData(null);
+    }}>Cancel</Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                disabled={deleteCb.loading}
+                onClick={handleConfirmDelete}
+              >
+                {deleteCb.loading ? "Deleting…" : "Delete"}
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
 
       {filteredConversions.length > 0 && (
         <Flex justify="between" align="center" mt="3" px="2">

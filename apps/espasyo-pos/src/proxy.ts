@@ -396,7 +396,6 @@ async function detectInvalidCookies(request: NextRequest): Promise<boolean> {
 
 async function getAuthState(request: NextRequest): Promise<AuthState> {
   const token = request.cookies.get("ac")?.value;
-  const cachedAuth = request.cookies.get("auth_valid")?.value;
   const role = extractRoleFromJwt(token);
   const userId = extractUserIdFromJwt(token);
 
@@ -406,11 +405,6 @@ async function getAuthState(request: NextRequest): Promise<AuthState> {
 
   if (isExpired) {
     return { isAuthenticated: false, role: null, userId: null, hasActiveShift: false };
-  }
-
-  if (cachedAuth === "true") {
-    const hasActiveShift = await checkActiveShift(token || "");
-    return { isAuthenticated: true, role, userId, hasActiveShift };
   }
 
   const isAuthenticated = token ? await validateToken(token) : false;

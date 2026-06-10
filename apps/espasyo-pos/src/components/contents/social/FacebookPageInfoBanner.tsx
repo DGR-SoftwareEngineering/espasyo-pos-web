@@ -13,6 +13,8 @@ interface Props {
   onReconnect?: () => void;
   onUpdateToken?: () => void;
   onDisconnect?: () => void;
+  notConfigured?: boolean;
+  onConnect?: () => void;
 }
 
 export const FacebookPageInfoBanner: React.FC<Props> = ({
@@ -24,6 +26,8 @@ export const FacebookPageInfoBanner: React.FC<Props> = ({
   onReconnect,
   onUpdateToken,
   onDisconnect,
+  notConfigured = false,
+  onConnect,
 }) => {
   const isConnected = !loading && !!pageInfo && !tokenExpired;
 
@@ -174,6 +178,27 @@ export const FacebookPageInfoBanner: React.FC<Props> = ({
                     Token Expired · Reconnect
                   </Text>
                 </motion.button>
+              ) : notConfigured ? (
+                <motion.button
+                  onClick={onConnect}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 14px",
+                    borderRadius: 20,
+                    background: "rgba(255,255,255,0.18)",
+                    border: "1px solid rgba(255,255,255,0.45)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Text size="1" as="span" style={{ color: "#fff" }}>🔌</Text>
+                  <Text size="1" weight="medium" style={{ color: "#fff", whiteSpace: "nowrap" }}>
+                    Not connected · Set up
+                  </Text>
+                </motion.button>
               ) : (
                 <Flex align="center" gap="2">
                   <Flex
@@ -273,7 +298,7 @@ export const FacebookPageInfoBanner: React.FC<Props> = ({
           py="2"
           style={{
             borderTop: "1px solid rgba(255,255,255,0.15)",
-            background: tokenExpired ? "rgba(239,68,68,0.18)" : "rgba(0,0,0,0.12)",
+            background: tokenExpired ? "rgba(239,68,68,0.18)" : notConfigured ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.12)",
             position: "relative",
           }}
         >
@@ -298,6 +323,29 @@ export const FacebookPageInfoBanner: React.FC<Props> = ({
                 }}
               >
                 Click here to reconnect
+              </button>
+            </>
+          ) : notConfigured ? (
+            <>
+              <Text size="1" style={{ color: "rgba(255,255,255,0.78)" }}>
+                ⚙ Facebook integration is not configured — enter a Page Access Token to publish posts
+              </Text>
+              <Text size="1" style={{ color: "rgba(255,255,255,0.4)" }}>·</Text>
+              <button
+                onClick={onConnect}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.78)",
+                  fontWeight: 700,
+                  fontSize: "var(--font-size-1)",
+                  padding: 0,
+                  textDecoration: "underline",
+                  textUnderlineOffset: 2,
+                }}
+              >
+                Click here to set up
               </button>
             </>
           ) : (

@@ -53,24 +53,6 @@ export const useUnitConversionForm = ({
   };
 
   useEffect(() => {
-    if (resetForm) {
-      form.reset(defaultValues);
-    }
-  }, [resetForm, form]);
-
-  useEffect(() => {
-    if (isEdit && initialValues) {
-      form.reset({
-        conversionRate: initialValues.conversionRate ?? 0,
-        fromUnitID: initialValues.fromUnitID ?? "",
-        isApproximate: initialValues.isApproximate ?? false,
-        toUnitID: initialValues.toUnitID ?? "",
-        notes: initialValues.notes ?? "",
-      });
-    }
-  }, [isEdit, initialValues, form]);
-
-  useEffect(() => {
     if (
       watchedValues.fromUnitID === watchedValues.toUnitID &&
       watchedValues.fromUnitID

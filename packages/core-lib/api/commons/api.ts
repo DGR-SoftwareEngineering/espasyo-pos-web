@@ -19,6 +19,7 @@ import {
   UpdatePurchaseOrderParams,
   UpdateSupplierInvoiceParams,
   CreateUnitConversionParams,
+  UnitConversionDependenciesResponse,
   DetectGapResponseDto,
   NotificationCountResponse,
   NotificationListResponse,
@@ -111,6 +112,7 @@ import {
   FacebookPostListResponse,
   FacebookPostResponse,
   FacebookConnectionStatusResponse,
+  FacebookOAuthUrlResponse,
   CreateFacebookPostParams,
   UpdateFacebookPostParams,
   FacebookReconnectParams,
@@ -527,6 +529,18 @@ export class CommonsApi {
     return this.axios.post<ApiResponse>(
       `/api/v1/unit-api/unitconversion`,
       params,
+    );
+  }
+
+  public deleteUnitConversion(id: string) {
+    return this.axios.delete<ApiResponse<boolean>>(
+      `/api/v1/unit-api/unitconversion/${id}`,
+    );
+  }
+
+  public getUnitConversionDependencies(id: string) {
+    return this.axios.get<UnitConversionDependenciesResponse>(
+      `/api/v1/unit-api/unitconversion/${id}/dependencies`,
     );
   }
 
@@ -1887,5 +1901,9 @@ export class CommonsApi {
 
   public disconnectFacebook() {
     return this.axios.delete<ApiResponse<string>>(`/api/v1/social-api/FacebookPost/disconnect`);
+  }
+
+  public getFacebookOAuthUrl() {
+    return this.axios.get<FacebookOAuthUrlResponse>(`/api/v1/social-api/FacebookPost/oauth/url`);
   }
 }
