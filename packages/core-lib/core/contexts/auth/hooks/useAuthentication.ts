@@ -190,6 +190,13 @@ export const useAuthentication = (): AuthService => {
     }
   }, [isAuthenticated, accessToken]);
 
+  useEffect(() => {
+    if (!accessToken || !refreshToken) {
+      setIsAuthenticated(false);
+      clearCookies!();
+    }
+  }, [accessToken, refreshToken])
+
   const logout = useCallback(async () => {
     try {
       let currentAccessToken = accessToken;

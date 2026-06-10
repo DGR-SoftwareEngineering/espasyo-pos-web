@@ -62,12 +62,10 @@ export const Header: React.FC<HeaderProps> = ({
     <Box
       data-layout="app-header"
       style={{
-        position: sticky ? "sticky" : "relative",
-        top: 0,
-        zIndex: 20,
-        background: "var(--color-background)",
-        borderBottom: "1px solid var(--gray-a4)",
-        padding: "16px 24px",
+        background: "var(--color-panel-solid)",
+        boxShadow: "0 1px 0 var(--gray-a5)",
+        padding: "12px 24px",
+        flexShrink: 0,
       }}
     >
       <Flex direction="column" gap="2">

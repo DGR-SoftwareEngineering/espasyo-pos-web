@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Button,
   Dialog,
   Flex,
   Separator,
+  Spinner,
   Text,
   TextField,
 } from "@radix-ui/themes";
@@ -19,7 +20,7 @@ interface Props {
   onSuccess: () => void;
 }
 
-type Step = "instructions" | "form" | "success";
+type Step = "instructions" | "oauth_pending" | "form" | "success";
 
 const StepBadge: React.FC<{ n: number }> = ({ n }) => (
   <Flex
@@ -45,22 +46,84 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
   const [token, setToken] = useState("");
   const [pageId, setPageId] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [oauthError, setOauthError] = useState<string | null>(null);
   const [connectedPage, setConnectedPage] = useState<FacebookConnectionStatusDto | null>(null);
   const [showToken, setShowToken] = useState(false);
+  const popupRef = useRef<Window | null>(null);
 
   const reconnectCb = useApiCallback(
     async (api, params: { pageAccessToken: string; pageId?: string }) =>
       api.commons.reconnectFacebook(params),
   );
 
+  const getOAuthUrlCb = useApiCallback(async (api) => api.commons.getFacebookOAuthUrl());
+
   const handleClose = () => {
     setStep("instructions");
     setToken("");
     setPageId("");
     setErrorMsg(null);
+    setOauthError(null);
     setConnectedPage(null);
     setShowToken(false);
+    if (popupRef.current && !popupRef.current.closed) {
+      popupRef.current.close();
+    }
     onClose();
+  };
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleOAuthMessage = (ev: MessageEvent) => {
+      if (ev.origin !== window.location.origin || ev.data?.type !== "FACEBOOK_OAUTH_COMPLETE") return;
+      window.removeEventListener("message", handleOAuthMessage);
+
+      if (ev.data.error) {
+        setOauthError(ev.data.error);
+        setStep("instructions");
+      } else {
+        setConnectedPage({
+          isConnected: true,
+          pageName: ev.data.pageName,
+          pageId: ev.data.pageId,
+          pictureUrl: null,
+          errorMessage: null,
+        });
+        setStep("success");
+        setTimeout(() => {
+          handleClose();
+          onSuccess();
+        }, 2200);
+      }
+    };
+
+    window.addEventListener("message", handleOAuthMessage);
+    return () => window.removeEventListener("message", handleOAuthMessage);
+  }, [open, onSuccess]);
+
+  const handleOAuthConnect = async () => {
+    setOauthError(null);
+    const result = await getOAuthUrlCb.execute();
+
+    if (!result?.data?.success || !result.data.response) {
+      setOauthError((result?.data?.errors as string[] | null | undefined)?.[0] ?? "Failed to start OAuth.");
+      return;
+    }
+
+    const popup = window.open(
+      result.data.response.authorizationUrl,
+      "facebook-oauth",
+      "width=600,height=700,scrollbars=yes"
+    );
+
+    if (!popup || popup.closed) {
+      setOauthError("Popup was blocked. Please allow popups for this site.");
+      return;
+    }
+
+    popupRef.current = popup;
+    setStep("oauth_pending");
   };
 
   const handleConnect = async () => {
@@ -118,6 +181,8 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
             <Text size="2" color="gray" as="div" mt="1">
               {step === "instructions"
                 ? "Follow these steps to get a Page Access Token"
+                : step === "oauth_pending"
+                ? "Waiting for Facebook authorization…"
                 : step === "form"
                 ? "Enter your new Page Access Token"
                 : "Connected successfully"}
@@ -261,6 +326,31 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
                   </Flex>
                 </Flex>
 
+                {oauthError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <Flex
+                      align="start"
+                      gap="2"
+                      p="3"
+                      style={{
+                        background: "var(--red-a3)",
+                        borderRadius: "var(--radius-3)",
+                        border: "1px solid var(--red-a5)",
+                      }}
+                    >
+                      <ExclamationTriangleIcon
+                        style={{ color: "var(--red-11)", flexShrink: 0, marginTop: 1 }}
+                      />
+                      <Text size="2" style={{ color: "var(--red-11)" }}>
+                        {oauthError}
+                      </Text>
+                    </Flex>
+                  </motion.div>
+                )}
+
                 <Box
                   mt="4"
                   p="3"
@@ -279,18 +369,75 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
 
               <Separator size="4" />
 
-              <Flex align="center" justify="end" gap="3" px="5" py="3">
-                <Button variant="soft" color="gray" onClick={handleClose}>
+              <Flex align="center" justify="between" px="5" py="3">
+                <Button variant="ghost" color="gray" onClick={handleClose}>
                   Cancel
                 </Button>
-                <Button onClick={() => setStep("form")}>
-                  I have my token →
+                <Flex direction="column" align="end" gap="2">
+                  <Button onClick={handleOAuthConnect} disabled={getOAuthUrlCb.loading}>
+                    {getOAuthUrlCb.loading ? "Opening…" : "🔵 Connect with Facebook"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="2"
+                    color="gray"
+                    onClick={() => setStep("form")}
+                  >
+                    Or enter token manually →
+                  </Button>
+                </Flex>
+              </Flex>
+            </motion.div>
+          )}
+
+          {/* Step 2: OAuth Pending */}
+          {step === "oauth_pending" && (
+            <motion.div
+              key="oauth_pending"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Flex
+                direction="column"
+                align="center"
+                justify="center"
+                gap="3"
+                px="5"
+                py="8"
+              >
+                <Spinner size="3" />
+                <Box style={{ textAlign: "center" }}>
+                  <Text size="3" weight="bold" as="div">
+                    Waiting for authorization…
+                  </Text>
+                  <Text size="2" color="gray" as="div" mt="2">
+                    A popup window has opened. Please complete the authentication.
+                  </Text>
+                </Box>
+              </Flex>
+
+              <Separator size="4" />
+
+              <Flex align="center" justify="end" gap="3" px="5" py="3">
+                <Button
+                  variant="soft"
+                  color="gray"
+                  onClick={() => {
+                    setStep("instructions");
+                    if (popupRef.current && !popupRef.current.closed) {
+                      popupRef.current.close();
+                    }
+                  }}
+                >
+                  Cancel
                 </Button>
               </Flex>
             </motion.div>
           )}
 
-          {/* Step 2: Form */}
+          {/* Step 3: Form */}
           {step === "form" && (
             <motion.div
               key="form"
@@ -401,7 +548,7 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
             </motion.div>
           )}
 
-          {/* Step 3: Success */}
+          {/* Step 4: Success */}
           {step === "success" && (
             <motion.div
               key="success"

@@ -2481,3 +2481,36 @@ export type FacebookPostListResponse = ApiResponse<FacebookPostDto[]>;
 export type FacebookPostResponse = ApiResponse<FacebookPostDto>;
 export type FacebookPageInfoResponse = ApiResponse<FacebookPageInfoDto>;
 export type FacebookConnectionStatusResponse = ApiResponse<FacebookConnectionStatusDto>;
+
+export interface FacebookOAuthUrlDto {
+  authorizationUrl: string;
+  state: string;
+}
+export type FacebookOAuthUrlResponse = ApiResponse<FacebookOAuthUrlDto>;
+
+// ===== Unit Conversion Dependency Detection =====
+
+export interface AffectedProductDto {
+  productID: string;
+  name: string;
+  fromUnit: string;
+  toUnit: string;
+}
+
+export interface AffectedRecipeDto {
+  recipeID: string;
+  productName: string;
+  unitName: string;
+}
+
+export interface UnitConversionDependenciesDto {
+  unitConversionID: string;
+  fromUnitName: string;
+  toUnitName: string;
+  conversionRate: number;
+  affectedProducts: AffectedProductDto[];
+  affectedRecipes: AffectedRecipeDto[];
+  hasDependencies: boolean;
+}
+
+export type UnitConversionDependenciesResponse = ApiResponse<UnitConversionDependenciesDto>;

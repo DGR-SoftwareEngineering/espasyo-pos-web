@@ -1,6 +1,7 @@
 import { GetServerSidePropsContext, GetServerSideProps } from "next";
 import { ServerResponse } from "http";
 import { nonce } from "./nonce";
+import { validateAndCleanCookies } from "./utils/auth";
 
 type CSPDirective = {
   [key: string]: string[];
@@ -43,10 +44,25 @@ export const setCSPHeader = (res: ServerResponse, csp: string): void => {
 };
 
 export const SSRWithContentSecurityPolicy = (
-  getServerSidePropsFn?: GetServerSideProps
+  getServerSidePropsFn?: GetServerSideProps,
+  requireAuth: boolean = false
 ) => {
   return async (context: GetServerSidePropsContext) => {
     try {
+
+      if (requireAuth) {
+        const isValid = await validateAndCleanCookies(context);
+        
+        if (!isValid) {
+          return {
+            redirect: {
+              destination: "/",
+              permanent: false,
+            },
+          };
+        }
+      }
+
       const generatedNonce = nonce();
       const csp = generateCSP(generatedNonce);
 
@@ -74,6 +90,22 @@ export const SSRWithContentSecurityPolicy = (
         },
       };
     } catch (error: any) {
+      if (requireAuth) {
+        context.res.setHeader("Set-Cookie", [
+          "ac=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax",
+          "session=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax",
+          "sso_token=; Max-Age=0; Path=/; SameSite=Strict",
+          "uid=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax",
+        ]);
+        
+        return {
+          redirect: {
+            destination: "/",
+            permanent: false,
+          },
+        };
+      }
+
       return {
         props: { error: { message: error.message || "An error occured." } },
       };

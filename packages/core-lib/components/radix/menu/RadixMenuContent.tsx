@@ -11,6 +11,7 @@ import {
 import { ChevronRightIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import { useRouter } from "../../../core/router";
 import { usePageLoaderContext } from "../../../core/contexts";
+import { useTabsNavigation, deriveLabel } from "../../../core/contexts/TabsNavigationContext";
 import { MenuItem } from "../../menu/config/menuConfig";
 import { useFilteredMenu } from "../../menu/hooks/useFilteredMenu";
 
@@ -302,6 +303,7 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
 }) => {
   const router = useRouter();
   const { startContentTransition } = usePageLoaderContext();
+  const { openTab } = useTabsNavigation();
   const [selectedPath, setSelectedPath] = useState<string>("");
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
 
@@ -339,13 +341,27 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.pathname, mainMenuKey]);
 
+  // Build a flat path → label map from all menu items so openTab gets the correct label
+  const pathLabelMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    [...mainMenu, ...secondaryMenu].forEach((item) => {
+      if (item.path) map[item.path] = item.text;
+      item.nestedItems?.forEach((n) => {
+        if (n.path) map[n.path] = n.text;
+      });
+    });
+    return map;
+  }, [mainMenu, secondaryMenu]);
+
   const handleSelect = useCallback(
     (path: string) => {
+      const label = pathLabelMap[path] ?? deriveLabel(path);
+      openTab(path, label);
       setSelectedPath(path);
       startContentTransition();
       router.push(path);
     },
-    [router, startContentTransition],
+    [router, startContentTransition, openTab, pathLabelMap],
   );
 
   const handleToggle = useCallback((itemId: string) => {
