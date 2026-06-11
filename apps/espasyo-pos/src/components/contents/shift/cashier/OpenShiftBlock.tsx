@@ -108,17 +108,21 @@ export const OpenShiftBlock: React.FC = () => {
           notes: formData.notes || null,
         };
         const result = await openShiftCb.execute(params);
-        if (result?.data?.success && result.data.response) {
-          showToast(
-            `Shift ${result.data.response.shiftNumber} opened successfully!`,
-            "success",
-          );
+        if (result?.status !== undefined && result.status >= 200 && result.status < 300) {
+          if (result?.data?.response?.shiftNumber) {
+            showToast(
+              `Shift ${result.data.response.shiftNumber} opened successfully!`,
+              "success",
+            );
+          } else {
+            showToast("Shift opened successfully!", "success");
+          }
           // Bypass cookie prevents the middleware race condition in production:
           // the DB write may not be visible on the next request's active-shift
           // check, so we set a short-lived cookie that proxy.ts reads to skip
           // the redirect back to /cashier/shift/open for one navigation.
           document.cookie = "shift-just-opened=1; max-age=30; path=/; SameSite=Lax";
-          router.replace("/cashier/pos");
+          window.location.replace("/cashier/pos");
           return;
         }
         const errorMsg =
@@ -131,9 +135,9 @@ export const OpenShiftBlock: React.FC = () => {
         // Check for an active shift before surfacing the generic error.
         try {
           const shiftRes = await activeShiftCb.execute();
-          if (shiftRes?.data?.response) {
+          if (shiftRes?.status !== undefined && shiftRes.status >= 200 && shiftRes.status < 300 && shiftRes?.data?.response) {
             document.cookie = "shift-just-opened=1; max-age=30; path=/; SameSite=Lax";
-            router.replace("/cashier/pos");
+            window.location.replace("/cashier/pos");
             return;
           }
         } catch {
