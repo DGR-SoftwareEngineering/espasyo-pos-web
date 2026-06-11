@@ -3,44 +3,28 @@ import { Box, Flex, Heading, Text, Link as RadixLink } from "@radix-ui/themes";
 import { ChevronRightIcon } from "@radix-ui/react-icons";
 import { useRouter } from "../../core/router";
 import { useHeaderTitleContext } from "../../core/contexts";
-import { HeaderUserMenu } from "./menu/HeaderUserMenu";
 import { HeaderSearch } from "./menu/HeaderSearch";
-import { HeaderNotificationMenu } from "./menu/HeaderNotificationMenu";
 import { HeaderSalesTarget } from "./menu/HeaderSalesTarget";
 import { ThemeToggleButton } from "./ThemeToggleButton";
-
-interface HeaderUser {
-  initials?: string;
-  email?: string;
-  role?: string;
-}
 
 interface HeaderProps {
   /** Right-side slot (notifications, search, theme toggle, etc.). */
   endSlot?: React.ReactNode;
   /** Sticky header (default true). */
   sticky?: boolean;
-  /** Profile context — when provided, the user menu renders on the far right. */
-  user?: HeaderUser;
-  /** Logout handler — required when `user` is provided. */
-  logout?: () => Promise<void>;
-  loading?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   endSlot,
   sticky = true,
-  user,
-  logout,
-  loading,
 }) => {
   const router = useRouter();
   const { headerTitle } = safeHeaderTitle();
 
   const homeHref = (() => {
-    const r = (user?.role ?? "").trim().toLowerCase();
-    if (r === "cashier") return "/cashier/pos";
-    if (r === "admin") return "/admin/hub";
+    const path = router.pathname ?? "/";
+    if (path.startsWith("/cashier")) return "/cashier/pos";
+    if (path.startsWith("/admin")) return "/admin/hub";
     return "/";
   })();
 
@@ -126,21 +110,9 @@ export const Header: React.FC<HeaderProps> = ({
             gap="3"
             style={{ flex: "1 1 auto", justifyContent: "flex-end", minWidth: 0 }}
           >
-            {user?.role?.toLowerCase() === 'admin' && <HeaderSalesTarget />}
+            <HeaderSalesTarget />
             <HeaderSearch />
             <ThemeToggleButton />
-            {user && logout && (
-              <>
-                <HeaderNotificationMenu />
-                <HeaderUserMenu
-                  logout={logout}
-                  loading={loading}
-                  role={user.role}
-                  initials={user.initials}
-                  email={user.email}
-                />
-              </>
-            )}
           </Flex>
         </Flex>
 
