@@ -212,6 +212,12 @@ export async function proxy(request: NextRequest) {
 
     const response = applyFinalSecurityHeaders(NextResponse.next());
 
+    // Clear the shift-open bypass cookie after it has served its purpose
+    // (one successful navigation through the active-shift guard).
+    if (request.cookies.get("shift-just-opened")?.value) {
+      response.cookies.delete("shift-just-opened");
+    }
+
     if (authState.userId) {
       response.cookies.set("uid", authState.userId, {
         httpOnly: true,
@@ -325,7 +331,13 @@ async function handleRouteProtection(
     }
 
     if (!authState.hasActiveShift) {
-      return NextResponse.redirect(new URL("/cashier/shift/open", request.url));
+      // Allow through if the cashier just opened a shift: the DB write may not
+      // be visible yet on the active-shift read in multi-instance production.
+      const bypass = request.cookies.get("shift-just-opened")?.value;
+      if (!bypass) {
+        return NextResponse.redirect(new URL("/cashier/shift/open", request.url));
+      }
+      // Bypass present — fall through; proxy() clears the cookie from the response.
     }
   }
 

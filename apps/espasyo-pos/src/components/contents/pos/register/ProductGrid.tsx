@@ -24,7 +24,11 @@ import {
   PromoDto,
 } from "core-lib/api/commons/types";
 import { useApi } from "core-lib/core/hooks";
-import { usePublicSettings } from "core-lib/core/contexts";
+import { usePublicSettings, useOfflineMode } from "core-lib/core/contexts";
+import {
+  cacheProducts,
+  getCachedProducts,
+} from "core-lib/core/services/offlineDb";
 import { formatCurrency } from "../format";
 import { SELLABLE_PRODUCTS_PAGE_SIZE } from "../constants";
 
@@ -68,9 +72,12 @@ export const ProductGrid: React.FC<Props> = ({
   onPromoClick,
 }) => {
   const { currencyCode, inventory, pos } = usePublicSettings();
+  const { isOnline } = useOfflineMode();
   const [search, setSearch] = useState("");
   const [categoryID, setCategoryID] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [cachedItems, setCachedItems] = useState<SellableProductDto[]>([]);
+  const [isFromCache, setIsFromCache] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -97,8 +104,32 @@ export const ProductGrid: React.FC<Props> = ({
     [search, categoryID],
   );
 
+  const liveItems = productsCb.result?.data?.response?.items ?? [];
+
+  // Cache on successful fetch
+  useEffect(() => {
+    if (liveItems.length > 0) {
+      cacheProducts(liveItems).catch(() => {});
+    }
+  }, [liveItems]);
+
+  // Load cache on mount for offline fallback
+  useEffect(() => {
+    getCachedProducts().then((cached) => {
+      if (cached.length > 0) {
+        setCachedItems(cached as SellableProductDto[]);
+      }
+    });
+  }, []);
+
+  // Switch to cache when offline and live fetch yields nothing
+  useEffect(() => {
+    const shouldUseCache = !isOnline && liveItems.length === 0 && cachedItems.length > 0;
+    setIsFromCache(shouldUseCache);
+  }, [isOnline, liveItems.length, cachedItems.length]);
+
   const categoriesCb = useApi((api) => api.commons.productCategoryList(), []);
-  const items = productsCb.result?.data?.response?.items ?? [];
+  const items = isFromCache ? cachedItems : liveItems;
   const totalItems = productsCb.result?.data?.response?.totalItems ?? 0;
 
   const allCategories = useMemo<ProductCategoryDto[]>(
@@ -303,6 +334,19 @@ export const ProductGrid: React.FC<Props> = ({
           </ScrollArea>
         )}
       </Box>
+
+      {isFromCache && (
+        <Box px="4" pt="2">
+          <Callout.Root color="amber" variant="surface" size="1">
+            <Callout.Icon>
+              <ExclamationTriangleIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              Showing cached products — prices may be from a previous session.
+            </Callout.Text>
+          </Callout.Root>
+        </Box>
+      )}
 
       {showOutWarning && (
         <Box px="4" pt="3">

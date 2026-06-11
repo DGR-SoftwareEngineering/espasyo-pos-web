@@ -20,11 +20,13 @@ import {
   InfoOutlined,
   LocalOfferOutlined,
   MonetizationOnOutlined,
+  QueryStatsOutlined,
   ShoppingCartOutlined,
   TitleOutlined,
   TrendingUpOutlined,
   WarningAmberOutlined,
 } from "@mui/icons-material";
+import { PromoFeasibilityCard } from "./PromoFeasibilityCard";
 import { useFieldArray, Controller } from "react-hook-form";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import { SelectField } from "core-lib/components/radix/form/SelectField";
@@ -100,6 +102,10 @@ export const PromoForm: React.FC<PromoFormProps> = ({
   onLoadVariants,
   variantsLoading = {},
   allVariantsLoaded = false,
+  feasibilityResult,
+  feasibilityLoading,
+  onCheckFeasibility,
+  onCreatePO,
 }) => {
   const {
     control,
@@ -145,9 +151,15 @@ export const PromoForm: React.FC<PromoFormProps> = ({
     watchedValues.items,
   ]);
 
+  const productMap = new Map(products.map((p) => [p.productID, p]));
+
   const productOptions = products.map((p) => ({
     value: p.productID,
-    label: p.name,
+    label: p.isOutOfStock
+      ? `${p.name} — ⚠ Out of Stock`
+      : p.isLowStock
+      ? `${p.name} — ◐ Low Stock`
+      : p.name,
   }));
 
   const variantProductOptions = allVariantsLoaded
@@ -299,6 +311,22 @@ export const PromoForm: React.FC<PromoFormProps> = ({
           title="Products"
           description="Select the products included in this promotion."
         >
+          {promoType === 3 && (
+            <Callout.Root color="blue" variant="surface" size="1" mb="2">
+              <Callout.Icon><InfoOutlined style={{ fontSize: 16 }} /></Callout.Icon>
+              <Callout.Text>
+                For Buy X Get Y promos, mark <strong>Is Free Item</strong> on the items the customer receives at no charge.
+              </Callout.Text>
+            </Callout.Root>
+          )}
+          {promoType === 4 && (
+            <Callout.Root color="teal" variant="surface" size="1" mb="2">
+              <Callout.Icon><InfoOutlined style={{ fontSize: 16 }} /></Callout.Icon>
+              <Callout.Text>
+                All non-free items share the bundle price. Mark free extras with <strong>Is Free Item</strong>.
+              </Callout.Text>
+            </Callout.Root>
+          )}
           <Flex direction="column" gap="2">
             {fields.length === 0 && (
               <Card variant="surface" style={{ background: "var(--gray-a2)" }}>
@@ -455,13 +483,37 @@ export const PromoForm: React.FC<PromoFormProps> = ({
                           placeholder="Select category…"
                         />
                       ) : (
-                        <SelectField
-                          name={`items.${index}.productID`}
-                          control={control}
-                          label="Product"
-                          options={productOptions}
-                          placeholder="Select product…"
-                        />
+                        <>
+                          <SelectField
+                            name={`items.${index}.productID`}
+                            control={control}
+                            label="Product"
+                            options={productOptions}
+                            placeholder="Select product…"
+                          />
+                          {(() => {
+                            const pid = watchedValues.items?.[index]?.productID;
+                            const p = pid ? productMap.get(pid) : undefined;
+                            if (!p) return null;
+                            if (p.isOutOfStock) {
+                              return (
+                                <Callout.Root color="red" variant="soft" size="1" mt="1">
+                                  <Callout.Icon><WarningAmberOutlined fontSize="small" /></Callout.Icon>
+                                  <Callout.Text>This product is currently out of stock.</Callout.Text>
+                                </Callout.Root>
+                              );
+                            }
+                            if (p.isLowStock) {
+                              return (
+                                <Callout.Root color="amber" variant="soft" size="1" mt="1">
+                                  <Callout.Icon><WarningAmberOutlined fontSize="small" /></Callout.Icon>
+                                  <Callout.Text>This product is low on stock.</Callout.Text>
+                                </Callout.Root>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </>
                       )}
                     </Box>
                     <Box style={{ width: 80 }}>
@@ -604,18 +656,40 @@ export const PromoForm: React.FC<PromoFormProps> = ({
           description="Check financial viability before activating this promo."
         >
           <Flex gap="2" direction="column">
-            <Button
-              type="button"
-              variant="outline"
-              color="indigo"
-              size="2"
-              onClick={() => onCalculate?.(getValues())}
-              loading={!!calcLoading}
-              disabled={!canCalculate || !onCalculate}
-            >
-              <AutoGraphOutlined fontSize="small" />
-              Preview Cost Impact
-            </Button>
+            <Flex gap="2" wrap="wrap">
+              <Button
+                type="button"
+                variant="outline"
+                color="indigo"
+                size="2"
+                onClick={() => onCalculate?.(getValues())}
+                loading={!!calcLoading}
+                disabled={!canCalculate || !onCalculate}
+              >
+                <AutoGraphOutlined fontSize="small" />
+                Preview Cost Impact
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                color="violet"
+                size="2"
+                onClick={() => onCheckFeasibility?.(getValues())}
+                loading={!!feasibilityLoading}
+                disabled={!onCheckFeasibility}
+              >
+                <QueryStatsOutlined fontSize="small" />
+                Check Stock Feasibility
+              </Button>
+            </Flex>
+            {(feasibilityResult || feasibilityLoading) && (
+              <PromoFeasibilityCard
+                result={feasibilityResult ?? null}
+                loading={!!feasibilityLoading}
+                promoType={promoType}
+                onCreatePO={onCreatePO ?? (() => {})}
+              />
+            )}
 
             {calcResult && (() => {
               const discountAmt = calcResult.originalPrice - calcResult.finalPrice;

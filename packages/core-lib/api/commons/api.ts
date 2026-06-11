@@ -44,6 +44,8 @@ import {
   UnitConversionListResponse,
   UpdateRecipeParams,
   UserInfoResponse,
+  UserPresenceDto,
+  UpdateActivityParams,
 } from "./types";
 import {
   AdjustStockParams,
@@ -134,6 +136,8 @@ import {
 } from "./types";
 import {
   CreateSaleParams,
+  SyncOfflineSalesParams,
+  SyncOfflineSalesResponse,
   DailySalesSummaryResponse,
   OrderDetailResponse,
   OrderListResponse,
@@ -149,6 +153,7 @@ import {
   ShiftResponse,
   ShiftSummaryResponse,
   ShiftListResponse,
+  DeleteShiftResponse,
   OpenShiftParams,
   CloseShiftParams,
   CreatePromoParams,
@@ -158,6 +163,8 @@ import {
   PromoListResponse,
   PromoSuggestionListResponse,
   PromoCalculateResponse,
+  PromoFeasibilityRequestDto,
+  PromoFeasibilityResponse,
   AssignedCustomerListResponse,
   AssignPromoCustomersParams,
   CustomerPromoProductListResponse,
@@ -1358,6 +1365,13 @@ export class CommonsApi {
     return this.axios.post<SaleResponse>(`/api/v1/sales-api/Sales`, params);
   }
 
+  public syncOfflineSales(params: SyncOfflineSalesParams) {
+    return this.axios.post<SyncOfflineSalesResponse>(
+      `/api/v1/sales-api/Sales/sync-offline`,
+      params,
+    );
+  }
+
   public saleGetById(id: string) {
     return this.axios.get<SaleResponse>(
       `/api/v1/sales-api/Sales/${encodeURIComponent(id)}`,
@@ -1435,6 +1449,12 @@ export class CommonsApi {
     return this.axios.get<ShiftListResponse>(`/api/v1/shift-api/CashierShift`);
   }
 
+  public deleteShift(id: string) {
+    return this.axios.delete<DeleteShiftResponse>(
+      `/api/v1/shift-api/CashierShift/${encodeURIComponent(id)}`,
+    );
+  }
+
   // ─── Promo API ───────────────────────────────────────────────────────────────
 
   public promoSuggestions() {
@@ -1443,6 +1463,10 @@ export class CommonsApi {
 
   public promoCalculate(params: PromoCalculateRequest) {
     return this.axios.post<PromoCalculateResponse>(`/api/v1/promo-api/promo/calculate`, params);
+  }
+
+  public promoCheckFeasibility(params: PromoFeasibilityRequestDto) {
+    return this.axios.post<PromoFeasibilityResponse>(`/api/v1/promo-api/promo/check-feasibility`, params);
   }
 
   public promoCreate(params: CreatePromoParams) {
@@ -1515,6 +1539,12 @@ export class CommonsApi {
   public promoProductsForCustomer(customerId: string) {
     return this.axios.get<CustomerPromoProductListResponse>(
       `/api/v1/promo-api/promo/customer/${encodeURIComponent(customerId)}/promo-products`,
+    );
+  }
+
+  public promoAssignedForCustomer(customerId: string) {
+    return this.axios.get<PromoListResponse>(
+      `/api/v1/promo-api/promo/customer/${encodeURIComponent(customerId)}/assigned-promos`,
     );
   }
 
@@ -1905,5 +1935,19 @@ export class CommonsApi {
 
   public getFacebookOAuthUrl() {
     return this.axios.get<FacebookOAuthUrlResponse>(`/api/v1/social-api/FacebookPost/oauth/url`);
+  }
+
+  // ── User Presence / Who's Online ───────────────────────────────────────────
+  public getOnlineUsers() {
+    return this.axios.get<ApiResponse<UserPresenceDto[]>>(
+      '/api/v1/presence-api/Presence/online',
+    );
+  }
+
+  public updateActivity(params: UpdateActivityParams) {
+    return this.axios.post<void>(
+      '/api/v1/presence-api/Presence/activity',
+      params,
+    );
   }
 }

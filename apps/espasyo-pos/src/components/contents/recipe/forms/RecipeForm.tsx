@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
+  Badge,
   Box,
   Callout,
   Card,
@@ -127,9 +128,22 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
               placeholder="Search menu items..."
               getOptionLabel={(item) => item.name}
               getOptionValue={(item) => item.productID}
+              getOptionDisabled={(item) => !!item.hasActiveRecipe}
               valueMode="id"
               disableClearable
               onSelectOption={(option) => option && onMenuItemSelect?.(option.productID)}
+              renderOption={(item) => (
+                <Flex align="center" justify="between" gap="2">
+                  <Text size="2" style={{ opacity: item.hasActiveRecipe ? 0.5 : 1 }}>
+                    {item.name}
+                  </Text>
+                  {item.hasActiveRecipe && (
+                    <Badge color="orange" variant="soft" size="1">
+                      Has Recipe
+                    </Badge>
+                  )}
+                </Flex>
+              )}
             />
             {errors.menuItemProductID && (
               <Text size="1" color="red" as="div" mt="1">

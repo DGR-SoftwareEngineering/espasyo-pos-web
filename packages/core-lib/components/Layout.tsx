@@ -12,6 +12,7 @@ import {
   RadixThemeFrameworkProps,
 } from "./design/RadixThemeFramework";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { useThemePreference } from "../core/contexts/theme/ThemePreferenceContext";
 
 export type Framework = "Radix" | "MUI";
 
@@ -68,7 +69,7 @@ const renderFallback = () => (
   </div>
 );
 
-export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
+const LayoutInner: React.FC<React.PropsWithChildren<Props>> = ({
   radixTheme,
   children,
   platform = "POS",
@@ -77,6 +78,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
   const { isAuthenticated, loading, email, role, initials } = useAuthContext();
   const { hasDuplicateSession } = usePreventDuplicateSession();
   const { theme: publicTheme } = usePublicSettings();
+  const { appearance: themePreference } = useThemePreference();
   useRefreshTokenHandler(logout);
 
   if (hasDuplicateSession) {
@@ -86,6 +88,9 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
   const resolvedAccent =
     radixTheme?.accentColor ??
     hexToRadixAccent(publicTheme.primaryColor, "indigo");
+
+  // Use explicit radixTheme.appearance if provided; otherwise use theme preference context
+  const resolvedAppearance = radixTheme?.appearance ?? themePreference;
 
   const renderRadix = () => (
     <Suspense fallback={renderFallback()}>
@@ -97,7 +102,7 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
           email={email}
           role={role}
           initials={initials}
-          appearance={radixTheme?.appearance ?? "light"}
+          appearance={resolvedAppearance}
           accentColor={resolvedAccent}
           grayColor={radixTheme?.grayColor ?? "slate"}
           radius={radixTheme?.radius ?? "medium"}
@@ -116,4 +121,8 @@ export const Layout: React.FC<React.PropsWithChildren<Props>> = ({
       {renderRadix()}
     </ErrorBoundary>
   );
+};
+
+export const Layout: React.FC<React.PropsWithChildren<Props>> = ({ ...props }) => {
+  return <LayoutInner {...props} />;
 };

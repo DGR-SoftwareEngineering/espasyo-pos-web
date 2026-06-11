@@ -1,7 +1,7 @@
 import React from "react";
 import { Badge, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
 import { EyeOpenIcon } from "@radix-ui/react-icons";
-import { LockOpenOutlined } from "@mui/icons-material";
+import { DeleteOutlined, LockOpenOutlined } from "@mui/icons-material";
 import { CashierShiftDto } from "core-lib/api/commons/types";
 import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
 import { formatCurrency } from "core-lib/business/strings";
@@ -11,6 +11,7 @@ interface Props {
   row: CashierShiftDto;
   onView: (shift: CashierShiftDto) => void;
   onClose: (shift: CashierShiftDto) => void;
+  onDelete?: (shift: CashierShiftDto) => void;
   mode?: "admin" | "cashier";
 }
 
@@ -25,7 +26,7 @@ const formatDateTime = (iso: string | null) => {
   });
 };
 
-export const ShiftTableRow: React.FC<Props> = ({ row, onView, onClose, mode = "admin" }) => {
+export const ShiftTableRow: React.FC<Props> = ({ row, onView, onClose, onDelete, mode = "admin" }) => {
   const statusCfg = STATUS_CONFIG[row.status];
 
   const columns = [
@@ -124,6 +125,22 @@ export const ShiftTableRow: React.FC<Props> = ({ row, onView, onClose, mode = "a
                 }}
               >
                 <LockOpenOutlined style={{ fontSize: 14 }} />
+              </IconButton>
+            </Tooltip>
+          )}
+          {row.status === "Closed" && mode !== "cashier" && onDelete && (
+            <Tooltip content={DIALOG_TITLES.delete}>
+              <IconButton
+                size="1"
+                variant="ghost"
+                color="red"
+                aria-label={DIALOG_TITLES.delete}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(row);
+                }}
+              >
+                <DeleteOutlined style={{ fontSize: 14 }} />
               </IconButton>
             </Tooltip>
           )}

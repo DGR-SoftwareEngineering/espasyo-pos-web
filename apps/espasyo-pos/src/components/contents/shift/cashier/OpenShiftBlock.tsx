@@ -113,6 +113,11 @@ export const OpenShiftBlock: React.FC = () => {
             `Shift ${result.data.response.shiftNumber} opened successfully!`,
             "success",
           );
+          // Bypass cookie prevents the middleware race condition in production:
+          // the DB write may not be visible on the next request's active-shift
+          // check, so we set a short-lived cookie that proxy.ts reads to skip
+          // the redirect back to /cashier/shift/open for one navigation.
+          document.cookie = "shift-just-opened=1; max-age=30; path=/; SameSite=Lax";
           router.replace("/cashier/pos");
           return;
         }
@@ -127,6 +132,7 @@ export const OpenShiftBlock: React.FC = () => {
         try {
           const shiftRes = await activeShiftCb.execute();
           if (shiftRes?.data?.response) {
+            document.cookie = "shift-just-opened=1; max-age=30; path=/; SameSite=Lax";
             router.replace("/cashier/pos");
             return;
           }

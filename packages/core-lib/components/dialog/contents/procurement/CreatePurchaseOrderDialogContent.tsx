@@ -87,7 +87,8 @@ const emptyLine = (): DraftLine => ({
 export const CreatePurchaseOrderDialogContent: React.FC<{
   onSuccess: (purchaseOrderID: string) => void;
   onClose: () => void;
-}> = ({ onSuccess, onClose }) => {
+  prefillItems?: Array<{ productID: string; productName: string; quantity: number }>;
+}> = ({ onSuccess, onClose, prefillItems }) => {
   const { showToast } = useToastContext();
   const { procurement, currencyCode } = usePublicSettings();
 
@@ -106,7 +107,17 @@ export const CreatePurchaseOrderDialogContent: React.FC<{
   const [discountAmount, setDiscountAmount] = useState("");
   const [shippingFee, setShippingFee] = useState("");
   const [notes, setNotes] = useState("");
-  const [lines, setLines] = useState<DraftLine[]>([emptyLine()]);
+  const [lines, setLines] = useState<DraftLine[]>(() => {
+    if (prefillItems && prefillItems.length > 0) {
+      return prefillItems.map((item) => ({
+        ...emptyLine(),
+        productID: item.productID,
+        quantity: String(item.quantity),
+        notes: "Auto-filled from promo feasibility check",
+      }));
+    }
+    return [emptyLine()];
+  });
 
   const suppliersApi = useApi((api) => api.commons.supplierList(1, 200));
   const productsApi = useApi((api) => api.commons.productList());

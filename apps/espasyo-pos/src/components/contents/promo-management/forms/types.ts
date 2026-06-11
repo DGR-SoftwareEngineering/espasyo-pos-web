@@ -1,9 +1,11 @@
 import {
   ProductCategoryDto,
-  ProductDataList,
   ProductVariantDto,
   PromoCalculateResult,
+  PromoFeasibilityItemResultDto,
+  PromoFeasibilityResultDto,
   PromoSuggestionDto,
+  SellableProductDto,
 } from "core-lib/api/commons/types";
 import { PromoForm } from "./validation";
 
@@ -12,7 +14,7 @@ export interface PromoFormProps {
   submitLoading: boolean;
   isInDialog?: boolean;
   initialValues?: Partial<PromoForm>;
-  products: ProductDataList[];
+  products: SellableProductDto[];
   productCategories: ProductCategoryDto[];
   fromSuggestion?: PromoSuggestionDto | null;
   calcResult?: PromoCalculateResult | null;
@@ -27,4 +29,8 @@ export interface PromoFormProps {
   variantsLoading?: Record<string, boolean>;
   /** True once batch variant pre-load for all products is complete. */
   allVariantsLoaded?: boolean;
+  feasibilityResult?: PromoFeasibilityResultDto | null;
+  feasibilityLoading?: boolean;
+  onCheckFeasibility?: (values: PromoForm) => void;
+  onCreatePO?: (items: PromoFeasibilityItemResultDto[]) => void;
 }

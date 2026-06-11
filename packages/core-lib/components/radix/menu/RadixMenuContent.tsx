@@ -10,10 +10,12 @@ import {
 } from "@radix-ui/themes";
 import { ChevronRightIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import { useRouter } from "../../../core/router";
-import { usePageLoaderContext } from "../../../core/contexts";
+import { usePageLoaderContext, useOfflineMode } from "../../../core/contexts";
 import { useTabsNavigation, deriveLabel } from "../../../core/contexts/TabsNavigationContext";
 import { MenuItem } from "../../menu/config/menuConfig";
 import { useFilteredMenu } from "../../menu/hooks/useFilteredMenu";
+
+const OFFLINE_ALLOWED_PATHS = ["/cashier/pos", "/cashier/orders"];
 
 interface NestedMenuItemProps {
   item: MenuItem;
@@ -22,6 +24,7 @@ interface NestedMenuItemProps {
   openStates: Record<string, boolean>;
   onSelect: (path: string) => void;
   onToggle: (itemId: string) => void;
+  offlineBlocked?: boolean;
 }
 
 const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
@@ -31,6 +34,7 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
   openStates,
   onSelect,
   onToggle,
+  offlineBlocked = false,
 }) => {
   const hasNested = !!item.nestedItems?.length;
   const isOpen = openStates[item.id] || false;
@@ -41,6 +45,7 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
   const active = isSelected || hasSelectedChild;
 
   const handleClick = () => {
+    if (offlineBlocked) return;
     // Navigate if the item has a direct path (even if it also has children)
     if (item.path) onSelect(item.path);
     // Toggle children independently of navigation
@@ -56,6 +61,8 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
         tabIndex={0}
         aria-expanded={hasNested ? isOpen : undefined}
         aria-current={isSelected ? "page" : undefined}
+        aria-disabled={offlineBlocked}
+        title={offlineBlocked ? "Available when online" : undefined}
         onClick={handleClick}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -67,7 +74,8 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
           padding: "8px 12px",
           paddingLeft: 12 + depth * 12,
           borderRadius: "var(--radius-2)",
-          cursor: "pointer",
+          cursor: offlineBlocked ? "not-allowed" : "pointer",
+          opacity: offlineBlocked ? 0.4 : 1,
           background: active ? "var(--accent-a3)" : undefined,
           borderLeft: active ? "3px solid var(--accent-9)" : "3px solid transparent",
           color: active ? "var(--accent-11)" : "var(--gray-12)",
@@ -166,12 +174,14 @@ interface CollapsedMenuItemProps {
   item: MenuItem;
   selectedPath: string;
   onSelect: (path: string) => void;
+  offlineBlocked?: boolean;
 }
 
 const CollapsedMenuItem: React.FC<CollapsedMenuItemProps> = ({
   item,
   selectedPath,
   onSelect,
+  offlineBlocked = false,
 }) => {
   const hasNested = !!item.nestedItems?.length;
   const isSelected = item.path === selectedPath;
@@ -188,13 +198,17 @@ const CollapsedMenuItem: React.FC<CollapsedMenuItemProps> = ({
       role="button"
       tabIndex={0}
       aria-current={isSelected ? "page" : undefined}
+      aria-disabled={offlineBlocked}
+      title={offlineBlocked ? "Available when online" : undefined}
       onClick={() => {
+        if (offlineBlocked) return;
         if (item.path) onSelect(item.path);
         else if (hasNested) setPopoverOpen((v) => !v);
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
+          if (offlineBlocked) return;
           if (item.path) onSelect(item.path);
           else if (hasNested) setPopoverOpen((v) => !v);
         }
@@ -203,7 +217,8 @@ const CollapsedMenuItem: React.FC<CollapsedMenuItemProps> = ({
         width: 44,
         height: 40,
         borderRadius: "var(--radius-2)",
-        cursor: "pointer",
+        cursor: offlineBlocked ? "not-allowed" : "pointer",
+        opacity: offlineBlocked ? 0.4 : 1,
         background: active ? "var(--accent-a3)" : undefined,
         color: active ? "var(--accent-11)" : "var(--gray-11)",
         transition: "background 120ms ease",
@@ -304,8 +319,17 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
   const router = useRouter();
   const { startContentTransition } = usePageLoaderContext();
   const { openTab } = useTabsNavigation();
+  const { isOnline } = useOfflineMode();
   const [selectedPath, setSelectedPath] = useState<string>("");
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
+
+  const isPathOfflineBlocked = useCallback(
+    (path: string | undefined) =>
+      !isOnline &&
+      !!path &&
+      !OFFLINE_ALLOWED_PATHS.some((allowed) => path.startsWith(allowed)),
+    [isOnline],
+  );
 
   const { mainMenu, secondaryMenu } = useFilteredMenu(roleName);
   const mainMenuKey = useMemo(
@@ -394,6 +418,7 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
               item={item}
               selectedPath={selectedPath}
               onSelect={handleSelect}
+              offlineBlocked={isPathOfflineBlocked(item.path)}
             />
           ))}
           {secondaryMenu.length > 0 && (
@@ -415,6 +440,7 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
                   item={item}
                   selectedPath={selectedPath}
                   onSelect={handleSelect}
+                  offlineBlocked={isPathOfflineBlocked(item.path)}
                 />
               ))}
             </Box>
@@ -442,6 +468,7 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
               openStates={openStates}
               onSelect={handleSelect}
               onToggle={handleToggle}
+              offlineBlocked={isPathOfflineBlocked(item.path)}
             />
           ))}
         </Flex>

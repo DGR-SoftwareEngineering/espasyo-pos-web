@@ -137,7 +137,7 @@ export interface UseCartState {
     product: SellableProductDto,
     options: AddProductOptions,
   ) => void;
-  applyPromo: (product: SellableProductDto, promo: PromoDto) => void;
+  applyPromo: (product: SellableProductDto, promo: PromoDto, allProducts?: SellableProductDto[]) => void;
   applyPromoProduct: (product: any, promo: any) => void;
   addRedeemedProduct: (product: RedeemableProductDto, options?: AddProductOptions) => void;
   setLineQuantity: (lineId: string, quantity: number) => void;
@@ -223,7 +223,7 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
     [],
   );
 
-  const applyPromo = useCallback((product: SellableProductDto, promo: PromoDto) => {
+  const applyPromo = useCallback((product: SellableProductDto, promo: PromoDto, allProducts?: SellableProductDto[]) => {
     setLines((prev) => {
       // Remove existing plain (non-variant, non-promo) line for this product
       let filtered = prev.filter(
@@ -283,6 +283,65 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
           },
         ];
       } else if (promo.type === "BuyXGetY") {
+        // When the promo has explicit items with free/non-free distinction, build
+        // separate lines per item (cross-product BuyXGetY). Otherwise fall back to
+        // the single aggregated-quantity line on the clicked product.
+        const promoProductItems = promo.items.filter(
+          (i): i is typeof i & { productID: string } => !!i.productID,
+        );
+        const hasFreeItems = promoProductItems.some((i) => i.isFreeItem);
+
+        if (hasFreeItems && promoProductItems.length > 0) {
+          const buyItems = promoProductItems.filter((i) => !i.isFreeItem);
+          const freeItems = promoProductItems.filter((i) => i.isFreeItem);
+          const promoProductIds = new Set(promoProductItems.map((i) => i.productID));
+          filtered = filtered.filter(
+            (l) => !promoProductIds.has(l.productID) || l.productVariantID,
+          );
+          const newLines = [...filtered];
+          const productMap = new Map(
+            (allProducts ?? []).map((p) => [p.productID, p]),
+          );
+          for (const item of buyItems) {
+            const p = productMap.get(item.productID);
+            newLines.push({
+              lineId: genLineId(),
+              productID: item.productID,
+              productName: item.productName ?? p?.name ?? "",
+              unitID: "",
+              unitName: p?.stockUnitName ?? "",
+              imageUrl: p?.imageUrl ?? null,
+              quantity: item.quantity,
+              unitPrice: p?.sellingPrice ?? 0,
+              discount: 0,
+              currentStock: p?.currentStock ?? 9999,
+              promoID: promo.promoID,
+              promoLabel: promo.title,
+              originalPrice: p?.sellingPrice ?? undefined,
+            });
+          }
+          for (const item of freeItems) {
+            const p = productMap.get(item.productID);
+            newLines.push({
+              lineId: genLineId(),
+              productID: item.productID,
+              productName: item.productName ?? p?.name ?? "",
+              unitID: "",
+              unitName: p?.stockUnitName ?? "",
+              imageUrl: p?.imageUrl ?? null,
+              quantity: item.quantity,
+              unitPrice: 0,
+              discount: 0,
+              currentStock: p?.currentStock ?? 9999,
+              promoID: promo.promoID,
+              promoLabel: promo.title,
+              originalPrice: p?.sellingPrice ?? undefined,
+            });
+          }
+          return newLines;
+        }
+
+        // Same-product BuyXGetY: aggregate into one line with discount
         const buyQty = promo.buyQuantity ?? 1;
         const getQty = promo.getQuantity ?? 1;
         const totalQty = buyQty + getQty;
@@ -326,40 +385,45 @@ export const useCartState = (defaultTaxRate: number): UseCartState => {
         const pricePerPaidUnit = totalPaidQty > 0 ? round2(bundlePrice / totalPaidQty) : 0;
 
         const newLines = [...filtered];
+        const bundleProductMap = new Map(
+          (allProducts ?? []).map((p) => [p.productID, p]),
+        );
 
         for (const item of paidItems) {
+          const p = bundleProductMap.get(item.productID);
           newLines.push({
             lineId: genLineId(),
             productID: item.productID,
-            productName: item.productName ?? "",
+            productName: item.productName ?? p?.name ?? "",
             unitID: "",
-            unitName: "",
-            imageUrl: null,
+            unitName: p?.stockUnitName ?? "",
+            imageUrl: p?.imageUrl ?? null,
             quantity: item.quantity,
             unitPrice: pricePerPaidUnit,
             discount: 0,
-            currentStock: 9999,
+            currentStock: p?.currentStock ?? 9999,
             promoID: promo.promoID,
             promoLabel: promo.title,
-            originalPrice: undefined,
+            originalPrice: p?.sellingPrice ?? undefined,
           });
         }
 
         for (const item of freeItems) {
+          const p = bundleProductMap.get(item.productID);
           newLines.push({
             lineId: genLineId(),
             productID: item.productID,
-            productName: item.productName ?? "",
+            productName: item.productName ?? p?.name ?? "",
             unitID: "",
-            unitName: "",
-            imageUrl: null,
+            unitName: p?.stockUnitName ?? "",
+            imageUrl: p?.imageUrl ?? null,
             quantity: item.quantity,
             unitPrice: 0,
             discount: 0,
-            currentStock: 9999,
+            currentStock: p?.currentStock ?? 9999,
             promoID: promo.promoID,
             promoLabel: promo.title,
-            originalPrice: undefined,
+            originalPrice: p?.sellingPrice ?? undefined,
           });
         }
 

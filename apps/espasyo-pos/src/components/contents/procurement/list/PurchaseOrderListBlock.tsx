@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import {
   Box,
@@ -79,6 +79,26 @@ export const PurchaseOrderListBlock: React.FC = () => {
     setReloadToken((n) => n + 1);
     setPageNumber(1);
   };
+
+  useEffect(() => {
+    if (!router.query.prefill) return;
+    const raw = typeof window !== "undefined" ? localStorage.getItem("po_prefill") : null;
+    if (!raw) return;
+    localStorage.removeItem("po_prefill");
+    try {
+      const prefillItems = JSON.parse(raw) as Array<{ productID: string; productName: string; quantity: number }>;
+      openDialog({
+        title: "New purchase order",
+        dialogContentType: "PurchaseOrderCreate" as unknown as DialogContentType,
+        data: { prefillItems },
+        onSuccess: () => setReloadToken((n) => n + 1),
+      });
+    } catch {
+      // malformed localStorage — ignore
+    }
+    router.replace(router.pathname, undefined, { shallow: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.query.prefill]);
 
   const goToDetail = (po: PurchaseOrderDto) =>
     router.push(`/admin/hub/procurement/purchase-orders/${po.purchaseOrderID}`);

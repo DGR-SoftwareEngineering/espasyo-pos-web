@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertDialog, Box, Button, Callout, Flex, Heading, IconButton, Text, Tooltip } from "@radix-ui/themes";
 import { InfoCircledIcon, ExitIcon } from "@radix-ui/react-icons";
-import { FullscreenOutlined, LockOpenOutlined, PointOfSaleRounded } from "@mui/icons-material";
+import { FullscreenOutlined, LockOpenOutlined, PointOfSaleRounded, ReceiptLongOutlined } from "@mui/icons-material";
 import {
   useToastContext,
   usePublicSettings,
   useDialogContext,
+  useOfflineMode,
 } from "core-lib/core/contexts";
 import { useApi, useApiCallback, useLogout, useCashDrawer } from "core-lib/core/hooks";
+import { addOfflineSale } from "core-lib/core/services/offlineDb";
 import { ConfettiCanvas, ConfettiHandle } from "core-lib/components/confetti";
 import { cashDrawerService } from "core-lib/business/cashDrawer";
 import {
@@ -16,6 +18,7 @@ import {
   CustomerPromoProductDto,
   CustomerPromoProductItemDto,
   PromoDto,
+  PromoListResponse,
   SaleDetailDto,
   SalesPaymentMethodDto,
   SellableProductDto,
@@ -35,6 +38,7 @@ import { AddProductOptions, computeTotals, useCartState } from "./hooks";
 import { SaleReceiptPrintable } from "../printables/SaleReceiptPrintable";
 import { useTargetSales } from "./useTargetSales";
 import { TargetSalesDetailDialog } from "./TargetSalesDetailDialog";
+import { PosOrdersDialog } from "./PosOrdersDialog";
 import { CloseShiftFormBlock } from "../../shift-management/forms/CloseShiftFormBlock";
 import { CloseShiftForm } from "../../shift-management/forms/validation";
 
@@ -103,6 +107,8 @@ export const PosRegisterBlock: React.FC = () => {
   const [addedExclusiveIds, setAddedExclusiveIds] = useState<Set<string>>(new Set());
   const targetSales = useTargetSales();
   const [targetDialogOpen, setTargetDialogOpen] = useState(false);
+  const [ordersDialogOpen, setOrdersDialogOpen] = useState(false);
+  const { isOnline, refreshPendingCount } = useOfflineMode();
 
   // Browser fullscreen toggle
   const togglePosMode = useCallback(async () => {
@@ -206,6 +212,10 @@ export const PosRegisterBlock: React.FC = () => {
 
   // ──── Promos ──────────────────────────────────────────────────────────
   const promoData = useApi((api) => api.commons.promoList());
+  const sellableProductsApi = useApi(
+    (api) => api.commons.sellableProductList({ pageNumber: 1, pageSize: 500 }),
+  );
+  const sellableProducts = sellableProductsApi.result?.data?.response?.items ?? [];
 
   // Filter: show only active promos that are NOT customer-specific
   // (customer-specific promos only appear when that customer is selected in cart)
@@ -214,6 +224,26 @@ export const PosRegisterBlock: React.FC = () => {
       .filter((p) => p.status === "Active" && !p.isCustomerSpecific),
     [promoData.result],
   );
+
+  // Customer-specific promos: loaded when a customer is attached to the cart
+  const [customerPromos, setCustomerPromos] = useState<PromoDto[]>([]);
+  const promoAssignedCb = useApiCallback(
+    async (api, customerId: string) =>
+      api.commons.promoAssignedForCustomer(customerId),
+  );
+
+  useEffect(() => {
+    const customerId = cart.selectedCustomer?.customerID;
+    if (!customerId) {
+      setCustomerPromos([]);
+      return;
+    }
+    promoAssignedCb.execute(customerId).then((res) => {
+      const promos = (res?.data as PromoListResponse | undefined)?.response ?? [];
+      setCustomerPromos(promos.filter((p) => p.status === "Active"));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart.selectedCustomer?.customerID]);
 
   const promoCategoriesData = useApi(
     (api) => api.commons.productCategoryList(),
@@ -229,7 +259,8 @@ export const PosRegisterBlock: React.FC = () => {
 
   const eligiblePromosFor = useCallback(
     (product: SellableProductDto): PromoDto[] => {
-      if (generalPromos.length === 0) return [];
+      const allPromos = [...generalPromos, ...customerPromos];
+      if (allPromos.length === 0) return [];
       const ancestors = new Set<string>();
       let cur = product.categoryID ?? null;
       while (cur && !ancestors.has(cur)) {
@@ -238,7 +269,7 @@ export const PosRegisterBlock: React.FC = () => {
       }
       const seen = new Set<string>();
       const out: PromoDto[] = [];
-      for (const promo of generalPromos) {
+      for (const promo of allPromos) {
         for (const item of promo.items) {
           const hitsProduct =
             !!item.productID && item.productID === product.productID;
@@ -255,7 +286,7 @@ export const PosRegisterBlock: React.FC = () => {
       }
       return out;
     },
-    [generalPromos, categoryParents],
+    [generalPromos, customerPromos, categoryParents],
   );
 
   // ──── Dialog state ────────────────────────────────────────────────────
@@ -340,6 +371,7 @@ export const PosRegisterBlock: React.FC = () => {
           unitPrice: l.unitPrice,
           discount: l.discount > 0 ? l.discount : null,
           isRedemptionLine: l.isRedeemed ?? false,
+          isPromoFreeLine: !!l.promoID && l.unitPrice === 0,
         })),
         discountAmount: currentCart.orderDiscount > 0 ? currentCart.orderDiscount : null,
         taxRate: currentCart.taxRate,
@@ -351,6 +383,21 @@ export const PosRegisterBlock: React.FC = () => {
         })),
         notes: payload.notes,
       };
+
+      // Offline path — queue sale in IndexedDB
+      if (!isOnline) {
+        const localId = crypto.randomUUID();
+        await addOfflineSale({
+          localId,
+          createdAt: new Date().toISOString(),
+          payload: params,
+          syncStatus: "pending",
+        });
+        await refreshPendingCount();
+        showToast(`Sale queued offline (${localId.slice(0, 8)}…)`, "success");
+        currentCart.clear();
+        return;
+      }
 
       setSubmitting(true);
       try {
@@ -436,7 +483,7 @@ export const PosRegisterBlock: React.FC = () => {
         setSubmitting(false);
       }
     },
-    [createCb, showToast, openDialog, systemName, theme, currencyCode, pos, targetSales.refresh, settingsMap, confirmRedeemCb],
+    [createCb, showToast, openDialog, systemName, theme, currencyCode, pos, targetSales.refresh, settingsMap, confirmRedeemCb, isOnline, refreshPendingCount],
   );
 
   // Fire confetti exactly once per day when the daily target is first crossed.
@@ -510,6 +557,11 @@ export const PosRegisterBlock: React.FC = () => {
         summary={targetSales.summary}
       />
 
+      <PosOrdersDialog
+        open={ordersDialogOpen}
+        onClose={() => setOrdersDialogOpen(false)}
+      />
+
       {isPosMode && (
         <Flex
           align="center"
@@ -556,7 +608,19 @@ export const PosRegisterBlock: React.FC = () => {
                 </IconButton>
               </Tooltip>
             )}
-            <Button variant="ghost" size="2" onClick={() => setCloseShiftConfirmOpen(true)} style={{ color: "var(--red-4)" }}>
+            <Tooltip content="View recent and offline orders">
+              <Button variant="ghost" size="2" onClick={() => setOrdersDialogOpen(true)} style={{ color: "var(--white-a11)" }}>
+                <ReceiptLongOutlined style={{ fontSize: 16 }} /> Orders
+              </Button>
+            </Tooltip>
+            <Button
+              variant="ghost"
+              size="2"
+              disabled={!isOnline}
+              title={!isOnline ? "End Shift disabled while offline" : undefined}
+              onClick={() => setCloseShiftConfirmOpen(true)}
+              style={{ color: isOnline ? "var(--red-4)" : undefined }}
+            >
               <LockOpenOutlined style={{ fontSize: 16 }} /> End Shift
             </Button>
             <IconButton variant="ghost" color="gray" onClick={togglePosMode} aria-label="Exit POS mode" title="Exit POS mode (or press Esc)" style={{ color: "var(--white-a11)" }}>
@@ -587,7 +651,19 @@ export const PosRegisterBlock: React.FC = () => {
 
         {!isPosMode && (
           <Flex justify="end" align="center" gap="2">
-            <Button variant="soft" color="red" size="2" onClick={() => setCloseShiftConfirmOpen(true)}>
+            <Tooltip content="View recent and offline orders">
+              <Button variant="soft" color="gray" size="2" onClick={() => setOrdersDialogOpen(true)}>
+                <ReceiptLongOutlined style={{ fontSize: 16 }} /> Orders
+              </Button>
+            </Tooltip>
+            <Button
+              variant="soft"
+              color="red"
+              size="2"
+              disabled={!isOnline}
+              title={!isOnline ? "End Shift disabled while offline" : undefined}
+              onClick={() => setCloseShiftConfirmOpen(true)}
+            >
               <LockOpenOutlined style={{ fontSize: 16 }} /> End Shift
             </Button>
             <IconButton variant="soft" color="indigo" onClick={togglePosMode} aria-label="Enter POS mode" title="Enter fullscreen POS mode">
@@ -671,7 +747,22 @@ export const PosRegisterBlock: React.FC = () => {
           product={promoDialogProduct}
           promos={eligiblePromosFor(promoDialogProduct)}
           onApply={(promo) => {
-            cartRef.current.applyPromo(promoDialogProduct, promo);
+            const productMapLocal = new Map(sellableProducts.map((p) => [p.productID, p]));
+            const blocked = promo.items
+              .filter((i) => !!i.productID && !i.isFreeItem)
+              .filter((i) => {
+                const p = productMapLocal.get(i.productID!);
+                return p !== undefined && p.currentStock <= 0;
+              });
+            if (blocked.length > 0) {
+              showToast(
+                `Cannot apply promo: ${blocked.map((i) => i.productName ?? i.productID).join(", ")} is out of stock.`,
+                "error",
+              );
+              setPromoDialogProduct(null);
+              return;
+            }
+            cartRef.current.applyPromo(promoDialogProduct, promo, sellableProducts);
             if (promo.type === "Bundle" && promo.items.some((i) => !!i.productCategoryID)) {
               showToast("Bundle includes category items — add eligible products to the cart manually. The discount applies at checkout.", "success");
             }
