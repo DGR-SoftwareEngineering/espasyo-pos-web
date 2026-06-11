@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import {
   Badge,
   Box,
+  Callout,
   Flex,
   Heading,
   IconButton,
@@ -46,6 +47,7 @@ interface Props {
   submitLoading: boolean;
   contentBlocks?: ContentBlockDto[];
   cooldownSeconds?: number;
+  lockedMessage?: string | null;
 }
 
 const ICON_MAP: Record<string, SvgIconComponent> = {
@@ -114,6 +116,7 @@ export const LoginForm: React.FC<Props> = ({
   submitLoading,
   contentBlocks = [],
   cooldownSeconds = 0,
+  lockedMessage = null,
 }) => {
   const { handleSubmit, control, formState, setFocus, clearErrors } =
     useForm<LoginFormType>({
@@ -625,6 +628,20 @@ export const LoginForm: React.FC<Props> = ({
                       Forgot password?
                     </Text> */}
                   </Flex>
+
+                  {lockedMessage && (
+                    <Callout.Root color="red" variant="soft" mb="4">
+                      <LockClosedIcon width={16} height={16} />
+                      <Callout.Text>
+                        <Flex direction="column" gap="1">
+                          <Text weight="bold" size="2">
+                            Account Locked
+                          </Text>
+                          <Text size="2">{lockedMessage}</Text>
+                        </Flex>
+                      </Callout.Text>
+                    </Callout.Root>
+                  )}
 
                   <Box mt="2">
                     <Button

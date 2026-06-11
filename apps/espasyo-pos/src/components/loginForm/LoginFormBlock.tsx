@@ -37,6 +37,7 @@ export const LoginFormBlock: React.FC<Props> = ({ contentBlocks = [] }) => {
   const accessMeCb = useApiCallback(async (api) => api.access.me());
   const [loading, setLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [lockedMessage, setLockedMessage] = useState<string | null>(null);
   const { showToast } = useToastContext();
   const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -66,6 +67,7 @@ export const LoginFormBlock: React.FC<Props> = ({ contentBlocks = [] }) => {
       onSubmit={handleSubmit}
       contentBlocks={contentBlocks}
       cooldownSeconds={cooldownSeconds}
+      lockedMessage={lockedMessage}
     />
   );
 
@@ -107,6 +109,11 @@ export const LoginFormBlock: React.FC<Props> = ({ contentBlocks = [] }) => {
           "error",
         );
         setCooldownSeconds(THROTTLE_COOLDOWN_SECONDS);
+        return;
+      }
+      if (firstMessage?.includes("[ACCOUNT_LOCKED]")) {
+        const message = firstMessage.replace("[ACCOUNT_LOCKED] ", "").trim();
+        setLockedMessage(message);
         return;
       }
       const looksDescriptive =

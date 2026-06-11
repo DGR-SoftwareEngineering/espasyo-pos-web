@@ -27,6 +27,22 @@ interface NestedMenuItemProps {
   offlineBlocked?: boolean;
 }
 
+const SectionLabel: React.FC<{ label: string }> = ({ label }) => (
+  <Box px="2" pb="1" pt="3">
+    <Text
+      size="1"
+      weight="medium"
+      style={{
+        color: "var(--gray-10)",
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+      }}
+    >
+      {label}
+    </Text>
+  </Box>
+);
+
 const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
   item,
   depth,
@@ -71,14 +87,13 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
           }
         }}
         style={{
-          padding: "8px 12px",
-          paddingLeft: 12 + depth * 12,
-          borderRadius: "var(--radius-2)",
+          padding: "7px 10px",
+          paddingLeft: 10 + depth * 12,
+          borderRadius: "var(--radius-3)",
           cursor: offlineBlocked ? "not-allowed" : "pointer",
           opacity: offlineBlocked ? 0.4 : 1,
-          background: active ? "var(--accent-a3)" : undefined,
-          borderLeft: active ? "3px solid var(--accent-9)" : "3px solid transparent",
-          color: active ? "var(--accent-11)" : "var(--gray-12)",
+          background: active ? "var(--accent-a4)" : undefined,
+          color: active ? "var(--accent-11)" : "var(--gray-11)",
           transition: "background 120ms ease",
         }}
         onMouseEnter={(e) => {
@@ -90,7 +105,12 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
       >
         <Box
           style={{
-            display: "inline-flex",
+            width: 20,
+            height: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
             color: active ? "var(--accent-11)" : "var(--gray-11)",
           }}
         >
@@ -130,14 +150,11 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
                   }
                 }}
                 style={{
-                  padding: "6px 12px",
-                  paddingLeft: 12 + (depth + 1) * 14,
-                  borderRadius: "var(--radius-2)",
+                  padding: "7px 10px",
+                  paddingLeft: 10 + (depth + 1) * 12,
+                  borderRadius: "var(--radius-3)",
                   cursor: "pointer",
-                  background: isNestedSelected ? "var(--accent-a3)" : undefined,
-                  borderLeft: isNestedSelected
-                    ? "3px solid var(--accent-9)"
-                    : "3px solid transparent",
+                  background: isNestedSelected ? "var(--accent-a4)" : undefined,
                   color: isNestedSelected
                     ? "var(--accent-11)"
                     : "var(--gray-11)",
@@ -145,13 +162,23 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
                 }}
                 onMouseEnter={(e) => {
                   if (!isNestedSelected)
-                    e.currentTarget.style.background = "var(--gray-a2)";
+                    e.currentTarget.style.background = "var(--gray-a3)";
                 }}
                 onMouseLeave={(e) => {
                   if (!isNestedSelected) e.currentTarget.style.background = "";
                 }}
               >
-                <Box style={{ display: "inline-flex", opacity: 0.85 }}>
+                <Box
+                  style={{
+                    width: 20,
+                    height: 20,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    color: "inherit",
+                  }}
+                >
                   {nested.icon}
                 </Box>
                 <Text
@@ -458,31 +485,30 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
     >
       <Flex direction="column" gap="1" p="2" style={{ flex: 1 }}>
         {/* Main menu */}
-        <Flex direction="column" gap="1">
-          {mainMenu.map((item) => (
-            <NestedMenuItem
-              key={item.id}
-              item={item}
-              depth={0}
-              selectedPath={selectedPath}
-              openStates={openStates}
-              onSelect={handleSelect}
-              onToggle={handleToggle}
-              offlineBlocked={isPathOfflineBlocked(item.path)}
-            />
-          ))}
+        <Flex direction="column">
+          <SectionLabel label="Navigation" />
+          <Flex direction="column" gap="0.5">
+            {mainMenu.map((item) => (
+              <NestedMenuItem
+                key={item.id}
+                item={item}
+                depth={0}
+                selectedPath={selectedPath}
+                openStates={openStates}
+                onSelect={handleSelect}
+                onToggle={handleToggle}
+                offlineBlocked={isPathOfflineBlocked(item.path)}
+              />
+            ))}
+          </Flex>
         </Flex>
 
         {/* Secondary menu */}
         {secondaryMenu.length > 0 && (
-          <Flex
-            direction="column"
-            gap="1"
-            mt="4"
-            pt="3"
-            style={{ borderTop: "1px solid var(--gray-a4)" }}
-          >
-            {secondaryMenu.map((item) => {
+          <Flex direction="column">
+            <SectionLabel label="Support" />
+            <Flex direction="column" gap="0.5">
+              {secondaryMenu.map((item) => {
               const isSelected = item.path === selectedPath;
               return (
                 <Flex
@@ -500,17 +526,34 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
                     }
                   }}
                   style={{
-                    padding: "8px 12px",
-                    borderRadius: "var(--radius-2)",
+                    padding: "7px 10px",
+                    borderRadius: "var(--radius-3)",
                     cursor: "pointer",
-                    background: isSelected ? "var(--accent-a3)" : undefined,
-                    borderLeft: isSelected
-                      ? "3px solid var(--accent-9)"
-                      : "3px solid transparent",
+                    background: isSelected ? "var(--accent-a4)" : undefined,
                     color: isSelected ? "var(--accent-11)" : "var(--gray-11)",
+                    transition: "background 120ms ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected)
+                      e.currentTarget.style.background = "var(--gray-a3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) e.currentTarget.style.background = "";
                   }}
                 >
-                  <Box style={{ display: "inline-flex" }}>{item.icon}</Box>
+                  <Box
+                    style={{
+                      width: 20,
+                      height: 20,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      color: "inherit",
+                    }}
+                  >
+                    {item.icon}
+                  </Box>
                   <Text
                     size="2"
                     weight={isSelected ? "bold" : "regular"}
@@ -521,6 +564,7 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
                 </Flex>
               );
             })}
+            </Flex>
           </Flex>
         )}
       </Flex>

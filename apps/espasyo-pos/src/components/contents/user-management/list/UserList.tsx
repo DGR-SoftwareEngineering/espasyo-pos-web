@@ -15,7 +15,7 @@ const TABLE_HEADERS = [
     width: "12%",
   },
   { id: "status", name: "Status", align: "center" as const, width: "8%" },
-  { id: "actions", name: "Actions", align: "right" as const, width: "12%" },
+  { id: "actions", name: "Actions", align: "right" as const, width: "21%" },
 ];
 
 interface Props {
@@ -34,6 +34,9 @@ interface Props {
   onView: (user: UserDto) => void;
   onEdit: (user: UserDto) => void;
   onDelete: (user: UserDto) => void;
+  onLock: (user: UserDto) => void;
+  onUnlock: (user: UserDto) => void;
+  onRevokeTokens: (user: UserDto) => void;
 }
 
 export const UserList: React.FC<Props> = ({
@@ -45,6 +48,9 @@ export const UserList: React.FC<Props> = ({
   onView,
   onEdit,
   onDelete,
+  onLock,
+  onUnlock,
+  onRevokeTokens,
 }) => {
   const bodyRowComponent = useCallback(
     (row: UserDto) => (
@@ -54,9 +60,12 @@ export const UserList: React.FC<Props> = ({
         onView={onView}
         onEdit={onEdit}
         onDelete={onDelete}
+        onLock={onLock}
+        onUnlock={onUnlock}
+        onRevokeTokens={onRevokeTokens}
       />
     ),
-    [onView, onEdit, onDelete],
+    [onView, onEdit, onDelete, onLock, onUnlock, onRevokeTokens],
   );
 
   return (

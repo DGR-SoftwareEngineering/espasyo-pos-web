@@ -879,6 +879,8 @@ export interface UserDto {
   auth: AuthDto | null;
   userInfo: UserInfoDto | null;
   isActive: boolean;
+  isLocked?: boolean;
+  lockedAt?: string | null;
   createdBy: string | null;
   createdAt: string | null;
   updatedBy: string | null;

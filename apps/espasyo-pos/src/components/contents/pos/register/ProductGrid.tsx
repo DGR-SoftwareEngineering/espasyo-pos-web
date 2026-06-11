@@ -97,11 +97,9 @@ export const ProductGrid: React.FC<Props> = ({
     (api) =>
       api.commons.sellableProductList({
         pageNumber: 1,
-        pageSize: SELLABLE_PRODUCTS_PAGE_SIZE,
-        search: search.trim() || undefined,
-        categoryID: categoryID ?? undefined,
+        pageSize: 500, // backend clamps to 200, loads all menu items
       }),
-    [search, categoryID],
+    [], // load once on mount, no refetch
   );
 
   const liveItems = productsCb.result?.data?.response?.items ?? [];
@@ -129,8 +127,20 @@ export const ProductGrid: React.FC<Props> = ({
   }, [isOnline, liveItems.length, cachedItems.length]);
 
   const categoriesCb = useApi((api) => api.commons.productCategoryList(), []);
-  const items = isFromCache ? cachedItems : liveItems;
-  const totalItems = productsCb.result?.data?.response?.totalItems ?? 0;
+  const baseItems = isFromCache ? cachedItems : liveItems;
+
+  // Client-side filtering for search and category
+  const items = useMemo(() => {
+    let result = baseItems;
+    if (categoryID) {
+      result = result.filter((p) => p.categoryID === categoryID);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      result = result.filter((p) => p.name.toLowerCase().includes(q));
+    }
+    return result;
+  }, [baseItems, search, categoryID]);
 
   const allCategories = useMemo<ProductCategoryDto[]>(
     () => categoriesCb.result?.data?.response ?? [],
@@ -179,8 +189,8 @@ export const ProductGrid: React.FC<Props> = ({
 
   const allowNegative = inventory.allowNegativeStock;
   const outOfStockCount = useMemo(
-    () => items.filter((i) => i.isOutOfStock).length,
-    [items],
+    () => baseItems.filter((i) => i.isOutOfStock).length,
+    [baseItems],
   );
   const showOutWarning =
     !allowNegative && items.length > 0 && outOfStockCount === items.length;
@@ -280,7 +290,7 @@ export const ProductGrid: React.FC<Props> = ({
               <Text size="1" color="gray" weight="medium">
                 {productsCb.loading
                   ? "Loading menu…"
-                  : `${items.length} of ${totalItems} products`}
+                  : `${items.length} of ${baseItems.length} products`}
               </Text>
             </Flex>
           </Flex>

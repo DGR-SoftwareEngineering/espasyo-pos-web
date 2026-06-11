@@ -943,6 +943,18 @@ export class CommonsApi {
     return this.axios.delete<ApiResponse<boolean>>(`/api/v1/user/${id}`);
   }
 
+  public lockUser(id: string) {
+    return this.axios.put<UserResponse>(`/api/v1/user/${id}/lock`);
+  }
+
+  public unlockUser(id: string) {
+    return this.axios.put<UserResponse>(`/api/v1/user/${id}/unlock`);
+  }
+
+  public revokeAllUserTokens(id: string) {
+    return this.axios.post<ApiResponse<boolean>>(`/api/v1/user/${id}/revoke-tokens`, {});
+  }
+
   // ===== Supplier =====
 
   public supplierList(pageNumber = 1, pageSize = 20) {

@@ -122,6 +122,42 @@ export const UserListBlock: React.FC = () => {
     [openDialog, handleRefresh],
   );
 
+  const handleLock = useCallback(
+    (user: UserDto) => {
+      openDialog({
+        title: "Lock Account",
+        dialogContentType: "UserLock",
+        data: user as DialogDataType["UserLock"],
+        onSuccess: handleRefresh,
+      });
+    },
+    [openDialog, handleRefresh],
+  );
+
+  const handleUnlock = useCallback(
+    (user: UserDto) => {
+      openDialog({
+        title: "Unlock Account",
+        dialogContentType: "UserUnlock",
+        data: user as DialogDataType["UserUnlock"],
+        onSuccess: handleRefresh,
+      });
+    },
+    [openDialog, handleRefresh],
+  );
+
+  const handleRevokeTokens = useCallback(
+    (user: UserDto) => {
+      openDialog({
+        title: "Revoke All Tokens",
+        dialogContentType: "UserRevokeTokens",
+        data: user as DialogDataType["UserRevokeTokens"],
+        onSuccess: handleRefresh,
+      });
+    },
+    [openDialog, handleRefresh],
+  );
+
   const hasNoUsers =
     !data.loading && (serverPagination?.totalItems ?? users.length) === 0;
 
@@ -227,6 +263,9 @@ export const UserListBlock: React.FC = () => {
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onLock={handleLock}
+          onUnlock={handleUnlock}
+          onRevokeTokens={handleRevokeTokens}
         />
       </Card>
 

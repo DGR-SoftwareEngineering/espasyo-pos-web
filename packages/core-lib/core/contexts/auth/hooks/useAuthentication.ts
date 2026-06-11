@@ -102,6 +102,7 @@ export const useAuthentication = (): AuthService => {
       ? (parseTokenId(accessToken) ?? undefined)
       : undefined,
     isOnline,
+    enabled: role?.toLowerCase() !== "cashier",
   });
 
   const loading =
@@ -189,12 +190,13 @@ export const useAuthentication = (): AuthService => {
   }, [isAuthenticated, accessToken]);
 
   useEffect(() => {
-    if (isAuthenticated && isOnline) {
+    const isCashier = role?.toLowerCase() === "cashier";
+    if (isAuthenticated && isOnline && !isCashier) {
       return authSessionIdleTimer.start();
     } else {
       return authSessionIdleTimer.stop();
     }
-  }, [isAuthenticated, isOnline]);
+  }, [isAuthenticated, isOnline, role]);
 
   useEffect(() => {
     if (!accessToken || !refreshToken) {
