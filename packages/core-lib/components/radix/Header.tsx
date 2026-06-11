@@ -7,6 +7,7 @@ import { HeaderUserMenu } from "./menu/HeaderUserMenu";
 import { HeaderSearch } from "./menu/HeaderSearch";
 import { HeaderNotificationMenu } from "./menu/HeaderNotificationMenu";
 import { HeaderSalesTarget } from "./menu/HeaderSalesTarget";
+import { ThemeToggleButton } from "./ThemeToggleButton";
 
 interface HeaderUser {
   initials?: string;
@@ -127,6 +128,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {user?.role?.toLowerCase() === 'admin' && <HeaderSalesTarget />}
             <HeaderSearch />
+            <ThemeToggleButton />
             {user && logout && (
               <>
                 <HeaderNotificationMenu />

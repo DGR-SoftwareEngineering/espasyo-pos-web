@@ -40,7 +40,7 @@ const config = new FeatureConfigBuilder<CashierShiftDto>("Shift")
 
 export const SUBMISSION_KEYS = { close: "shift.close" };
 export const TABLE_HEADERS   = config.TABLE_HEADERS;
-export const DIALOG_TITLES   = { view: "Shift Detail", close: "Close Shift" };
+export const DIALOG_TITLES   = { view: "Shift Detail", close: "Close Shift", delete: "Delete Shift" };
 export const DIALOG_TYPES    = { view: "ShiftView",    close: "ShiftClose" };
 export const sortOptions     = config.sortOptions;
 export const applyShiftSorting = config.applySorting;

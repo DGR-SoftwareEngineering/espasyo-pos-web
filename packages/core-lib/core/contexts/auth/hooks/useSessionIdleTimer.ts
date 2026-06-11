@@ -8,12 +8,13 @@ type AliveCheck = { lastRequest: string } | undefined;
 interface Props {
   sessionId?: string;
   onSessionExpired: AsyncFunction;
+  isOnline: boolean;
 }
 
 const startSessionCheckAfterMinutes =
   process.env.NODE_ENV === "development" ? 10 : 1; // 30 days — effectively never fires
 
-export const useSessionIdleTimer = ({ onSessionExpired, sessionId }: Props) => {
+export const useSessionIdleTimer = ({ onSessionExpired, sessionId, isOnline }: Props) => {
   const sessionCb = useApiCallback((api) => api.authentication.session());
   const keepAliveCb = useApiCallback((api) => api.authentication.keepAlive());
   const [aliveCheck, setAliveCheck, clearAliveCheck] =
@@ -21,6 +22,7 @@ export const useSessionIdleTimer = ({ onSessionExpired, sessionId }: Props) => {
 
   const idleTimer = useIdleTimer({
     onIdle: async () => {
+      if (!isOnline) return;
       if (!sessionId) return;
       try {
         await sessionCb.execute();
@@ -30,6 +32,7 @@ export const useSessionIdleTimer = ({ onSessionExpired, sessionId }: Props) => {
       }
     },
     onAction: async () => {
+      if (!isOnline) return;
       if (!sessionId) return;
       if (!aliveCheck) {
         resetAliveCheck();
@@ -61,7 +64,6 @@ export const useSessionIdleTimer = ({ onSessionExpired, sessionId }: Props) => {
 
   function stopIdleTimer() {
     clearAliveCheck();
-    idleTimer.message({}, false);
     idleTimer.reset();
   }
 

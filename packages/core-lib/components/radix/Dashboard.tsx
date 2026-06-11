@@ -12,6 +12,9 @@ import {
   MaintenanceBanner,
   MaintenancePageBlock,
 } from "./MaintenanceBanner";
+import { OfflineIndicatorBar } from "./OfflineIndicatorBar";
+import { OfflineDisconnectDialog } from "./OfflineDisconnectDialog";
+import { SyncOfflineDialog } from "./SyncOfflineDialog";
 
 const SIDEBAR_COLLAPSED_KEY_PREFIX = "espasyo.sidebarCollapsed.";
 // Legacy single-key (kept for one-time cleanup so old prefs don't leak across roles).
@@ -116,47 +119,51 @@ export const RadixDashboard: React.FC<Props> = ({
 
   return (
     <TabsNavigationProvider homePath={homePath} homeLabel="Dashboard">
-      <Flex
-        direction={isMobile ? "column" : "row"}
-        style={{ minHeight: "100vh" }}
-      >
-        <SideMenu
-          logout={logout}
-          loading={loading}
-          role={role}
-          initials={initials}
-          email={email}
-          collapsible
-          collapsed={sidebarCollapsed}
-          onToggleCollapsed={handleToggleSidebar}
-        />
-
+      
         <Flex
-          direction="column"
-          style={{ flex: 1, minWidth: 0, height: "100vh", overflow: "hidden" }}
+          direction={isMobile ? "column" : "row"}
+          style={{ minHeight: "100vh" }}
         >
-          <MaintenanceBanner />
-          <Header
-            user={{ initials, email, role }}
+          <SideMenu
             logout={logout}
             loading={loading}
+            role={role}
+            initials={initials}
+            email={email}
+            collapsible
+            collapsed={sidebarCollapsed}
+            onToggleCollapsed={handleToggleSidebar}
           />
-          {isAdmin && <TabsNavigationBar role={role} />}
-          <Box
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              padding: isMobile ? "16px" : "24px 32px",
-            }}
+
+          <Flex
+            direction="column"
+            style={{ flex: 1, minWidth: 0, height: "100vh", overflow: "hidden" }}
           >
-            {pageInMaintenance ? (
-              <MaintenancePageBlock pageKey={currentPageKey!} />
-            ) : (
-              children
-            )}
-          </Box>
+            <MaintenanceBanner />
+            <Header
+              user={{ initials, email, role }}
+              logout={logout}
+              loading={loading}
+            />
+            <OfflineIndicatorBar />
+            {isAdmin && <TabsNavigationBar role={role} />}
+            <Box
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: isMobile ? "16px" : "24px 32px",
+              }}
+            >
+              {pageInMaintenance ? (
+                <MaintenancePageBlock pageKey={currentPageKey!} />
+              ) : (
+                children
+              )}
+            </Box>
+          </Flex>
         </Flex>
-      </Flex>
+        <OfflineDisconnectDialog />
+        <SyncOfflineDialog />
     </TabsNavigationProvider>
   );
 };

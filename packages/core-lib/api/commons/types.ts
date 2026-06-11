@@ -80,6 +80,7 @@ export interface ProductDataList {
   brandName: string | null;
   variantCount?: number;
   addOnGroupCount?: number;
+  hasActiveRecipe?: boolean;
   status?: number;
   createdBy: string | null;
   createdAt: string | null;
@@ -1410,6 +1411,10 @@ export interface SaleDto {
   refundedAmount: number;
   itemCount: number;
   paymentCount: number;
+  /** 1 = Online, 2 = OfflineSynced */
+  source?: number;
+  sourceName?: string;
+  syncedAt?: string | null;
 }
 
 export interface SaleDetailDto {
@@ -1483,6 +1488,8 @@ export interface CreateSaleItemParams {
   unitPrice: number;
   discount?: number | null;
   isRedemptionLine?: boolean;
+  /** True for BuyXGetY free items — exempts from backend price tamper check. */
+  isPromoFreeLine?: boolean;
 }
 
 export interface CreateSalePaymentParams {
@@ -1589,6 +1596,9 @@ export interface OrderDto {
   itemCount: number;
   paymentSummary: string;
   voidedByUserName: string | null;
+  /** 1 = Online, 2 = OfflineSynced. Undefined for older records. */
+  source?: number;
+  sourceName?: string;
 }
 
 export interface OrderQueryParams {
@@ -1616,6 +1626,31 @@ export type SellableProductListResponse = ApiResponse<
 >;
 export type ProductListResponse = ApiResponse<ProductDataList[]>;
 export type DailySalesSummaryResponse = ApiResponse<DailySalesSummaryDto>;
+
+// ─── Offline Sync ─────────────────────────────────────────────────────────
+
+export interface SyncOfflineSaleItemParams extends CreateSaleParams {
+  localId: string;
+  offlineCreatedAt: string;
+}
+
+export interface SyncOfflineSalesParams {
+  sales: SyncOfflineSaleItemParams[];
+}
+
+export interface SyncSaleResult {
+  localId: string;
+  success: boolean;
+  sale?: SaleDetailDto;
+  errorMessage?: string;
+}
+
+export interface SyncOfflineSalesResponseDto {
+  results: SyncSaleResult[];
+}
+
+export type SyncOfflineSalesResponse =
+  ApiResponse<SyncOfflineSalesResponseDto>;
 
 // ─── Business Expense ──────────────────────────────────────────────────────
 
@@ -1693,6 +1728,7 @@ export type ActiveShiftResponse = ApiResponse<ShiftSummaryDto | null>;
 export type ShiftResponse = ApiResponse<CashierShiftDto>;
 export type ShiftSummaryResponse = ApiResponse<ShiftSummaryDto>;
 export type ShiftListResponse = ApiResponse<CashierShiftDto[]>;
+export type DeleteShiftResponse = ApiResponse<string>;
 
 // ─── Promo Management ────────────────────────────────────────────────────────
 
@@ -1788,6 +1824,11 @@ export interface PromoSuggestionDto {
   margin: number;
   reason: string;
   suggestedProductIDs: string[];
+  suggestedDiscountPercent?: number | null;
+  suggestedDiscountAmount?: number | null;
+  suggestedBuyQuantity?: number | null;
+  suggestedGetQuantity?: number | null;
+  suggestedBundlePrice?: number | null;
 }
 
 export interface PromoItemInput {
@@ -2224,6 +2265,17 @@ export interface FinancialReportDto {
   grossProfit: number;
   netProfit: number;
   revenueByProduct: FinancialReportProductRevenueItemDto[];
+  promoPerformance: PromoPerformanceItemDto[];
+}
+
+export interface PromoPerformanceItemDto {
+  promoID: string;
+  promoTitle: string;
+  promoType: string;
+  usageCount: number;
+  totalDiscountGiven: number;
+  totalRevenue: number;
+  averageOrderValue: number;
 }
 
 export interface FinancialReportQueryParams {
@@ -2514,3 +2566,64 @@ export interface UnitConversionDependenciesDto {
 }
 
 export type UnitConversionDependenciesResponse = ApiResponse<UnitConversionDependenciesDto>;
+
+// ── Promo Feasibility ────────────────────────────────────────────────────────
+
+export interface PromoFeasibilityItemRequestDto {
+  productID: string;
+  quantity: number;
+  isFreeItem: boolean;
+  /** Current stock from SellableProductDto — used as fallback when product has no direct Inventory record (menu items with recipes). */
+  currentStock?: number;
+  /** Product display name fallback when no Inventory record exists. */
+  productName?: string;
+}
+
+export interface PromoFeasibilityRequestDto {
+  type: number; // PromoType enum: 1=Percentage,2=Fixed,3=BuyXGetY,4=Bundle
+  buyQuantity: number;
+  getQuantity: number;
+  bundlePrice?: number;
+  startDate?: string; // ISO date "YYYY-MM-DD"
+  endDate?: string;
+  items: PromoFeasibilityItemRequestDto[];
+}
+
+export interface PromoFeasibilityItemResultDto {
+  productID: string;
+  productName: string;
+  currentStock: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maxUsesFromStock: number;
+  averageDailyUsage?: number;
+  projectedStockAfterPeriod?: number;
+  willHitReorder: boolean;
+  willHitLowStock: boolean;
+  willGoOutOfStock: boolean;
+  shortfall?: number;
+}
+
+export interface PromoFeasibilityResultDto {
+  canFulfillCount: number;
+  customerCapacity?: number;
+  stockIsAdequate: boolean;
+  scheduledDays?: number;
+  items: PromoFeasibilityItemResultDto[];
+}
+
+export type PromoFeasibilityResponse = ApiResponse<PromoFeasibilityResultDto>;
+
+// ─── User Presence / Who's Online ─────────────────────────────────────────────
+export interface UserPresenceDto {
+  userID: string;
+  displayName: string;
+  role: string;
+  currentActivity: string;
+  connectedAt: string;
+  lastSeen: string;
+}
+
+export interface UpdateActivityParams {
+  activity: string;
+}

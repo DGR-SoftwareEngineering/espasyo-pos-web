@@ -13,6 +13,7 @@ import { useAccessToken, useRefreshToken } from "../hooks";
 import { useSessionIdleTimer } from "./useSessionIdleTimer";
 import { parseTokenId, safeDecode } from "../access-token";
 import { config } from "../../../../config";
+import { useOfflineMode } from "../../OfflineModeContext";
 
 // Claim-type URLs are not constants in the codebase — they're constructed from
 // env vars (same pattern as src/proxy.ts) so the schema host stays out of git.
@@ -63,6 +64,7 @@ export const useAuthentication = (): AuthService => {
   const [email, setEmail] = useState("");
   const [userInfoLoading, setUserInfoLoading] = useState(false);
   const [roleLoading, setRoleLoading] = useState(false);
+  const { isOnline } = useOfflineMode();
 
   const loginCb = useApiCallback((api, p: LoginParams) =>
     api.authentication.login(p),
@@ -90,12 +92,16 @@ export const useAuthentication = (): AuthService => {
 
   const authSessionIdleTimer = useSessionIdleTimer({
     onSessionExpired: async () => {
+      if (!isOnline) {
+        return;
+      }
       await logout();
       await goToExpiredSessionPage();
     },
     sessionId: accessToken
       ? (parseTokenId(accessToken) ?? undefined)
       : undefined,
+    isOnline,
   });
 
   const loading =
@@ -183,12 +189,12 @@ export const useAuthentication = (): AuthService => {
   }, [isAuthenticated, accessToken]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && isOnline) {
       return authSessionIdleTimer.start();
     } else {
       return authSessionIdleTimer.stop();
     }
-  }, [isAuthenticated, accessToken]);
+  }, [isAuthenticated, isOnline]);
 
   useEffect(() => {
     if (!accessToken || !refreshToken) {

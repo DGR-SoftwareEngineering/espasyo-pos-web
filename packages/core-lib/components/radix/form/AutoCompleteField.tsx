@@ -32,6 +32,7 @@ export interface AutoCompleteFieldProps<TForm extends FieldValues, TOption> {
   noOptionText?: React.ReactNode;
   getOptionLabel: (option: TOption) => string;
   getOptionValue?: (option: TOption) => string | number;
+  getOptionDisabled?: (option: TOption) => boolean;
   isOptionEqualToValue?: (option: TOption, value: TOption) => boolean;
   valueMode?: ValueMode;
   onSearch?: (query: string) => Promise<TOption[]> | TOption[] | void;
@@ -84,6 +85,7 @@ function AutoCompleteFieldComponent<TForm extends FieldValues, TOption>({
   noOptionText = "No matching options",
   getOptionLabel,
   getOptionValue,
+  getOptionDisabled,
   valueMode = "id",
   onSearch,
   onSelectOption,
@@ -177,7 +179,7 @@ function AutoCompleteFieldComponent<TForm extends FieldValues, TOption>({
     } else if (e.key === "Enter" && activeIdx >= 0) {
       e.preventDefault();
       const opt = filteredOptions[activeIdx];
-      if (opt) commitSelection(opt);
+      if (opt && !getOptionDisabled?.(opt)) commitSelection(opt);
     } else if (e.key === "Escape") {
       setOpen(false);
     }
@@ -280,16 +282,19 @@ function AutoCompleteFieldComponent<TForm extends FieldValues, TOption>({
                   (valueMode === "option"
                     ? field.value === opt
                     : field.value === getValue(opt));
+                const isDisabled = getOptionDisabled?.(opt) ?? false;
                 return (
                   <Box
                     key={String(getValue(opt) ?? idx)}
                     role="option"
                     aria-selected={isSelected}
+                    aria-disabled={isDisabled}
                     onMouseEnter={() => setActiveIdx(idx)}
-                    onClick={() => commitSelection(opt)}
+                    onClick={() => !isDisabled && commitSelection(opt)}
                     style={{
                       padding: "8px 12px",
-                      cursor: "pointer",
+                      cursor: isDisabled ? "not-allowed" : "pointer",
+                      opacity: isDisabled ? 0.5 : 1,
                       background: isActive
                         ? "var(--accent-a3)"
                         : isSelected

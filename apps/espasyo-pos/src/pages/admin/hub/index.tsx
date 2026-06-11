@@ -1,5 +1,5 @@
 import { Flex, Text } from "@radix-ui/themes";
-import { SSRWithContentSecurityPolicy, useAuthContext } from "core-lib";
+import { SSRWithContentSecurityPolicy, useAuthContext, useOfflineMode } from "core-lib";
 import { AdminDashboard } from "../../../components/dashboard/admin";
 import { GetServerSideProps } from "next";
 import { useEffect } from "react";
@@ -10,12 +10,13 @@ const AdminHub = () => {
   const logoutWithClearCookiesCb = useApiCallback((api) =>
       api.authentication.logoutWithClearCookies(),
   );
+  const { isOnline } = useOfflineMode();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && isOnline) {
       logoutWithClearCookiesCb.execute();
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, isOnline]);
 
   if (loading) {
     return (

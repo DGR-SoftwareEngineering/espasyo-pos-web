@@ -250,6 +250,7 @@ export const DialogContextModal: React.FC<Props> = ({
     case "PurchaseOrderCreate":
       return (
         <CreatePurchaseOrderDialogContent
+          prefillItems={(dialogData as { prefillItems?: Array<{ productID: string; productName: string; quantity: number }> } | undefined)?.prefillItems}
           onSuccess={() => onSuccess?.()}
           onClose={onClose!}
         />
