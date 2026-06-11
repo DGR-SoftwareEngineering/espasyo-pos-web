@@ -34,6 +34,7 @@ export const BrandingHead: React.FC = () => {
       {theme.faviconUrl ? (
         <link rel="icon" href={theme.faviconUrl} />
       ) : null}
+      <link rel="manifest" href="/manifest.json" />
     </Head>
   );
 };

@@ -489,3 +489,7 @@ async function checkActiveShift(token: string): Promise<boolean> {
     return true; // fail-open: allow navigation; JWT auth is the real guard
   }
 }
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon\\.ico).*)"],
+};

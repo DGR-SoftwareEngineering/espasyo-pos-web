@@ -8,7 +8,7 @@ import { CacheProvider } from "@emotion/react";
 import NProgress from "nprogress";
 import type { AppProps } from "next/app";
 import { Router } from "next/router";
-import React, { ReactElement, ReactNode, Suspense } from "react";
+import React, { ReactElement, ReactNode, Suspense, useEffect } from "react";
 import Head from "next/head";
 import { NextPage } from "next";
 import { useEmotionCache } from "core-lib/core/hooks";
@@ -31,6 +31,16 @@ type AppPropsWithLayout = AppProps & {
 
 export default function App({ Component, pageProps }: AppPropsWithLayout) {
   const cache = useEmotionCache();
+
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      "serviceWorker" in navigator &&
+      process.env.NODE_ENV === "production"
+    ) {
+      navigator.serviceWorker.register("/sw.js").catch(console.error);
+    }
+  }, []);
 
   const getLayout = Component.getLayout ?? ((page) => page);
   const renderApp = () => {
