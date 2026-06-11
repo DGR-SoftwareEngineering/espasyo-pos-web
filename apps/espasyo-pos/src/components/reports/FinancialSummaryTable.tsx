@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Card, Flex, Heading, Table, Text } from "@radix-ui/themes";
 import { formatCurrency } from "../contents/procurement/format";
 
-interface FinancialData {
+export interface FinancialData {
   currencyCode: string;
   grossSales: number | null;
   cogs: number | null;

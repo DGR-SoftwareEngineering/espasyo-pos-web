@@ -7,10 +7,10 @@ import {
 } from "@radix-ui/react-icons";
 import {
   RestaurantMenuOutlined,
-  AttachMoney,
   KitchenOutlined,
   LocalDiningOutlined,
 } from "@mui/icons-material";
+import { PesoIcon } from "core-lib/components/icons/PesoIcon";
 import { useApi, useApiCallback } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";
 import { registerForm } from "core-lib/components/radix/form/FormRenderer";
@@ -56,10 +56,7 @@ export const RecipeListBlock: React.FC = () => {
     return response?.items ?? [];
   }, [response]);
 
-  console.log('recipes', recipes);
   const stats = useRecipeStats(recipes);
-
-  console.log('stats', stats)
 
   const serverPagination = useMemo(() => {
     if (!response) return undefined;
@@ -243,7 +240,7 @@ export const RecipeListBlock: React.FC = () => {
           <StatsCard
             label="Total Recipe Cost"
             value={formatCurrency(stats.totalCost)}
-            icon={<AttachMoney />}
+            icon={<PesoIcon />}
             color="warning"
             variant="detailed"
           />

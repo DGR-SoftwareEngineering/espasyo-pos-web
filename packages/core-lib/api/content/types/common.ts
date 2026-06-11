@@ -190,6 +190,9 @@ export type DialogDataType = {
   UserView: UserDto;
   UserEdit: UserDto;
   UserDelete: UserDto;
+  UserLock: UserDto;
+  UserUnlock: UserDto;
+  UserRevokeTokens: UserDto;
 
   SupplierView: SupplierDto;
   SupplierEdit: SupplierDto;

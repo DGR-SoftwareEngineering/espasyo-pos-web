@@ -1,5 +1,6 @@
 import React from "react";
-import { Badge, Box, Flex, Text, Tooltip } from "@radix-ui/themes";
+import { Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import { LockClosedIcon, LockOpen1Icon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { UserDto } from "core-lib/api/commons/types";
 import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
 import { ActionButtons } from "core-lib/components/radix/buttons/ActionButtons";
@@ -13,6 +14,9 @@ interface Props {
   onView: (user: UserDto) => void;
   onEdit: (user: UserDto) => void;
   onDelete: (user: UserDto) => void;
+  onLock: (user: UserDto) => void;
+  onUnlock: (user: UserDto) => void;
+  onRevokeTokens: (user: UserDto) => void;
 }
 
 const formatRelative = (iso: string | null) => {
@@ -34,6 +38,9 @@ export const UserTableRow: React.FC<Props> = ({
   onView,
   onEdit,
   onDelete,
+  onLock,
+  onUnlock,
+  onRevokeTokens,
 }) => {
   const info = row.userInfo;
   const fullName = [info?.firstName, info?.middleName, info?.lastName]
@@ -121,30 +128,74 @@ export const UserTableRow: React.FC<Props> = ({
       id: "status",
       align: "center" as const,
       width: "8%",
-      render: () => (
-        <Badge
-          color={row.isActive ? "green" : "gray"}
-          variant="soft"
-          radius="medium"
-          size="2"
-        >
-          {row.isActive ? "Active" : "Inactive"}
-        </Badge>
-      ),
+      render: () => {
+        if (row.isLocked) {
+          return (
+            <Badge color="red" variant="soft" radius="medium" size="2">
+              Locked
+            </Badge>
+          );
+        }
+        return (
+          <Badge
+            color={row.isActive ? "green" : "gray"}
+            variant="soft"
+            radius="medium"
+            size="2"
+          >
+            {row.isActive ? "Active" : "Inactive"}
+          </Badge>
+        );
+      },
     },
     {
       id: "actions",
       align: "right" as const,
-      width: "12%",
+      width: "21%",
       render: () => (
-        <ActionButtons
-          onView={() => onView(row)}
-          onEdit={() => onEdit(row)}
-          onDelete={() => onDelete(row)}
-          viewTooltip={DIALOG_TITLES.view}
-          editTooltip={DIALOG_TITLES.edit}
-          deleteTooltip={DIALOG_TITLES.delete}
-        />
+        <Flex gap="1" justify="end">
+          <ActionButtons
+            onView={() => onView(row)}
+            onEdit={() => onEdit(row)}
+            onDelete={() => onDelete(row)}
+            viewTooltip={DIALOG_TITLES.view}
+            editTooltip={DIALOG_TITLES.edit}
+            deleteTooltip={DIALOG_TITLES.delete}
+          />
+          {!row.isLocked ? (
+            <Tooltip content="Lock Account">
+              <IconButton
+                size="1"
+                variant="ghost"
+                color="amber"
+                onClick={() => onLock(row)}
+              >
+                <LockClosedIcon width={16} height={16} />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip content="Unlock Account">
+              <IconButton
+                size="1"
+                variant="ghost"
+                color="green"
+                onClick={() => onUnlock(row)}
+              >
+                <LockOpen1Icon width={16} height={16} />
+              </IconButton>
+            </Tooltip>
+          )}
+          <Tooltip content="Revoke All Tokens">
+            <IconButton
+              size="1"
+              variant="ghost"
+              color="indigo"
+              onClick={() => onRevokeTokens(row)}
+            >
+              <ExclamationTriangleIcon width={16} height={16} />
+            </IconButton>
+          </Tooltip>
+        </Flex>
       ),
     },
   ];

@@ -47,6 +47,9 @@ import {
   UserViewDialogContent,
   UserEditDialogContent,
   UserDeleteDialogContent,
+  UserLockDialogContent,
+  UserUnlockDialogContent,
+  UserRevokeTokensDialogContent,
 } from "./contents/users";
 import {
   SupplierViewDialogContent,
@@ -221,6 +224,30 @@ export const DialogContextModal: React.FC<Props> = ({
     case "UserDelete":
       return (
         <UserDeleteDialogContent
+          user={dialogData as UserDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "UserLock":
+      return (
+        <UserLockDialogContent
+          user={dialogData as UserDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "UserUnlock":
+      return (
+        <UserUnlockDialogContent
+          user={dialogData as UserDto}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    case "UserRevokeTokens":
+      return (
+        <UserRevokeTokensDialogContent
           user={dialogData as UserDto}
           onSuccess={onSuccess!}
           onClose={onClose!}

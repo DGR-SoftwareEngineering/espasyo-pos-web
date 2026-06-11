@@ -9,9 +9,8 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { Cross1Icon, ExitIcon } from "@radix-ui/react-icons";
-import { CoffeeOutlined } from "@mui/icons-material";
+import { usePublicSettings } from "../../core/contexts";
 import { RadixMenuContent } from "./menu/RadixMenuContent";
-import { CardAlert } from "./CardAlert";
 import { Button } from "./buttons/Button";
 
 interface Props {
@@ -38,6 +37,7 @@ export const SideMenuMobile: React.FC<Props> = ({
   loading,
   brand = DEFAULT_BRAND,
 }) => {
+  const { theme } = usePublicSettings();
   const displayName = initials || "User";
   const userInitial = (initials || email || "?").charAt(0).toUpperCase();
 
@@ -88,9 +88,24 @@ export const SideMenuMobile: React.FC<Props> = ({
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
+                  overflow: "hidden",
                 }}
               >
-                <CoffeeOutlined fontSize="small" />
+                {theme.logoUrl ? (
+                  <img
+                    src={theme.logoUrl}
+                    alt={brand}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <Text size="2" weight="bold">
+                    {brand.charAt(0)}
+                  </Text>
+                )}
               </Box>
               <Text size="3" weight="bold" truncate>
                 {brand}
@@ -108,53 +123,11 @@ export const SideMenuMobile: React.FC<Props> = ({
           </Flex>
         </Dialog.Title>
 
-        {role && (
-          <Box px="4" py="3" style={{ flexShrink: 0 }}>
-            <Flex
-              align="center"
-              gap="3"
-              px="3"
-              py="2"
-              style={{
-                background: "var(--accent-a2)",
-                border: "1px solid var(--accent-a4)",
-                borderRadius: "var(--radius-3)",
-              }}
-            >
-              <Avatar
-                size="2"
-                radius="full"
-                color="indigo"
-                variant="solid"
-                fallback={userInitial}
-              />
-              <Box style={{ minWidth: 0 }}>
-                <Text size="1" color="gray" as="div">
-                  Signed in as
-                </Text>
-                <Text
-                  size="2"
-                  weight="bold"
-                  as="div"
-                  truncate
-                  style={{ color: "var(--accent-11)" }}
-                >
-                  {role.toUpperCase()}
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
-        )}
-
         <Box style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
           <RadixMenuContent roleName={role} loading={loading} />
         </Box>
 
         <Separator size="4" />
-
-        <Box px="3" py="2" style={{ flexShrink: 0 }}>
-          <CardAlert><></></CardAlert>
-        </Box>
 
         <Box
           px="3"
@@ -169,8 +142,7 @@ export const SideMenuMobile: React.FC<Props> = ({
             <Avatar
               size="2"
               radius="full"
-              color="indigo"
-              variant="solid"
+              variant="soft"
               fallback={userInitial}
             />
             <Box style={{ flex: 1, minWidth: 0 }}>

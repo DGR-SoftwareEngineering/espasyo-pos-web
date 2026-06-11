@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { Avatar, Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import { Avatar, Badge, Box, Flex, IconButton, Separator, Text, Tooltip } from "@radix-ui/themes";
 import {
-  DotFilledIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ExitIcon,
   HamburgerMenuIcon,
 } from "@radix-ui/react-icons";
 import { useResolution } from "../../core/hooks";
@@ -30,6 +32,66 @@ interface SideMenuProps {
 const DEFAULT_BRAND = "Espasyo";
 const DEFAULT_SUBTITLE = "Coffee House POS";
 const DEFAULT_WIDTH = 264;
+
+const UserFooter: React.FC<{
+  initials: string;
+  email: string;
+  collapsed: boolean;
+  loading?: boolean;
+  logout: () => Promise<void>;
+}> = ({ initials, email, collapsed, loading, logout }) => {
+  const userInitial = (initials || email || "?").charAt(0).toUpperCase();
+  const displayName = initials || "User";
+
+  if (collapsed) {
+    return (
+      <Flex justify="center" py="3">
+        <Tooltip content={`${displayName} · ${email}`} side="right">
+          <Avatar
+            size="2"
+            radius="full"
+            variant="soft"
+            fallback={userInitial}
+            style={{ cursor: "pointer" }}
+          />
+        </Tooltip>
+      </Flex>
+    );
+  }
+
+  return (
+    <Flex
+      align="center"
+      gap="3"
+      px="3"
+      py="3"
+      style={{
+        background: "var(--color-panel-translucent)",
+      }}
+    >
+      <Avatar size="2" radius="full" variant="soft" fallback={userInitial} />
+      <Box style={{ flex: 1, minWidth: 0 }}>
+        <Text size="2" weight="medium" as="div" truncate>
+          {displayName}
+        </Text>
+        <Text size="1" color="gray" as="div" truncate>
+          {email || "—"}
+        </Text>
+      </Box>
+      <Tooltip content="Logout">
+        <IconButton
+          variant="ghost"
+          color="gray"
+          size="2"
+          disabled={loading}
+          onClick={logout}
+        >
+          <ExitIcon />
+        </IconButton>
+      </Tooltip>
+    </Flex>
+  );
+};
 
 export const SideMenu: React.FC<SideMenuProps> = ({
   logout,
@@ -121,23 +183,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             </Text>
           </Flex>
 
-          <Flex align="center" gap="2">
-            {role && (
-              <Tooltip content={`Role: ${role.toUpperCase()}`}>
-                <Badge color="indigo" variant="soft" size="1" radius="full">
-                  <DotFilledIcon />
-                  {role.charAt(0).toUpperCase()}
-                </Badge>
-              </Tooltip>
-            )}
-            <Avatar
-              size="2"
-              radius="full"
-              color="indigo"
-              variant="solid"
-              fallback={userInitial}
-            />
-          </Flex>
+          <Avatar
+            size="2"
+            radius="full"
+            variant="soft"
+            fallback={userInitial}
+          />
         </Flex>
 
         <SideMenuMobile
@@ -171,26 +222,24 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       }}
     >
       <aside aria-label="Primary navigation">
-        {/* ── Brand header ── */}
+        {/* ── Brand header — redesigned with role badge + chevron toggle ── */}
         <Flex
           align="center"
-          justify={collapsed ? "center" : "between"}
-          gap="3"
-          px={collapsed ? "2" : "4"}
-          py="3"
-          style={{ flexShrink: 0, minHeight: 64 }}
+          justify="between"
+          gap="2"
+          px={collapsed ? "2" : "3"}
+          style={{ minHeight: 64, flexShrink: 0 }}
         >
           <Flex
             align="center"
-            gap="2"
-            justify={collapsed ? "center" : "start"}
-            style={{ overflow: "hidden" }}
+            gap="3"
+            style={{ minWidth: 0, flex: 1 }}
           >
-            {/* Brand mark — fallback is a coffee-bean dot when not provided */}
+            {/* Brand mark — 36×36, rounded, gradient */}
             <Box
               style={{
-                width: 32,
-                height: 32,
+                width: 36,
+                height: 36,
                 borderRadius: "var(--radius-3)",
                 background:
                   "linear-gradient(135deg, var(--accent-9), var(--accent-10))",
@@ -199,7 +248,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
-                boxShadow: "0 1px 2px var(--gray-a4)",
                 overflow: "hidden",
               }}
             >
@@ -210,99 +258,52 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               )}
             </Box>
             {!collapsed && (
-              <Flex direction="column" style={{ minWidth: 0, lineHeight: 1.1 }}>
-                <Text size="3" weight="bold" truncate>
+              <Flex direction="column" style={{ minWidth: 0, lineHeight: 1.15 }}>
+                <Text size="2" weight="bold" truncate>
                   {brand}
                 </Text>
-                <Text size="1" color="gray" truncate>
-                  {DEFAULT_SUBTITLE}
-                </Text>
+                {role && (
+                  <Badge
+                    size="1"
+                    variant="soft"
+                    radius="full"
+                    style={{ alignSelf: "flex-start", marginTop: 4 }}
+                  >
+                    {role.toUpperCase()}
+                  </Badge>
+                )}
               </Flex>
             )}
           </Flex>
-
           {collapsible && !collapsed && (
             <Tooltip content="Collapse sidebar">
               <IconButton
                 variant="ghost"
                 color="gray"
-                size="2"
+                size="1"
                 aria-label="Collapse sidebar"
                 onClick={() => onToggleCollapsed?.(true)}
               >
-                <HamburgerMenuIcon />
+                <ChevronLeftIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+          {collapsible && collapsed && (
+            <Tooltip content="Expand sidebar" side="right">
+              <IconButton
+                variant="ghost"
+                color="gray"
+                size="1"
+                aria-label="Expand sidebar"
+                onClick={() => onToggleCollapsed?.(false)}
+              >
+                <ChevronRightIcon />
               </IconButton>
             </Tooltip>
           )}
         </Flex>
 
-        {/* ── Expand toggle (collapsed state) — same visual spot as the collapse button ── */}
-        {collapsible && collapsed && (
-          <Flex justify="center" pb="2">
-            <Tooltip content="Expand sidebar" side="right">
-              <IconButton
-                variant="ghost"
-                color="gray"
-                size="2"
-                aria-label="Expand sidebar"
-                onClick={() => onToggleCollapsed?.(false)}
-              >
-                <HamburgerMenuIcon />
-              </IconButton>
-            </Tooltip>
-          </Flex>
-        )}
-
-        {/* ── Role indicator ── */}
-        {!collapsed && role && (
-          <Box px="4" pb="3">
-            <Flex
-              align="center"
-              gap="2"
-              px="2"
-              py="2"
-              style={{
-                borderRadius: "var(--radius-3)",
-                background: "var(--accent-a2)",
-                border: "1px solid var(--accent-a4)",
-              }}
-            >
-              <Box
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: "var(--accent-9)",
-                  boxShadow: "0 0 0 3px var(--accent-a4)",
-                  flexShrink: 0,
-                }}
-              />
-              <Flex direction="column" style={{ minWidth: 0 }}>
-                <Text size="1" color="gray" style={{ lineHeight: 1.2 }}>
-                  Signed in as
-                </Text>
-                <Text
-                  size="2"
-                  weight="bold"
-                  style={{ color: "var(--accent-11)", lineHeight: 1.2 }}
-                >
-                  {role.toUpperCase()}
-                </Text>
-              </Flex>
-            </Flex>
-          </Box>
-        )}
-
-        {collapsed && role && (
-          <Flex justify="center" pb="3">
-            <Tooltip content={`Role: ${role.toUpperCase()}`} side="right">
-              <Badge color="indigo" variant="soft" size="1" radius="full">
-                <DotFilledIcon />
-                {role.charAt(0).toUpperCase()}
-              </Badge>
-            </Tooltip>
-          </Flex>
-        )}
+        <Separator size="4" />
 
         {/* ── Menu list ── */}
         <Box style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
@@ -312,6 +313,17 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             collapsed={collapsed}
           />
         </Box>
+
+        <Separator size="4" />
+
+        {/* ── User footer ── */}
+        <UserFooter
+          initials={initials}
+          email={email}
+          collapsed={collapsed}
+          loading={loading}
+          logout={logout}
+        />
       </aside>
     </Box>
   );
