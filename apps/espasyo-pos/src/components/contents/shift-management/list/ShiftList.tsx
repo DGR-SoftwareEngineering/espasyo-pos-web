@@ -14,6 +14,7 @@ export const ShiftList: React.FC<ShiftListProps> = ({
   onPreviousPage,
   onView,
   onClose,
+  onDelete,
   mode = "admin",
 }) => {
   const bodyRowComponent = useCallback(
@@ -23,10 +24,11 @@ export const ShiftList: React.FC<ShiftListProps> = ({
         row={row}
         onView={onView}
         onClose={onClose}
+        onDelete={onDelete}
         mode={mode}
       />
     ),
-    [onView, onClose, mode],
+    [onView, onClose, onDelete, mode],
   );
 
   return (

@@ -48,15 +48,13 @@ export const UnitConversionFormBlock: React.FC = () => {
 
       const result = await conversionCb.execute(payload);
 
-      if (result.status === 201 && result.data.success) {
+      if (result?.data?.success) {
         showToast("Unit conversion created successfully", "success");
         setResetForm(true);
         setTimeout(() => setResetForm(false), 100);
       } else {
-        showToast(
-          result.data.message || "Failed to create unit conversion",
-          "error",
-        );
+        const msg = (result?.data?.errors as string[] | null | undefined)?.[0] ?? result?.data?.message ?? "Failed to create unit conversion";
+        showToast(msg, "error");
       }
     } catch (error) {
       console.error("Error creating unit conversion:", error);

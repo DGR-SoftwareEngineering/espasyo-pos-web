@@ -85,6 +85,7 @@ import { FinancialSummaryTable } from "./FinancialSummaryTable";
 import { ShiftDetailsTab } from "./ShiftDetailsTab";
 import { SalesForecastingTab } from "./SalesForecastingTab";
 import { ProductVariantTab } from "./ProductVariantTab";
+import { PromoPerformanceTab } from "./PromoPerformanceTab";
 import {
   SupplierInvoiceDto,
   SupplierInvoiceStatusDto,
@@ -1839,6 +1840,8 @@ export const AdminReportsPage: React.FC = () => {
   );
   const revenueByProduct: FinancialReportProductRevenueItemDto[] =
     financialReportApi.result?.data?.response?.revenueByProduct ?? [];
+  const promoPerformance =
+    financialReportApi.result?.data?.response?.promoPerformance ?? [];
 
   const salesForecastApi = useApi((api) => api.commons.salesForecast(), []);
 
@@ -2320,6 +2323,18 @@ export const AdminReportsPage: React.FC = () => {
           />
         ),
       },
+      {
+        key: "promo_performance",
+        label: "Promo Performance",
+        content: (
+          <PromoPerformanceTab
+            data={promoPerformance}
+            loading={financialReportApi.loading}
+            currencyCode={currencyCode}
+            periodLabel={periodLabel}
+          />
+        ),
+      },
     ],
     [
       deferredPeriod,
@@ -2350,6 +2365,7 @@ export const AdminReportsPage: React.FC = () => {
       financialReportApi.loading,
       financialReportApi.result,
       revenueByProduct,
+      promoPerformance,
       filteredInvoices,
     ],
   );

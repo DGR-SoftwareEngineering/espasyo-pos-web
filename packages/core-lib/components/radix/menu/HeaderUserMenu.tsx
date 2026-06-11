@@ -16,6 +16,7 @@ import {
 } from "@radix-ui/react-icons";
 import { useRouter as useCoreRouter } from "../../../core/router";
 import { MpinManagementDialog } from "../security/MpinManagementDialog";
+import { useOfflineMode } from "../../../core/contexts/OfflineModeContext";
 
 interface Props {
   logout: () => Promise<void>;
@@ -41,6 +42,8 @@ export const HeaderUserMenu: React.FC<Props> = ({
   const nextRouter = useNextRouter();
   const isAdmin = (role ?? "").toLowerCase() === "admin";
   const [mpinOpen, setMpinOpen] = useState(false);
+  const { isOnline, pendingSalesCount } = useOfflineMode();
+  const logoutBlocked = !isOnline || pendingSalesCount > 0;
 
   const displayName = initials || "User";
   const userInitial = (initials || email || "?").charAt(0).toUpperCase();
@@ -149,7 +152,16 @@ export const HeaderUserMenu: React.FC<Props> = ({
 
           <DropdownMenu.Separator />
 
-          <DropdownMenu.Item color="red" onSelect={handleLogout}>
+          <DropdownMenu.Item
+            color="red"
+            disabled={logoutBlocked}
+            title={
+              logoutBlocked
+                ? "Sync offline sales before logging out"
+                : undefined
+            }
+            onSelect={!logoutBlocked ? handleLogout : undefined}
+          >
             <ExitIcon />
             Logout
           </DropdownMenu.Item>

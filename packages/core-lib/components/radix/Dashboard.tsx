@@ -3,13 +3,18 @@ import { Box, Flex } from "@radix-ui/themes";
 import { useRouter } from "next/router";
 import { useResolution } from "../../core/hooks";
 import { usePublicSettings } from "../../core/contexts";
+import { TabsNavigationProvider } from "../../core/contexts/TabsNavigationContext";
 import { PAGE_KEYS } from "../../business/settings";
 import { SideMenu } from "./SideMenu";
 import { Header } from "./Header";
+import { TabsNavigationBar } from "./TabsNavigationBar";
 import {
   MaintenanceBanner,
   MaintenancePageBlock,
 } from "./MaintenanceBanner";
+import { OfflineIndicatorBar } from "./OfflineIndicatorBar";
+import { OfflineDisconnectDialog } from "./OfflineDisconnectDialog";
+import { SyncOfflineDialog } from "./SyncOfflineDialog";
 
 const SIDEBAR_COLLAPSED_KEY_PREFIX = "espasyo.sidebarCollapsed.";
 // Legacy single-key (kept for one-time cleanup so old prefs don't leak across roles).
@@ -110,45 +115,55 @@ export const RadixDashboard: React.FC<Props> = ({
     return <>{children}</>;
   }
 
-  return (
-    <Flex
-      direction={isMobile ? "column" : "row"}
-      style={{ minHeight: "100vh" }}
-    >
-      <SideMenu
-        logout={logout}
-        loading={loading}
-        role={role}
-        initials={initials}
-        email={email}
-        collapsible
-        collapsed={sidebarCollapsed}
-        onToggleCollapsed={handleToggleSidebar}
-      />
+  const homePath = isAdmin ? "/admin/hub" : "/cashier/pos";
 
-      <Flex
-        direction="column"
-        style={{ flex: 1, minWidth: 0, overflow: "auto" }}
-      >
-        <MaintenanceBanner />
-        <Header
-          user={{ initials, email, role }}
-          logout={logout}
-          loading={loading}
-        />
-        <Box
-          style={{
-            flex: 1,
-            padding: isMobile ? "16px" : "24px 32px",
-          }}
+  return (
+    <TabsNavigationProvider homePath={homePath} homeLabel="Dashboard">
+      
+        <Flex
+          direction={isMobile ? "column" : "row"}
+          style={{ minHeight: "100vh" }}
         >
-          {pageInMaintenance ? (
-            <MaintenancePageBlock pageKey={currentPageKey!} />
-          ) : (
-            children
-          )}
-        </Box>
-      </Flex>
-    </Flex>
+          <SideMenu
+            logout={logout}
+            loading={loading}
+            role={role}
+            initials={initials}
+            email={email}
+            collapsible
+            collapsed={sidebarCollapsed}
+            onToggleCollapsed={handleToggleSidebar}
+          />
+
+          <Flex
+            direction="column"
+            style={{ flex: 1, minWidth: 0, height: "100vh", overflow: "hidden" }}
+          >
+            <MaintenanceBanner />
+            <Header
+              user={{ initials, email, role }}
+              logout={logout}
+              loading={loading}
+            />
+            <OfflineIndicatorBar />
+            {isAdmin && <TabsNavigationBar role={role} />}
+            <Box
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: isMobile ? "16px" : "24px 32px",
+              }}
+            >
+              {pageInMaintenance ? (
+                <MaintenancePageBlock pageKey={currentPageKey!} />
+              ) : (
+                children
+              )}
+            </Box>
+          </Flex>
+        </Flex>
+        <OfflineDisconnectDialog />
+        <SyncOfflineDialog />
+    </TabsNavigationProvider>
   );
 };

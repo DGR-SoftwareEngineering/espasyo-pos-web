@@ -24,7 +24,7 @@ interface Props {
   row: UnitConversion;
   onView: (conversion: UnitConversion) => void;
   onEdit: (conversion: UnitConversion) => void;
-  onDelete: (conversion: UnitConversion) => void;
+  onDelete: (id: string) => Promise<void>
   isSelectable?: boolean;
   selectedRowKey?: string | number;
   onSelect?: (rowKey: string | number) => void;
@@ -111,7 +111,7 @@ export const UnitConversionTableRow: React.FC<Props> = ({
         <ActionButtons
           onView={() => onView(row)}
           onEdit={() => onEdit(row)}
-          onDelete={() => onDelete(row)}
+          onDelete={() => onDelete(row.unitConversionID)}
           onExpand={handleToggleExpand}
           viewTooltip="View Conversion Details"
           editTooltip="Edit Conversion"

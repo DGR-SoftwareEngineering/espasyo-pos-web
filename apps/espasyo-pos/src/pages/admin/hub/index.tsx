@@ -1,10 +1,22 @@
 import { Flex, Text } from "@radix-ui/themes";
-import { SSRWithContentSecurityPolicy, useAuthContext } from "core-lib";
+import { SSRWithContentSecurityPolicy, useAuthContext, useOfflineMode } from "core-lib";
 import { AdminDashboard } from "../../../components/dashboard/admin";
 import { GetServerSideProps } from "next";
+import { useEffect } from "react";
+import { useApiCallback } from "core-lib/core/hooks";
 
 const AdminHub = () => {
-  const { loading } = useAuthContext();
+  const { loading, initials, role, isAuthenticated } = useAuthContext();
+  const logoutWithClearCookiesCb = useApiCallback((api) =>
+      api.authentication.logoutWithClearCookies(),
+  );
+  const { isOnline } = useOfflineMode();
+
+  useEffect(() => {
+    if (!isAuthenticated && isOnline) {
+      logoutWithClearCookiesCb.execute();
+    }
+  }, [isAuthenticated, isOnline]);
 
   if (loading) {
     return (
@@ -14,8 +26,12 @@ const AdminHub = () => {
     );
   }
 
-  return <AdminDashboard />;
+  return <AdminDashboard initials={initials} role={role} />;
 };
 export const getServerSideProps: GetServerSideProps =
-  SSRWithContentSecurityPolicy();
+  SSRWithContentSecurityPolicy(async (context) => {
+    return {
+      props: {},
+    };
+  }, true);
 export default AdminHub;

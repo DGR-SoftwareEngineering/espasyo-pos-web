@@ -195,7 +195,7 @@ export type DialogDataType = {
   SupplierEdit: SupplierDto;
   SupplierDelete: SupplierDto;
 
-  PurchaseOrderCreate: undefined;
+  PurchaseOrderCreate: { prefillItems?: Array<{ productID: string; productName: string; quantity: number }> } | undefined;
   PurchaseOrderReceive: PurchaseOrderDetailDto;
   PurchaseOrderAddInvoice: PurchaseOrderDetailDto;
   InvoiceRecordPayment: SupplierInvoiceDetailDto;

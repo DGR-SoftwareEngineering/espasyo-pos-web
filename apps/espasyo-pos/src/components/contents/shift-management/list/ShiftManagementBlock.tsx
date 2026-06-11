@@ -11,6 +11,7 @@ import {
 import { useApi, useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
 import { CashierShiftDto, CloseShiftParams, ShiftSummaryDto } from "core-lib/api/commons/types";
+import { DeleteOutlined } from "@mui/icons-material";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { StatsCard } from "core-lib/components/radix/StatsCard";
 import { FilterBar } from "core-lib/components/radix/FilterBar";
@@ -56,8 +57,10 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "ad
 
   const [closeTarget, setCloseTarget] = useState<{ shift: CashierShiftDto; summary?: ShiftSummaryDto } | null>(null);
   const [viewTarget, setViewTarget] = useState<ShiftSummaryDto | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CashierShiftDto | null>(null);
   const [closeLoading, setCloseLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const activeShiftData = useApi((api) => api.commons.getActiveShift(), []);
   const shiftsData = useApi((api) => api.commons.listShifts(), []);
@@ -66,6 +69,9 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "ad
   );
   const shiftDetailCb = useApiCallback(
     async (api, id: string) => api.commons.getShiftById(id),
+  );
+  const deleteShiftCb = useApiCallback(
+    async (api, id: string) => api.commons.deleteShift(id),
   );
 
   useEffect(() => {
@@ -160,6 +166,29 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "ad
     },
     [shiftDetailCb],
   );
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      const result = await deleteShiftCb.execute(deleteTarget.cashierShiftID);
+      if (result?.data?.success) {
+        showToast("Shift deleted successfully", "success");
+        setDeleteTarget(null);
+        handleRefresh();
+        return;
+      }
+      const errorMsg =
+        Array.isArray(result?.data?.errors) && result.data.errors.length > 0
+          ? (result.data.errors as string[])[0]
+          : result?.data?.message ?? "Failed to delete shift";
+      showToast(errorMsg, "error");
+    } catch {
+      showToast("Failed to delete shift", "error");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [deleteTarget, deleteShiftCb, handleRefresh, showToast]);
 
   return (
     <Box style={{ width: "100%" }}>
@@ -361,6 +390,7 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "ad
           onPreviousPage={() => setPageNumber((p) => p - 1)}
           onView={handleView}
           onClose={handleClose}
+          onDelete={mode !== "cashier" ? (shift) => setDeleteTarget(shift) : undefined}
           mode={mode}
         />
       </Card>
@@ -402,6 +432,59 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "ad
         maxWidth="sm"
       >
         {viewTarget && <ShiftDetailView summary={viewTarget} />}
+      </DialogBox>
+
+      {/* Delete Shift Confirm Dialog */}
+      <DialogBox
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={DIALOG_TITLES.delete}
+        maxWidth="xs"
+        disableDismiss={deleteLoading}
+      >
+        {deleteTarget && (
+          <Flex direction="column" gap="4">
+            <Flex
+              align="center"
+              gap="2"
+              px="3"
+              py="2"
+              style={{
+                background: "var(--red-a3)",
+                borderRadius: "var(--radius-2)",
+                border: "1px solid var(--red-a6)",
+              }}
+            >
+              <DeleteOutlined style={{ fontSize: 16, color: "var(--red-11)" }} />
+              <Text size="2" color="red">
+                This action cannot be undone from the UI.
+              </Text>
+            </Flex>
+            <Text size="2">
+              Delete shift <strong>{deleteTarget.shiftNumber}</strong> by{" "}
+              <strong>{deleteTarget.cashierName}</strong>? The record will be
+              soft-deleted and no longer visible in the shift list.
+            </Text>
+            <Flex gap="2" justify="end">
+              <Button
+                variant="soft"
+                color="gray"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="solid"
+                color="red"
+                onClick={handleDeleteConfirm}
+                loading={deleteLoading}
+              >
+                Delete Shift
+              </Button>
+            </Flex>
+          </Flex>
+        )}
       </DialogBox>
     </Box>
   );

@@ -134,6 +134,17 @@ export const PromoSelectDialog: React.FC<Props> = ({
                     </Flex>
                   )}
 
+                  {promo.type === "BuyXGetY" && (
+                    <Text size="1" color="blue">
+                      Buy {promo.buyQuantity ?? 1}, get {promo.getQuantity ?? 1} free — {promo.getQuantity ?? 1} item(s) added to cart at no charge.
+                    </Text>
+                  )}
+                  {promo.type === "Bundle" && (
+                    <Text size="1" color="violet">
+                      Selecting this adds all bundle items to the cart at the combined bundle price.
+                    </Text>
+                  )}
+
                   <Button
                     color="green"
                     size="2"

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Box, Container } from "@radix-ui/themes";
+import { Box } from "@radix-ui/themes";
 import { useAuthContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
 import { getDailySalesGross } from "core-lib/business";
@@ -31,8 +31,12 @@ const setCelebrationFiredToday = () => {
   }
 };
 
-export const AdminDashboard: React.FC = () => {
-  const { role, initials } = useAuthContext();
+interface Props {
+  initials: string
+  role: string;
+}
+
+export const AdminDashboard: React.FC<Props> = ({ initials, role }) => {
   const { systemName, operationalStatus, maintenance, pos, currencyCode } = usePublicSettings();
   const [showCelebration, setShowCelebration] = useState(false);
   const dailySummary = useApi((api) => api.commons.salesDailySummary(), []);
@@ -60,7 +64,7 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <Box style={{ minHeight: "100%", background: "var(--gray-2)" }}>
-      <Container size="4" px="4" py="4">
+      <Box pt="4">
         <AdminHero
           name={initials || "Admin"}
           role={role ?? "Admin"}
@@ -68,19 +72,23 @@ export const AdminDashboard: React.FC = () => {
           operationalStatus={operationalStatus}
           maintenanceEnabled={maintenance.enabled}
         />
-        <AdminKpiRow />
-        <AdminChartsRow />
-        <Box
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: 16,
-          }}
-        >
-          <AdminRecentActivity />
-          <AdminSystemHealth />
-        </Box>
-      </Container>
+      </Box>
+      
+      <AdminKpiRow />
+      <AdminChartsRow />
+      
+      <Box 
+        pb="4"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: 16,
+        }}
+      >
+        <AdminRecentActivity />
+        <AdminSystemHealth />
+      </Box>
+      
       <SalesCelebrationModal
         open={showCelebration}
         onClose={() => setShowCelebration(false)}

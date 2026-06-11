@@ -20,7 +20,7 @@ interface Props {
   onPreviousPage?: () => void;
   onView: (conversion: UnitConversion) => void;
   onEdit: (conversion: UnitConversion) => void;
-  onDelete: (conversion: UnitConversion) => void;
+  onDelete: (id: string) => Promise<void>;
 }
 
 export const UnitConversionList: React.FC<Props> = ({

@@ -29,7 +29,11 @@ import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import { useApi } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";
-import { usePublicSettings } from "core-lib/core/contexts";
+import { usePublicSettings, useOfflineMode } from "core-lib/core/contexts";
+import {
+  getPendingOfflineSales,
+  type OfflineSaleRecord,
+} from "core-lib/core/services/offlineDb";
 import type { OrderDetailDialogData } from "core-lib/api/content/types/common";
 import {
   OrderDto,
@@ -81,13 +85,35 @@ const STATUS_BADGE: Record<SaleStatusDto, { color: BadgeColor; label: string; ic
   },
 };
 
+// ─── Source badge ─────────────────────────────────────────────────────────────
+
+type SourceType = "Online" | "OfflinePending" | "OfflineSynced";
+
+const SOURCE_BADGE: Record<
+  SourceType,
+  { label: string; color: "blue" | "orange" | "green" }
+> = {
+  Online: { label: "Online", color: "blue" },
+  OfflinePending: { label: "Offline – Not Yet Synced", color: "orange" },
+  OfflineSynced: { label: "Offline – Synced", color: "green" },
+};
+
+const resolveSourceType = (source: number | undefined): SourceType => {
+  if (source === 2) return "OfflineSynced";
+  return "Online";
+};
+
 // ─── OrdersBlock ──────────────────────────────────────────────────────────────
 
 export const OrdersBlock: React.FC = () => {
   const { currencyCode, pos, systemName, theme } = usePublicSettings();
   const { openDialog } = useDialogContext();
   const router = useRouter();
+  const { pendingSalesCount } = useOfflineMode();
 
+  const [pendingOfflineSales, setPendingOfflineSales] = useState<
+    OfflineSaleRecord[]
+  >([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -96,6 +122,11 @@ export const OrdersBlock: React.FC = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [reloadToken, setReloadToken] = useState(0);
+
+  // Load pending offline sales from IndexedDB; refresh when count changes (e.g. after sync).
+  useEffect(() => {
+    getPendingOfflineSales().then(setPendingOfflineSales);
+  }, [pendingSalesCount]);
 
   // Pre-fill date filter from URL query params (e.g. ?fromDate=2026-06-09&toDate=2026-06-09).
   // Runs once on mount so direct links from the POS target sales dialog land filtered.
@@ -341,6 +372,9 @@ export const OrdersBlock: React.FC = () => {
             <Text size="1" weight="bold" color="gray" style={{ flex: "1 1 80px", textTransform: "uppercase", letterSpacing: 0.5 }}>
               Status
             </Text>
+            <Text size="1" weight="bold" color="gray" style={{ flex: "1 1 90px", textTransform: "uppercase", letterSpacing: 0.5 }}>
+              Source
+            </Text>
             <Text
               size="1"
               weight="bold"
@@ -353,28 +387,38 @@ export const OrdersBlock: React.FC = () => {
         </Box>
 
         {/* Rows */}
-        {listApi.loading && orders.length === 0 ? (
+        {listApi.loading && orders.length === 0 && pendingOfflineSales.length === 0 ? (
           <Flex align="center" justify="center" p="6" gap="2">
             <Text color="gray" size="2">
               Loading orders…
             </Text>
           </Flex>
-        ) : orders.length === 0 ? (
+        ) : orders.length === 0 && pendingOfflineSales.length === 0 ? (
           <EmptyState hasFilters={hasFilters} onClear={handleClearFilters} />
         ) : (
-          orders.map((order, idx) => (
-            <OrderRow
-              key={order.orderID}
-              order={order}
-              currencyCode={currencyCode}
-              striped={idx % 2 === 1}
-              onClick={() => handleRowClick(order)}
-            />
-          ))
+          <>
+            {pendingOfflineSales.map((record, idx) => (
+              <OfflinePendingRow
+                key={record.localId}
+                record={record}
+                currencyCode={currencyCode}
+                striped={idx % 2 === 1}
+              />
+            ))}
+            {orders.map((order, idx) => (
+              <OrderRow
+                key={order.orderID}
+                order={order}
+                currencyCode={currencyCode}
+                striped={(pendingOfflineSales.length + idx) % 2 === 1}
+                onClick={() => handleRowClick(order)}
+              />
+            ))}
+          </>
         )}
 
         {/* Pagination footer */}
-        {orders.length > 0 && (
+        {(orders.length > 0 || pendingOfflineSales.length > 0) && (
           <>
             <Separator size="4" />
             <Flex
@@ -538,6 +582,19 @@ const OrderRow: React.FC<{
         )}
       </Box>
 
+      {/* Source */}
+      <Box style={{ flex: "1 1 90px" }}>
+        {(() => {
+          const st = resolveSourceType(order.source);
+          const sb = SOURCE_BADGE[st];
+          return (
+            <Badge color={sb.color} variant="soft" radius="full" size="1">
+              {sb.label}
+            </Badge>
+          );
+        })()}
+      </Box>
+
       {/* Total */}
       <Box style={{ flex: "1 1 80px", textAlign: "right" }}>
         <Text
@@ -550,6 +607,84 @@ const OrderRow: React.FC<{
           }}
         >
           {formatCurrency(order.totalAmount, currencyCode)}
+        </Text>
+      </Box>
+    </Flex>
+  );
+};
+
+// ─── OfflinePendingRow ────────────────────────────────────────────────────────
+
+const OfflinePendingRow: React.FC<{
+  record: OfflineSaleRecord;
+  currencyCode: string;
+  striped: boolean;
+}> = ({ record, currencyCode, striped }) => {
+  const total = record.payload.payments.reduce((s, p) => s + p.amount, 0);
+  const itemCount = record.payload.items.length;
+  const sourceBadge = SOURCE_BADGE["OfflinePending"];
+
+  return (
+    <Flex
+      gap="3"
+      align="center"
+      px="3"
+      py="3"
+      style={{
+        background: striped ? "var(--amber-a2)" : "var(--amber-a1)",
+        borderBottom: "1px solid var(--gray-a3)",
+        opacity: 0.9,
+      }}
+    >
+      {/* "Order #" placeholder */}
+      <Box style={{ flex: "2 1 100px", minWidth: 0 }}>
+        <Text size="2" weight="medium" as="div" truncate style={{ fontVariantNumeric: "tabular-nums", color: "var(--amber-11)" }}>
+          {record.localId.slice(0, 8).toUpperCase()}…
+        </Text>
+        <Text size="1" color="gray" as="div">
+          {itemCount} item{itemCount === 1 ? "" : "s"} · Not synced
+        </Text>
+      </Box>
+
+      {/* Date */}
+      <Box style={{ flex: "1 1 80px", minWidth: 0 }}>
+        <Text size="2" color="gray" as="div" truncate>
+          {formatShortDate(record.createdAt)}
+        </Text>
+      </Box>
+
+      {/* Cashier */}
+      <Box style={{ flex: "1 1 100px", minWidth: 0 }}>
+        <Text size="2" color="gray" as="div" truncate>
+          —
+        </Text>
+      </Box>
+
+      {/* Payment */}
+      <Box style={{ flex: "1 1 100px", minWidth: 0 }}>
+        <Text size="2" color="gray" as="div" truncate>
+          —
+        </Text>
+      </Box>
+
+      {/* Status */}
+      <Box style={{ flex: "1 1 80px" }}>
+        <Badge color="gray" variant="soft" radius="full" size="1">
+          Pending
+        </Badge>
+      </Box>
+
+      {/* Source */}
+      <Box style={{ flex: "1 1 90px" }}>
+        <Badge color={sourceBadge.color} variant="soft" radius="full" size="1">
+          {sourceBadge.label}
+        </Badge>
+      </Box>
+
+      {/* Total */}
+      <Box style={{ flex: "1 1 80px", textAlign: "right" }}>
+        <Text size="2" weight="medium" as="div" style={{ fontVariantNumeric: "tabular-nums" }}>
+          {formatCurrency(total, currencyCode)}
         </Text>
       </Box>
     </Flex>

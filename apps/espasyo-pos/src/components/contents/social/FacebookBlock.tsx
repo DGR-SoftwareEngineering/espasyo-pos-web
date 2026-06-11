@@ -54,6 +54,14 @@ export const FacebookBlock: React.FC = () => {
     );
   }, [pageInfoData.loading, pageInfoData.result, pageInfo]);
 
+  const notConfigured = useMemo(() => {
+    if (pageInfoData.loading || pageInfo || tokenExpired) return false;
+    const err = pageInfoData.error as (string[] & { status?: number }) | undefined;
+    if (!err) return false;
+    if (err.status === 503) return true;
+    return err.some?.((e) => typeof e === "string" && e.toLowerCase().includes("not configured")) ?? false;
+  }, [pageInfoData.loading, pageInfoData.error, pageInfoData.result, pageInfo, tokenExpired]);
+
   const handleNewPost = useCallback(() => {
     setEditPost(null);
     setComposerOpen(true);
@@ -120,6 +128,8 @@ export const FacebookBlock: React.FC = () => {
         onReconnect={() => setReconnectOpen(true)}
         onUpdateToken={() => setReconnectOpen(true)}
         onDisconnect={() => setDisconnectOpen(true)}
+        notConfigured={notConfigured}
+        onConnect={() => setReconnectOpen(true)}
       />
 
       <Box mt="5">
