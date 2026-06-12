@@ -97,6 +97,12 @@ import {
   SupplierListResponse,
   SupplierResponse,
   UpdateSupplierParams,
+  RecipeImportPreviewDto,
+  RecipeImportResultDto,
+  RecipeImportStagingResultDto,
+  RecipeImportBatchSummaryDto,
+  RecipeImportSyncResultDto,
+  ImportRecipeExcelDto,
 } from "./types";
 import {
   AuditLogListResponse,
@@ -529,6 +535,40 @@ export class CommonsApi {
           "Content-Type": "application/json",
         },
       },
+    );
+  }
+
+  public previewRecipeImport(params: { file: File }) {
+    const form = new FormData();
+    form.append("file", params.file);
+    return this.axios.post<ApiResponse<RecipeImportPreviewDto>>(
+      `/api/v1/product-api/Product/preview-recipe-import`,
+      form,
+    );
+  }
+
+  public importRecipeExcel(params: ImportRecipeExcelDto) {
+    return this.axios.post<ApiResponse<RecipeImportStagingResultDto>>(
+      `/api/v1/product-api/Product/import-recipe-excel`,
+      params,
+    );
+  }
+
+  public getImportBatchList() {
+    return this.axios.get<ApiResponse<RecipeImportBatchSummaryDto[]>>(
+      `/api/v1/product-api/Product/import-batches`,
+    );
+  }
+
+  public syncImportBatch(batchId: string) {
+    return this.axios.post<ApiResponse<RecipeImportSyncResultDto>>(
+      `/api/v1/product-api/Product/import-batches/${batchId}/sync`,
+    );
+  }
+
+  public revertImportBatch(batchId: string) {
+    return this.axios.post<ApiResponse<string>>(
+      `/api/v1/product-api/Product/import-batches/${batchId}/revert`,
     );
   }
 

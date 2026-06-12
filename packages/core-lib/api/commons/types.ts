@@ -2629,3 +2629,124 @@ export interface UserPresenceDto {
 export interface UpdateActivityParams {
   activity: string;
 }
+
+// ─── Recipe Import ────────────────────────────────────────────────────────────
+export interface IngredientPreviewItemDto {
+  name: string;
+  packagePrice: number;
+  qtyPerPack: number;
+  unitName: string;
+  unitCost: number;
+  alreadyExistsInDb: boolean;
+  unitExistsInDb: boolean;
+  warnings: string[];
+}
+
+export interface RecipeItemPreviewDto {
+  ingredientName: string;
+  quantityRequired: number;
+  unitName: string;
+  ingredientFoundInSheet: boolean;
+  ingredientExistsInDb: boolean;
+  unitExistsInDb: boolean;
+  warnings: string[];
+}
+
+export interface RecipePreviewItemDto {
+  menuItemName: string;
+  menuItemAlreadyExistsInDb: boolean;
+  hasExistingActiveRecipe: boolean;
+  estimatedCostPerServing: number;
+  sellingPrice: number;
+  foodCostPercent: number;
+  grossProfitPerServing: number;
+  items: RecipeItemPreviewDto[];
+  warnings: string[];
+  hasExistingVariants: boolean;
+  existingVariantCount: number;
+  hasExistingAddOnGroups: boolean;
+  existingAddOnGroupCount: number;
+}
+
+export interface RecipeImportPreviewDto {
+  ingredients: IngredientPreviewItemDto[];
+  recipes: RecipePreviewItemDto[];
+  globalWarnings: string[];
+}
+
+export type RecipeImportPreviewResponse = ApiResponse<RecipeImportPreviewDto>;
+
+export interface ImportIngredientItemDto {
+  name: string;
+  packagePrice: number;
+  qtyPerPack: number;
+  unitName: string;
+}
+
+export interface ImportRecipeItemDto {
+  ingredientName: string;
+  quantityRequired: number;
+  unitName: string;
+}
+
+export interface ImportMenuItemDto {
+  menuItemName: string;
+  sellingPrice: number;
+  recipeItems: ImportRecipeItemDto[];
+}
+
+export interface ImportRecipeExcelDto {
+  defaultIngredientCategoryID: string;
+  defaultMenuItemCategoryID: string;
+  ingredients: ImportIngredientItemDto[];
+  recipes: ImportMenuItemDto[];
+}
+
+export interface RecipeImportResultDto {
+  unitsCreated: number;
+  ingredientsCreated: number;
+  ingredientsSkipped: number;
+  menuItemsCreated: number;
+  menuItemsSkipped: number;
+  recipesCreated: number;
+  recipesSkipped: number;
+  errors: string[];
+}
+
+export type RecipeImportResultResponse = ApiResponse<RecipeImportResultDto>;
+
+export interface RecipeImportStagingResultDto {
+  batchID: string;
+  batchCode: string;
+  ingredientsStaged: number;
+  ingredientsSkipped: number;
+  menuItemsStaged: number;
+  menuItemsSkipped: number;
+  recipesStaged: number;
+  recipesSkipped: number;
+  warnings: string[];
+}
+
+export interface RecipeImportBatchSummaryDto {
+  batchID: string;
+  batchCode: string;
+  importedAt: string;
+  importedByName: string;
+  status: "Pending" | "Synced" | "Reverted" | "Discarded";
+  totalIngredients: number;
+  totalMenuItems: number;
+  totalRecipes: number;
+  syncedAt: string | null;
+  revertedAt: string | null;
+}
+
+export interface RecipeImportSyncResultDto {
+  ingredientsCreated: number;
+  menuItemsCreated: number;
+  recipesCreated: number;
+  errors: string[];
+}
+
+export type RecipeImportStagingResponse = ApiResponse<RecipeImportStagingResultDto>;
+export type RecipeImportBatchListResponse = ApiResponse<RecipeImportBatchSummaryDto[]>;
+export type RecipeImportSyncResponse = ApiResponse<RecipeImportSyncResultDto>;
