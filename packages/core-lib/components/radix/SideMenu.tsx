@@ -13,6 +13,7 @@ import { useResolution } from "../../core/hooks";
 import { usePublicSettings, useOfflineMode } from "../../core/contexts";
 import { MpinManagementDialog } from "./security/MpinManagementDialog";
 import { RadixMenuContent } from "./menu/RadixMenuContent";
+import { RadixOptionsMenu } from "./menu/RadixOptionsMenu";
 import { SideMenuMobile } from "./SideMenuMobile";
 
 interface SideMenuProps {
