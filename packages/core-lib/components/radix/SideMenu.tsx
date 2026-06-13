@@ -1,12 +1,17 @@
 import React, { useState } from "react";
-import { Avatar, Badge, Box, Flex, IconButton, Separator, Text, Tooltip } from "@radix-ui/themes";
+import { Avatar, Badge, Box, DropdownMenu, Flex, IconButton, Separator, Text, Tooltip } from "@radix-ui/themes";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  ExitIcon,
+  LockClosedIcon,
+  GearIcon,
   HamburgerMenuIcon,
 } from "@radix-ui/react-icons";
+import { useRouter } from "next/router";
 import { useResolution } from "../../core/hooks";
-import { usePublicSettings } from "../../core/contexts";
+import { usePublicSettings, useOfflineMode } from "../../core/contexts";
+import { MpinManagementDialog } from "./security/MpinManagementDialog";
 import { RadixMenuContent } from "./menu/RadixMenuContent";
 import { RadixOptionsMenu } from "./menu/RadixOptionsMenu";
 import { SideMenuMobile } from "./SideMenuMobile";
@@ -36,50 +41,138 @@ const DEFAULT_WIDTH = 264;
 const UserFooter: React.FC<{
   initials: string;
   email: string;
+  role: string;
   collapsed: boolean;
   loading?: boolean;
   logout: () => Promise<void>;
-}> = ({ initials, email, collapsed, loading, logout }) => {
+}> = ({ initials, email, role, collapsed, loading, logout }) => {
+  const router = useRouter();
+  const { isOnline, pendingSalesCount } = useOfflineMode();
+  const [mpinOpen, setMpinOpen] = useState(false);
+  const logoutBlocked = !isOnline || pendingSalesCount > 0;
+  const isAdmin = role.trim().toLowerCase() === "admin";
+
   const userInitial = (initials || email || "?").charAt(0).toUpperCase();
   const displayName = initials || "User";
 
+  const menuContent = (
+    <>
+      <Box px="2" py="2">
+        <Text size="2" weight="bold" as="div">
+          {displayName}
+        </Text>
+        <Text size="1" color="gray" as="div">
+          {email || "—"}
+        </Text>
+      </Box>
+      <DropdownMenu.Separator />
+
+      <DropdownMenu.Item onSelect={() => setMpinOpen(true)}>
+        <Flex align="center" gap="2">
+          <LockClosedIcon />
+          MPIN Security
+        </Flex>
+      </DropdownMenu.Item>
+
+      {isAdmin && (
+        <DropdownMenu.Item onSelect={() => router.push("/admin/hub/settings")}>
+          <Flex align="center" gap="2">
+            <GearIcon />
+            Settings
+          </Flex>
+        </DropdownMenu.Item>
+      )}
+
+      <DropdownMenu.Separator />
+
+      <DropdownMenu.Item
+        color="red"
+        disabled={logoutBlocked}
+        onSelect={logout}
+      >
+        <Flex align="center" gap="2">
+          <ExitIcon />
+          Logout
+        </Flex>
+      </DropdownMenu.Item>
+    </>
+  );
+
   if (collapsed) {
     return (
-      <Flex justify="center" py="3">
-        <Tooltip content={`${displayName} · ${email}`} side="right">
-          <Avatar
-            size="2"
-            radius="full"
-            variant="soft"
-            fallback={userInitial}
-            style={{ cursor: "pointer" }}
-          />
-        </Tooltip>
-      </Flex>
+      <>
+        <Flex justify="center" py="3">
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <button
+                style={{
+                  all: "unset",
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                  display: "flex",
+                }}
+              >
+                <Tooltip content={`${displayName} · ${email}`} side="right">
+                  <Avatar
+                    size="2"
+                    radius="full"
+                    variant="soft"
+                    fallback={userInitial}
+                  />
+                </Tooltip>
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content side="right" align="end" size="2">
+              {menuContent}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </Flex>
+        <MpinManagementDialog open={mpinOpen} onOpenChange={setMpinOpen} />
+      </>
     );
   }
 
   return (
-    <Flex
-      align="center"
-      gap="3"
-      px="3"
-      py="3"
-      style={{
-        background: "var(--color-panel-translucent)",
-      }}
-    >
-      <Avatar size="2" radius="full" variant="soft" fallback={userInitial} />
-      <Box style={{ flex: 1, minWidth: 0 }}>
-        <Text size="2" weight="medium" as="div" truncate>
-          {displayName}
-        </Text>
-        <Text size="1" color="gray" as="div" truncate>
-          {email || "—"}
-        </Text>
-      </Box>
-      <RadixOptionsMenu logout={logout} loading={loading} />
-    </Flex>
+    <>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+          <Flex
+            align="center"
+            gap="3"
+            px="3"
+            py="3"
+            role="button"
+            style={{
+              cursor: "pointer",
+              background: "var(--color-panel-translucent)",
+              width: "100%",
+              borderRadius: "var(--radius-2)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--gray-a2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--color-panel-translucent)";
+            }}
+          >
+            <Avatar size="2" radius="full" variant="soft" fallback={userInitial} />
+            <Box style={{ flex: 1, minWidth: 0 }}>
+              <Text size="2" weight="medium" as="div" truncate>
+                {displayName}
+              </Text>
+              <Text size="1" color="gray" as="div" truncate>
+                {email || "—"}
+              </Text>
+            </Box>
+            <ChevronRightIcon style={{ color: "var(--gray-9)", flexShrink: 0 }} />
+          </Flex>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content side="right" align="end" size="2">
+          {menuContent}
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+      <MpinManagementDialog open={mpinOpen} onOpenChange={setMpinOpen} />
+    </>
   );
 };
 
@@ -310,6 +403,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         <UserFooter
           initials={initials}
           email={email}
+          role={role}
           collapsed={collapsed}
           loading={loading}
           logout={logout}
