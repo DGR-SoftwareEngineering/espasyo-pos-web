@@ -1,49 +1,32 @@
 import React, { createContext, useContext, useState, useMemo } from "react";
-import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useApiCallback } from "core-lib/core/hooks";
 import {
   RecipeImportPreviewDto,
-  RecipeImportResultDto,
   RecipeImportStagingResultDto,
   ImportRecipeExcelDto,
-  IngredientCategoryDto,
-  ProductCategoryDto,
-  RecipeImportPreviewResponse,
-  RecipeImportResultResponse,
-  IngredientPreviewItemDto,
-  RecipeItemPreviewDto,
+  RecipePreviewItemDto,
 } from "core-lib/api/commons/types";
-import { AxiosResponse } from "axios";
 
-type Step = "upload" | "preview" | "result";
+export type Step = "info" | "upload" | "config" | "preview" | "result";
 
 interface RecipeImportContextValue {
-  // State
   currentStep: Step;
   selectedFile: File | null;
-  ingredientCategoryId: string;
-  menuItemCategoryId: string;
   previewData: RecipeImportPreviewDto | null;
-  selectedIngredients: Set<string>;
   selectedRecipes: Set<string>;
   resultData: RecipeImportStagingResultDto | null;
+  recipeLimit: number | "all";
 
-  // Lookups
-  ingredientCategories: IngredientCategoryDto[];
-  menuItemCategories: ProductCategoryDto[];
   previewLoading: boolean;
   importLoading: boolean;
 
-  // Actions
   setCurrentStep: (step: Step) => void;
   setSelectedFile: (file: File | null) => void;
-  setIngredientCategoryId: (id: string) => void;
-  setMenuItemCategoryId: (id: string) => void;
-  toggleIngredient: (name: string) => void;
+  setRecipeLimit: (v: number | "all") => void;
+  applyLimitsAndPreview: (limit: number | "all", skipExistingFull?: boolean) => void;
   toggleRecipe: (name: string) => void;
-  updateIngredient: (originalName: string, patch: Partial<IngredientPreviewItemDto>) => void;
-  updateRecipeMenuItemName: (originalName: string, newName: string) => void;
-  updateRecipeItem: (menuItemName: string, itemIndex: number, patch: Partial<RecipeItemPreviewDto>) => void;
-  executePreview: (file: File) => Promise<void>;
+  updateRecipe: (menuItemName: string, patch: Partial<RecipePreviewItemDto>) => void;
+  executePreview: (file: File) => Promise<string | null>;
   executeImport: (dto: ImportRecipeExcelDto) => Promise<void>;
   reset: () => void;
 }
@@ -55,9 +38,7 @@ const RecipeImportContext = createContext<RecipeImportContextValue | undefined>(
 export const useRecipeImportContext = (): RecipeImportContextValue => {
   const context = useContext(RecipeImportContext);
   if (!context) {
-    throw new Error(
-      "useRecipeImportContext must be used within RecipeImportProvider"
-    );
+    throw new Error("useRecipeImportContext must be used within RecipeImportProvider");
   }
   return context;
 };
@@ -65,42 +46,20 @@ export const useRecipeImportContext = (): RecipeImportContextValue => {
 interface RecipeImportProviderProps {
   children: React.ReactNode;
   onImportComplete?: () => void;
+  onGoToHistory?: () => void;
 }
 
 export const RecipeImportProvider: React.FC<RecipeImportProviderProps> = ({
   children,
   onImportComplete,
 }) => {
-  // State
-  const [currentStep, setCurrentStep] = useState<Step>("upload");
+  const [currentStep, setCurrentStep] = useState<Step>("info");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [ingredientCategoryId, setIngredientCategoryId] = useState<string>("");
-  const [menuItemCategoryId, setMenuItemCategoryId] = useState<string>("");
-  const [previewData, setPreviewData] =
-    useState<RecipeImportPreviewDto | null>(null);
-  const [selectedIngredients, setSelectedIngredients] = useState<Set<string>>(
-    new Set()
-  );
-  const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(
-    new Set()
-  );
-  const [resultData, setResultData] =
-    useState<RecipeImportStagingResultDto | null>(null);
+  const [previewData, setPreviewData] = useState<RecipeImportPreviewDto | null>(null);
+  const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
+  const [resultData, setResultData] = useState<RecipeImportStagingResultDto | null>(null);
+  const [recipeLimit, setRecipeLimit] = useState<number | "all">("all");
 
-  // Fetch categories
-  const { result: ingredientCatsResult } = useApi(
-    (api) => api.commons.ingredientCategoryList(),
-    []
-  );
-  const { result: menuItemCatsResult } = useApi(
-    (api) => api.commons.productCategoryList(),
-    []
-  );
-
-  const ingredientCategories = ingredientCatsResult?.data?.response || [];
-  const menuItemCategories = menuItemCatsResult?.data?.response || [];
-
-  // API callbacks
   const previewCb = useApiCallback(
     async (api, file: File) => api.commons.previewRecipeImport({ file })
   );
@@ -109,88 +68,63 @@ export const RecipeImportProvider: React.FC<RecipeImportProviderProps> = ({
     async (api, dto: ImportRecipeExcelDto) => api.commons.importRecipeExcel(dto)
   );
 
-  // Toggle functions
-  const toggleIngredient = (name: string) => {
-    const newSet = new Set(selectedIngredients);
-    if (newSet.has(name)) {
-      newSet.delete(name);
-    } else {
-      newSet.add(name);
-    }
-    setSelectedIngredients(newSet);
-  };
-
   const toggleRecipe = (name: string) => {
     const newSet = new Set(selectedRecipes);
-    if (newSet.has(name)) {
-      newSet.delete(name);
-    } else {
-      newSet.add(name);
-    }
+    if (newSet.has(name)) newSet.delete(name); else newSet.add(name);
     setSelectedRecipes(newSet);
   };
 
-  const updateIngredient = (originalName: string, patch: Partial<IngredientPreviewItemDto>) => {
+  const updateRecipe = (menuItemName: string, patch: Partial<RecipePreviewItemDto>) => {
     setPreviewData(prev => {
       if (!prev) return prev;
       return {
         ...prev,
-        ingredients: prev.ingredients.map(i => i.name === originalName ? { ...i, ...patch } : i),
+        recipes: prev.recipes.map(r =>
+          r.menuItemName === menuItemName ? { ...r, ...patch } : r
+        ),
       };
     });
-    if (patch.name && patch.name !== originalName) {
-      setSelectedIngredients(prev => {
+    if (patch.menuItemName && patch.menuItemName !== menuItemName) {
+      setSelectedRecipes(prev => {
         const next = new Set(prev);
-        if (next.has(originalName)) { next.delete(originalName); next.add(patch.name!); }
+        if (next.has(menuItemName)) {
+          next.delete(menuItemName);
+          next.add(patch.menuItemName!);
+        }
         return next;
       });
     }
   };
 
-  const updateRecipeMenuItemName = (originalName: string, newName: string) => {
-    setPreviewData(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        recipes: prev.recipes.map(r => r.menuItemName === originalName ? { ...r, menuItemName: newName } : r),
-      };
-    });
-    setSelectedRecipes(prev => {
-      const next = new Set(prev);
-      if (next.has(originalName)) { next.delete(originalName); next.add(newName); }
-      return next;
-    });
+  const applyLimitsAndPreview = (limit: number | "all", skipExistingFull = false) => {
+    if (!previewData) return;
+    let recipes = previewData.recipes;
+    if (skipExistingFull) {
+      recipes = recipes.filter(r => !(r.menuItemAlreadyExistsInDb && r.hasExistingActiveRecipe));
+    }
+    const allRecNames = recipes.map(r => r.menuItemName);
+    const limited = limit === "all" ? allRecNames : allRecNames.slice(0, limit);
+    setSelectedRecipes(new Set(limited));
+    setCurrentStep("preview");
   };
 
-  const updateRecipeItem = (menuItemName: string, itemIndex: number, patch: Partial<RecipeItemPreviewDto>) => {
-    setPreviewData(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        recipes: prev.recipes.map(r => {
-          if (r.menuItemName !== menuItemName) return r;
-          const items = [...r.items];
-          items[itemIndex] = { ...items[itemIndex], ...patch };
-          return { ...r, items };
-        }),
-      };
-    });
-  };
-
-  // Actions
-  const executePreview = async (file: File) => {
-    const response = await previewCb.execute(file);
-    if (response?.data?.response) {
-      const preview = response.data.response;
-      setPreviewData(preview);
-
-      // Select all by default
-      const ingNames = preview.ingredients.map((i) => i.name);
-      const recNames = preview.recipes.map((r) => r.menuItemName);
-      setSelectedIngredients(new Set(ingNames));
-      setSelectedRecipes(new Set(recNames));
-
-      setCurrentStep("preview");
+  const executePreview = async (file: File): Promise<string | null> => {
+    try {
+      const response = await previewCb.execute(file);
+      if (response?.data?.response) {
+        const preview = response.data.response;
+        setPreviewData(preview);
+        setSelectedRecipes(new Set(preview.recipes.map(r => r.menuItemName)));
+        setCurrentStep("config");
+        return null;
+      }
+      return "Failed to analyze the file. Please try again.";
+    } catch (error) {
+      const msg =
+        Array.isArray(error) && typeof error[0] === "string"
+          ? error[0]
+          : "Failed to analyze the file. Please try again.";
+      return msg;
     }
   };
 
@@ -204,39 +138,30 @@ export const RecipeImportProvider: React.FC<RecipeImportProviderProps> = ({
   };
 
   const reset = () => {
-    setCurrentStep("upload");
+    setCurrentStep("info");
     setSelectedFile(null);
-    setIngredientCategoryId("");
-    setMenuItemCategoryId("");
     setPreviewData(null);
-    setSelectedIngredients(new Set());
     setSelectedRecipes(new Set());
     setResultData(null);
+    setRecipeLimit("all");
   };
 
   const value: RecipeImportContextValue = useMemo(
     () => ({
       currentStep,
       selectedFile,
-      ingredientCategoryId,
-      menuItemCategoryId,
       previewData,
-      selectedIngredients,
       selectedRecipes,
       resultData,
-      ingredientCategories,
-      menuItemCategories,
+      recipeLimit,
       previewLoading: previewCb.loading,
       importLoading: importCb.loading,
       setCurrentStep,
       setSelectedFile,
-      setIngredientCategoryId,
-      setMenuItemCategoryId,
-      toggleIngredient,
+      setRecipeLimit,
+      applyLimitsAndPreview,
       toggleRecipe,
-      updateIngredient,
-      updateRecipeMenuItemName,
-      updateRecipeItem,
+      updateRecipe,
       executePreview,
       executeImport,
       reset,
@@ -244,14 +169,10 @@ export const RecipeImportProvider: React.FC<RecipeImportProviderProps> = ({
     [
       currentStep,
       selectedFile,
-      ingredientCategoryId,
-      menuItemCategoryId,
       previewData,
-      selectedIngredients,
       selectedRecipes,
       resultData,
-      ingredientCategories,
-      menuItemCategories,
+      recipeLimit,
       previewCb.loading,
       importCb.loading,
     ]
@@ -263,3 +184,9 @@ export const RecipeImportProvider: React.FC<RecipeImportProviderProps> = ({
     </RecipeImportContext.Provider>
   );
 };
+
+const GoToHistoryContext = createContext<(() => void) | undefined>(undefined);
+export const useGoToHistory = () => useContext(GoToHistoryContext);
+export const GoToHistoryProvider: React.FC<{ onGoToHistory?: () => void; children: React.ReactNode }> = ({ onGoToHistory, children }) => (
+  <GoToHistoryContext.Provider value={onGoToHistory}>{children}</GoToHistoryContext.Provider>
+);

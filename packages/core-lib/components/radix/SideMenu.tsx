@@ -3,12 +3,12 @@ import { Avatar, Badge, Box, Flex, IconButton, Separator, Text, Tooltip } from "
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  ExitIcon,
   HamburgerMenuIcon,
 } from "@radix-ui/react-icons";
 import { useResolution } from "../../core/hooks";
 import { usePublicSettings } from "../../core/contexts";
 import { RadixMenuContent } from "./menu/RadixMenuContent";
+import { RadixOptionsMenu } from "./menu/RadixOptionsMenu";
 import { SideMenuMobile } from "./SideMenuMobile";
 
 interface SideMenuProps {
@@ -78,17 +78,7 @@ const UserFooter: React.FC<{
           {email || "—"}
         </Text>
       </Box>
-      <Tooltip content="Logout">
-        <IconButton
-          variant="ghost"
-          color="gray"
-          size="2"
-          disabled={loading}
-          onClick={logout}
-        >
-          <ExitIcon />
-        </IconButton>
-      </Tooltip>
+      <RadixOptionsMenu logout={logout} loading={loading} />
     </Flex>
   );
 };

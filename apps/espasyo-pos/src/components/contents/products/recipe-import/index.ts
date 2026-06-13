@@ -1,3 +1,4 @@
 export { RecipeImportBlock } from "./RecipeImportBlock";
-export { IngredientImportTable } from "./IngredientImportTable";
 export { RecipeImportList } from "./RecipeImportList";
+export { ImportBatchDetailBlock } from "./ImportBatchDetailBlock";
+export { SyncLoadingOverlay } from "./SyncLoadingOverlay";

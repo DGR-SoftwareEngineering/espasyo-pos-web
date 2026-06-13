@@ -1,5 +1,5 @@
 import { GetServerSideProps } from "next";
-import { RecipeImportBlock } from "../../../../components";
+import { RecipeImportBlock } from "../../../../../components";
 import { SSRWithContentSecurityPolicy } from "core-lib";
 
 export const getServerSideProps: GetServerSideProps =

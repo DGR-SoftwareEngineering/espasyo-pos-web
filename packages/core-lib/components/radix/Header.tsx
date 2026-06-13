@@ -132,13 +132,13 @@ export const Header: React.FC<HeaderProps> = ({
             {user && logout && (
               <>
                 <HeaderNotificationMenu />
-                <HeaderUserMenu
+                {/* <HeaderUserMenu
                   logout={logout}
                   loading={loading}
                   role={user.role}
                   initials={user.initials}
                   email={user.email}
-                />
+                /> */}
               </>
             )}
           </Flex>

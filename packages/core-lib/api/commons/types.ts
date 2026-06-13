@@ -2640,16 +2640,19 @@ export interface IngredientPreviewItemDto {
   alreadyExistsInDb: boolean;
   unitExistsInDb: boolean;
   warnings: string[];
+  categoryID?: string;
 }
 
 export interface RecipeItemPreviewDto {
   ingredientName: string;
   quantityRequired: number;
   unitName: string;
-  ingredientFoundInSheet: boolean;
   ingredientExistsInDb: boolean;
   unitExistsInDb: boolean;
   warnings: string[];
+  ingredientCategoryID?: string;
+  packagePrice: number;
+  qtyPerPack: number;
 }
 
 export interface RecipePreviewItemDto {
@@ -2666,10 +2669,10 @@ export interface RecipePreviewItemDto {
   existingVariantCount: number;
   hasExistingAddOnGroups: boolean;
   existingAddOnGroupCount: number;
+  categoryID?: string;
 }
 
 export interface RecipeImportPreviewDto {
-  ingredients: IngredientPreviewItemDto[];
   recipes: RecipePreviewItemDto[];
   globalWarnings: string[];
 }
@@ -2681,24 +2684,29 @@ export interface ImportIngredientItemDto {
   packagePrice: number;
   qtyPerPack: number;
   unitName: string;
+  categoryID: string;
 }
 
 export interface ImportRecipeItemDto {
   ingredientName: string;
   quantityRequired: number;
   unitName: string;
+  ingredientCategoryID?: string | null;
+  packagePrice: number;
+  qtyPerPack: number;
+  ingredientExistsInDb: boolean;
 }
 
 export interface ImportMenuItemDto {
   menuItemName: string;
   sellingPrice: number;
+  categoryID: string;
   recipeItems: ImportRecipeItemDto[];
 }
 
 export interface ImportRecipeExcelDto {
-  defaultIngredientCategoryID: string;
-  defaultMenuItemCategoryID: string;
-  ingredients: ImportIngredientItemDto[];
+  password: string;
+  mpin: string;
   recipes: ImportMenuItemDto[];
 }
 
@@ -2750,3 +2758,42 @@ export interface RecipeImportSyncResultDto {
 export type RecipeImportStagingResponse = ApiResponse<RecipeImportStagingResultDto>;
 export type RecipeImportBatchListResponse = ApiResponse<RecipeImportBatchSummaryDto[]>;
 export type RecipeImportSyncResponse = ApiResponse<RecipeImportSyncResultDto>;
+
+export interface StagedIngredientDto {
+  name: string;
+  packagePrice: number;
+  qtyPerPack: number;
+  unitName: string;
+  categoryName: string;
+}
+
+export interface StagedMenuItemDto {
+  menuItemName: string;
+  sellingPrice: number;
+  categoryName: string;
+}
+
+export interface StagedRecipeItemDto {
+  ingredientName: string;
+  quantityRequired: number;
+  unitName: string;
+}
+
+export interface StagedRecipeDto {
+  menuItemName: string;
+  estimatedCostPerServing: number;
+  items: StagedRecipeItemDto[];
+}
+
+export interface RecipeImportBatchDetailDto {
+  batchID: string;
+  batchCode: string;
+  importedAt: string;
+  importedByName: string;
+  status: string;
+  syncedAt: string | null;
+  revertedAt: string | null;
+  ingredients: StagedIngredientDto[];
+  menuItems: StagedMenuItemDto[];
+  recipes: StagedRecipeDto[];
+}

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Table, Badge, Button, Text, Flex, Box, Card, Dialog, Spinner, Callout } from "@radix-ui/themes";
+import { Table, Badge, Button, Text, Flex, Box, Card, Dialog, Spinner, Callout, TextField } from "@radix-ui/themes";
+import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { WarningAmberOutlined } from "@mui/icons-material";
+import { useRouter } from "next/router";
 import { useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import { SyncLoadingOverlay } from "./SyncLoadingOverlay";
 
 const formatDateTime = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -21,6 +24,7 @@ interface ImportHistoryTabProps {
 }
 
 export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey = 0 }) => {
+  const router = useRouter();
   const { showToast } = useToastContext();
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [revertingId, setRevertingId] = useState<string | null>(null);
@@ -28,6 +32,8 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
   const [confirmDialog, setConfirmDialog] = useState<{ id: string; action: "sync" | "revert" } | null>(null);
   const [localRefreshKey, setLocalRefreshKey] = useState(0);
   const [batches, setBatches] = useState<any[]>([]);
+  const [batchSearch, setBatchSearch] = useState("");
+  const [syncOverlayVisible, setSyncOverlayVisible] = useState(false);
 
   const listCb = useApiCallback(async (api) => api.commons.getImportBatchList());
   const syncCb = useApiCallback(async (api, id: string) => api.commons.syncImportBatch(id));
@@ -43,8 +49,13 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
     }
   }, [listCb.result]);
 
+  const filteredBatches = batches.filter((b) =>
+    b.batchCode.toLowerCase().includes(batchSearch.toLowerCase())
+  );
+
   const handleSync = async (batchId: string) => {
     setSyncingId(batchId);
+    setSyncOverlayVisible(true);
     setConfirmError(null);
     try {
       const result = await syncCb.execute(batchId);
@@ -57,17 +68,30 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
           showToast(summary, "success");
         }
         setConfirmDialog(null);
+        setBatches((prev) =>
+          prev.map((b) =>
+            b.batchID === batchId
+              ? { ...b, status: "Synced", syncedAt: new Date().toISOString() }
+              : b
+          )
+        );
         setLocalRefreshKey((k) => k + 1);
       } else {
-        setConfirmError(Array.isArray(result?.data?.errors) && result.data.errors[0] ? result.data.errors[0] : "Sync failed. Please try again.");
+        setConfirmError(
+          Array.isArray(result?.data?.errors) && result.data.errors[0]
+            ? result.data.errors[0]
+            : "Sync failed. Please try again."
+        );
       }
     } catch (error) {
-      const msg = Array.isArray(error) && typeof error[0] === "string"
-        ? error[0]
-        : "Sync failed. Please try again.";
+      const msg =
+        Array.isArray(error) && typeof error[0] === "string"
+          ? error[0]
+          : "Sync failed. Please try again.";
       setConfirmError(msg);
     } finally {
       setSyncingId(null);
+      setSyncOverlayVisible(false);
     }
   };
 
@@ -82,12 +106,17 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
         setConfirmDialog(null);
         setBatches((prev) => prev.filter((b) => b.batchID !== batchId));
       } else {
-        setConfirmError(Array.isArray(result?.data?.errors) && result.data.errors[0] ? result.data.errors[0] : "Operation failed. Please try again.");
+        setConfirmError(
+          Array.isArray(result?.data?.errors) && result.data.errors[0]
+            ? result.data.errors[0]
+            : "Operation failed. Please try again."
+        );
       }
     } catch (error) {
-      const msg = Array.isArray(error) && typeof error[0] === "string"
-        ? error[0]
-        : "Operation failed. Please try again.";
+      const msg =
+        Array.isArray(error) && typeof error[0] === "string"
+          ? error[0]
+          : "Operation failed. Please try again.";
       setConfirmError(msg);
     } finally {
       setRevertingId(null);
@@ -127,59 +156,97 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
 
   return (
     <>
-      <Box style={{ overflowX: "auto" }}>
-        <Table.Root variant="surface">
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeaderCell>Batch Code</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Date Imported</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Imported By</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell align="right">Ingredients</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell align="right">Menu Items</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell align="right">Recipes</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {batches.map((batch) => (
-              <Table.Row key={batch.batchID}>
-                <Table.Cell>
-                  <Text weight="medium" size="2">
-                    {batch.batchCode}
-                  </Text>
-                </Table.Cell>
-                <Table.Cell>
-                  <Text size="2">{formatDateTime(batch.importedAt)}</Text>
-                </Table.Cell>
-                <Table.Cell>
-                  <Text size="2">{batch.importedByName}</Text>
-                </Table.Cell>
-                <Table.Cell align="right">
-                  <Text size="2">{batch.totalIngredients}</Text>
-                </Table.Cell>
-                <Table.Cell align="right">
-                  <Text size="2">{batch.totalMenuItems}</Text>
-                </Table.Cell>
-                <Table.Cell align="right">
-                  <Text size="2">{batch.totalRecipes}</Text>
-                </Table.Cell>
-                <Table.Cell>{getStatusBadge(batch.status)}</Table.Cell>
-                <Table.Cell>
-                  <Flex gap="2">
-                    {batch.status === "Pending" && (
-                      <>
-                        <Button
-                          size="1"
-                          color="green"
-                          onClick={() => {
-                            setConfirmError(null);
-                            setConfirmDialog({ id: batch.batchID, action: "sync" });
-                          }}
-                          disabled={syncingId === batch.batchID}
-                        >
-                          {syncingId === batch.batchID ? "Syncing..." : "Sync"}
-                        </Button>
+      <Box mb="3">
+        <TextField.Root
+          placeholder="Search by batch code..."
+          value={batchSearch}
+          onChange={(e) => setBatchSearch(e.target.value)}
+          style={{ maxWidth: 320 }}
+        >
+          <TextField.Slot>
+            <MagnifyingGlassIcon />
+          </TextField.Slot>
+        </TextField.Root>
+      </Box>
+
+      {filteredBatches.length === 0 ? (
+        <Card style={{ textAlign: "center", padding: "2rem" }}>
+          <Text color="gray">No batches match &quot;{batchSearch}&quot;.</Text>
+        </Card>
+      ) : (
+        <Box style={{ overflowX: "auto" }}>
+          <Table.Root variant="surface">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Batch Code</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Date Imported</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Imported By</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell align="right">Ingredients</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell align="right">Menu Items</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell align="right">Recipes</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {filteredBatches.map((batch) => (
+                <Table.Row
+                  key={batch.batchID}
+                  style={{ cursor: "pointer" }}
+                  onClick={() =>
+                    router.push(`/admin/hub/product/import-recipes/${batch.batchID}`)
+                  }
+                >
+                  <Table.Cell>
+                    <Text weight="medium" size="2">
+                      {batch.batchCode}
+                    </Text>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Text size="2">{formatDateTime(batch.importedAt)}</Text>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Text size="2">{batch.importedByName}</Text>
+                  </Table.Cell>
+                  <Table.Cell align="right">
+                    <Text size="2">{batch.totalIngredients}</Text>
+                  </Table.Cell>
+                  <Table.Cell align="right">
+                    <Text size="2">{batch.totalMenuItems}</Text>
+                  </Table.Cell>
+                  <Table.Cell align="right">
+                    <Text size="2">{batch.totalRecipes}</Text>
+                  </Table.Cell>
+                  <Table.Cell>{getStatusBadge(batch.status)}</Table.Cell>
+                  <Table.Cell onClick={(e) => e.stopPropagation()}>
+                    <Flex gap="2">
+                      {batch.status === "Pending" && (
+                        <>
+                          <Button
+                            size="1"
+                            color="green"
+                            onClick={() => {
+                              setConfirmError(null);
+                              setConfirmDialog({ id: batch.batchID, action: "sync" });
+                            }}
+                            disabled={syncingId === batch.batchID}
+                          >
+                            {syncingId === batch.batchID ? "Syncing..." : "Sync"}
+                          </Button>
+                          <Button
+                            size="1"
+                            color="red"
+                            variant="ghost"
+                            onClick={() => {
+                              setConfirmError(null);
+                              setConfirmDialog({ id: batch.batchID, action: "revert" });
+                            }}
+                          >
+                            Discard
+                          </Button>
+                        </>
+                      )}
+                      {batch.status === "Synced" && (
                         <Button
                           size="1"
                           color="red"
@@ -188,32 +255,19 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
                             setConfirmError(null);
                             setConfirmDialog({ id: batch.batchID, action: "revert" });
                           }}
+                          disabled={revertingId === batch.batchID}
                         >
-                          Discard
+                          {revertingId === batch.batchID ? "Reverting..." : "Revert"}
                         </Button>
-                      </>
-                    )}
-                    {batch.status === "Synced" && (
-                      <Button
-                        size="1"
-                        color="red"
-                        variant="ghost"
-                        onClick={() => {
-                          setConfirmError(null);
-                          setConfirmDialog({ id: batch.batchID, action: "revert" });
-                        }}
-                        disabled={revertingId === batch.batchID}
-                      >
-                        {revertingId === batch.batchID ? "Reverting..." : "Revert"}
-                      </Button>
-                    )}
-                  </Flex>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Root>
-      </Box>
+                      )}
+                    </Flex>
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Root>
+        </Box>
+      )}
 
       {/* Confirmation Dialog */}
       {confirmDialog && (
@@ -229,7 +283,9 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
             </Text>
             {confirmError && (
               <Callout.Root color="red" variant="surface" mt="3">
-                <Callout.Icon><WarningAmberOutlined fontSize="small" /></Callout.Icon>
+                <Callout.Icon>
+                  <WarningAmberOutlined fontSize="small" />
+                </Callout.Icon>
                 <Callout.Text size="2">{confirmError}</Callout.Text>
               </Callout.Root>
             )}
@@ -254,6 +310,8 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
           </Dialog.Content>
         </Dialog.Root>
       )}
+
+      <SyncLoadingOverlay visible={syncOverlayVisible} />
     </>
   );
 };

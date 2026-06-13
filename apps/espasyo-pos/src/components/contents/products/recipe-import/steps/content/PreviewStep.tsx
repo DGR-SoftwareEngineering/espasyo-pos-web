@@ -1,365 +1,288 @@
 import React, { useState } from "react";
-import { Box, Flex, Text, Card, Grid, Heading, Badge, IconButton, Callout, Select, TextField } from "@radix-ui/themes";
-import { TableIcon, ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
-import { Dialog, Button } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+  Card,
+  Grid,
+  Heading,
+  Badge,
+  IconButton,
+  Callout,
+  TextField as RadixTextField,
+  Separator,
+} from "@radix-ui/themes";
+import {
+  TableIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Pencil1Icon,
+} from "@radix-ui/react-icons";
+import { AdminConfirmDialog } from "core-lib/components/radix/security";
 import { useRecipeImportContext } from "../../RecipeImportContext";
-import { IngredientImportTable } from "../../IngredientImportTable";
 import { RecipeImportList } from "../../RecipeImportList";
 import { StepShell } from "./StepShell";
 import { StepNavigation } from "./StepNavigation";
 import { RecipeImportStepProps } from "../RecipeImportSteps";
 
 interface PreviewStepProps extends RecipeImportStepProps {
-  onSubmit: () => Promise<void>;
+  onSubmit: (args: { password: string; mpin: string }) => Promise<void>;
 }
 
-const INGREDIENT_PAGE_SIZE = 10;
 const RECIPE_PAGE_SIZE = 5;
 
 export const PreviewStep: React.FC<PreviewStepProps> = ({
   previous,
-  reset,
   onSubmit,
 }) => {
   const {
     previewData,
-    selectedIngredients,
     selectedRecipes,
-    toggleIngredient,
     toggleRecipe,
-    updateIngredient,
-    updateRecipeMenuItemName,
-    updateRecipeItem,
+    updateRecipe,
     importLoading,
-    ingredientCategoryId,
-    setIngredientCategoryId,
-    menuItemCategoryId,
-    setMenuItemCategoryId,
-    ingredientCategories,
-    menuItemCategories,
   } = useRecipeImportContext();
 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
-  const [adminMpin, setAdminMpin] = useState("");
-  const [ingPage, setIngPage] = useState(1);
   const [recipePage, setRecipePage] = useState(1);
-  const [ingredientSearch, setIngredientSearch] = useState("");
   const [recipeSearch, setRecipeSearch] = useState("");
 
-  if (!previewData) {
-    return null;
-  }
-
-  const selectedIngredientsArray = previewData.ingredients.filter((i) =>
-    selectedIngredients.has(i.name)
-  );
+  if (!previewData) return null;
 
   const selectedRecipesArray = previewData.recipes.filter((r) =>
     selectedRecipes.has(r.menuItemName)
   );
 
-  const ingredientsToCreate = selectedIngredientsArray.filter(
-    (i) => !i.alreadyExistsInDb
-  ).length;
+  const newMenuItems = selectedRecipesArray.filter((r) => !r.menuItemAlreadyExistsInDb);
+  const existingMenuItems = selectedRecipesArray.filter((r) => r.menuItemAlreadyExistsInDb);
+  const recipesToCreate = newMenuItems.filter((r) => !r.hasExistingActiveRecipe).length;
 
-  const ingredientsExist = selectedIngredientsArray.filter(
-    (i) => i.alreadyExistsInDb
-  ).length;
+  // Validation: all new menu items need a category
+  const missingMenuItemCat = newMenuItems.filter((r) => !r.categoryID).length;
 
-  const recipesToCreate = selectedRecipesArray.filter(
-    (r) => !r.menuItemAlreadyExistsInDb && !r.hasExistingActiveRecipe
-  ).length;
+  // Validation: all new ingredients (within selected recipes) need a category
+  const missingIngredientCat = selectedRecipesArray
+    .flatMap((r) => r.items.filter((i) => !i.ingredientExistsInDb && !i.ingredientCategoryID))
+    .length;
 
-  // Search filtering
-  const filteredIngredients = selectedIngredientsArray.filter((i) =>
-    i.name.toLowerCase().includes(ingredientSearch.toLowerCase())
-  );
+  const allHaveCategory = missingMenuItemCat === 0 && missingIngredientCat === 0;
+  const canContinue = recipesToCreate > 0 && allHaveCategory;
+
+  const formatCurrency = (v: number) =>
+    new Intl.NumberFormat("fil-PH", {
+      style: "currency",
+      currency: "PHP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(v);
 
   const filteredRecipes = selectedRecipesArray.filter((r) =>
     r.menuItemName.toLowerCase().includes(recipeSearch.toLowerCase())
   );
 
-  // Pagination
-  const ingPageCount = Math.ceil(filteredIngredients.length / INGREDIENT_PAGE_SIZE);
   const recipePageCount = Math.ceil(filteredRecipes.length / RECIPE_PAGE_SIZE);
-
-  const paginatedIngredients = filteredIngredients.slice(
-    (ingPage - 1) * INGREDIENT_PAGE_SIZE,
-    ingPage * INGREDIENT_PAGE_SIZE
-  );
-
   const paginatedRecipes = filteredRecipes.slice(
     (recipePage - 1) * RECIPE_PAGE_SIZE,
     recipePage * RECIPE_PAGE_SIZE
   );
 
-  const canContinue = ingredientsToCreate + recipesToCreate > 0 && ingredientCategoryId && menuItemCategoryId;
-
-  const handleConfirmImport = async () => {
-    await onSubmit();
+  const handleConfirmImport = async ({ password, mpin }: { password: string; mpin: string }) => {
+    await onSubmit({ password, mpin });
     setShowConfirmDialog(false);
-    setAdminPassword("");
-    setAdminMpin("");
   };
 
   return (
     <>
       <StepShell
         icon={<TableIcon width={24} height={24} />}
-        title="Review Import"
+        title="Preview & Assign Categories"
+        subtitle="Review each menu item, assign categories, and configure new ingredients before staging"
         actions={
           <StepNavigation
             onBack={previous}
             onContinue={() => setShowConfirmDialog(true)}
-            continueText={`Create ${ingredientsToCreate} Ingredients + ${recipesToCreate} Recipes`}
+            continueText={`Stage ${recipesToCreate} Recipe${recipesToCreate !== 1 ? "s" : ""}`}
             continueDisabled={!canContinue}
             loading={importLoading}
           />
         }
       >
         <Flex direction="column" gap="5">
-          {/* Category Configuration Row */}
-          <Grid columns={{ initial: "1", md: "2" }} gap="4">
-            <Box>
-              <Text as="div" mb="2" size="2" weight="medium">
-                Default Ingredient Category
-              </Text>
-              <Select.Root
-                value={ingredientCategoryId}
-                onValueChange={setIngredientCategoryId}
-              >
-                <Select.Trigger />
-                <Select.Content>
-                  <Select.Group>
-                    <Select.Label>Categories</Select.Label>
-                    {ingredientCategories.map((cat) => (
-                      <Select.Item
-                        key={cat.ingredientCategoryID}
-                        value={cat.ingredientCategoryID}
-                      >
-                        {cat.name}
-                      </Select.Item>
-                    ))}
-                  </Select.Group>
-                </Select.Content>
-              </Select.Root>
-            </Box>
-
-            <Box>
-              <Text as="div" mb="2" size="2" weight="medium">
-                Default Menu Item Category
-              </Text>
-              <Select.Root
-                value={menuItemCategoryId}
-                onValueChange={setMenuItemCategoryId}
-              >
-                <Select.Trigger />
-                <Select.Content>
-                  <Select.Group>
-                    <Select.Label>Categories</Select.Label>
-                    {menuItemCategories.map((cat) => (
-                      <Select.Item
-                        key={cat.productCategoryID}
-                        value={cat.productCategoryID}
-                      >
-                        {cat.name}
-                      </Select.Item>
-                    ))}
-                  </Select.Group>
-                </Select.Content>
-              </Select.Root>
-            </Box>
-          </Grid>
-
-          {!ingredientCategoryId || !menuItemCategoryId ? (
-            <Callout.Root color="amber">
+          {/* Category warning banner */}
+          {!allHaveCategory && (
+            <Callout.Root color="amber" variant="surface">
               <Callout.Text>
-                Please select both categories before creating items.
+                <Flex align="center" gap="2">
+                  <Pencil1Icon />
+                  <Flex direction="column" gap="1">
+                    {missingMenuItemCat > 0 && (
+                      <Text size="2">
+                        <Text weight="medium">{missingMenuItemCat} menu item{missingMenuItemCat !== 1 ? "s" : ""}</Text>{" "}
+                        still need{missingMenuItemCat === 1 ? "s" : ""} a category.
+                      </Text>
+                    )}
+                    {missingIngredientCat > 0 && (
+                      <Text size="2">
+                        <Text weight="medium">{missingIngredientCat} new ingredient{missingIngredientCat !== 1 ? "s" : ""}</Text>{" "}
+                        still need{missingIngredientCat === 1 ? "s" : ""} a category.
+                      </Text>
+                    )}
+                    <Text size="2" color="gray">
+                      Click the <Text weight="medium">pencil icon</Text> on each recipe card to assign categories.
+                    </Text>
+                  </Flex>
+                </Flex>
               </Callout.Text>
             </Callout.Root>
-          ) : null}
+          )}
 
-          {/* Split Panel Layout */}
-          <Grid columns={{ initial: "1", lg: "2" }} gap="4">
-            {/* Ingredients Panel */}
-            <Card variant="surface" size="2">
-              <Flex justify="between" align="center" mb="3">
-                <Heading size="3">Ingredients</Heading>
-                <Flex gap="1">
-                  {ingredientsToCreate > 0 && (
-                    <Badge color="green">{ingredientsToCreate} new</Badge>
-                  )}
-                  {ingredientsExist > 0 && (
-                    <Badge color="amber">{ingredientsExist} exist</Badge>
-                  )}
-                </Flex>
-              </Flex>
-
-              <Box mb="3">
-                <TextField.Root
-                  placeholder="Search ingredients..."
-                  value={ingredientSearch}
-                  onChange={(e) => { setIngredientSearch(e.target.value); setIngPage(1); }}
-                />
-              </Box>
-
-              <IngredientImportTable
-                items={paginatedIngredients}
-                onRemove={toggleIngredient}
-                onUpdate={updateIngredient}
-              />
-
-              {ingPageCount > 1 && (
-                <Flex justify="between" align="center" mt="3">
-                  <IconButton
-                    variant="ghost"
-                    size="2"
-                    onClick={() => setIngPage(Math.max(1, ingPage - 1))}
-                    disabled={ingPage === 1}
-                  >
-                    <ChevronLeftIcon />
-                  </IconButton>
-                  <Text size="2" color="gray">
-                    Page {ingPage} of {ingPageCount}
-                  </Text>
-                  <IconButton
-                    variant="ghost"
-                    size="2"
-                    onClick={() => setIngPage(Math.min(ingPageCount, ingPage + 1))}
-                    disabled={ingPage === ingPageCount}
-                  >
-                    <ChevronRightIcon />
-                  </IconButton>
-                </Flex>
-              )}
-            </Card>
-
-            {/* Recipes Panel */}
-            <Card variant="surface" size="2">
-              <Flex justify="between" align="center" mb="3">
-                <Heading size="3">Recipes</Heading>
+          {/* Recipes Panel — full width */}
+          <Card variant="surface" size="2">
+            <Flex justify="between" align="center" mb="3">
+              <Heading size="3">Menu Items & Recipes</Heading>
+              <Flex gap="2">
                 {recipesToCreate > 0 && (
                   <Badge color="green">{recipesToCreate} new</Badge>
                 )}
+                {existingMenuItems.length > 0 && (
+                  <Badge color="blue">{existingMenuItems.length} existing</Badge>
+                )}
               </Flex>
+            </Flex>
 
-              <Box mb="3">
-                <TextField.Root
-                  placeholder="Search recipes..."
-                  value={recipeSearch}
-                  onChange={(e) => { setRecipeSearch(e.target.value); setRecipePage(1); }}
-                />
-              </Box>
-
-              <RecipeImportList
-                items={paginatedRecipes}
-                onRemove={toggleRecipe}
-                onUpdateName={updateRecipeMenuItemName}
-                onUpdateItem={updateRecipeItem}
+            <Box mb="3">
+              <RadixTextField.Root
+                placeholder="Search menu items…"
+                value={recipeSearch}
+                onChange={(e) => {
+                  setRecipeSearch(e.target.value);
+                  setRecipePage(1);
+                }}
               />
+            </Box>
 
-              {recipePageCount > 1 && (
-                <Flex justify="between" align="center" mt="3">
-                  <IconButton
-                    variant="ghost"
-                    size="2"
-                    onClick={() => setRecipePage(Math.max(1, recipePage - 1))}
-                    disabled={recipePage === 1}
-                  >
-                    <ChevronLeftIcon />
-                  </IconButton>
-                  <Text size="2" color="gray">
-                    Page {recipePage} of {recipePageCount}
+            <RecipeImportList
+              items={paginatedRecipes}
+              onRemove={toggleRecipe}
+              onUpdateRecipe={updateRecipe}
+            />
+
+            {recipePageCount > 1 && (
+              <Flex justify="between" align="center" mt="3">
+                <IconButton
+                  variant="ghost"
+                  size="2"
+                  onClick={() => setRecipePage(Math.max(1, recipePage - 1))}
+                  disabled={recipePage === 1}
+                >
+                  <ChevronLeftIcon />
+                </IconButton>
+                <Text size="2" color="gray">
+                  Page {recipePage} of {recipePageCount}
+                </Text>
+                <IconButton
+                  variant="ghost"
+                  size="2"
+                  onClick={() => setRecipePage(Math.min(recipePageCount, recipePage + 1))}
+                  disabled={recipePage === recipePageCount}
+                >
+                  <ChevronRightIcon />
+                </IconButton>
+              </Flex>
+            )}
+          </Card>
+
+          <Separator />
+
+          {/* Summary Section */}
+          <Box>
+            <Heading size="3" mb="3">
+              Import Summary
+            </Heading>
+
+            <Grid columns={{ initial: "2", md: "3" }} gap="3" mb="4">
+              <Card variant="surface" size="1">
+                <Flex direction="column" align="center" gap="1">
+                  <Text size="1" color="gray">New Recipes</Text>
+                  <Text weight="bold" size="6" color="green">
+                    {recipesToCreate}
                   </Text>
-                  <IconButton
-                    variant="ghost"
-                    size="2"
-                    onClick={() => setRecipePage(Math.min(recipePageCount, recipePage + 1))}
-                    disabled={recipePage === recipePageCount}
-                  >
-                    <ChevronRightIcon />
-                  </IconButton>
+                  <Text size="1" color="gray">will be created</Text>
                 </Flex>
-              )}
-            </Card>
-          </Grid>
+              </Card>
+              <Card variant="surface" size="1">
+                <Flex direction="column" align="center" gap="1">
+                  <Text size="1" color="gray">Total Ingredients</Text>
+                  <Text weight="bold" size="6" color="blue">
+                    {selectedRecipesArray.reduce((acc, r) => acc + r.items.length, 0)}
+                  </Text>
+                  <Text size="1" color="gray">across all recipes</Text>
+                </Flex>
+              </Card>
+              <Card variant="surface" size="1">
+                <Flex direction="column" align="center" gap="1">
+                  <Text size="1" color="gray">New Ingredients</Text>
+                  <Text weight="bold" size="6" color="violet">
+                    {selectedRecipesArray
+                      .flatMap((r) => r.items)
+                      .filter((i) => !i.ingredientExistsInDb).length}
+                  </Text>
+                  <Text size="1" color="gray">will be created</Text>
+                </Flex>
+              </Card>
+            </Grid>
 
-          {/* Global Warnings */}
-          {previewData.globalWarnings.length > 0 && (
-            <Callout.Root color="orange">
-              <Callout.Text weight="medium" mb="2">
-                Warnings
-              </Callout.Text>
-              {previewData.globalWarnings.map((warning, i) => (
-                <Callout.Text key={i}>• {warning}</Callout.Text>
-              ))}
-            </Callout.Root>
-          )}
+            {/* Plain-language summary */}
+            <Box
+              style={{
+                padding: "1rem",
+                background: "var(--accent-a2)",
+                borderRadius: 8,
+                border: "1px solid var(--accent-a4)",
+                marginBottom: "1rem",
+              }}
+            >
+              <Text size="2" style={{ lineHeight: 1.75 }}>
+                You're about to stage{" "}
+                <Text weight="bold">{recipesToCreate} new recipe{recipesToCreate !== 1 ? "s" : ""}</Text>.
+                {existingMenuItems.length > 0 && (
+                  <>
+                    {" "}<Text weight="bold">{existingMenuItems.length} menu item{existingMenuItems.length !== 1 ? "s" : ""}</Text> already exist and will be skipped.
+                  </>
+                )}{" "}
+                Ingredient products will be created inline when you sync.
+              </Text>
+            </Box>
+
+            {/* Global Warnings */}
+            {previewData.globalWarnings.length > 0 && (
+              <Callout.Root color="orange">
+                <Callout.Text>
+                  <Text weight="medium" as="div" mb="2">
+                    {previewData.globalWarnings.length} Global Warning{previewData.globalWarnings.length !== 1 ? "s" : ""}
+                  </Text>
+                  {previewData.globalWarnings.map((warning, i) => (
+                    <Text key={i} as="div" size="2">
+                      • {warning}
+                    </Text>
+                  ))}
+                </Callout.Text>
+              </Callout.Root>
+            )}
+          </Box>
         </Flex>
       </StepShell>
 
-      {/* Admin Confirm Dialog */}
-      <Dialog.Root open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <Dialog.Content>
-          <Dialog.Title>Confirm Import</Dialog.Title>
-          <Flex direction="column" gap="4">
-            <Text>Please enter your admin password and MPIN to proceed.</Text>
-
-            <Box>
-              <Text as="div" mb="2" size="2" weight="medium">
-                Admin Password
-              </Text>
-              <input
-                type="password"
-                value={adminPassword}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAdminPassword(e.target.value)}
-                placeholder="Enter password"
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "4px",
-                  border: "1px solid var(--gray-a7)",
-                  fontFamily: "inherit",
-                  fontSize: "inherit",
-                }}
-              />
-            </Box>
-
-            <Box>
-              <Text as="div" mb="2" size="2" weight="medium">
-                Admin MPIN
-              </Text>
-              <input
-                type="password"
-                value={adminMpin}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAdminMpin(e.target.value)}
-                placeholder="Enter MPIN"
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "4px",
-                  border: "1px solid var(--gray-a7)",
-                  fontFamily: "inherit",
-                  fontSize: "inherit",
-                }}
-              />
-            </Box>
-
-            <Flex gap="2" justify="end">
-              <Dialog.Close>
-                <Button variant="outline">Cancel</Button>
-              </Dialog.Close>
-              <Button
-                onClick={handleConfirmImport}
-                disabled={importLoading || !adminPassword || !adminMpin}
-              >
-                Confirm
-              </Button>
-            </Flex>
-          </Flex>
-        </Dialog.Content>
-      </Dialog.Root>
+      <AdminConfirmDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        title="Confirm Recipe Import"
+        description={`Stage ${recipesToCreate} recipe(s) with inline ingredient creation. An admin can sync or revert this batch from Import History.`}
+        confirmLabel="Stage Import"
+        confirmColor="Primary"
+        loading={importLoading}
+        onConfirm={handleConfirmImport}
+      />
     </>
   );
 };

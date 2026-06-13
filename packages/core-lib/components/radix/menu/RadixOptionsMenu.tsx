@@ -48,10 +48,6 @@ export const RadixOptionsMenu: React.FC<Props> = ({ logout, loading }) => {
         </DropdownMenu.Trigger>
 
         <DropdownMenu.Content size="2" align="end" sideOffset={4}>
-          <DropdownMenu.Item>
-            <PersonIcon />
-            Profile
-          </DropdownMenu.Item>
           <DropdownMenu.Item onSelect={() => setMpinOpen(true)}>
             <LockClosedIcon />
             MPIN Security

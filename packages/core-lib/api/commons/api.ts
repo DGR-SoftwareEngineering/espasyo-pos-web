@@ -101,6 +101,7 @@ import {
   RecipeImportResultDto,
   RecipeImportStagingResultDto,
   RecipeImportBatchSummaryDto,
+  RecipeImportBatchDetailDto,
   RecipeImportSyncResultDto,
   ImportRecipeExcelDto,
 } from "./types";
@@ -569,6 +570,12 @@ export class CommonsApi {
   public revertImportBatch(batchId: string) {
     return this.axios.post<ApiResponse<string>>(
       `/api/v1/product-api/Product/import-batches/${batchId}/revert`,
+    );
+  }
+
+  public getImportBatchDetail(batchId: string) {
+    return this.axios.get<ApiResponse<RecipeImportBatchDetailDto>>(
+      `/api/v1/product-api/Product/import-batches/${batchId}`,
     );
   }
 

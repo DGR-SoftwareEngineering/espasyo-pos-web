@@ -5,43 +5,31 @@ import { useRecipeImportSteps } from "./steps/useSteps";
 import { ImportRecipeExcelDto } from "core-lib/api/commons/types";
 
 export const RecipeImportForm: React.FC = () => {
-  const {
-    previewData,
-    selectedFile,
-    ingredientCategoryId,
-    menuItemCategoryId,
-    selectedIngredients,
-    selectedRecipes,
-    executeImport,
-  } = useRecipeImportContext();
+  const { previewData, selectedRecipes, executeImport } = useRecipeImportContext();
 
-  const handleImport = async () => {
-    if (!previewData || !selectedFile) return;
+  const handleImport = async ({ password, mpin }: { password: string; mpin: string }) => {
+    if (!previewData) return;
 
-    const ingredientsToImport = previewData.ingredients.filter((i) =>
-      selectedIngredients.has(i.name)
-    );
     const recipesToImport = previewData.recipes
       .filter((r) => selectedRecipes.has(r.menuItemName))
       .map((r) => ({
         menuItemName: r.menuItemName,
         sellingPrice: r.sellingPrice,
+        categoryID: r.categoryID ?? "",
         recipeItems: r.items.map((item) => ({
           ingredientName: item.ingredientName,
           quantityRequired: item.quantityRequired,
           unitName: item.unitName,
+          ingredientCategoryID: item.ingredientCategoryID ?? null,
+          packagePrice: item.packagePrice ?? 0,
+          qtyPerPack: item.qtyPerPack ?? 1,
+          ingredientExistsInDb: item.ingredientExistsInDb,
         })),
       }));
 
     const dto: ImportRecipeExcelDto = {
-      defaultIngredientCategoryID: ingredientCategoryId,
-      defaultMenuItemCategoryID: menuItemCategoryId,
-      ingredients: ingredientsToImport.map((i) => ({
-        name: i.name,
-        packagePrice: i.packagePrice,
-        qtyPerPack: i.qtyPerPack,
-        unitName: i.unitName,
-      })),
+      password,
+      mpin,
       recipes: recipesToImport,
     };
 

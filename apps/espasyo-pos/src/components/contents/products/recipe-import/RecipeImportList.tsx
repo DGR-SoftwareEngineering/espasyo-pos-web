@@ -1,49 +1,76 @@
 import React, { useState } from "react";
-import { Badge, IconButton, Text, Flex, Box, Table, Dialog, Button, Callout } from "@radix-ui/themes";
-import { Cross2Icon, ChevronDownIcon, ChevronRightIcon, Pencil1Icon } from "@radix-ui/react-icons";
-import { RecipePreviewItemDto, RecipeItemPreviewDto } from "core-lib/api/commons/types";
+import {
+  Badge,
+  IconButton,
+  Text,
+  Flex,
+  Box,
+  Table,
+  Dialog,
+  Button,
+  Callout,
+  Heading,
+  Separator,
+  ScrollArea,
+} from "@radix-ui/themes";
+import {
+  Cross2Icon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  Pencil1Icon,
+  TrashIcon,
+} from "@radix-ui/react-icons";
+import {
+  RecipePreviewItemDto,
+  RecipeItemPreviewDto,
+} from "core-lib/api/commons/types";
+import { useForm, useFieldArray } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import {
+  importRecipeEditSchema,
+  ImportRecipeEditFormValues,
+  importRecipeItemEditSchema,
+  ImportRecipeItemEditFormValues,
+} from "./validation";
+import { TextField } from "core-lib/components/radix/form/TextField";
+import { SelectField } from "core-lib/components/radix/form/SelectField";
+import { useApi } from "core-lib/core/hooks";
 
 interface RecipeImportListProps {
   items: RecipePreviewItemDto[];
   onRemove: (name: string) => void;
-  onUpdateName: (originalName: string, newName: string) => void;
-  onUpdateItem: (menuItemName: string, itemIndex: number, patch: Partial<RecipeItemPreviewDto>) => void;
+  onUpdateRecipe: (menuItemName: string, patch: Partial<RecipePreviewItemDto>) => void;
 }
 
-export const RecipeImportList: React.FC<RecipeImportListProps> = ({ items, onRemove, onUpdateName, onUpdateItem }) => {
+export const RecipeImportList: React.FC<RecipeImportListProps> = ({
+  items,
+  onRemove,
+  onUpdateRecipe,
+}) => {
   const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (name: string) => {
     const newExpanded = new Set(expandedRecipes);
-    if (newExpanded.has(name)) {
-      newExpanded.delete(name);
-    } else {
-      newExpanded.add(name);
-    }
+    if (newExpanded.has(name)) newExpanded.delete(name);
+    else newExpanded.add(name);
     setExpandedRecipes(newExpanded);
   };
 
   const getStatusBadge = (item: RecipePreviewItemDto) => {
-    if (item.hasExistingActiveRecipe) {
-      return <Badge color="amber">Already Has Recipe</Badge>;
-    }
-    if (item.menuItemAlreadyExistsInDb && !item.hasExistingActiveRecipe) {
+    if (item.hasExistingActiveRecipe) return <Badge color="amber">Already Has Recipe</Badge>;
+    if (item.menuItemAlreadyExistsInDb && !item.hasExistingActiveRecipe)
       return <Badge color="blue">Menu Item Exists</Badge>;
-    }
-    if (item.warnings.length > 0) {
-      return <Badge color="orange">Warning</Badge>;
-    }
+    if (item.warnings.length > 0) return <Badge color="orange">Warning</Badge>;
     return <Badge color="green">Will Create</Badge>;
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("fil-PH", {
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("fil-PH", {
       style: "currency",
       currency: "PHP",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value);
-  };
 
   return (
     <Flex direction="column" gap="2">
@@ -54,8 +81,7 @@ export const RecipeImportList: React.FC<RecipeImportListProps> = ({ items, onRem
           isExpanded={expandedRecipes.has(recipe.menuItemName)}
           onToggleExpand={() => toggleExpanded(recipe.menuItemName)}
           onRemove={() => onRemove(recipe.menuItemName)}
-          onUpdateName={onUpdateName}
-          onUpdateItem={(itemIndex, patch) => onUpdateItem(recipe.menuItemName, itemIndex, patch)}
+          onUpdateRecipe={(patch) => onUpdateRecipe(recipe.menuItemName, patch)}
           getStatusBadge={getStatusBadge}
           formatCurrency={formatCurrency}
         />
@@ -69,8 +95,7 @@ interface RecipeAccordionItemProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   onRemove: () => void;
-  onUpdateName: (originalName: string, newName: string) => void;
-  onUpdateItem: (itemIndex: number, patch: Partial<RecipeItemPreviewDto>) => void;
+  onUpdateRecipe: (patch: Partial<RecipePreviewItemDto>) => void;
   getStatusBadge: (item: RecipePreviewItemDto) => React.ReactNode;
   formatCurrency: (value: number) => string;
 }
@@ -80,13 +105,17 @@ const RecipeAccordionItem: React.FC<RecipeAccordionItemProps> = ({
   isExpanded,
   onToggleExpand,
   onRemove,
-  onUpdateName,
-  onUpdateItem,
+  onUpdateRecipe,
   getStatusBadge,
   formatCurrency,
 }) => {
-  const [editingName, setEditingName] = useState(false);
-  const [newName, setNewName] = useState(recipe.menuItemName);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const newIngredientCount = recipe.items.filter((i) => !i.ingredientExistsInDb).length;
+  const missingIngredientCategories = recipe.items.filter(
+    (i) => !i.ingredientExistsInDb && !i.ingredientCategoryID
+  ).length;
+
   return (
     <Box
       style={{
@@ -118,16 +147,22 @@ const RecipeAccordionItem: React.FC<RecipeAccordionItemProps> = ({
             <Text weight="medium">{recipe.menuItemName}</Text>
             <Flex gap="2" align="center">
               <Text size="2" color="gray">
-                {recipe.items.length} items
+                {recipe.items.length} ingredient{recipe.items.length !== 1 ? "s" : ""}
               </Text>
-              {recipe.estimatedCostPerServing > 0 && (
-                <Text size="2" color="gray">
-                  Est. cost {formatCurrency(recipe.estimatedCostPerServing)}
+              {newIngredientCount > 0 && (
+                <Text size="2" color="blue">
+                  · {newIngredientCount} will be created
                 </Text>
               )}
             </Flex>
           </Flex>
-          <Flex gap="2" align="center">
+          <Flex gap="2" align="center" wrap="wrap">
+            {!recipe.menuItemAlreadyExistsInDb && !recipe.categoryID && (
+              <Badge color="red">No category</Badge>
+            )}
+            {missingIngredientCategories > 0 && (
+              <Badge color="orange">{missingIngredientCategories} ingredient{missingIngredientCategories !== 1 ? "s" : ""} need category</Badge>
+            )}
             <Box>{getStatusBadge(recipe)}</Box>
             {recipe.hasExistingVariants && (
               <Badge color="blue">{recipe.existingVariantCount} variants</Badge>
@@ -138,20 +173,18 @@ const RecipeAccordionItem: React.FC<RecipeAccordionItemProps> = ({
           </Flex>
         </Flex>
         <Flex align="center" gap="2">
-          {!recipe.menuItemAlreadyExistsInDb && (
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditingName(true);
-              }}
-              variant="ghost"
-              size="1"
-              color="gray"
-              title="Edit recipe name"
-            >
-              <Pencil1Icon width={16} height={16} />
-            </IconButton>
-          )}
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditOpen(true);
+            }}
+            variant="ghost"
+            size="1"
+            color="gray"
+            title="Edit recipe"
+          >
+            <Pencil1Icon width={16} height={16} />
+          </IconButton>
           {!recipe.hasExistingActiveRecipe && !recipe.menuItemAlreadyExistsInDb && (
             <IconButton
               onClick={(e) => {
@@ -171,46 +204,31 @@ const RecipeAccordionItem: React.FC<RecipeAccordionItemProps> = ({
 
       {isExpanded && (
         <Box style={{ padding: "1rem", backgroundColor: "var(--gray-a1)" }}>
-          {recipe.menuItemAlreadyExistsInDb && (recipe.hasExistingVariants || recipe.hasExistingAddOnGroups) && (
-            <Callout.Root color="blue" mb="3">
-              <Callout.Text>
-                This product already has {recipe.hasExistingVariants ? `${recipe.existingVariantCount} variant${recipe.existingVariantCount !== 1 ? 's' : ''}` : ''}{recipe.hasExistingVariants && recipe.hasExistingAddOnGroups ? ' and ' : ''}{recipe.hasExistingAddOnGroups ? `${recipe.existingAddOnGroupCount} add-on group${recipe.existingAddOnGroupCount !== 1 ? 's' : ''}` : ''} configured. The recipe import will attach a new recipe to this existing product without modifying its variants or add-ons.
-              </Callout.Text>
-            </Callout.Root>
-          )}
+          {recipe.menuItemAlreadyExistsInDb &&
+            (recipe.hasExistingVariants || recipe.hasExistingAddOnGroups) && (
+              <Callout.Root color="blue" mb="3">
+                <Callout.Text>
+                  This product already has{" "}
+                  {recipe.hasExistingVariants
+                    ? `${recipe.existingVariantCount} variant${recipe.existingVariantCount !== 1 ? "s" : ""}`
+                    : ""}
+                  {recipe.hasExistingVariants && recipe.hasExistingAddOnGroups ? " and " : ""}
+                  {recipe.hasExistingAddOnGroups
+                    ? `${recipe.existingAddOnGroupCount} add-on group${recipe.existingAddOnGroupCount !== 1 ? "s" : ""}`
+                    : ""}{" "}
+                  configured. The recipe import will attach a new recipe without modifying
+                  its variants or add-ons.
+                </Callout.Text>
+              </Callout.Root>
+            )}
 
-          {/* Financial Summary */}
-          <Box mb="4" style={{ padding: "1rem", background: "var(--accent-a2)", borderRadius: "6px" }}>
-            <Flex direction="column" gap="2">
-              <Flex justify="between" align="center">
-                <Text size="2" color="gray">Selling Price</Text>
-                <Text weight="bold">{formatCurrency(recipe.sellingPrice)}</Text>
-              </Flex>
-              <Flex justify="between" align="center">
-                <Text size="2" color="gray">Est. Cost/Serving</Text>
-                <Text weight="bold">{formatCurrency(recipe.estimatedCostPerServing)}</Text>
-              </Flex>
-              <Flex justify="between" align="center">
-                <Text size="2" color="gray">Gross Profit</Text>
-                <Text weight="bold" color={recipe.grossProfitPerServing > 0 ? "green" : "red"}>
-                  {formatCurrency(recipe.grossProfitPerServing)}
-                </Text>
-              </Flex>
-              <Flex justify="between" align="center">
-                <Text size="2" color="gray">Food Cost %</Text>
-                <Text weight="bold" color={
-                  recipe.foodCostPercent < 30 ? "green" : recipe.foodCostPercent < 40 ? "amber" : "red"
-                }>
-                  {recipe.foodCostPercent.toFixed(1)}%
-                </Text>
-              </Flex>
-            </Flex>
-          </Box>
+          <IngredientSummaryTable items={recipe.items} formatCurrency={formatCurrency} />
 
-          <RecipeItemsTable items={recipe.items} onUpdateItem={onUpdateItem} />
           {recipe.warnings.length > 0 && (
             <Callout.Root color="orange" mt="3">
-              <Callout.Text weight="medium" mb="2">Warnings</Callout.Text>
+              <Callout.Text weight="medium" mb="2">
+                Warnings
+              </Callout.Text>
               {recipe.warnings.map((warning, i) => (
                 <Callout.Text key={i}>• {warning}</Callout.Text>
               ))}
@@ -219,236 +237,531 @@ const RecipeAccordionItem: React.FC<RecipeAccordionItemProps> = ({
         </Box>
       )}
 
-      {editingName && (
-        <EditRecipeNameDialog
-          originalName={recipe.menuItemName}
-          open={editingName}
-          onOpenChange={setEditingName}
-          onSave={(name) => {
-            onUpdateName(recipe.menuItemName, name);
-            setEditingName(false);
-            setNewName(recipe.menuItemName);
-          }}
-        />
-      )}
+      <ImportRecipeEditDialog
+        recipe={recipe}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSave={(patch) => {
+          onUpdateRecipe(patch);
+          setEditOpen(false);
+        }}
+      />
     </Box>
   );
 };
 
-interface RecipeItemsTableProps {
+// Read-only summary table shown in the accordion body
+const IngredientSummaryTable: React.FC<{
   items: RecipeItemPreviewDto[];
-  onUpdateItem: (itemIndex: number, patch: Partial<RecipeItemPreviewDto>) => void;
-}
+  formatCurrency: (v: number) => string;
+}> = ({ items, formatCurrency }) => (
+  <Box style={{ overflowX: "auto" }}>
+    <Table.Root size="1" layout="auto">
+      <Table.Header>
+        <Table.Row>
+          <Table.ColumnHeaderCell>Ingredient</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell align="right">Qty</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell>Unit</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {items.map((item, i) => (
+          <Table.Row key={i}>
+            <Table.Cell>
+              <Flex direction="column" gap="1">
+                <Text size="2">{item.ingredientName}</Text>
+                {item.warnings.map((w, j) => (
+                  <Text key={j} as="p" size="1" color="orange">
+                    ⚠ {w}
+                  </Text>
+                ))}
+              </Flex>
+            </Table.Cell>
+            <Table.Cell align="right">
+              <Text size="2">{item.quantityRequired.toFixed(3)}</Text>
+            </Table.Cell>
+            <Table.Cell>
+              <Text size="2">{item.unitName || "—"}</Text>
+            </Table.Cell>
+            <Table.Cell>
+              {item.ingredientExistsInDb ? (
+                <Badge color="gray">Already Exists</Badge>
+              ) : item.ingredientCategoryID ? (
+                <Badge color="green">Will Create</Badge>
+              ) : (
+                <Badge color="red">Needs Category</Badge>
+              )}
+            </Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>
+  </Box>
+);
 
-const EditRecipeNameDialog: React.FC<{
-  originalName: string;
+// Combined edit dialog — menu item fields + all ingredient rows
+const ImportRecipeEditDialog: React.FC<{
+  recipe: RecipePreviewItemDto;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (newName: string) => void;
-}> = ({ originalName, open, onOpenChange, onSave }) => {
-  const [name, setName] = React.useState(originalName);
-
-  return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content>
-        <Dialog.Title>Edit Recipe Name</Dialog.Title>
-        <Flex direction="column" gap="4">
-          <Box>
-            <Text as="div" mb="2" size="2" weight="medium">
-              Menu Item Name
-            </Text>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                borderRadius: "4px",
-                border: "1px solid var(--gray-a7)",
-                fontFamily: "inherit",
-                fontSize: "inherit",
-              }}
-            />
-          </Box>
-          <Flex gap="2" justify="end">
-            <Dialog.Close>
-              <Button variant="outline">Cancel</Button>
-            </Dialog.Close>
-            <Button onClick={() => onSave(name.trim())}>Save</Button>
-          </Flex>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+  onSave: (patch: Partial<RecipePreviewItemDto>) => void;
+}> = ({ recipe, open, onOpenChange, onSave }) => {
+  // Fetch all lookups locally so SelectFields show correct loading state
+  const { result: menuCatResult, loading: menuCatLoading } = useApi(
+    (api) => api.commons.productCategoryList(),
+    []
   );
-};
-
-interface EditRecipeItemDialogProps {
-  item: RecipeItemPreviewDto;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (patch: Partial<RecipeItemPreviewDto>) => void;
-}
-
-const EditRecipeItemDialog: React.FC<EditRecipeItemDialogProps> = ({ item, open, onOpenChange, onSave }) => {
-  const [quantityRequired, setQuantityRequired] = React.useState(item.quantityRequired.toString());
-  const [unitName, setUnitName] = React.useState(item.unitName);
-
-  return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content>
-        <Dialog.Title>Edit Recipe Item</Dialog.Title>
-        <Flex direction="column" gap="4">
-          <Box>
-            <Text as="div" mb="2" size="2" weight="medium">
-              Ingredient Name
-            </Text>
-            <Text size="2" color="gray" as="p">
-              {item.ingredientName}
-            </Text>
-          </Box>
-
-          <Box>
-            <Text as="div" mb="2" size="2" weight="medium">
-              Quantity Required
-            </Text>
-            <input
-              type="number"
-              step="0.01"
-              value={quantityRequired}
-              onChange={(e) => setQuantityRequired(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                borderRadius: "4px",
-                border: "1px solid var(--gray-a7)",
-                fontFamily: "inherit",
-                fontSize: "inherit",
-              }}
-            />
-          </Box>
-
-          <Box>
-            <Text as="div" mb="2" size="2" weight="medium">
-              Unit Name
-            </Text>
-            <input
-              type="text"
-              value={unitName}
-              onChange={(e) => setUnitName(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                borderRadius: "4px",
-                border: "1px solid var(--gray-a7)",
-                fontFamily: "inherit",
-                fontSize: "inherit",
-              }}
-            />
-          </Box>
-
-          <Flex gap="2" justify="end">
-            <Dialog.Close>
-              <Button variant="outline">Cancel</Button>
-            </Dialog.Close>
-            <Button
-              onClick={() => {
-                onSave({
-                  quantityRequired: parseFloat(quantityRequired) || 0,
-                  unitName: unitName.trim(),
-                });
-                onOpenChange(false);
-              }}
-            >
-              Save
-            </Button>
-          </Flex>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+  const { result: ingCatResult, loading: ingCatLoading } = useApi(
+    (api) => api.commons.ingredientCategoryList(),
+    []
   );
-};
+  const { result: unitResult, loading: unitLoading } = useApi(
+    (api) => api.commons.unitList(),
+    []
+  );
 
-const RecipeItemsTable: React.FC<RecipeItemsTableProps> = ({ items, onUpdateItem }) => {
-  const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
-  const getItemStatusBadge = (item: RecipeItemPreviewDto) => {
-    if (!item.ingredientFoundInSheet) {
-      return <Badge color="red">Not Found in Sheet</Badge>;
-    }
-    if (!item.ingredientExistsInDb) {
-      return <Badge color="blue">Will Create with Recipe</Badge>;
-    }
-    if (!item.unitExistsInDb) {
-      return <Badge color="orange">Missing Unit</Badge>;
-    }
-    return <Badge color="green">Ready</Badge>;
+  const menuItemCategories = menuCatResult?.data?.response ?? [];
+  const ingredientCategories = ingCatResult?.data?.response ?? [];
+  const unitOptions = (unitResult?.data?.response ?? []).map((u) => ({
+    value: u.name,
+    label: u.name,
+  }));
+  const knownUnits = new Set(
+    (unitResult?.data?.response ?? []).map((u) => u.name.toLowerCase())
+  );
+
+  const { control, handleSubmit } = useForm<ImportRecipeEditFormValues>({
+    resolver: yupResolver(importRecipeEditSchema),
+    defaultValues: {
+      menuItemName: recipe.menuItemName,
+      categoryID: recipe.categoryID ?? "",
+      sellingPrice: recipe.sellingPrice,
+      items: recipe.items.map((item) => ({
+        ingredientName: item.ingredientName,
+        quantityRequired: item.quantityRequired,
+        unitName: item.unitName,
+        ingredientExistsInDb: item.ingredientExistsInDb,
+        ingredientCategoryID: item.ingredientCategoryID ?? "",
+        packagePrice: item.packagePrice ?? 0,
+        qtyPerPack: item.qtyPerPack ?? 1,
+      })),
+    },
+  });
+
+  const { fields, remove, append } = useFieldArray({ control, name: "items" });
+
+  // --- Add-ingredient sub-form ---
+  const [showAddPanel, setShowAddPanel] = useState(false);
+
+  const addForm = useForm<ImportRecipeItemEditFormValues>({
+    resolver: yupResolver(importRecipeItemEditSchema),
+    defaultValues: {
+      ingredientName: "",
+      quantityRequired: 0,
+      unitName: "",
+      ingredientExistsInDb: false,
+      ingredientCategoryID: "",
+      packagePrice: 0,
+      qtyPerPack: 1,
+    },
+  });
+
+  const handleAddIngredient = addForm.handleSubmit((vals) => {
+    append({
+      ingredientName: vals.ingredientName,
+      quantityRequired: vals.quantityRequired,
+      unitName: vals.unitName,
+      ingredientExistsInDb: false,
+      ingredientCategoryID: vals.ingredientCategoryID ?? "",
+      packagePrice: vals.packagePrice ?? 0,
+      qtyPerPack: vals.qtyPerPack ?? 1,
+    });
+    addForm.reset({
+      ingredientName: "",
+      quantityRequired: 0,
+      unitName: "",
+      ingredientExistsInDb: false,
+      ingredientCategoryID: "",
+      packagePrice: 0,
+      qtyPerPack: 1,
+    });
+    setShowAddPanel(false);
+  });
+
+  const onSubmit = (values: ImportRecipeEditFormValues) => {
+    const originalByName = new Map(
+      recipe.items.map((item) => [item.ingredientName, item])
+    );
+
+    const updatedItems: RecipeItemPreviewDto[] = values.items!.map((v) => {
+      const original = originalByName.get(v.ingredientName);
+      return {
+        ingredientName: v.ingredientName,
+        quantityRequired: v.quantityRequired,
+        unitName: v.unitName,
+        ingredientExistsInDb: v.ingredientExistsInDb,
+        unitExistsInDb:
+          original?.unitExistsInDb ?? knownUnits.has(v.unitName.toLowerCase()),
+        ingredientCategoryID: v.ingredientExistsInDb
+          ? undefined
+          : v.ingredientCategoryID || undefined,
+        packagePrice: v.ingredientExistsInDb ? 0 : (v.packagePrice ?? 0),
+        qtyPerPack: v.ingredientExistsInDb ? 1 : (v.qtyPerPack ?? 1),
+        warnings: original?.warnings ?? [],
+      };
+    });
+
+    onSave({
+      menuItemName: values.menuItemName,
+      categoryID: values.categoryID,
+      sellingPrice: values.sellingPrice,
+      items: updatedItems,
+    });
   };
 
   return (
-    <>
-      <Box style={{ overflowX: "auto" }}>
-        <Table.Root size="1" layout="auto">
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeaderCell>Ingredient</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell align="right">Qty</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Unit</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell />
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {items.map((item, i) => (
-              <Table.Row key={i}>
-                <Table.Cell>
-                  <Flex direction="column" gap="1">
-                    <Text size="2">{item.ingredientName}</Text>
-                    {item.warnings.length > 0 && (
-                      <Flex direction="column" gap="1">
-                        {item.warnings.map((warning, j) => (
-                          <Text key={j} as="p" size="1" color="orange">
-                            ⚠ {warning}
-                          </Text>
-                        ))}
-                      </Flex>
-                    )}
-                  </Flex>
-                </Table.Cell>
-                <Table.Cell align="right">
-                  <Text size="2">{item.quantityRequired.toFixed(2)}</Text>
-                </Table.Cell>
-                <Table.Cell>
-                  <Text size="2">{item.unitName || "—"}</Text>
-                </Table.Cell>
-                <Table.Cell>{getItemStatusBadge(item)}</Table.Cell>
-                <Table.Cell>
-                  <IconButton
-                    onClick={() => setEditingIndex(i)}
-                    variant="ghost"
-                    size="1"
-                    color="gray"
-                    title="Edit recipe item"
-                  >
-                    <Pencil1Icon width={16} height={16} />
-                  </IconButton>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Root>
-      </Box>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Content style={{ maxWidth: 760, maxHeight: "85vh" }}>
+        <Dialog.Title>Edit Recipe — {recipe.menuItemName}</Dialog.Title>
+        <Dialog.Description size="2" color="gray" mb="4">
+          Set the menu item details and ingredient information before importing.
+        </Dialog.Description>
 
-      {editingIndex !== null && (
-        <EditRecipeItemDialog
-          item={items[editingIndex]}
-          open={editingIndex !== null}
-          onOpenChange={(open) => !open && setEditingIndex(null)}
-          onSave={(patch) => {
-            onUpdateItem(editingIndex, patch);
-            setEditingIndex(null);
-          }}
-        />
-      )}
-    </>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <ScrollArea style={{ maxHeight: "calc(85vh - 180px)" }}>
+            <Flex direction="column" gap="5" pr="2">
+              {/* Section 1: Menu Item */}
+              <Box>
+                <Heading size="3" mb="3">
+                  Menu Item
+                </Heading>
+                <Flex direction="column" gap="3">
+                  <TextField
+                    name="menuItemName"
+                    control={control}
+                    label="Name"
+                    disabled={recipe.menuItemAlreadyExistsInDb}
+                    size="3"
+                  />
+                  {!recipe.menuItemAlreadyExistsInDb && (
+                    <SelectField
+                      name="categoryID"
+                      control={control}
+                      label="Category"
+                      size="3"
+                      isLoading={menuCatLoading}
+                      options={menuItemCategories.map((c) => ({
+                        value: c.productCategoryID,
+                        label: c.name,
+                      }))}
+                      placeholder="Select menu item category…"
+                    />
+                  )}
+                  <TextField
+                    name="sellingPrice"
+                    control={control}
+                    label="Selling Price (₱)"
+                    type="number"
+                    size="3"
+                  />
+                </Flex>
+              </Box>
+
+              <Separator />
+
+              {/* Section 2: Ingredients */}
+              <Box>
+                <Flex justify="between" align="center" mb="1">
+                  <Heading size="3">Ingredients</Heading>
+                  <Badge color="gray" variant="soft">
+                    {fields.length} item{fields.length !== 1 ? "s" : ""}
+                  </Badge>
+                </Flex>
+                <Text size="2" color="gray" as="p" mb="3">
+                  New ingredients need a category, purchase cost, and purchase
+                  quantity. Existing ingredients only need qty and unit.
+                </Text>
+
+                <Flex direction="column" gap="4">
+                  {fields.map((field, idx) => {
+                    const isNew = !field.ingredientExistsInDb;
+
+                    return (
+                      <Box
+                        key={field.id}
+                        style={{
+                          padding: "1rem",
+                          border: `1px solid ${isNew ? "var(--blue-a6)" : "var(--gray-a5)"}`,
+                          borderRadius: "6px",
+                          background: isNew
+                            ? "var(--blue-a2)"
+                            : "var(--gray-a1)",
+                        }}
+                      >
+                        <Flex justify="between" align="center" mb="3">
+                          <Flex align="center" gap="2">
+                            <Text weight="medium" size="2">
+                              {field.ingredientName}
+                            </Text>
+                            {isNew ? (
+                              <Badge color="blue" size="1">New</Badge>
+                            ) : (
+                              <Badge color="gray" size="1">Exists</Badge>
+                            )}
+                          </Flex>
+                          <IconButton
+                            type="button"
+                            size="1"
+                            variant="ghost"
+                            color="red"
+                            title="Remove ingredient"
+                            onClick={() => remove(idx)}
+                          >
+                            <TrashIcon width={14} height={14} />
+                          </IconButton>
+                        </Flex>
+
+                        {isNew ? (
+                          /* New ingredient — mirrors ProductForm ingredient fields */
+                          <Flex direction="column" gap="3">
+                            <Flex gap="3" wrap="wrap">
+                              <Box style={{ flex: "1 1 140px" }}>
+                                <TextField
+                                  name={`items.${idx}.packagePrice`}
+                                  control={control}
+                                  label="Total Purchase Cost (₱)"
+                                  type="number"
+                                  size="2"
+                                />
+                              </Box>
+                              <Box style={{ flex: "1 1 120px" }}>
+                                <TextField
+                                  name={`items.${idx}.qtyPerPack`}
+                                  control={control}
+                                  label="Purchase Quantity"
+                                  type="number"
+                                  size="2"
+                                />
+                              </Box>
+                              <Box style={{ flex: "1 1 160px" }}>
+                                <SelectField
+                                  name={`items.${idx}.unitName`}
+                                  control={control}
+                                  label="Unit"
+                                  size="2"
+                                  isLoading={unitLoading}
+                                  options={unitOptions}
+                                  placeholder="Select unit…"
+                                />
+                              </Box>
+                            </Flex>
+                            <Flex gap="3" wrap="wrap">
+                              <Box style={{ flex: "2 1 200px" }}>
+                                <SelectField
+                                  name={`items.${idx}.ingredientCategoryID`}
+                                  control={control}
+                                  label="Ingredient Category"
+                                  size="2"
+                                  isLoading={ingCatLoading}
+                                  options={ingredientCategories.map((c) => ({
+                                    value: c.ingredientCategoryID,
+                                    label: c.name,
+                                  }))}
+                                  placeholder="Select category…"
+                                />
+                              </Box>
+                              <Box style={{ flex: "1 1 120px" }}>
+                                <TextField
+                                  name={`items.${idx}.quantityRequired`}
+                                  control={control}
+                                  label="Qty Required in Recipe"
+                                  type="number"
+                                  size="2"
+                                />
+                              </Box>
+                            </Flex>
+                          </Flex>
+                        ) : (
+                          /* Existing ingredient — qty + unit only */
+                          <Flex gap="3" wrap="wrap">
+                            <Box style={{ flex: "1 1 120px" }}>
+                              <TextField
+                                name={`items.${idx}.quantityRequired`}
+                                control={control}
+                                label="Qty Required"
+                                type="number"
+                                size="2"
+                              />
+                            </Box>
+                            <Box style={{ flex: "1 1 120px" }}>
+                              <TextField
+                                name={`items.${idx}.unitName`}
+                                control={control}
+                                label="Unit"
+                                size="2"
+                              />
+                            </Box>
+                          </Flex>
+                        )}
+                      </Box>
+                    );
+                  })}
+
+                  {/* Add Ingredient panel */}
+                  {!showAddPanel ? (
+                    <Box>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        color="blue"
+                        size="2"
+                        onClick={() => setShowAddPanel(true)}
+                      >
+                        + Add Ingredient
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Box
+                      style={{
+                        padding: "1rem",
+                        border: "1px solid var(--blue-a7)",
+                        borderRadius: "6px",
+                        background: "var(--blue-a3)",
+                      }}
+                    >
+                      <Flex justify="between" align="center" mb="3">
+                        <Flex direction="column" gap="1">
+                          <Text weight="medium" size="2">New Ingredient</Text>
+                          <Text size="1" color="gray">
+                            Unit must already exist in the system (Settings → Units).
+                          </Text>
+                        </Flex>
+                        <IconButton
+                          type="button"
+                          variant="ghost"
+                          size="1"
+                          color="gray"
+                          onClick={() => {
+                            setShowAddPanel(false);
+                            addForm.reset();
+                          }}
+                        >
+                          <Cross2Icon width={14} height={14} />
+                        </IconButton>
+                      </Flex>
+
+                      <Flex direction="column" gap="3">
+                        {/* Row 1: Name + Category */}
+                        <Flex gap="3" wrap="wrap">
+                          <Box style={{ flex: "2 1 200px" }}>
+                            <TextField
+                              name="ingredientName"
+                              control={addForm.control}
+                              label="Ingredient Name"
+                              size="2"
+                            />
+                          </Box>
+                          <Box style={{ flex: "2 1 200px" }}>
+                            <SelectField
+                              name="ingredientCategoryID"
+                              control={addForm.control}
+                              label="Ingredient Category"
+                              size="2"
+                              isLoading={ingCatLoading}
+                              options={ingredientCategories.map((c) => ({
+                                value: c.ingredientCategoryID,
+                                label: c.name,
+                              }))}
+                              placeholder="Select category…"
+                            />
+                          </Box>
+                        </Flex>
+
+                        {/* Row 2: Purchase Cost + Purchase Qty + Unit */}
+                        <Flex gap="3" wrap="wrap">
+                          <Box style={{ flex: "1 1 140px" }}>
+                            <TextField
+                              name="packagePrice"
+                              control={addForm.control}
+                              label="Total Purchase Cost (₱)"
+                              type="number"
+                              size="2"
+                            />
+                          </Box>
+                          <Box style={{ flex: "1 1 120px" }}>
+                            <TextField
+                              name="qtyPerPack"
+                              control={addForm.control}
+                              label="Purchase Quantity"
+                              type="number"
+                              size="2"
+                            />
+                          </Box>
+                          <Box style={{ flex: "1 1 160px" }}>
+                            <SelectField
+                              name="unitName"
+                              control={addForm.control}
+                              label="Unit"
+                              size="2"
+                              isLoading={unitLoading}
+                              options={unitOptions}
+                              placeholder="Select unit…"
+                            />
+                          </Box>
+                        </Flex>
+
+                        {/* Row 3: Qty in recipe */}
+                        <Flex gap="3" wrap="wrap">
+                          <Box style={{ flex: "1 1 140px" }}>
+                            <TextField
+                              name="quantityRequired"
+                              control={addForm.control}
+                              label="Qty Required in Recipe"
+                              type="number"
+                              size="2"
+                            />
+                          </Box>
+                        </Flex>
+
+                        <Flex justify="end" gap="2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="2"
+                            onClick={() => {
+                              setShowAddPanel(false);
+                              addForm.reset();
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            size="2"
+                            onClick={handleAddIngredient}
+                          >
+                            Add to List
+                          </Button>
+                        </Flex>
+                      </Flex>
+                    </Box>
+                  )}
+                </Flex>
+              </Box>
+            </Flex>
+          </ScrollArea>
+
+          <Flex gap="2" justify="end" mt="4">
+            <Dialog.Close>
+              <Button variant="outline" type="button">
+                Cancel
+              </Button>
+            </Dialog.Close>
+            <Button type="submit">Save Changes</Button>
+          </Flex>
+        </form>
+      </Dialog.Content>
+    </Dialog.Root>
   );
 };

@@ -1,15 +1,27 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/router";
 import { Tabs, TabItem } from "core-lib/components/radix/tabs";
-import { RecipeImportProvider } from "./RecipeImportContext";
+import { RecipeImportProvider, GoToHistoryProvider } from "./RecipeImportContext";
 import { RecipeImportForm } from "./RecipeImportForm";
 import { ImportHistoryTab } from "./ImportHistoryTab";
 
 export const RecipeImportBlock: React.FC = () => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("import");
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
 
+  useEffect(() => {
+    if (router.isReady && router.query.tab === "history") {
+      setActiveTab("history");
+    }
+  }, [router.isReady, router.query.tab]);
+
   const handleImportComplete = useCallback(() => {
     setHistoryRefreshKey((k) => k + 1);
+    // Don't auto-switch — ResultStep will navigate via handleGoToHistory
+  }, []);
+
+  const handleGoToHistory = useCallback(() => {
     setActiveTab("history");
   }, []);
 
@@ -18,9 +30,11 @@ export const RecipeImportBlock: React.FC = () => {
       value: "import",
       label: "Import Recipe",
       content: (
-        <RecipeImportProvider onImportComplete={handleImportComplete}>
-          <RecipeImportForm />
-        </RecipeImportProvider>
+        <GoToHistoryProvider onGoToHistory={handleGoToHistory}>
+          <RecipeImportProvider onImportComplete={handleImportComplete}>
+            <RecipeImportForm />
+          </RecipeImportProvider>
+        </GoToHistoryProvider>
       ),
     },
     {

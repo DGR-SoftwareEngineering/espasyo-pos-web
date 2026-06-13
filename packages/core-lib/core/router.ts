@@ -5,7 +5,14 @@ import { useEffect, useMemo, useState } from "react";
 import { resolveTitle } from "./route-titles";
 
 type StaticRoutes = Record<
-  "home" | "customerLogin" | "customerRegister" | "hub" | "page_not_found" | "second_tab_redirect",
+  | "home"
+  | "customerLogin"
+  | "customerRegister"
+  | "hub"
+  | "page_not_found"
+  | "second_tab_redirect"
+  | "productList"
+  | "recipeList",
   string
 >;
 type TransitionOptions = ArgumentTypes<NextRouter["push"]>[2];
@@ -25,6 +32,8 @@ export const STATIC_ROUTES: StaticRoutes = {
   hub: "/hub",
   page_not_found: "/404",
   second_tab_redirect: "/duplicate-session",
+  productList: "/admin/hub/product/product-list",
+  recipeList: "/admin/hub/product/recipe/recipe-list",
 };
 
 export interface CustomRouterReturn {
