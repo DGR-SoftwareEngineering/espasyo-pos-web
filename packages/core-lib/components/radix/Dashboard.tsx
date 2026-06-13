@@ -140,11 +140,7 @@ export const RadixDashboard: React.FC<Props> = ({
             style={{ flex: 1, minWidth: 0, height: "100vh", overflow: "hidden" }}
           >
             <MaintenanceBanner />
-            <Header
-              user={{ initials, email, role }}
-              logout={logout}
-              loading={loading}
-            />
+            <Header />
             <OfflineIndicatorBar />
             {isAdmin && <TabsNavigationBar role={role} />}
             <Box
