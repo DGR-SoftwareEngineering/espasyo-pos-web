@@ -1,6 +1,11 @@
 import { ProductDataList, UnitDto } from "core-lib/api/commons/types";
 import { RecipeForm as RecipeFormType } from "./validation";
 
+export type RecipeTarget =
+  | { type: "base"; productId: string; productName: string }
+  | { type: "variant"; productId: string; productName: string; variantId: string; variantName: string }
+  | { type: "addon"; productId: string; productName: string; addOnItemId: string; addOnItemName: string };
+
 export interface RecipeFormProps {
   onSubmit: (values: RecipeFormType) => void;
   submitLoading: boolean;
@@ -8,10 +13,10 @@ export interface RecipeFormProps {
   initialValues?: Partial<RecipeFormType>;
   isEdit?: boolean;
   isInDialog: boolean;
-  menuItems: ProductDataList[];
   ingredients: ProductDataList[];
   units: UnitDto[];
-  onMenuItemSelect?: (menuItemId: string) => void;
+  recipeTarget?: RecipeTarget;
+  submitLabel?: string;
 }
 
 export interface NewIngredient {

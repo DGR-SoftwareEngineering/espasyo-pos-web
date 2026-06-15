@@ -158,6 +158,100 @@ export interface RecipeResponse {
   untrackedSalesGap?: UntrackedSalesGapDto[];
 }
 
+// ===== Variant Recipes =====
+export interface VariantRecipeItemResponse {
+  variantRecipeItemID: string;
+  ingredientProductID: string;
+  ingredientName: string;
+  ingredientCost: number | null;
+  calculatedCost: number;
+  quantityRequired: number;
+  unitID: string;
+  unitName: string;
+  displayOrder: number;
+  notes: string | null;
+  purchaseQuantity?: number | null;
+  purchaseUnitName?: string | null;
+  stockUnitName?: string | null;
+  costPerStockUnit?: number | null;
+}
+
+export interface VariantRecipeResponse {
+  variantRecipeID: string;
+  productVariantID: string;
+  variantName: string;
+  notes: string | null;
+  recipeItems: VariantRecipeItemResponse[];
+  totalCost: number;
+}
+
+export interface CreateVariantRecipeItemParams {
+  ingredientProductID: string;
+  quantityRequired: number;
+  unitID: string;
+  displayOrder: number;
+  notes?: string | null;
+}
+
+export interface CreateVariantRecipeParams {
+  productVariantID: string;
+  notes?: string | null;
+  recipeItems: CreateVariantRecipeItemParams[];
+}
+
+export interface UpdateVariantRecipeParams {
+  variantRecipeID: string;
+  notes?: string | null;
+  recipeItems: CreateVariantRecipeItemParams[];
+}
+
+// ===== Add-On Item Recipes =====
+export interface AddOnItemRecipeItemResponse {
+  addOnItemRecipeItemID: string;
+  ingredientProductID: string;
+  ingredientName: string;
+  ingredientCost: number | null;
+  calculatedCost: number;
+  quantityRequired: number;
+  unitID: string;
+  unitName: string;
+  displayOrder: number;
+  notes: string | null;
+  purchaseQuantity?: number | null;
+  purchaseUnitName?: string | null;
+  stockUnitName?: string | null;
+  costPerStockUnit?: number | null;
+}
+
+export interface AddOnItemRecipeResponse {
+  addOnItemRecipeID: string;
+  productAddOnItemID: string;
+  itemName: string;
+  notes: string | null;
+  recipeItems: AddOnItemRecipeItemResponse[];
+  totalCost: number;
+}
+
+export interface CreateAddOnItemRecipeItemParams {
+  ingredientProductID: string;
+  quantityRequired: number;
+  unitID: string;
+  displayOrder: number;
+  notes?: string | null;
+}
+
+export interface CreateAddOnItemRecipeParams {
+  productAddOnItemID: string;
+  notes?: string | null;
+  recipeItems: CreateAddOnItemRecipeItemParams[];
+}
+
+export interface UpdateAddOnItemRecipeParams {
+  addOnItemRecipeID: string;
+  notes?: string | null;
+  recipeItems: CreateAddOnItemRecipeItemParams[];
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   pageNumber: number;
@@ -203,6 +297,15 @@ export interface UnitConversion {
   isApproximate: boolean;
   notes: string | null;
   isActive: boolean;
+}
+
+export interface CriticalUsageResponse {
+  isInUse: boolean;
+  totalSaleCount: number;
+  activePromoCount: number;
+  activeRecipeReferenceCount: number;
+  productCount: number;
+  details: string[];
 }
 
 export interface ConversionRateResponse {
@@ -1302,6 +1405,20 @@ export type UnitConversionListResponse = ApiResponse<
 >;
 export type ProductionCapacityResponse = ApiResponse<ProductionCapacity>;
 export type RecipeListResponse = ApiResponse<PaginatedResponse<RecipeResponse>>;
+
+export interface ProductRecipeSummaryResponse {
+  menuItemProductID: string;
+  menuItemName: string;
+  notes: string | null;
+  recipeID: string | null;
+  recipeItems: RecipeItemResponse[];
+  totalCost: number;
+  variantRecipeCount: number;
+  addOnRecipeCount: number;
+  totalAllIngredients: number;
+  totalAllCost: number;
+}
+export type ProductRecipeSummaryListResponse = ApiResponse<PaginatedResponse<ProductRecipeSummaryResponse>>;
 export type UserInfoResponse = ApiResponse<UserInformations>;
 export type CategoryListResponse = ApiResponse<CategoryDataList[]>;
 
@@ -1478,8 +1595,41 @@ export interface SellableProductDto {
   bottleneckIngredientNames: string[];
   /** When true, cashier MUST pick a variant before adding to the order. */
   hasVariants: boolean;
-  variants: ProductVariantDto[];
-  addOnGroups: ProductAddOnGroupDto[];
+  variants: SellableVariantDto[];
+  addOnGroups: SellableAddOnGroupDto[];
+}
+
+/** Variant as returned by the sellable-products endpoint. */
+export interface SellableVariantDto {
+  productVariantID: string;
+  name: string;
+  price: number;
+  displayOrder: number;
+  /** True when this variant has its own recipe that overrides the base product recipe on sale. */
+  hasOwnRecipe: boolean;
+  /** Max units producible for this variant from current ingredient stock. Null if no variant recipe. */
+  maxProductionFromVariantRecipe: number | null;
+  /** Names of ingredients limiting production for this variant. */
+  variantBottleneckIngredients: string[];
+}
+
+export interface SellableAddOnItemDto {
+  productAddOnItemID: string;
+  name: string;
+  additionalPrice: number;
+  displayOrder: number;
+  /** True when this add-on item has its own recipe whose ingredients are deducted additively on sale. */
+  hasOwnRecipe: boolean;
+}
+
+export interface SellableAddOnGroupDto {
+  productAddOnGroupID: string;
+  name: string;
+  isRequired: boolean;
+  minSelections: number;
+  maxSelections: number;
+  displayOrder: number;
+  items: SellableAddOnItemDto[];
 }
 
 export interface CreateSaleItemParams {

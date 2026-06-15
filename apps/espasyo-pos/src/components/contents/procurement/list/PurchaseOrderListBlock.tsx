@@ -22,6 +22,7 @@ import {
   LocalShippingOutlined,
 } from "@mui/icons-material";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
+import { StatsCard } from "core-lib/components/radix/StatsCard";
 import { useApi } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
@@ -163,28 +164,28 @@ export const PurchaseOrderListBlock: React.FC = () => {
           gap: 12,
         }}
       >
-        <StatTile
+        <StatsCard
           label="Total POs"
-          value={stats.total.toString()}
-          accent="indigo"
+          value={stats.total}
+          color="indigo"
           icon={<ListAltOutlined fontSize="small" />}
         />
-        <StatTile
+        <StatsCard
           label="Pending receipt"
-          value={stats.pendingReceipt.toString()}
-          accent="amber"
+          value={stats.pendingReceipt}
+          color="amber"
           icon={<LocalShippingOutlined fontSize="small" />}
         />
-        <StatTile
+        <StatsCard
           label="Drafts"
-          value={stats.drafts.toString()}
-          accent="gray"
+          value={stats.drafts}
+          color="gray"
           icon={<HourglassEmptyOutlined fontSize="small" />}
         />
-        <StatTile
+        <StatsCard
           label="Spend (page)"
           value={formatCurrency(stats.totalSpend, currencyCode)}
-          accent="teal"
+          color="teal"
           icon={<AccountBalanceWalletOutlined fontSize="small" />}
         />
       </Box>
@@ -321,50 +322,4 @@ export const PurchaseOrderListBlock: React.FC = () => {
   );
 };
 
-interface StatTileProps {
-  label: string;
-  value: string;
-  accent: "indigo" | "amber" | "gray" | "teal";
-  icon: React.ReactNode;
-}
-
-const StatTile: React.FC<StatTileProps> = ({ label, value, accent, icon }) => (
-  <Card
-    size="2"
-    variant="surface"
-    style={{
-      background: `var(--${accent}-a2)`,
-      borderColor: `var(--${accent}-a4)`,
-    }}
-  >
-    <Flex justify="between" align="start">
-      <Box>
-        <Text size="1" color="gray">
-          {label}
-        </Text>
-        <Heading
-          size="6"
-          mt="1"
-          style={{ color: `var(--${accent}-11)`, lineHeight: 1 }}
-        >
-          {value}
-        </Heading>
-      </Box>
-      <Box
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: "var(--radius-2)",
-          background: `var(--${accent}-a3)`,
-          color: `var(--${accent}-11)`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </Box>
-    </Flex>
-  </Card>
-);
+// StatTile removed in favor of StatsCard from core-lib

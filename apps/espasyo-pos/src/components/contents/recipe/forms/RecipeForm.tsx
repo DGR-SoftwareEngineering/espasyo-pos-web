@@ -10,15 +10,16 @@ import {
   Text,
 } from "@radix-ui/themes";
 import {
-  RestaurantMenuOutlined,
   KitchenOutlined,
   NotesOutlined,
   AddCircleOutlineOutlined,
   FastfoodOutlined,
+  RestaurantMenuOutlined,
+  LayersOutlined,
+  ExtensionOutlined,
 } from "@mui/icons-material";
 import { useFieldArray } from "react-hook-form";
 import { TextField } from "core-lib/components/radix/form/TextField";
-import { AutoCompleteField } from "core-lib/components/radix/form/AutoCompleteField";
 import { FormHeader } from "core-lib/components/radix/FormHeader";
 import { FormSection } from "core-lib/components/radix/FormSection";
 import { FormActions } from "core-lib/components/radix/FormActions";
@@ -28,7 +29,6 @@ import type { RecipeForm as RecipeFormType } from "./validation";
 import { useRecipeForm, useIngredientForm } from "../hooks";
 import { toSelectOptionsWithField } from "core-lib/business/array";
 import { IngredientAddForm, IngredientListItem } from "../../../../components";
-import { ProductDataList } from "core-lib/api/commons/types";
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({
   onSubmit,
@@ -38,9 +38,9 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   isEdit = false,
   isInDialog = false,
   ingredients,
-  menuItems,
   units,
-  onMenuItemSelect,
+  recipeTarget,
+  submitLabel,
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const addForm = useIngredientForm();
@@ -103,6 +103,30 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   const handleFormSubmit = handleSubmit(onSubmit);
   const handleButtonClick = () => handleFormSubmit();
 
+  const targetLabel = recipeTarget
+    ? recipeTarget.type === "base"
+      ? `Base recipe — ${recipeTarget.productName}`
+      : recipeTarget.type === "variant"
+        ? `${recipeTarget.productName} › ${recipeTarget.variantName}`
+        : `${recipeTarget.productName} › ${recipeTarget.addOnItemName} (add-on)`
+    : null;
+
+  const targetIcon =
+    recipeTarget?.type === "variant" ? (
+      <LayersOutlined style={{ fontSize: 16 }} />
+    ) : recipeTarget?.type === "addon" ? (
+      <ExtensionOutlined style={{ fontSize: 16 }} />
+    ) : (
+      <RestaurantMenuOutlined style={{ fontSize: 16 }} />
+    );
+
+  const targetColor =
+    recipeTarget?.type === "variant"
+      ? "indigo"
+      : recipeTarget?.type === "addon"
+        ? "purple"
+        : "blue";
+
   return (
     <Card variant="surface" size="3" style={{ width: "100%" }}>
       <FormHeader
@@ -116,43 +140,15 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
 
       <Box p="4">
         <Flex direction="column" gap="4">
-          <FormSection
-            icon={<RestaurantMenuOutlined style={{ color: "var(--accent-11)" }} />}
-            title="Select Menu Item"
-          >
-            <AutoCompleteField<RecipeFormType, ProductDataList>
-              name="menuItemProductID"
-              control={control}
-              options={menuItems}
-              label="Menu Item"
-              placeholder="Search menu items..."
-              getOptionLabel={(item) => item.name}
-              getOptionValue={(item) => item.productID}
-              getOptionDisabled={(item) => !!item.hasActiveRecipe}
-              valueMode="id"
-              disableClearable
-              onSelectOption={(option) => option && onMenuItemSelect?.(option.productID)}
-              renderOption={(item) => (
-                <Flex align="center" justify="between" gap="2">
-                  <Text size="2" style={{ opacity: item.hasActiveRecipe ? 0.5 : 1 }}>
-                    {item.name}
-                  </Text>
-                  {item.hasActiveRecipe && (
-                    <Badge color="orange" variant="soft" size="1">
-                      Has Recipe
-                    </Badge>
-                  )}
-                </Flex>
-              )}
-            />
-            {errors.menuItemProductID && (
-              <Text size="1" color="red" as="div" mt="1">
-                {errors.menuItemProductID.message}
-              </Text>
-            )}
-          </FormSection>
-
-          <Separator size="4" />
+          {/* Target breadcrumb */}
+          {targetLabel && (
+            <Callout.Root color={targetColor} variant="soft" size="1">
+              <Callout.Icon>{targetIcon}</Callout.Icon>
+              <Callout.Text>
+                <strong>{targetLabel}</strong>
+              </Callout.Text>
+            </Callout.Root>
+          )}
 
           <Box>
             <Flex justify="between" align="center" mb="3">
@@ -265,7 +261,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
         submitLoading={submitLoading}
         onButtonClick={handleButtonClick}
         isInDialog={isInDialog}
-        buttonText={isEdit ? "Update Recipe" : "Create Recipe"}
+        buttonText={submitLabel ?? (isEdit ? "Update Recipe" : "Create Recipe")}
         submissionKey={submissionKey}
       />
     </Card>

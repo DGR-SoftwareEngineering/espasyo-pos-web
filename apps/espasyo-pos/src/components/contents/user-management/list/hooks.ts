@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { RoleDto, UserDto } from "core-lib/api/commons/types";
+import { useFilters } from "core-lib/core/hooks";
 
 export interface UserFilterState {
   searchTerm: string;
@@ -36,49 +37,58 @@ const sortStrategies: Record<
 };
 
 export const useUserFilters = ({ users, roles }: Props) => {
-  const [filters, setFilters] = useState<UserFilterState>({
-    searchTerm: "",
-    roleFilter: "all",
-    sortBy: "name",
-  });
+  const [sortBy, setSortBy] = useState("name");
 
-  const [filteredUsers, setFilteredUsers] = useState<UserDto[]>([]);
-
-  useEffect(() => {
-    let next = [...users];
-    if (filters.searchTerm) {
-      const q = filters.searchTerm.toLowerCase();
-      next = next.filter((u) => {
-        const info = u.userInfo;
+  const {
+    filters,
+    setFilter,
+    resetFilters: resetGeneric,
+    filteredItems,
+  } = useFilters({
+    items: users,
+    defaultFilters: {
+      searchTerm: "",
+      roleFilter: "all",
+      sortBy: "name",
+    },
+    filterFns: {
+      searchTerm: (item, value) => {
+        if (!value || value === "") return true;
+        const q = (value as string).toLowerCase();
+        const info = item.userInfo;
         return (
           (info?.firstName ?? "").toLowerCase().includes(q) ||
-          (info?.middleName ?? "").toLowerCase().includes(q) ||
           (info?.lastName ?? "").toLowerCase().includes(q) ||
           (info?.email ?? "").toLowerCase().includes(q) ||
-          (u.username ?? "").toLowerCase().includes(q) ||
-          (info?.contactNumber ?? "").toLowerCase().includes(q) ||
-          (u.roleName ?? "").toLowerCase().includes(q)
+          (item.username ?? "").toLowerCase().includes(q) ||
+          (item.roleName ?? "").toLowerCase().includes(q)
         );
-      });
-    }
-    if (filters.roleFilter !== "all") {
-      next = next.filter((u) => u.roleID === filters.roleFilter);
-    }
-    const sort = sortStrategies[filters.sortBy] ?? sortStrategies.name;
-    next.sort(sort);
-    setFilteredUsers(next);
-  }, [users, filters]);
+      },
+      roleFilter: (item, value) =>
+        value === "all" || item.roleID === value,
+    },
+  });
+
+  const filteredUsers = useMemo(() => {
+    const sort = sortStrategies[sortBy] ?? sortStrategies.name;
+    return [...filteredItems].sort(sort);
+  }, [filteredItems, sortBy]);
 
   const updateFilter = useCallback(
     <K extends keyof UserFilterState>(key: K, value: UserFilterState[K]) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
+      if (key === "sortBy") {
+        setSortBy(value as string);
+      } else {
+        setFilter(key as keyof typeof filters, value as never);
+      }
     },
-    [],
+    [setFilter],
   );
 
   const resetFilters = useCallback(() => {
-    setFilters({ searchTerm: "", roleFilter: "all", sortBy: "name" });
-  }, []);
+    resetGeneric();
+    setSortBy("name");
+  }, [resetGeneric]);
 
   const stats: UserStats = useMemo(() => {
     const byRole: Record<string, number> = {};

@@ -24,7 +24,11 @@ interface RecipeImportContextValue {
   setSelectedFile: (file: File | null) => void;
   setRecipeLimit: (v: number | "all") => void;
   applyLimitsAndPreview: (limit: number | "all", skipExistingFull?: boolean) => void;
+  applyLimitToSelection: (limit: number | "all") => void;
+  proceedToPreview: (skipExistingFull?: boolean) => void;
   toggleRecipe: (name: string) => void;
+  bulkSelectRecipes: (names: string[]) => void;
+  bulkDeselectRecipes: (names: string[]) => void;
   updateRecipe: (menuItemName: string, patch: Partial<RecipePreviewItemDto>) => void;
   executePreview: (file: File) => Promise<string | null>;
   executeImport: (dto: ImportRecipeExcelDto) => Promise<void>;
@@ -96,16 +100,49 @@ export const RecipeImportProvider: React.FC<RecipeImportProviderProps> = ({
     }
   };
 
-  const applyLimitsAndPreview = (limit: number | "all", skipExistingFull = false) => {
+  const bulkSelectRecipes = (names: string[]) => {
+    setSelectedRecipes(prev => {
+      const next = new Set(prev);
+      names.forEach(n => next.add(n));
+      return next;
+    });
+  };
+
+  const bulkDeselectRecipes = (names: string[]) => {
+    setSelectedRecipes(prev => {
+      const next = new Set(prev);
+      names.forEach(n => next.delete(n));
+      return next;
+    });
+  };
+
+  const applyLimitToSelection = (limit: number | "all") => {
     if (!previewData) return;
-    let recipes = previewData.recipes;
-    if (skipExistingFull) {
-      recipes = recipes.filter(r => !(r.menuItemAlreadyExistsInDb && r.hasExistingActiveRecipe));
-    }
-    const allRecNames = recipes.map(r => r.menuItemName);
+    const allRecNames = previewData.recipes.map(r => r.menuItemName);
     const limited = limit === "all" ? allRecNames : allRecNames.slice(0, limit);
     setSelectedRecipes(new Set(limited));
+  };
+
+  const proceedToPreview = (skipExistingFull = false) => {
+    if (!previewData) return;
+    if (skipExistingFull) {
+      const skippedNames = new Set(
+        previewData.recipes
+          .filter(r => r.menuItemAlreadyExistsInDb && r.hasExistingActiveRecipe)
+          .map(r => r.menuItemName)
+      );
+      setSelectedRecipes(prev => {
+        const next = new Set(prev);
+        skippedNames.forEach(name => next.delete(name));
+        return next;
+      });
+    }
     setCurrentStep("preview");
+  };
+
+  const applyLimitsAndPreview = (limit: number | "all", skipExistingFull = false) => {
+    applyLimitToSelection(limit);
+    proceedToPreview(skipExistingFull);
   };
 
   const executePreview = async (file: File): Promise<string | null> => {
@@ -160,7 +197,11 @@ export const RecipeImportProvider: React.FC<RecipeImportProviderProps> = ({
       setSelectedFile,
       setRecipeLimit,
       applyLimitsAndPreview,
+      applyLimitToSelection,
+      proceedToPreview,
       toggleRecipe,
+      bulkSelectRecipes,
+      bulkDeselectRecipes,
       updateRecipe,
       executePreview,
       executeImport,

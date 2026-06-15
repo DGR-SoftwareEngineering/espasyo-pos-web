@@ -29,6 +29,7 @@ import {
 } from "@mui/icons-material";
 import { useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import { extractApiError } from "core-lib/business/errorUtils";
 import {
   CustomerDetailDto,
   CustomerLoyaltyCardDto,
@@ -286,11 +287,7 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
       try {
         const result = await enrollCb.execute({ id: customerId, hasCard: true });
         if (!result?.data?.success || !result?.data?.response) {
-          const msg =
-            Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-              ? (result.data.errors as string[])[0]
-              : result?.data?.message ?? "Failed to enroll";
-          showToast(msg, "error");
+          showToast(extractApiError(result, "Failed to enroll"), "error");
           return;
         }
         
@@ -329,11 +326,7 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
       try {
         const result = await enrollCb.execute({ id: customerId, hasCard: false });
         if (!result?.data?.success || !result?.data?.response) {
-          const msg =
-            Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-              ? (result.data.errors as string[])[0]
-              : result?.data?.message ?? "Failed to pause enrollment";
-          showToast(msg, "error");
+          showToast(extractApiError(result, "Failed to pause enrollment"), "error");
           return;
         }
         
@@ -420,10 +413,8 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
         );
         showToast("Stamp added", "success");
         setStampDialogSlot(null);
-      } catch (e: unknown) {
-        const msg =
-          Array.isArray(e) && typeof e[0] === "string" ? e[0] : "Failed to add stamp";
-        showToast(msg, "error");
+      } catch {
+        showToast("Failed to add stamp", "error");
       } finally {
         setStampLoading(false);
       }
@@ -484,10 +475,8 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
         );
         showToast("Stamp removed", "success");
         setRemoveDialogOpen(false);
-      } catch (e: unknown) {
-        const msg =
-          Array.isArray(e) && typeof e[0] === "string" ? e[0] : "Failed to remove stamp";
-        showToast(msg, "error");
+      } catch {
+        showToast("Failed to remove stamp", "error");
       } finally {
         setRemoveLoading(false);
       }
@@ -541,6 +530,8 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
         <Dialog.Content
           style={{ maxWidth: 820, padding: 0, overflow: "hidden", borderRadius: 16 }}
           aria-describedby={undefined}
+          onInteractOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
         >
           {/* Header */}
           <Flex
@@ -1122,7 +1113,12 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
 
       {/* New Customer Dialog */}
       <Dialog.Root open={createOpen} onOpenChange={setCreateOpen}>
-        <Dialog.Content style={{ maxWidth: 520 }} aria-describedby={undefined}>
+        <Dialog.Content
+          style={{ maxWidth: 520 }}
+          aria-describedby={undefined}
+          onInteractOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
           <Dialog.Title>
             <Flex align="center" gap="2">
               <AddCircleOutlined style={{ fontSize: 20, color: "var(--indigo-11)" }} />

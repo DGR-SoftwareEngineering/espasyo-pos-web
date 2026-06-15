@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { PromoDto } from "core-lib/api/commons/types";
+import { useFilters } from "core-lib/core/hooks";
 import { PromoFilters, PromoStats } from "./types";
 import { StatusFilter } from "../constants";
 
@@ -8,21 +9,23 @@ interface UsePromoFiltersParams {
 }
 
 export const usePromoFilters = ({ promos }: UsePromoFiltersParams) => {
-  const [filters, setFilters] = useState<PromoFilters>({
-    searchTerm: "",
-    statusFilter: "all",
+  const {
+    filters,
+    setFilter,
+    resetFilters,
+    filteredItems,
+  } = useFilters({
+    items: promos,
+    defaultFilters: {
+      searchTerm: "",
+      statusFilter: "all",
+    },
+    searchKeys: ["title"],
+    filterFns: {
+      statusFilter: (item, value) =>
+        value === "all" || item.status === value,
+    },
   });
-
-  const filteredPromos = useMemo(() => {
-    return promos.filter((p) => {
-      const matchesSearch =
-        !filters.searchTerm ||
-        p.title.toLowerCase().includes(filters.searchTerm.toLowerCase());
-      const matchesStatus =
-        filters.statusFilter === "all" || p.status === filters.statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [promos, filters]);
 
   const stats: PromoStats = useMemo(
     () => ({
@@ -35,21 +38,15 @@ export const usePromoFilters = ({ promos }: UsePromoFiltersParams) => {
     [promos],
   );
 
-  const updateFilter = <K extends keyof PromoFilters>(key: K, value: PromoFilters[K]) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
+  const updateFilter = <K extends keyof PromoFilters>(key: K, value: PromoFilters[K]) =>
+    setFilter(key, value);
 
-  const updateStatusFilter = (value: StatusFilter) => {
-    setFilters((prev) => ({ ...prev, statusFilter: value }));
-  };
-
-  const resetFilters = () => {
-    setFilters({ searchTerm: "", statusFilter: "all" });
-  };
+  const updateStatusFilter = (value: StatusFilter) =>
+    setFilter("statusFilter", value);
 
   return {
     filters,
-    filteredPromos,
+    filteredPromos: filteredItems,
     stats,
     updateFilter,
     updateStatusFilter,

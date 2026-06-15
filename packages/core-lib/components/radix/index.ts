@@ -30,8 +30,14 @@ export * from "./FormSection";
 export * from "./FormActions";
 export * from "./FormErrorSummary";
 export * from "./toggle/ToggleField";
+export * from "./form/TagsField";
 export * from "./LookupPicker";
 export * from "./FilterBar";
+export * from "./PillTabBar";
+export * from "./PaginationFooter";
+export * from "./LoadingState";
+export * from "./confirm";
+export * from "./wizard";
 
 export * from "./buttons/Button";
 export * from "./buttons/PrimaryButton";

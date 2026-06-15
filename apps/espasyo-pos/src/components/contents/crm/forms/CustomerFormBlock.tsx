@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import { extractApiError } from "core-lib/business/errorUtils";
 import {
   CreateCustomerParams,
   CustomerDetailDto,
@@ -86,11 +87,7 @@ export const CustomerFormBlock: React.FC<CustomerFormBlockProps> = ({
             params: toUpdateParams(values),
           });
           if (!result?.data?.success || !result?.data?.response) {
-            const msg =
-              Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-                ? (result.data.errors as string[])[0]
-                : result?.data?.message ?? "Failed to save customer";
-            showToast(msg, "error");
+            showToast(extractApiError(result, "Failed to save customer"), "error");
             return;
           }
           saved = result.data.response;
@@ -110,11 +107,7 @@ export const CustomerFormBlock: React.FC<CustomerFormBlockProps> = ({
         } else {
           const result = await createCb.execute(toCreateParams(values));
           if (!result?.data?.success || !result?.data?.response) {
-            const msg =
-              Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-                ? (result.data.errors as string[])[0]
-                : result?.data?.message ?? "Failed to create customer";
-            showToast(msg, "error");
+            showToast(extractApiError(result, "Failed to create customer"), "error");
             return;
           }
           saved = result.data.response;

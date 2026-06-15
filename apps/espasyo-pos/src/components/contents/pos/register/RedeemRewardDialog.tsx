@@ -15,7 +15,7 @@ import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import { EmojiEventsOutlined } from "@mui/icons-material";
 import { useApiCallback } from "core-lib/core/hooks";
 import { RedeemableProductDto } from "core-lib/api/crm";
-import type { SellableProductDto, ProductVariantDto } from "core-lib/api/commons/types";
+import type { SellableProductDto, SellableVariantDto } from "core-lib/api/commons/types";
 import { formatCurrency } from "../format";
 import { usePublicSettings } from "core-lib/core/contexts";
 import { AddProductOptions } from "./hooks";
@@ -99,7 +99,7 @@ export const RedeemRewardDialog: React.FC<RedeemRewardDialogProps> = ({
     };
   }, [targetSize]);
 
-  const filterVariantsBySize = useCallback((variants: ProductVariantDto[]): ProductVariantDto[] => {
+  const filterVariantsBySize = useCallback((variants: SellableVariantDto[]): SellableVariantDto[] => {
     return variants.filter(variant => matchesTargetSize(variant.name));
   }, [matchesTargetSize]);
 
@@ -169,7 +169,11 @@ export const RedeemRewardDialog: React.FC<RedeemRewardDialogProps> = ({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 480, padding: 0 }}>
+      <Dialog.Content
+        style={{ maxWidth: 480, padding: 0 }}
+        onInteractOutside={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
         {/* Header */}
         <Flex
           align="center"

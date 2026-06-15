@@ -1,17 +1,11 @@
-import { Flex, Text } from "@radix-ui/themes";
 import { SSRWithContentSecurityPolicy, useAuthContext } from "core-lib";
 import { FacebookBlock } from "../../../../components/contents/social";
 import { GetServerSideProps } from "next";
+import { LoadingState } from "core-lib/components/radix/LoadingState";
 
 const FacebookPage = () => {
   const { loading } = useAuthContext();
-  if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ minHeight: 240 }}>
-        <Text color="gray">Loading…</Text>
-      </Flex>
-    );
-  }
+  if (loading) return <LoadingState />;
   return <FacebookBlock />;
 };
 

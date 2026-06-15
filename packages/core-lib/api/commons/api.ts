@@ -20,6 +20,7 @@ import {
   UpdateSupplierInvoiceParams,
   CreateUnitConversionParams,
   UnitConversionDependenciesResponse,
+  CriticalUsageResponse,
   DetectGapResponseDto,
   NotificationCountResponse,
   NotificationListResponse,
@@ -38,11 +39,18 @@ import {
   RecipeListResponse,
   RecipeParams,
   RecipeResponse,
+  ProductRecipeSummaryListResponse,
   SupplierInvoiceListResponse,
   SupplierInvoiceQueryParams,
   SupplierInvoiceResponse,
   UnitConversionListResponse,
   UpdateRecipeParams,
+  VariantRecipeResponse,
+  CreateVariantRecipeParams,
+  UpdateVariantRecipeParams,
+  AddOnItemRecipeResponse,
+  CreateAddOnItemRecipeParams,
+  UpdateAddOnItemRecipeParams,
   UserInfoResponse,
   UserPresenceDto,
   UpdateActivityParams,
@@ -502,6 +510,12 @@ export class CommonsApi {
     );
   }
 
+  public getProductsWithRecipeSummary(pageNumber = 1, pageSize = 100) {
+    return this.axios.get<ProductRecipeSummaryListResponse>(
+      `/api/v1/product/recipe-api/recipe/product-summary?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    );
+  }
+
   public getUnitConversions(pageNumber: number = 1, pageSize: number = 10) {
     return this.axios.get<UnitConversionListResponse>(
       `/api/v1/unit-api/unitconversion?pageNumber=${pageNumber}&pageSize=${pageSize}`,
@@ -521,9 +535,140 @@ export class CommonsApi {
     );
   }
 
+  // ===== Variant Recipes =====
+  public createVariantRecipe(params: CreateVariantRecipeParams) {
+    return this.axios.post<ApiResponse<VariantRecipeResponse>>(
+      `/api/v1/product/recipe-api/variantrecipe`,
+      params,
+    );
+  }
+
+  public getVariantRecipeByVariant(variantId: string) {
+    return this.axios.get<ApiResponse<VariantRecipeResponse>>(
+      `/api/v1/product/recipe-api/variantrecipe/by-variant/${variantId}`,
+    );
+  }
+
+  public getVariantRecipesByProduct(productId: string) {
+    return this.axios.get<ApiResponse<VariantRecipeResponse[]>>(
+      `/api/v1/product/recipe-api/variantrecipe/by-product/${productId}`,
+    );
+  }
+
+  public updateVariantRecipe(params: UpdateVariantRecipeParams) {
+    return this.axios.put<ApiResponse<VariantRecipeResponse>>(
+      `/api/v1/product/recipe-api/variantrecipe`,
+      params,
+    );
+  }
+
+  public deleteVariantRecipe(id: string) {
+    return this.axios.delete<ApiResponse<boolean>>(
+      `/api/v1/product/recipe-api/variantrecipe/${id}`,
+    );
+  }
+
+  // ===== Add-On Item Recipes =====
+  public createAddOnItemRecipe(params: CreateAddOnItemRecipeParams) {
+    return this.axios.post<ApiResponse<AddOnItemRecipeResponse>>(
+      `/api/v1/product/recipe-api/addOnitemrecipe`,
+      params,
+    );
+  }
+
+  public getAddOnItemRecipeByItem(addOnItemId: string) {
+    return this.axios.get<ApiResponse<AddOnItemRecipeResponse>>(
+      `/api/v1/product/recipe-api/addOnitemrecipe/by-addon-item/${addOnItemId}`,
+    );
+  }
+
+  public getAddOnItemRecipesByProduct(productId: string) {
+    return this.axios.get<ApiResponse<AddOnItemRecipeResponse[]>>(
+      `/api/v1/product/recipe-api/AddOnItemRecipe/by-product/${productId}`,
+    );
+  }
+
+  public updateAddOnItemRecipe(params: UpdateAddOnItemRecipeParams) {
+    return this.axios.put<ApiResponse<AddOnItemRecipeResponse>>(
+      `/api/v1/product/recipe-api/addOnitemrecipe`,
+      params,
+    );
+  }
+
+  public deleteAddOnItemRecipe(id: string) {
+    return this.axios.delete<ApiResponse<boolean>>(
+      `/api/v1/product/recipe-api/addOnitemrecipe/${id}`,
+    );
+  }
+
   public calculateMaxProduction(menuItemProductId: string) {
     return this.axios.get<ProductionCapacityResponse>(
       `/api/v1/product/recipe-api/recipe/calculate-max-production?menuItemProductId=${menuItemProductId}`,
+    );
+  }
+
+  public calculateVariantMaxProduction(variantRecipeId: string) {
+    return this.axios.get<ProductionCapacityResponse>(
+      `/api/v1/product/recipe-api/recipe/calculate-variant-production?variantRecipeId=${variantRecipeId}`,
+    );
+  }
+
+  public calculateAddOnMaxProduction(addOnItemRecipeId: string) {
+    return this.axios.get<ProductionCapacityResponse>(
+      `/api/v1/product/recipe-api/recipe/calculate-addon-production?addOnItemRecipeId=${addOnItemRecipeId}`,
+    );
+  }
+
+  public checkProductCriticalUsage(ids: string[]) {
+    return this.axios.get<ApiResponse<CriticalUsageResponse>>(
+      `/api/v1/product-api/product/check-critical-usage`,
+      { params: { ids } },
+    );
+  }
+
+  public forceDeleteProduct(dto: { ids: string[]; password: string; mpin: string }) {
+    return this.axios.post<ApiResponse<number>>(
+      `/api/v1/product-api/product/force-delete`,
+      dto,
+    );
+  }
+
+  public checkRecipeCriticalUsage(recipeId: string) {
+    return this.axios.get<ApiResponse<CriticalUsageResponse>>(
+      `/api/v1/product/recipe-api/recipe/check-critical-usage?recipeId=${recipeId}`,
+    );
+  }
+
+  public forceDeleteRecipe(dto: { entityId: string; password: string; mpin: string }) {
+    return this.axios.post<ApiResponse<boolean>>(
+      `/api/v1/product/recipe-api/recipe/force-delete`,
+      dto,
+    );
+  }
+
+  public checkInventoryCriticalUsage(inventoryId: string) {
+    return this.axios.get<ApiResponse<CriticalUsageResponse>>(
+      `/api/v1/inventory-api/inventory/check-critical-usage?inventoryId=${inventoryId}`,
+    );
+  }
+
+  public forceDeleteInventory(dto: { entityId: string; password: string; mpin: string }) {
+    return this.axios.post<ApiResponse<boolean>>(
+      `/api/v1/inventory-api/inventory/force-delete`,
+      dto,
+    );
+  }
+
+  public checkCategoryCriticalUsage(categoryId: string) {
+    return this.axios.get<ApiResponse<CriticalUsageResponse>>(
+      `/api/v1/category-api/category/check-critical-usage?categoryId=${categoryId}`,
+    );
+  }
+
+  public forceDeleteCategory(dto: { entityId: string; password: string; mpin: string }) {
+    return this.axios.post<ApiResponse<string>>(
+      `/api/v1/category-api/category/force-delete`,
+      dto,
     );
   }
 

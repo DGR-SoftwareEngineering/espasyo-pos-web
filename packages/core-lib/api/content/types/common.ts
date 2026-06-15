@@ -176,10 +176,18 @@ export type DialogDataType = {
   RecipeView: {
     recipe: RecipeResponse;
     productionCapacity?: ProductionCapacity;
+    onNavigateToInventory?: () => void;
+    variantRecipeCount?: number;
+    addOnRecipeCount?: number;
   };
   RecipeEdit: RecipeResponse;
   RecipeDelete: RecipeResponse;
   RecipeCreate: undefined;
+  RecipeVariantAddonDelete: {
+    recipe: RecipeResponse;
+    variantRecipeCount?: number;
+    addOnRecipeCount?: number;
+  };
 
   InventoryView: InventoryDto;
   InventoryAdjust: InventoryDto;
@@ -243,6 +251,7 @@ export type CustomDialogElement = DialogElement & {
   customOnClick?: AsyncFunction | (() => void);
   customOnClose?: AsyncFunction | (() => void);
   loading?: boolean;
+  maxWidth?: "xs" | "sm" | "md" | "lg" | "xl";
 };
 
 export interface CallToAction {

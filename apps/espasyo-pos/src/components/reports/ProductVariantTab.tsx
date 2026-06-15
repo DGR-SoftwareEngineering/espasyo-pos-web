@@ -309,11 +309,25 @@ export const ProductVariantTab: React.FC<ProductVariantTabProps> = ({
   // ── Chart A: top products (horizontal bar) ──
 
   const topProductsData = useMemo(
-    () =>
-      [...data]
+    () => {
+      const top = [...data]
         .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 20)
-        .map((p) => ({ ...p, shortName: truncate(p.productName, 22) })),
+        .slice(0, 20);
+
+      // Detect duplicate product names and append category
+      const nameDuplicates = new Set(
+        top
+          .map((p) => p.productName)
+          .filter((name, idx, arr) => arr.indexOf(name) !== idx)
+      );
+
+      return top.map((p) => {
+        const label = nameDuplicates.has(p.productName) && p.categoryName
+          ? `${p.productName} (${p.categoryName})`
+          : p.productName;
+        return { ...p, shortName: truncate(label, 22) };
+      });
+    },
     [data],
   );
 
@@ -324,8 +338,19 @@ export const ProductVariantTab: React.FC<ProductVariantTabProps> = ({
     const names = Array.from(
       new Set(productsWithVariants.flatMap((p) => p.variants.map((v) => v.variantName))),
     );
+
+    // Detect duplicate product names and append category
+    const nameDuplicates = new Set(
+      productsWithVariants
+        .map((p) => p.productName)
+        .filter((name, idx, arr) => arr.indexOf(name) !== idx)
+    );
+
     const rows = productsWithVariants.map((p) => {
-      const row: Record<string, unknown> = { productName: truncate(p.productName, 18) };
+      const label = nameDuplicates.has(p.productName) && p.categoryName
+        ? `${p.productName} (${p.categoryName})`
+        : p.productName;
+      const row: Record<string, unknown> = { productName: truncate(label, 18) };
       names.forEach((n) => {
         const variant = p.variants.find((v) => v.variantName === n);
         row[n] = variant?.revenue ?? 0;

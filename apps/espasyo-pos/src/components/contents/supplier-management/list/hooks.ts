@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SupplierDto } from "core-lib/api/commons/types";
+import { useFilters } from "core-lib/core/hooks";
 
 export interface SupplierFilterState {
   searchTerm: string;
@@ -37,58 +38,60 @@ const sortStrategies: Record<
 };
 
 export const useSupplierFilters = ({ suppliers }: Props) => {
-  const [filters, setFilters] = useState<SupplierFilterState>({
-    searchTerm: "",
-    paymentTermsFilter: "all",
-    sortBy: "company",
+  const [sortBy, setSortBy] = useState("company");
+
+  const {
+    filters,
+    setFilter,
+    resetFilters: resetGeneric,
+    filteredItems,
+  } = useFilters({
+    items: suppliers,
+    defaultFilters: {
+      searchTerm: "",
+      paymentTermsFilter: "all",
+      sortBy: "company",
+    },
+    filterFns: {
+      searchTerm: (item, value) => {
+        if (!value || value === "") return true;
+        const q = (value as string).toLowerCase();
+        return (
+          (item.companyName ?? "").toLowerCase().includes(q) ||
+          (item.contactPersonName ?? "").toLowerCase().includes(q) ||
+          (item.email ?? "").toLowerCase().includes(q) ||
+          (item.contactNumber ?? "").toLowerCase().includes(q) ||
+          (item.paymentTerms ?? "").toLowerCase().includes(q)
+        );
+      },
+      paymentTermsFilter: (item, value) =>
+        value === "all" || (item.paymentTerms ?? "") === value,
+    },
   });
 
-  const [filteredSuppliers, setFilteredSuppliers] = useState<SupplierDto[]>([]);
-
-  useEffect(() => {
-    let next = [...suppliers];
-    if (filters.searchTerm) {
-      const q = filters.searchTerm.toLowerCase();
-      next = next.filter((s) => {
-        return (
-          (s.companyName ?? "").toLowerCase().includes(q) ||
-          (s.contactPersonName ?? "").toLowerCase().includes(q) ||
-          (s.email ?? "").toLowerCase().includes(q) ||
-          (s.contactNumber ?? "").toLowerCase().includes(q) ||
-          (s.taxID ?? "").toLowerCase().includes(q) ||
-          (s.paymentTerms ?? "").toLowerCase().includes(q) ||
-          (s.address ?? "").toLowerCase().includes(q) ||
-          (s.userUsername ?? "").toLowerCase().includes(q)
-        );
-      });
-    }
-    if (filters.paymentTermsFilter !== "all") {
-      next = next.filter(
-        (s) => (s.paymentTerms ?? "") === filters.paymentTermsFilter,
-      );
-    }
-    const sort = sortStrategies[filters.sortBy] ?? sortStrategies.company;
-    next.sort(sort);
-    setFilteredSuppliers(next);
-  }, [suppliers, filters]);
+  const filteredSuppliers = useMemo(() => {
+    const sort = sortStrategies[sortBy] ?? sortStrategies.company;
+    return [...filteredItems].sort(sort);
+  }, [filteredItems, sortBy]);
 
   const updateFilter = useCallback(
     <K extends keyof SupplierFilterState>(
       key: K,
       value: SupplierFilterState[K],
     ) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
+      if (key === "sortBy") {
+        setSortBy(value as string);
+      } else {
+        setFilter(key as keyof typeof filters, value as never);
+      }
     },
-    [],
+    [setFilter],
   );
 
   const resetFilters = useCallback(() => {
-    setFilters({
-      searchTerm: "",
-      paymentTermsFilter: "all",
-      sortBy: "company",
-    });
-  }, []);
+    resetGeneric();
+    setSortBy("company");
+  }, [resetGeneric]);
 
   const stats: SupplierStats = useMemo(() => {
     const byTerms: Record<string, number> = {};

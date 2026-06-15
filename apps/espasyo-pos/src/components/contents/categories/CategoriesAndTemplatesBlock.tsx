@@ -114,7 +114,7 @@ const CategoriesSidebarLayout: React.FC = () => {
         </Flex>
       </Box>
 
-      <Box style={{ flex: 1, minWidth: 0 }}>
+      <Box key={activeCategory} style={{ flex: 1, minWidth: 0 }}>
         {activeComponent}
       </Box>
     </Flex>
