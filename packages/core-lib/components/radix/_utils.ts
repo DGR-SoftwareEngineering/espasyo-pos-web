@@ -23,7 +23,10 @@ export type RadixAccent =
   | "amber"
   | "red"
   | "blue"
-  | "gray";
+  | "gray"
+  | "teal"
+  | "orange"
+  | "cyan";
 
 /**
  * Closest Radix accent for each MUI semantic palette name.

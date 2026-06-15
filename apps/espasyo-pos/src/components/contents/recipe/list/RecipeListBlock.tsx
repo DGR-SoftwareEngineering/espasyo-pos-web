@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/router";
 import { Badge, Box, Card, Flex, Text, Tooltip } from "@radix-ui/themes";
 import {
   ReloadIcon,
@@ -11,7 +12,7 @@ import {
   LocalDiningOutlined,
 } from "@mui/icons-material";
 import { PesoIcon } from "core-lib/components/icons/PesoIcon";
-import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useApi } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";
 import { registerForm } from "core-lib/components/radix/form/FormRenderer";
 import type { DialogContentType } from "core-lib/api/content/types/common";
@@ -27,7 +28,7 @@ import {
   sortOptions,
   RecipeFilterState,
 } from "../constants";
-import { RecipeResponse } from "core-lib/api/commons/types";
+import { ProductRecipeSummaryResponse, RecipeResponse } from "core-lib/api/commons/types";
 import { useRecipeStats } from "../hooks";
 import { RecipeForm } from "../forms/RecipeForm";
 import { formatCurrency } from "core-lib/business";
@@ -35,7 +36,8 @@ import { formatCurrency } from "core-lib/business";
 registerForm("recipe-form", RecipeForm);
 
 export const RecipeListBlock: React.FC = () => {
-  const { openDialog } = useDialogContext();
+  const { openDialog, closeDialog } = useDialogContext();
+  const router = useRouter();
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -45,14 +47,10 @@ export const RecipeListBlock: React.FC = () => {
     sortBy: "name",
   });
 
-  const calcCb = useApiCallback(
-    async (api, menuItemProductId: string) =>
-      await api.commons.calculateMaxProduction(menuItemProductId),
-  );
-  const data = useApi((api) => api.commons.getRecipe());
+  const data = useApi((api) => api.commons.getProductsWithRecipeSummary());
   const response = data.result?.data.response;
 
-  const recipes = useMemo((): RecipeResponse[] => {
+  const recipes = useMemo((): ProductRecipeSummaryResponse[] => {
     return response?.items ?? [];
   }, [response]);
 
@@ -78,14 +76,14 @@ export const RecipeListBlock: React.FC = () => {
       filtered = filtered.filter(
         (recipe) =>
           recipe.menuItemName.toLowerCase().includes(query) ||
-          recipe.recipeID.toLowerCase().includes(query) ||
-          recipe.recipeItems.some((item) =>
+          (recipe.recipeID ?? "").toLowerCase().includes(query) ||
+          (recipe.recipeItems ?? []).some((item) =>
             item.ingredientName.toLowerCase().includes(query),
           ),
       );
     }
 
-    return applyRecipeSorting(filtered, filters);
+    return applyRecipeSorting(filtered as unknown as RecipeResponse[], filters) as ProductRecipeSummaryResponse[];
   }, [recipes, filters]);
 
   const paginatedData = useMemo(() => {
@@ -119,41 +117,33 @@ export const RecipeListBlock: React.FC = () => {
   }, [data]);
 
   const handleView = useCallback(
-    async (recipe: RecipeResponse) => {
-      try {
-        const result = await calcCb.execute(recipe.menuItemProductID);
-        if (!calcCb.loading && result.data.success) {
-          openDialog({
-            title: DIALOG_TITLES.view,
-            dialogContentType: DIALOG_TYPES.view as unknown as DialogContentType,
-            data: {
-              recipe: recipe,
-              productionCapacity: result.data.response,
-            },
-            loading: calcCb.loading,
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch production capacity:", error);
-        openDialog({
-          title: DIALOG_TITLES.view,
-          dialogContentType: DIALOG_TYPES.view as unknown as DialogContentType,
-          data: {
-            recipe: recipe,
-            productionCapacity: undefined,
-          },
-        });
-      }
+    (recipe: ProductRecipeSummaryResponse) => {
+      const navigateToInventory = () => {
+        closeDialog();
+        router.push("/admin/hub/inventory/inventory-list");
+      };
+      openDialog({
+        title: DIALOG_TITLES.view,
+        dialogContentType: DIALOG_TYPES.view as unknown as DialogContentType,
+        data: {
+          recipe: recipe as unknown as RecipeResponse,
+          onNavigateToInventory: navigateToInventory,
+          variantRecipeCount: recipe.variantRecipeCount,
+          addOnRecipeCount: recipe.addOnRecipeCount,
+        },
+        maxWidth: "xl",
+      });
     },
-    [openDialog, calcCb],
+    [openDialog, closeDialog, router],
   );
 
   const handleEdit = useCallback(
-    (recipe: RecipeResponse) => {
+    (recipe: ProductRecipeSummaryResponse) => {
+      if (!recipe.recipeID) return;
       openDialog({
         title: DIALOG_TITLES.edit,
         dialogContentType: DIALOG_TYPES.edit as unknown as DialogContentType,
-        data: recipe,
+        data: recipe as unknown as RecipeResponse,
         onSuccess: handleRefresh,
       });
     },
@@ -161,13 +151,29 @@ export const RecipeListBlock: React.FC = () => {
   );
 
   const handleDelete = useCallback(
-    (recipe: RecipeResponse) => {
-      openDialog({
-        title: DIALOG_TITLES.delete,
-        dialogContentType: DIALOG_TYPES.delete as unknown as DialogContentType,
-        data: recipe,
-        onSuccess: handleRefresh,
-      });
+    (recipe: ProductRecipeSummaryResponse) => {
+      const isVariantAddonOnly = !recipe.recipeID &&
+        (recipe.variantRecipeCount > 0 || recipe.addOnRecipeCount > 0);
+
+      if (isVariantAddonOnly) {
+        openDialog({
+          title: "Manage Variant & Add-On Recipes",
+          dialogContentType: "RecipeVariantAddonDelete" as unknown as DialogContentType,
+          data: {
+            recipe: recipe as unknown as RecipeResponse,
+            variantRecipeCount: recipe.variantRecipeCount,
+            addOnRecipeCount: recipe.addOnRecipeCount,
+          },
+          onSuccess: handleRefresh,
+        });
+      } else if (recipe.recipeID) {
+        openDialog({
+          title: DIALOG_TITLES.delete,
+          dialogContentType: DIALOG_TYPES.delete as unknown as DialogContentType,
+          data: recipe as unknown as RecipeResponse,
+          onSuccess: handleRefresh,
+        });
+      }
     },
     [openDialog, handleRefresh],
   );
@@ -216,37 +222,44 @@ export const RecipeListBlock: React.FC = () => {
         />
 
         <Flex gap="3" mt="4" wrap="wrap">
-          <StatsCard
-            label="Total Recipes"
-            value={stats.totalRecipes}
-            icon={<RestaurantMenuOutlined />}
-            color="primary"
-            variant="detailed"
-          />
-          <StatsCard
-            label="Total Ingredients"
-            value={stats.totalIngredients}
-            icon={<KitchenOutlined />}
-            color="success"
-            variant="detailed"
-          />
-          <StatsCard
-            label="Avg Ingredients"
-            value={stats.averageIngredients}
-            icon={<LocalDiningOutlined />}
-            color="info"
-            variant="detailed"
-          />
-          <StatsCard
-            label="Total Recipe Cost"
-            value={formatCurrency(stats.totalCost)}
-            icon={<PesoIcon />}
-            color="warning"
-            variant="detailed"
-          />
+          {(() => {
+            const loadingVal = data.loading ? "—" : undefined;
+            return (
+              <>
+                <StatsCard
+                  label="Total Recipes"
+                  value={loadingVal ?? stats.totalRecipes}
+                  icon={<RestaurantMenuOutlined />}
+                  color="primary"
+                  variant="detailed"
+                />
+                <StatsCard
+                  label="Total Ingredients"
+                  value={loadingVal ?? stats.totalIngredients}
+                  icon={<KitchenOutlined />}
+                  color="success"
+                  variant="detailed"
+                />
+                <StatsCard
+                  label="Avg Ingredients"
+                  value={loadingVal ?? stats.averageIngredients}
+                  icon={<LocalDiningOutlined />}
+                  color="info"
+                  variant="detailed"
+                />
+                <StatsCard
+                  label="Total Recipe Cost"
+                  value={loadingVal ?? formatCurrency(stats.totalCost)}
+                  icon={<PesoIcon />}
+                  color="warning"
+                  variant="detailed"
+                />
+              </>
+            );
+          })()}
         </Flex>
 
-        {(stats.mostExpensive.name || stats.mostIngredients.name) && (
+        {!data.loading && (stats.mostExpensive.name || stats.mostIngredients.name) && (
           <Flex gap="2" mt="3" wrap="wrap">
             {stats.mostExpensive.name && (
               <Badge color="amber" variant="soft" size="2" radius="full">

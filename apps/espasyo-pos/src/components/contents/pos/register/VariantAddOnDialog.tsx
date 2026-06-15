@@ -9,20 +9,21 @@ import {
   ScrollArea,
   Separator,
   Text,
+  Tooltip,
 } from "@radix-ui/themes";
 import { Cross2Icon, MinusIcon, PlusIcon } from "@radix-ui/react-icons";
 import type {
-  ProductAddOnGroupDto,
-  ProductAddOnItemDto,
-  ProductVariantDto,
+  SellableVariantDto,
+  SellableAddOnGroupDto,
+  SellableAddOnItemDto,
   SellableProductDto,
 } from "core-lib/api/commons/types";
 import { formatCurrency } from "../format";
 import { usePublicSettings } from "core-lib/core/contexts";
 
 export interface VariantAddOnConfirmPayload {
-  variant: ProductVariantDto | null;
-  addOnItems: { group: ProductAddOnGroupDto; item: ProductAddOnItemDto }[];
+  variant: SellableVariantDto | null;
+  addOnItems: { group: SellableAddOnGroupDto; item: SellableAddOnItemDto }[];
   quantity: number;
   unitPrice: number; // resolved (variant price OR base) + sum of add-on prices
 }
@@ -104,7 +105,7 @@ export const VariantAddOnDialog: React.FC<Props> = ({
   });
   const canConfirm = variantOk && requiredGroupOk && quantity > 0;
 
-  const toggleItem = (group: ProductAddOnGroupDto, itemId: string) => {
+  const toggleItem = (group: SellableAddOnGroupDto, itemId: string) => {
     setSelections((prev) => {
       const next = { ...prev };
       const set = new Set(next[group.productAddOnGroupID] ?? new Set<string>());
@@ -125,7 +126,7 @@ export const VariantAddOnDialog: React.FC<Props> = ({
 
   const handleConfirm = () => {
     if (!canConfirm) return;
-    const chosenAddOns: { group: ProductAddOnGroupDto; item: ProductAddOnItemDto }[] = [];
+    const chosenAddOns: { group: SellableAddOnGroupDto; item: SellableAddOnItemDto }[] = [];
     for (const g of groups) {
       const set = selections[g.productAddOnGroupID];
       if (!set) continue;
@@ -189,9 +190,17 @@ export const VariantAddOnDialog: React.FC<Props> = ({
                   <Flex gap="2" wrap="wrap">
                     {variants.map((v) => {
                       const active = v.productVariantID === variantId;
-                      return (
+                      const variantStockOut =
+                        v.hasOwnRecipe && v.maxProductionFromVariantRecipe === 0;
+                      const tooltipContent =
+                        variantStockOut && v.variantBottleneckIngredients.length > 0
+                          ? `Out of stock: ${v.variantBottleneckIngredients.join(", ")}`
+                          : variantStockOut
+                            ? "Out of stock for this variant"
+                            : undefined;
+
+                      const btn = (
                         <button
-                          key={v.productVariantID}
                           type="button"
                           onClick={() => setVariantId(v.productVariantID)}
                           style={{
@@ -200,10 +209,14 @@ export const VariantAddOnDialog: React.FC<Props> = ({
                             borderRadius: 12,
                             border: active
                               ? "2px solid var(--indigo-9)"
-                              : "1px solid var(--gray-a5)",
+                              : variantStockOut
+                                ? "1px solid var(--red-a6)"
+                                : "1px solid var(--gray-a5)",
                             background: active
                               ? "var(--indigo-a3)"
-                              : "var(--color-panel-solid)",
+                              : variantStockOut
+                                ? "var(--red-a2)"
+                                : "var(--color-panel-solid)",
                             color: active ? "var(--indigo-12)" : "var(--gray-12)",
                             fontWeight: 600,
                             transition: "all 0.12s ease",
@@ -220,7 +233,22 @@ export const VariantAddOnDialog: React.FC<Props> = ({
                           <Text size="1" color="gray">
                             {formatCurrency(v.price, currencyCode)}
                           </Text>
+                          {variantStockOut && (
+                            <Badge color="red" variant="soft" size="1">
+                              Out of stock
+                            </Badge>
+                          )}
                         </button>
+                      );
+
+                      return tooltipContent ? (
+                        <Tooltip key={v.productVariantID} content={tooltipContent}>
+                          {btn}
+                        </Tooltip>
+                      ) : (
+                        <React.Fragment key={v.productVariantID}>
+                          {btn}
+                        </React.Fragment>
                       );
                     })}
                   </Flex>

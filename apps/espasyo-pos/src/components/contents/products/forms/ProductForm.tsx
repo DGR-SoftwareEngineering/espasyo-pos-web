@@ -71,6 +71,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   initialValues,
   isEdit = false,
   isInDialog = false,
+  productId,
   productCategories,
   ingredientCategories,
   units,
@@ -442,6 +443,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <ProductVariantsSection
                 control={control}
                 variantTemplates={variantTemplates ?? []}
+                productId={productId}
+                isEdit={isEdit}
               />
             </FormSection>
           )}
@@ -456,6 +459,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <ProductAddOnGroupsSection
                 control={control}
                 addOnTemplates={addOnTemplates ?? []}
+                isEdit={isEdit}
               />
             </FormSection>
           )}

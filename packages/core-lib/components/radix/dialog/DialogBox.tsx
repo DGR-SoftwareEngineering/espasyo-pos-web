@@ -146,6 +146,18 @@ export const DialogBox = memo(
               return;
             }
           }}
+          onPointerDownOutside={(e) => {
+            const originalEvent = (e as CustomEvent).detail?.originalEvent;
+            const target = originalEvent?.target as Element | null;
+            if (target?.closest?.('[data-float-portal]')) {
+              e.preventDefault();
+              return;
+            }
+            if (loading || disableDismiss) {
+              e.preventDefault();
+              return;
+            }
+          }}
         >
           {(title || !hideCloseButton) && (
             <Flex

@@ -4,3 +4,4 @@ export * from "./strings";
 export * from "./number";
 export * from "./recipe";
 export * from "./sales";
+export * from "./errorUtils";

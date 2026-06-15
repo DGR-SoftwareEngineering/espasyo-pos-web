@@ -25,5 +25,7 @@ export * from "./useMapErrors";
 export * from "./useMpinStatus";
 export * from "./useNotificationFeed";
 export * from "./useCashDrawer";
+export * from "./useFilters";
+export * from "./useCriticalDeleteGuard";
 /* non-hook */
 export * from "./form-validation/field";

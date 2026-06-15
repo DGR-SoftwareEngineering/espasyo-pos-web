@@ -35,6 +35,7 @@ import {
   RecipeViewDialogContent,
   RecipeDeleteDialogContent,
   RecipeEditDialogContent,
+  RecipeVariantAddonDeleteDialogContent,
 } from "./contents/recipe";
 import {
   InventoryViewDialogContent,
@@ -148,11 +149,17 @@ export const DialogContextModal: React.FC<Props> = ({
       const viewData = dialogData as {
         recipe: RecipeResponse;
         productionCapacity?: ProductionCapacity;
+        onNavigateToInventory?: () => void;
+        variantRecipeCount?: number;
+        addOnRecipeCount?: number;
       };
       return (
         <RecipeViewDialogContent
           recipe={viewData.recipe}
           productionCapacity={viewData.productionCapacity}
+          onNavigateToInventory={viewData.onNavigateToInventory}
+          variantRecipeCount={viewData.variantRecipeCount}
+          addOnRecipeCount={viewData.addOnRecipeCount}
         />
       );
     case "RecipeEdit":
@@ -171,6 +178,18 @@ export const DialogContextModal: React.FC<Props> = ({
           onClose={onClose!}
         />
       );
+    case "RecipeVariantAddonDelete": {
+      const vaData = dialogData as { recipe: RecipeResponse; variantRecipeCount?: number; addOnRecipeCount?: number };
+      return (
+        <RecipeVariantAddonDeleteDialogContent
+          recipe={vaData.recipe}
+          variantRecipeCount={vaData.variantRecipeCount}
+          addOnRecipeCount={vaData.addOnRecipeCount}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    }
     case "ProductCreate":
       // You'll create this later
       return <div>Product Create Form (Coming Soon)</div>;

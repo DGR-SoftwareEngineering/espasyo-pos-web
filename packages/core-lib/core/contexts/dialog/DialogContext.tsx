@@ -80,7 +80,7 @@ export const DialogContextProvider: React.FC<
           title={dialogElement?.title}
           disableDismiss={loading}
           fullScreenOnMobile
-          maxWidth="lg"
+          maxWidth={dialogElement?.maxWidth ?? "lg"}
         >
           <DialogContextModal
             dialogFormType={dialogElement?.dialogContentType}

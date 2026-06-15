@@ -14,6 +14,7 @@ export interface ProductFormProps {
   initialValues?: Partial<ProductFormType>;
   isEdit?: boolean;
   isInDialog: boolean;
+  productId?: string;
   productCategories: ProductCategoryDto[];
   ingredientCategories: IngredientCategoryDto[];
   units: UnitDto[];
