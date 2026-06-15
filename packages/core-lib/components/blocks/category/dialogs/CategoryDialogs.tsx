@@ -247,12 +247,16 @@ export const CategoryDeleteDialog: React.FC<{
         {isInUse ? (
           <Button
             variant="contained"
-            color="error"
             onClick={openAdminConfirm}
             disabled={checkUsage.loading}
             sx={{
               borderRadius: 2,
               boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`,
+              backgroundColor: "var(--red-9)",
+              "&:hover": {
+                backgroundColor: "var(--red-10)",
+              },
+              color: "white",
             }}
           >
             Force Delete Anyway
