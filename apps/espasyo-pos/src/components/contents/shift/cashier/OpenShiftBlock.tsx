@@ -68,6 +68,7 @@ export const OpenShiftBlock: React.FC = () => {
   const { logout } = useLogout();
 
   const [submitting, setSubmitting] = useState(false);
+  const [submitSucceeded, setSubmitSucceeded] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
   const [greeting, setGreeting] = useState('');
@@ -122,6 +123,7 @@ export const OpenShiftBlock: React.FC = () => {
           // check, so we set a short-lived cookie that proxy.ts reads to skip
           // the redirect back to /cashier/shift/open for one navigation.
           document.cookie = "shift-just-opened=1; max-age=30; path=/; SameSite=Lax";
+          setSubmitSucceeded(true);
           window.location.replace("/cashier/pos");
           return;
         }
@@ -137,6 +139,7 @@ export const OpenShiftBlock: React.FC = () => {
           const shiftRes = await activeShiftCb.execute();
           if (shiftRes?.status !== undefined && shiftRes.status >= 200 && shiftRes.status < 300 && shiftRes?.data?.response) {
             document.cookie = "shift-just-opened=1; max-age=30; path=/; SameSite=Lax";
+            setSubmitSucceeded(true);
             window.location.replace("/cashier/pos");
             return;
           }
@@ -515,7 +518,7 @@ export const OpenShiftBlock: React.FC = () => {
                 {/* Form */}
                 <OpenShiftFormBlock
                   onSubmit={handleSubmit}
-                  submitLoading={submitting}
+                  submitLoading={submitting || submitSucceeded}
                 />
               </Box>
 

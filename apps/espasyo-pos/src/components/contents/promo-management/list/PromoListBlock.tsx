@@ -12,12 +12,15 @@ import { ReloadIcon } from "@radix-ui/react-icons";
 import { AddCircleOutlined } from "@mui/icons-material";
 import { useApi, useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import { extractApiError } from "core-lib/business/errorUtils";
 import { PromoDto, PromoSuggestionDto, SystemSettingDto } from "core-lib/api/commons/types";
 import { SETTING_KEYS } from "core-lib/business/settings";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { StatsCard } from "core-lib/components/radix/StatsCard";
 import { FilterBar } from "core-lib/components/radix/FilterBar";
 import { DialogBox } from "core-lib/components/radix/dialog/DialogBox";
+import { PillTabBar } from "core-lib/components/radix/PillTabBar";
+import { PaginationFooter } from "core-lib/components/radix/PaginationFooter";
 import { PromoList } from "./PromoList";
 import { PromoSuggestionsPanel } from "./PromoSuggestionsPanel";
 import { SlowMovingPromoPanel } from "./SlowMovingPromoPanel";
@@ -125,11 +128,7 @@ export const PromoListBlock: React.FC = () => {
         handleRefresh();
         return;
       }
-      const msg =
-        Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-          ? (result.data.errors as string[])[0]
-          : result?.data?.message ?? "Failed to activate promo";
-      showToast(msg, "error");
+      showToast(extractApiError(result, "Failed to activate promo"), "error");
     } catch {
       showToast("Failed to activate promo", "error");
     } finally {
@@ -148,11 +147,7 @@ export const PromoListBlock: React.FC = () => {
         handleRefresh();
         return;
       }
-      const msg =
-        Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-          ? (result.data.errors as string[])[0]
-          : result?.data?.message ?? "Failed to deactivate promo";
-      showToast(msg, "error");
+      showToast(extractApiError(result, "Failed to deactivate promo"), "error");
     } catch {
       showToast("Failed to deactivate promo", "error");
     } finally {
@@ -171,11 +166,7 @@ export const PromoListBlock: React.FC = () => {
         handleRefresh();
         return;
       }
-      const msg =
-        Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-          ? (result.data.errors as string[])[0]
-          : result?.data?.message ?? "Failed to delete promo";
-      showToast(msg, "error");
+      showToast(extractApiError(result, "Failed to delete promo"), "error");
     } catch {
       showToast("Failed to delete promo", "error");
     } finally {
@@ -215,47 +206,17 @@ export const PromoListBlock: React.FC = () => {
           <StatsCard label="Expired" value={stats.expired} color="error" />
         </Flex>
 
-        {/* Status tabs */}
-        <Box
-          mt="4"
-          style={{
-            display: "inline-flex",
-            borderRadius: 999,
-            border: "1px solid var(--gray-a4)",
-            background: "var(--gray-a2)",
-            padding: 3,
-            gap: 2,
+        <PillTabBar
+          tabs={STATUS_TABS.map((tab) => ({
+            value: tab,
+            label: tab === "all" ? "All" : tab,
+          }))}
+          activeTab={filters.statusFilter}
+          onTabChange={(value) => {
+            updateStatusFilter(value as StatusFilter);
+            setPageNumber(1);
           }}
-        >
-          {STATUS_TABS.map((tab) => {
-            const active = filters.statusFilter === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => {
-                  updateStatusFilter(tab as StatusFilter);
-                  setPageNumber(1);
-                }}
-                style={{
-                  padding: "5px 14px",
-                  borderRadius: 999,
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontWeight: active ? 600 : 400,
-                  background: active ? "var(--color-background)" : "transparent",
-                  color: active ? "var(--accent-11)" : "var(--gray-11)",
-                  boxShadow: active ? "var(--shadow-1)" : "none",
-                  transition: "all 0.15s ease",
-                  whiteSpace: "nowrap",
-                  textTransform: tab === "all" ? undefined : undefined,
-                }}
-              >
-                {tab === "all" ? "All" : tab}
-              </button>
-            );
-          })}
-        </Box>
+        />
 
         <Flex justify="between" align="center" gap="3" mt="3" wrap="wrap">
           <FilterBar
@@ -325,15 +286,11 @@ export const PromoListBlock: React.FC = () => {
         />
       </Card>
 
-      {filteredPromos.length > 0 && (
-        <Flex justify="between" align="center" mt="3" px="2">
-          <Text size="2" color="gray">
-            Showing {(pageNumber - 1) * pageSize + 1} to{" "}
-            {Math.min(pageNumber * pageSize, filteredPromos.length)} of{" "}
-            {filteredPromos.length} entries
-          </Text>
-        </Flex>
-      )}
+      <PaginationFooter
+        pageNumber={pageNumber}
+        pageSize={pageSize}
+        totalItems={filteredPromos.length}
+      />
 
       {/* Create Promo Dialog */}
       <DialogBox

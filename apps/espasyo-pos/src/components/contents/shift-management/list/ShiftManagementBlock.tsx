@@ -10,12 +10,15 @@ import {
 } from "@mui/icons-material";
 import { useApi, useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import { extractApiError } from "core-lib/business/errorUtils";
 import { CashierShiftDto, CloseShiftParams, ShiftSummaryDto } from "core-lib/api/commons/types";
 import { DeleteOutlined } from "@mui/icons-material";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { StatsCard } from "core-lib/components/radix/StatsCard";
 import { FilterBar } from "core-lib/components/radix/FilterBar";
 import { DialogBox } from "core-lib/components/radix/dialog/DialogBox";
+import { PillTabBar } from "core-lib/components/radix/PillTabBar";
+import { PaginationFooter } from "core-lib/components/radix/PaginationFooter";
 import { formatCurrency } from "core-lib/business/strings";
 import { ShiftList } from "./ShiftList";
 import { useShiftFilters } from "./hooks";
@@ -129,11 +132,7 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "ad
           }
           return;
         }
-        const errorMsg =
-          Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-            ? (result.data.errors as string[])[0]
-            : result?.data?.message ?? "Failed to close shift";
-        showToast(errorMsg, "error");
+        showToast(extractApiError(result, "Failed to close shift"), "error");
       } catch {
         showToast("Failed to close shift", "error");
       } finally {
@@ -178,11 +177,7 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "ad
         handleRefresh();
         return;
       }
-      const errorMsg =
-        Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-          ? (result.data.errors as string[])[0]
-          : result?.data?.message ?? "Failed to delete shift";
-      showToast(errorMsg, "error");
+      showToast(extractApiError(result, "Failed to delete shift"), "error");
     } catch {
       showToast("Failed to delete shift", "error");
     } finally {
@@ -312,45 +307,14 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "ad
           </Callout.Root>
         )}
 
-        <Box
-          mt="4"
-          style={{
-            display: "inline-flex",
-            borderRadius: 999,
-            border: "1px solid var(--gray-a4)",
-            background: "var(--gray-a2)",
-            padding: 3,
-            gap: 2,
+        <PillTabBar
+          tabs={STATUS_TABS}
+          activeTab={filters.statusFilter}
+          onTabChange={(value) => {
+            updateStatusFilter(value as StatusFilter);
+            setPageNumber(1);
           }}
-        >
-          {STATUS_TABS.map((tab) => {
-            const active = filters.statusFilter === tab.value;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => {
-                  updateStatusFilter(tab.value);
-                  setPageNumber(1);
-                }}
-                style={{
-                  padding: "5px 14px",
-                  borderRadius: 999,
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontWeight: active ? 600 : 400,
-                  background: active ? "var(--color-background)" : "transparent",
-                  color: active ? "var(--accent-11)" : "var(--gray-11)",
-                  boxShadow: active ? "var(--shadow-1)" : "none",
-                  transition: "all 0.15s ease",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </Box>
+        />
 
         <Flex justify="between" align="center" gap="3" mt="3" wrap="wrap">
           <FilterBar
@@ -395,15 +359,11 @@ export const ShiftManagementBlock: React.FC<Props> = ({ onAfterClose, mode = "ad
         />
       </Card>
 
-      {filteredShifts.length > 0 && (
-        <Flex justify="between" align="center" mt="3" px="2">
-          <Text size="2" color="gray">
-            Showing {(pageNumber - 1) * pageSize + 1} to{" "}
-            {Math.min(pageNumber * pageSize, filteredShifts.length)} of{" "}
-            {filteredShifts.length} entries
-          </Text>
-        </Flex>
-      )}
+      <PaginationFooter
+        pageNumber={pageNumber}
+        pageSize={pageSize}
+        totalItems={filteredShifts.length}
+      />
 
       {/* Close Shift Dialog */}
       <DialogBox

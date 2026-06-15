@@ -15,6 +15,8 @@ import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { StatsCard } from "core-lib/components/radix/StatsCard";
 import { FilterBar } from "core-lib/components/radix/FilterBar";
 import { Button } from "core-lib/components/radix/buttons/Button";
+import { PillTabBar } from "core-lib/components/radix/PillTabBar";
+import { PaginationFooter } from "core-lib/components/radix/PaginationFooter";
 import { ProductList } from "./ProductList";
 import { useProductFilters } from "./hooks";
 import type { ProductTypeFilter } from "./types";
@@ -170,50 +172,14 @@ export const ProductListBlock: React.FC = () => {
           />
         </Flex>
 
-        {/* Type filter tabs */}
-        <Box
-          mt="4"
-          style={{
-            display: "inline-flex",
-            borderRadius: 999,
-            border: "1px solid var(--gray-a4)",
-            background: "var(--gray-a2)",
-            padding: 3,
-            gap: 2,
+        <PillTabBar
+          tabs={TYPE_TABS}
+          activeTab={filters.productTypeFilter}
+          onTabChange={(value) => {
+            updateFilter("productTypeFilter", value);
+            setPageNumber(1);
           }}
-        >
-          {TYPE_TABS.map((tab) => {
-            const active = filters.productTypeFilter === tab.value;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => {
-                  updateFilter("productTypeFilter", tab.value);
-                  setPageNumber(1);
-                }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "5px 12px",
-                  borderRadius: 999,
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontWeight: active ? 600 : 400,
-                  background: active ? "var(--color-background)" : "transparent",
-                  color: active ? tab.color : "var(--gray-11)",
-                  boxShadow: active ? "var(--shadow-1)" : "none",
-                  transition: "all 0.15s ease",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            );
-          })}
-        </Box>
+        />
 
         <Flex justify="between" align="center" gap="3" mt="3" wrap="wrap">
           <FilterBar
@@ -269,15 +235,11 @@ export const ProductListBlock: React.FC = () => {
         />
       </Card>
 
-      {filteredProducts.length > 0 && (
-        <Flex justify="between" align="center" mt="3" px="2">
-          <Text size="2" color="gray">
-            Showing {(pageNumber - 1) * pageSize + 1} to{" "}
-            {Math.min(pageNumber * pageSize, filteredProducts.length)} of{" "}
-            {filteredProducts.length} entries
-          </Text>
-        </Flex>
-      )}
+      <PaginationFooter
+        pageNumber={pageNumber}
+        pageSize={pageSize}
+        totalItems={filteredProducts.length}
+      />
     </Box>
   );
 };

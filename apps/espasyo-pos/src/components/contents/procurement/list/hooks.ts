@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useCallback } from "react";
 import {
   PurchaseOrderDto,
   PurchaseOrderStatusDto,
+  FulfillmentMethodDto,
 } from "core-lib/api/commons/types";
+import { useFilters } from "core-lib/core/hooks";
 import { FilterState, StatsData } from "./types";
 
 interface UsePurchaseOrderFiltersProps {
@@ -12,59 +14,35 @@ interface UsePurchaseOrderFiltersProps {
 export const usePurchaseOrderFilters = ({
   orders,
 }: UsePurchaseOrderFiltersProps) => {
-  const [filters, setFilters] = useState<FilterState>({
-    searchTerm: "",
-    statusFilter: "all",
-    supplierFilter: "all",
-    fulfillmentFilter: "all",
+  const {
+    filters,
+    setFilter,
+    resetFilters,
+    filteredItems,
+  } = useFilters({
+    items: orders,
+    defaultFilters: {
+      searchTerm: "",
+      statusFilter: "all" as PurchaseOrderStatusDto | "all",
+      supplierFilter: "all",
+      fulfillmentFilter: "all" as FulfillmentMethodDto | "all",
+    },
+    searchKeys: ["orderNumber", "supplierName"],
+    filterFns: {
+      statusFilter: (item, value) =>
+        value === "all" || item.status === value,
+      supplierFilter: (item, value) =>
+        value === "all" || item.supplierID === value,
+      fulfillmentFilter: (item, value) =>
+        value === "all" || item.fulfillmentMethod === value,
+    },
   });
 
-  const [filteredOrders, setFilteredOrders] = useState<PurchaseOrderDto[]>([]);
-
-  useEffect(() => {
-    let result = [...orders];
-
-    if (filters.searchTerm) {
-      const q = filters.searchTerm.toLowerCase();
-      result = result.filter(
-        (po) =>
-          po.orderNumber.toLowerCase().includes(q) ||
-          po.supplierName.toLowerCase().includes(q),
-      );
-    }
-
-    if (filters.statusFilter !== "all") {
-      result = result.filter((po) => po.status === filters.statusFilter);
-    }
-
-    if (filters.supplierFilter !== "all") {
-      result = result.filter((po) => po.supplierID === filters.supplierFilter);
-    }
-
-    if (filters.fulfillmentFilter !== "all") {
-      result = result.filter(
-        (po) => po.fulfillmentMethod === filters.fulfillmentFilter,
-      );
-    }
-
-    setFilteredOrders(result);
-  }, [orders, filters]);
-
   const updateFilter = useCallback(
-    <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
-    },
-    [],
+    <K extends keyof FilterState>(key: K, value: FilterState[K]) =>
+      setFilter(key, value),
+    [setFilter],
   );
-
-  const resetFilters = useCallback(() => {
-    setFilters({
-      searchTerm: "",
-      statusFilter: "all",
-      supplierFilter: "all",
-      fulfillmentFilter: "all",
-    });
-  }, []);
 
   const stats: StatsData = useMemo(
     () => ({
@@ -90,7 +68,7 @@ export const usePurchaseOrderFilters = ({
 
   return {
     filters,
-    filteredOrders,
+    filteredOrders: filteredItems,
     stats,
     updateFilter,
     resetFilters,

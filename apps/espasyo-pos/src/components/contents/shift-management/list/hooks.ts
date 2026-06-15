@@ -1,28 +1,26 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { CashierShiftDto } from "core-lib/api/commons/types";
+import { useFilters } from "core-lib/core/hooks";
 import { ShiftFilterState, StatusFilter } from "./types";
 
-const DEFAULT_FILTERS: ShiftFilterState = {
-  searchTerm: "",
-  statusFilter: "all",
-};
-
 export const useShiftFilters = ({ shifts }: { shifts: CashierShiftDto[] }) => {
-  const [filters, setFilters] = useState<ShiftFilterState>(DEFAULT_FILTERS);
-
-  const filteredShifts = useMemo(() => {
-    return shifts.filter((s) => {
-      const matchesSearch =
-        !filters.searchTerm ||
-        s.shiftNumber.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        s.cashierName.toLowerCase().includes(filters.searchTerm.toLowerCase());
-
-      const matchesStatus =
-        filters.statusFilter === "all" || s.status === filters.statusFilter;
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [shifts, filters]);
+  const {
+    filters,
+    setFilter,
+    resetFilters,
+    filteredItems,
+  } = useFilters({
+    items: shifts,
+    defaultFilters: {
+      searchTerm: "",
+      statusFilter: "all",
+    },
+    searchKeys: ["shiftNumber", "cashierName"],
+    filterFns: {
+      statusFilter: (item, value) =>
+        value === "all" || item.status === value,
+    },
+  });
 
   const stats = useMemo(
     () => ({
@@ -36,12 +34,17 @@ export const useShiftFilters = ({ shifts }: { shifts: CashierShiftDto[] }) => {
   const updateFilter = <K extends keyof ShiftFilterState>(
     key: K,
     value: ShiftFilterState[K],
-  ) => setFilters((prev) => ({ ...prev, [key]: value }));
+  ) => setFilter(key, value);
 
   const updateStatusFilter = (value: StatusFilter) =>
-    updateFilter("statusFilter", value);
+    setFilter("statusFilter", value);
 
-  const resetFilters = () => setFilters(DEFAULT_FILTERS);
-
-  return { filters, filteredShifts, stats, updateFilter, updateStatusFilter, resetFilters };
+  return {
+    filters,
+    filteredShifts: filteredItems,
+    stats,
+    updateFilter,
+    updateStatusFilter,
+    resetFilters,
+  };
 };

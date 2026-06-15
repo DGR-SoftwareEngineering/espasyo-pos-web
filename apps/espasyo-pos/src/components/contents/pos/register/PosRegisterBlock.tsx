@@ -9,6 +9,7 @@ import {
   useOfflineMode,
 } from "core-lib/core/contexts";
 import { useApi, useApiCallback, useLogout, useCashDrawer } from "core-lib/core/hooks";
+import { extractApiError } from "core-lib/business/errorUtils";
 import { addOfflineSale } from "core-lib/core/services/offlineDb";
 import { ConfettiCanvas, ConfettiHandle } from "core-lib/components/confetti";
 import { cashDrawerService } from "core-lib/business/cashDrawer";
@@ -178,11 +179,7 @@ export const PosRegisterBlock: React.FC = () => {
           await logout();
           return;
         }
-        const errorMsg =
-          Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-            ? (result.data.errors as string[])[0]
-            : result?.data?.message ?? "Failed to close shift";
-        showToast(errorMsg, "error");
+        showToast(extractApiError(result, "Failed to close shift"), "error");
       } catch {
         showToast("Failed to close shift", "error");
       } finally {

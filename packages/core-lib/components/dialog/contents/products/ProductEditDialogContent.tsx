@@ -499,6 +499,7 @@ export const ProductEditDialogContent: React.FC<{
         lookupsLoading={lookupsLoading}
         isInDialog={true}
         isEdit={true}
+        productId={product.productID}
         currentImageUrl={product.imageUrl}
       />
     </Box>

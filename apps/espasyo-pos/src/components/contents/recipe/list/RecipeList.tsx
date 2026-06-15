@@ -2,15 +2,11 @@ import React, { useCallback, useMemo } from "react";
 import { Box } from "@radix-ui/themes";
 import { DataTableV2 } from "core-lib/components/radix/table/DataTableV2";
 import { TABLE_HEADERS } from "../constants";
-import { RecipeResponse } from "core-lib/api/commons/types";
-import {
-  getRecipeIngredientCount,
-  getRecipeTotalCost,
-} from "core-lib/business/recipe";
+import { ProductRecipeSummaryResponse } from "core-lib/api/commons/types";
 import { RecipeTableRow } from "./RecipeTableRow";
 
 interface Props {
-  data: RecipeResponse[];
+  data: ProductRecipeSummaryResponse[];
   loading?: boolean;
   pagination?: {
     pageNumber: number;
@@ -22,15 +18,12 @@ interface Props {
   };
   onNextPage?: () => void;
   onPreviousPage?: () => void;
-  onView: (recipe: RecipeResponse) => void;
-  onEdit: (recipe: RecipeResponse) => void;
-  onDelete: (recipe: RecipeResponse) => void;
+  onView: (recipe: ProductRecipeSummaryResponse) => void;
+  onEdit: (recipe: ProductRecipeSummaryResponse) => void;
+  onDelete: (recipe: ProductRecipeSummaryResponse) => void;
 }
 
-type TableRecipe = RecipeResponse & {
-  ingredientCount: number;
-  totalCost: number;
-};
+type TableRecipe = ProductRecipeSummaryResponse & { ingredientCount: number };
 
 export const RecipeList: React.FC<Props> = ({
   data,
@@ -45,15 +38,15 @@ export const RecipeList: React.FC<Props> = ({
   const tableData = useMemo((): TableRecipe[] => {
     return data.map((recipe) => ({
       ...recipe,
-      ingredientCount: getRecipeIngredientCount(recipe),
-      totalCost: getRecipeTotalCost(recipe),
+      ingredientCount: recipe.totalAllIngredients,
+      totalCost: recipe.totalAllCost,
     }));
   }, [data]);
 
   const bodyRowComponent = useCallback(
     (row: TableRecipe) => (
       <RecipeTableRow
-        key={row.recipeID}
+        key={row.recipeID ?? row.menuItemProductID}
         row={row}
         onView={onView}
         onEdit={onEdit}

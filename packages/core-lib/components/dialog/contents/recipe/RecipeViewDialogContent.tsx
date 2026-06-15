@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import {
   Avatar,
   Badge,
   Box,
+  Button,
   Card,
   Callout,
   Flex,
@@ -18,6 +19,7 @@ import {
   InventoryOutlined,
   WarningAmberOutlined,
   ProductionQuantityLimitsOutlined,
+  InfoOutlined,
 } from "@mui/icons-material";
 import {
   RecipeResponse,
@@ -41,10 +43,15 @@ import {
   getIngredientCostStats,
 } from "../../../../business/recipe";
 import { PesoIcon } from "../../../icons/PesoIcon";
+import { useApiCallback } from "../../../../core/hooks";
+import { RecipeVariantAddonViewContent } from "./RecipeVariantAddonViewContent";
 
 interface Props {
   recipe: RecipeResponse;
   productionCapacity?: ProductionCapacity;
+  onNavigateToInventory?: () => void;
+  variantRecipeCount?: number;
+  addOnRecipeCount?: number;
 }
 
 type RadixColor = "green" | "amber" | "red" | "gray";
@@ -215,8 +222,27 @@ const RecipeViewIngredientCard: React.FC<RecipeViewIngredientCardProps> = ({
 
 export const RecipeViewDialogContent: React.FC<Props> = ({
   recipe,
-  productionCapacity,
+  onNavigateToInventory,
+  variantRecipeCount,
+  addOnRecipeCount,
 }) => {
+  const isVariantOnly = !recipe.recipeItems?.length &&
+    ((variantRecipeCount ?? 0) > 0 || (addOnRecipeCount ?? 0) > 0);
+
+  const capacityCb = useApiCallback(
+    async (api, productId: string) => await api.commons.calculateMaxProduction(productId)
+  );
+
+  useEffect(() => {
+    if (!isVariantOnly && recipe.menuItemProductID) {
+      capacityCb.execute(recipe.menuItemProductID);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipe.menuItemProductID, isVariantOnly]);
+
+  const productionCapacity = capacityCb.result?.data?.response;
+  const isCapacityLoading = capacityCb.loading;
+
   const totalCost = getRecipeTotalCost(recipe);
   const ingredientCount = getRecipeIngredientCount(recipe);
   const avgCostPerIngredient = getAverageCostPerIngredient(recipe);
@@ -226,6 +252,17 @@ export const RecipeViewDialogContent: React.FC<Props> = ({
   const stats = useMemo(() => getIngredientCostStats(recipe), [recipe]);
 
   const statusColor = getStatusColor(productionCapacity?.overallStatus);
+
+  if (isVariantOnly) {
+    return (
+      <RecipeVariantAddonViewContent
+        recipe={recipe}
+        onNavigateToInventory={onNavigateToInventory}
+        variantRecipeCount={variantRecipeCount}
+        addOnRecipeCount={addOnRecipeCount}
+      />
+    );
+  }
 
   return (
     <motion.div
@@ -268,9 +305,21 @@ export const RecipeViewDialogContent: React.FC<Props> = ({
               <Badge color="gray" variant="soft" size="1">
                 Menu: {recipe?.menuItemProductID?.substring(0, 8)}...
               </Badge>
-              <Badge color="gray" variant="soft" size="1">
-                Recipe: {recipe?.recipeID?.substring(0, 8)}...
-              </Badge>
+              {recipe?.recipeID && (
+                <Badge color="gray" variant="soft" size="1">
+                  Recipe: {recipe?.recipeID?.substring(0, 8)}...
+                </Badge>
+              )}
+              {(variantRecipeCount ?? 0) > 0 && (
+                <Badge color="violet" variant="soft" size="1">
+                  {variantRecipeCount} variant recipe{variantRecipeCount !== 1 ? "s" : ""}
+                </Badge>
+              )}
+              {(addOnRecipeCount ?? 0) > 0 && (
+                <Badge color="orange" variant="soft" size="1">
+                  {addOnRecipeCount} add-on recipe{addOnRecipeCount !== 1 ? "s" : ""}
+                </Badge>
+              )}
             </Flex>
           </Box>
           {productionCapacity?.overallStatus && (
@@ -320,53 +369,78 @@ export const RecipeViewDialogContent: React.FC<Props> = ({
         </Grid>
 
         {/* Production Capacity */}
-        {productionCapacity && (
+        {(isCapacityLoading || productionCapacity) && (
           <>
             <Separator size="4" />
             <Flex align="center" gap="2">
               <ProductionQuantityLimitsOutlined style={{ color: "var(--accent-11)" }} />
               <Heading size="3">Production Capacity</Heading>
-              {productionCapacity.overallStatus && (
-                <Badge
-                  color={statusColor}
-                  variant="soft"
-                  size="1"
-                >
+              {isCapacityLoading && (
+                <Badge color="gray" variant="soft" size="1">Calculating...</Badge>
+              )}
+              {!isCapacityLoading && productionCapacity?.overallStatus && (
+                <Badge color={statusColor} variant="soft" size="1">
                   {productionCapacity.overallStatus}
                 </Badge>
               )}
             </Flex>
 
-            <Grid columns="3" gap="2">
-              <StatsCard
-                label="Maximum Units"
-                value={maxUnits}
-                color="info"
-                variant="compact"
+            {isCapacityLoading ? (
+              <Box
+                style={{
+                  height: 76,
+                  background: "var(--gray-a3)",
+                  borderRadius: "var(--radius-3)",
+                  animation: "pulse 1.5s ease-in-out infinite",
+                }}
               />
-              <StatsCard
-                label="Cost Per Serving"
-                value={formatCurrency(costPerUnit)}
-                color="success"
-                variant="compact"
-                icon={<PesoIcon />}
-              />
-              <StatsCard
-                label="Total at Max"
-                value={formatCurrency(totalCostAtMax)}
-                color="warning"
-                variant="compact"
-                icon={<PesoIcon />}
-              />
-            </Grid>
+            ) : (
+              <Grid columns="3" gap="2">
+                <StatsCard
+                  label="Maximum Units"
+                  value={maxUnits}
+                  color="info"
+                  variant="compact"
+                />
+                <StatsCard
+                  label="Cost Per Serving"
+                  value={formatCurrency(costPerUnit)}
+                  color="success"
+                  variant="compact"
+                  icon={<PesoIcon />}
+                />
+                <StatsCard
+                  label="Total at Max"
+                  value={formatCurrency(totalCostAtMax)}
+                  color="warning"
+                  variant="compact"
+                  icon={<PesoIcon />}
+                />
+              </Grid>
+            )}
 
-            {productionCapacity.maxUnitsCanProduce === 0 && (
+            {!isCapacityLoading && productionCapacity && (
+              productionCapacity.maxUnitsCanProduce === 0 ||
+              (productionCapacity.bottleneckIngredients?.length ?? 0) > 0
+            ) && (
               <Callout.Root color="red" variant="soft">
                 <Callout.Icon>
                   <WarningAmberOutlined />
                 </Callout.Icon>
                 <Callout.Text>
-                  Cannot produce {recipe?.menuItemName} due to insufficient inventory
+                  <Flex justify="between" align="center" gap="3" wrap="wrap">
+                    <Text>
+                      {productionCapacity.maxUnitsCanProduce === 0
+                        ? `Cannot produce ${recipe?.menuItemName} — insufficient inventory.`
+                        : `${productionCapacity.bottleneckIngredients?.length} ingredient(s) are limiting production.`}
+                      {" "}This view is connected to live inventory data.
+                    </Text>
+                    {onNavigateToInventory && (
+                      <Button size="1" variant="soft" color="red" onClick={onNavigateToInventory}>
+                        Go to Inventory →
+                      </Button>
+                    )}
+                  </Flex>
                 </Callout.Text>
               </Callout.Root>
             )}
@@ -406,6 +480,18 @@ export const RecipeViewDialogContent: React.FC<Props> = ({
 
         {/* Ingredients */}
         <Separator size="4" />
+        {isVariantOnly ? (
+          <Callout.Root color="blue" variant="soft">
+            <Callout.Icon>
+              <InfoOutlined />
+            </Callout.Icon>
+            <Callout.Text>
+              This product has no base recipe — it uses variant and/or add-on recipes only.
+              Use the expand button in the Recipe List to view each variant or add-on&apos;s ingredients.
+            </Callout.Text>
+          </Callout.Root>
+        ) : (
+          <>
         <Flex justify="between" align="center" wrap="wrap" gap="2">
           <Flex align="center" gap="2">
             <InventoryOutlined style={{ color: "var(--accent-11)" }} />
@@ -459,6 +545,8 @@ export const RecipeViewDialogContent: React.FC<Props> = ({
             })}
           </Flex>
         </AnimatePresence>
+          </>
+        )}
       </Flex>
     </motion.div>
   );

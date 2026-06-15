@@ -13,6 +13,9 @@ import { AddCircleOutlined, PeopleAltOutlined } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useApi, useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import { extractApiError } from "core-lib/business/errorUtils";
+import { PillTabBar } from "core-lib/components/radix/PillTabBar";
+import { PaginationFooter } from "core-lib/components/radix/PaginationFooter";
 import {
   CustomerDetailDto,
   CustomerDto,
@@ -130,11 +133,7 @@ export const CustomerListBlock: React.FC = () => {
         handleRefresh();
         return;
       }
-      const msg =
-        Array.isArray(result?.data?.errors) && result.data.errors.length > 0
-          ? (result.data.errors as string[])[0]
-          : result?.data?.message ?? "Failed to delete customer";
-      showToast(msg, "error");
+      showToast(extractApiError(result, "Failed to delete customer"), "error");
     } catch {
       showToast("Failed to delete customer", "error");
     } finally {
@@ -214,47 +213,17 @@ export const CustomerListBlock: React.FC = () => {
           ))}
         </Flex>
 
-        <Box
-          mt="4"
-          style={{
-            display: "inline-flex",
-            borderRadius: 999,
-            border: "1px solid var(--gray-a4)",
-            background: "var(--gray-a2)",
-            padding: 3,
-            gap: 2,
-            flexWrap: "wrap",
+        <PillTabBar<SegmentFilter>
+          tabs={SEGMENT_TABS.map((tab) => ({
+            ...tab,
+            count: stats.perSegment[tab.value] ?? 0,
+          }))}
+          activeTab={filters.segmentFilter}
+          onTabChange={(value) => {
+            updateSegmentFilter(value);
+            setPageNumber(1);
           }}
-        >
-          {SEGMENT_TABS.map((tab) => {
-            const active = filters.segmentFilter === tab.value;
-            const count = stats.perSegment[tab.value] ?? 0;
-            return (
-              <button
-                key={String(tab.value)}
-                onClick={() => {
-                  updateSegmentFilter(tab.value);
-                  setPageNumber(1);
-                }}
-                style={{
-                  padding: "5px 14px",
-                  borderRadius: 999,
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontWeight: active ? 600 : 400,
-                  background: active ? "var(--color-background)" : "transparent",
-                  color: active ? "var(--accent-11)" : "var(--gray-11)",
-                  boxShadow: active ? "var(--shadow-1)" : "none",
-                  transition: "all 0.15s ease",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {tab.label} · {count}
-              </button>
-            );
-          })}
-        </Box>
+        />
 
         <Flex justify="between" align="center" gap="3" mt="3" wrap="wrap">
           <FilterBar
@@ -299,15 +268,12 @@ export const CustomerListBlock: React.FC = () => {
         </Card>
       )}
 
-      {filteredCustomers.length > 0 && (
-        <Flex justify="between" align="center" mt="3" px="2">
-          <Text size="2" color="gray">
-            Showing {(pageNumber - 1) * pageSize + 1} to{" "}
-            {Math.min(pageNumber * pageSize, filteredCustomers.length)} of{" "}
-            {filteredCustomers.length} customer(s)
-          </Text>
-        </Flex>
-      )}
+      <PaginationFooter
+        pageNumber={pageNumber}
+        pageSize={pageSize}
+        totalItems={filteredCustomers.length}
+        itemLabel="customer(s)"
+      />
 
       {/* Create dialog */}
       <DialogBox

@@ -77,12 +77,16 @@ export const RecipeEditDialogContent: React.FC<{
           formKey="recipe-form"
           onSubmit={handleSubmit}
           submitLoading={updateRecipeCb.loading}
-          menuItems={menuItems}
           ingredients={ingredients}
           units={units}
           initialValues={initialValues}
           isInDialog={true}
           isEdit={true}
+          recipeTarget={{
+            type: "base",
+            productId: recipe.menuItemProductID,
+            productName: recipe.menuItemName,
+          }}
         />
       )}
     </Box>

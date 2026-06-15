@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Box, Flex, Text, Popover, Button, Card, Separator } from "@radix-ui/themes";
 import { RocketIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
-import { usePublicSettings } from "../../../core/contexts";
+import { usePublicSettings, useAuthContext } from "../../../core/contexts";
 import { useApi } from "../../../core/hooks";
 import { useRouter } from "../../../core/router";
 import { formatCurrency, getDailySalesGross } from "../../../business";
@@ -33,7 +33,10 @@ const colorToBg: Record<string, string> = {
 export const HeaderSalesTarget: React.FC = () => {
   const router = useRouter();
   const { pos } = usePublicSettings();
+  const { role } = useAuthContext();
   const salesApi = useApi((api) => api.commons.salesDailySummary(), []);
+
+  const isAdmin = (role ?? "").toLowerCase() === "admin";
 
   const targetAmount = pos.targetSalesAmountPerDay;
   const salesResponse = salesApi.result?.data?.response;
@@ -47,7 +50,7 @@ export const HeaderSalesTarget: React.FC = () => {
   const reached = targetAmount > 0 && currentAmount >= targetAmount;
   const threshold = getThresholdColor(progressPct);
 
-  if (!pos.targetSalesEnabled || targetAmount <= 0) {
+  if (!isAdmin || !pos.targetSalesEnabled || targetAmount <= 0) {
     return null;
   }
 

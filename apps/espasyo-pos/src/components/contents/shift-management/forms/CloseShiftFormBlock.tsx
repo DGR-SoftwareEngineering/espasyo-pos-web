@@ -1,7 +1,2 @@
-import React from "react";
-import { CloseShiftForm } from "./CloseShiftForm";
-import { CloseShiftFormProps } from "./types";
-
-export const CloseShiftFormBlock: React.FC<CloseShiftFormProps> = (props) => (
-  <CloseShiftForm {...props} />
-);
+export { CloseShiftForm as CloseShiftFormBlock } from "./CloseShiftForm";
+export type { CloseShiftFormProps as CloseShiftFormBlockProps } from "./types";

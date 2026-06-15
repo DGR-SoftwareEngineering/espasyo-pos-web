@@ -1,30 +1,42 @@
 import React from "react";
 import { Badge, Box, Card, Flex, IconButton, Select, Switch, Text, Tooltip } from "@radix-ui/themes";
-import { TrashIcon, PlusIcon, ChevronDownIcon, ChevronRightIcon, CheckCircledIcon } from "@radix-ui/react-icons";
+import { TrashIcon, PlusIcon, ChevronDownIcon, ChevronRightIcon, CheckCircledIcon, FileTextIcon } from "@radix-ui/react-icons";
 import { Control, Controller, useFieldArray, type FieldArrayPath, type FieldValues } from "react-hook-form";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import type { ProductAddOnTemplateDto } from "core-lib/api/commons/types";
+import { AddOnItemRecipeDialog } from "../recipe/AddOnItemRecipeDialog";
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>;
   addOnGroupsFieldName?: string;
   addOnTemplates?: ProductAddOnTemplateDto[];
+  isEdit?: boolean;
 }
 
 interface ItemsArrayProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>;
   groupFieldName: string;
+  isEdit?: boolean;
 }
 
-const AddOnItemsArray: React.FC<ItemsArrayProps> = ({ control, groupFieldName }) => {
+const AddOnItemsArray: React.FC<ItemsArrayProps> = ({
+  control,
+  groupFieldName,
+  isEdit = false,
+}) => {
   const itemsFieldName = `${groupFieldName}.items`;
   const { fields, append, remove } = useFieldArray({
     control,
     name: itemsFieldName as FieldArrayPath<FieldValues>,
   });
+
+  const [selectedItemForRecipe, setSelectedItemForRecipe] = React.useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleAddItem = () => {
     append({
@@ -36,83 +48,127 @@ const AddOnItemsArray: React.FC<ItemsArrayProps> = ({ control, groupFieldName })
   };
 
   return (
-    <Flex direction="column" gap="2">
-      <Text size="1" weight="medium" color="gray">
-        Items
-      </Text>
+    <>
+      <Flex direction="column" gap="2">
+        <Text size="1" weight="medium" color="gray">
+          Items
+        </Text>
 
-      {fields.length === 0 ? (
-        <Box
-          p="3"
-          style={{
-            border: "1px dashed var(--gray-a6)",
-            borderRadius: "var(--radius-2)",
-            textAlign: "center",
-            background: "var(--gray-a1)",
-          }}
-        >
-          <Text size="1" color="gray">
-            No items in this group yet.
-          </Text>
-        </Box>
-      ) : (
-        <Flex direction="column" gap="2">
-          {fields.map((field, itemIndex) => (
-            <Box
-              key={field.id}
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto",
-                gap: "var(--space-2)",
-                alignItems: "end",
-              }}
-            >
-              <TextField
-                name={`${itemsFieldName}.${itemIndex}.name`}
-                control={control}
-                label={itemIndex === 0 ? "Item name" : ""}
-                placeholder="e.g., Cheese"
-              />
-              <TextField
-                name={`${itemsFieldName}.${itemIndex}.additionalPrice`}
-                control={control}
-                label={itemIndex === 0 ? "+ Price" : ""}
-                type="number"
-                placeholder="0.00"
-              />
-              <TextField
-                name={`${itemsFieldName}.${itemIndex}.displayOrder`}
-                control={control}
-                label={itemIndex === 0 ? "Order" : ""}
-                type="number"
-                placeholder="0"
-              />
-              <Tooltip content="Remove item">
-                <IconButton
-                  size="2"
-                  variant="soft"
-                  color="red"
-                  aria-label="Remove add-on item"
-                  onClick={() => remove(itemIndex)}
+        {fields.length === 0 ? (
+          <Box
+            p="3"
+            style={{
+              border: "1px dashed var(--gray-a6)",
+              borderRadius: "var(--radius-2)",
+              textAlign: "center",
+              background: "var(--gray-a1)",
+            }}
+          >
+            <Text size="1" color="gray">
+              No items in this group yet.
+            </Text>
+          </Box>
+        ) : (
+          <Flex direction="column" gap="2">
+            {fields.map((field, itemIndex) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const addOnItemId = (field as any).productAddOnItemID as string | null;
+
+              return (
+                <Box
+                  key={field.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: isEdit
+                      ? "minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto auto"
+                      : "minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto",
+                    gap: "var(--space-2)",
+                    alignItems: "end",
+                  }}
                 >
-                  <TrashIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          ))}
-        </Flex>
-      )}
-
-      <Box>
-        <Button type="Secondary" onClick={handleAddItem}>
-          <Flex align="center" gap="2">
-            <PlusIcon />
-            Add Item
+                  <TextField
+                    name={`${itemsFieldName}.${itemIndex}.name`}
+                    control={control}
+                    label={itemIndex === 0 ? "Item name" : ""}
+                    placeholder="e.g., Cheese"
+                  />
+                  <TextField
+                    name={`${itemsFieldName}.${itemIndex}.additionalPrice`}
+                    control={control}
+                    label={itemIndex === 0 ? "+ Price" : ""}
+                    type="number"
+                    placeholder="0.00"
+                  />
+                  <TextField
+                    name={`${itemsFieldName}.${itemIndex}.displayOrder`}
+                    control={control}
+                    label={itemIndex === 0 ? "Order" : ""}
+                    type="number"
+                    placeholder="0"
+                  />
+                  {isEdit && (
+                    <Box style={{ display: "flex", alignItems: "flex-end" }}>
+                      {addOnItemId ? (
+                        <Tooltip content="Manage add-on recipe">
+                          <IconButton
+                            size="2"
+                            variant="ghost"
+                            color="indigo"
+                            aria-label="Manage add-on item recipe"
+                            onClick={() =>
+                              setSelectedItemForRecipe({
+                                id: addOnItemId,
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                name: (field as any).name || "Add-on item",
+                              })
+                            }
+                          >
+                            <FileTextIcon />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Box style={{ width: 32, height: 32 }} />
+                      )}
+                    </Box>
+                  )}
+                  <Tooltip content="Remove item">
+                    <IconButton
+                      size="2"
+                      variant="soft"
+                      color="red"
+                      aria-label="Remove add-on item"
+                      style={{ alignSelf: "flex-end" }}
+                      onClick={() => remove(itemIndex)}
+                    >
+                      <TrashIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              );
+            })}
           </Flex>
-        </Button>
-      </Box>
-    </Flex>
+        )}
+
+        <Box>
+          <Button type="Secondary" onClick={handleAddItem}>
+            <Flex align="center" gap="2">
+              <PlusIcon />
+              Add Item
+            </Flex>
+          </Button>
+        </Box>
+      </Flex>
+
+      {selectedItemForRecipe && (
+        <AddOnItemRecipeDialog
+          addOnItemId={selectedItemForRecipe.id}
+          addOnItemName={selectedItemForRecipe.name}
+          open={!!selectedItemForRecipe}
+          onClose={() => setSelectedItemForRecipe(null)}
+          onSaved={() => setSelectedItemForRecipe(null)}
+        />
+      )}
+    </>
   );
 };
 
@@ -120,6 +176,7 @@ export const ProductAddOnGroupsSection: React.FC<Props> = ({
   control,
   addOnGroupsFieldName = "addOnGroups",
   addOnTemplates = [],
+  isEdit = false,
 }) => {
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -372,6 +429,7 @@ export const ProductAddOnGroupsSection: React.FC<Props> = ({
                       <AddOnItemsArray
                         control={control}
                         groupFieldName={groupFieldName}
+                        isEdit={isEdit}
                       />
                     </Box>
                   )}
