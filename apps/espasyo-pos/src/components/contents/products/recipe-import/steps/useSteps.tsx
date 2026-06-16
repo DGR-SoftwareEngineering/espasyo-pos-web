@@ -5,17 +5,19 @@ import { ProgressStepper } from "core-lib/components/radix/Stepper/ProgressStepp
 import { InfoStep } from "./content/InfoStep";
 import { UploadStep } from "./content/UploadStep";
 import { ConfigStep } from "./content/ConfigStep";
-import { PreviewStep } from "./content/PreviewStep";
+import { ModifyStep } from "./content/ModifyStep";
+import { SummaryStep } from "./content/SummaryStep";
 import { ResultStep } from "./content/ResultStep";
 
-const STEP_ORDER = ["Guide", "Upload File", "Configure", "Preview & Assign", "Done"];
+const STEP_ORDER = ["Guide", "Upload File", "Configure", "Edit Details", "Summary", "Done"];
 
 const STEP_INDEX: Record<string, number> = {
   info: 0,
   upload: 1,
   config: 2,
-  preview: 3,
-  result: 4,
+  modify: 3,
+  summary: 4,
+  result: 5,
 };
 
 interface UseRecipeImportStepsReturn {
@@ -32,15 +34,17 @@ export const useRecipeImportSteps = (
   const handleNext = () => {
     if (currentStep === "info") setCurrentStep("upload");
     else if (currentStep === "upload") setCurrentStep("config");
-    else if (currentStep === "config") setCurrentStep("preview");
-    else if (currentStep === "preview") setCurrentStep("result");
+    else if (currentStep === "config") setCurrentStep("modify");
+    else if (currentStep === "modify") setCurrentStep("summary");
+    else if (currentStep === "summary") setCurrentStep("result");
   };
 
   const handlePrevious = () => {
     if (currentStep === "upload") setCurrentStep("info");
     else if (currentStep === "config") setCurrentStep("upload");
-    else if (currentStep === "preview") setCurrentStep("config");
-    else if (currentStep === "result") setCurrentStep("preview");
+    else if (currentStep === "modify") setCurrentStep("config");
+    else if (currentStep === "summary") setCurrentStep("modify");
+    else if (currentStep === "result") setCurrentStep("summary");
   };
 
   const render = (
@@ -58,8 +62,11 @@ export const useRecipeImportSteps = (
       {currentStep === "config" && (
         <ConfigStep next={handleNext} previous={handlePrevious} reset={reset} />
       )}
-      {currentStep === "preview" && (
-        <PreviewStep next={handleNext} previous={handlePrevious} reset={reset} onSubmit={onSubmit} />
+      {currentStep === "modify" && (
+        <ModifyStep next={handleNext} previous={handlePrevious} reset={reset} />
+      )}
+      {currentStep === "summary" && (
+        <SummaryStep next={handleNext} previous={handlePrevious} reset={reset} onSubmit={onSubmit} />
       )}
       {currentStep === "result" && (
         <ResultStep next={handleNext} previous={handlePrevious} reset={reset} />

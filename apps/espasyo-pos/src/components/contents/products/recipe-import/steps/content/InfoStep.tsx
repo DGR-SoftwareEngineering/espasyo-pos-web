@@ -256,6 +256,71 @@ export const InfoStep: React.FC<RecipeImportStepProps> = ({ next }) => {
           </Flex>
         </Card>
 
+        {/* Variant Auto-Detection */}
+        <Card variant="surface" size="2">
+          <Flex gap="3" align="start">
+            <Box
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                background: "var(--blue-a3)",
+                color: "var(--blue-11)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                fontSize: 18,
+              }}
+            >
+              🔍
+            </Box>
+            <Box style={{ flex: 1 }}>
+              <Heading size="3" mb="2">
+                Variant Products — Auto-Detection
+              </Heading>
+              <Text as="p" color="gray" size="2" style={{ lineHeight: 1.7 }} mb="3">
+                If your product comes in multiple sizes, name each tab using this format:
+              </Text>
+              <Box
+                style={{
+                  padding: "0.75rem 1rem",
+                  background: "var(--blue-a2)",
+                  borderRadius: 6,
+                  fontFamily: "monospace",
+                  fontSize: 13,
+                  marginBottom: "0.75rem",
+                }}
+              >
+                <Text size="2" weight="medium">[size]oz [Product Name]</Text>
+                <Text as="p" size="1" color="gray" mt="1">
+                  e.g. &nbsp; 12oz PURE MATCHA &nbsp;|&nbsp; 16oz PURE MATCHA &nbsp;|&nbsp; 22oz PURE MATCHA
+                </Text>
+              </Box>
+              <Text as="p" color="gray" size="2" style={{ lineHeight: 1.7 }} mb="2">
+                The system will automatically:
+              </Text>
+              <Flex direction="column" gap="1">
+                {[
+                  "Create one parent product — PURE MATCHA",
+                  "Add size variants: 12oz, 16oz, 22oz with their individual prices",
+                  "Create a separate recipe for each size with its own ingredient quantities",
+                ].map((item, i) => (
+                  <Flex key={i} gap="2" align="center">
+                    <CheckCircledIcon color="var(--green-9)" />
+                    <Text size="2" color="gray">{item}</Text>
+                  </Flex>
+                ))}
+              </Flex>
+              <Callout.Root color="blue" variant="surface" mt="3">
+                <Callout.Text size="2">
+                  Tabs that do <strong>not</strong> match the size prefix pattern (e.g. "Pepper Beef Tapa", "PLAIN FRIES") are imported as regular standalone menu items — no change to their behaviour.
+                </Callout.Text>
+              </Callout.Root>
+            </Box>
+          </Flex>
+        </Card>
+
         {/* Important Notice */}
         <Card variant="surface" size="2" style={{ borderLeft: "4px solid var(--amber-9)" }}>
           <Flex direction="column" gap="2">

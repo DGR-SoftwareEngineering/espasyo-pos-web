@@ -36,6 +36,7 @@ import {
   RecipeDeleteDialogContent,
   RecipeEditDialogContent,
   RecipeVariantAddonDeleteDialogContent,
+  RecipeBulkDeleteDialogContent,
 } from "./contents/recipe";
 import {
   InventoryViewDialogContent,
@@ -185,6 +186,17 @@ export const DialogContextModal: React.FC<Props> = ({
           recipe={vaData.recipe}
           variantRecipeCount={vaData.variantRecipeCount}
           addOnRecipeCount={vaData.addOnRecipeCount}
+          onSuccess={onSuccess!}
+          onClose={onClose!}
+        />
+      );
+    }
+    case "RecipeBulkDelete": {
+      const bulkRecipeData = dialogData as { ids: string[]; count: number };
+      return (
+        <RecipeBulkDeleteDialogContent
+          ids={bulkRecipeData.ids}
+          count={bulkRecipeData.count}
           onSuccess={onSuccess!}
           onClose={onClose!}
         />

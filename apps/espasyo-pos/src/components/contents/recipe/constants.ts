@@ -52,16 +52,20 @@ const config = new FeatureConfigBuilder<RecipeResponse>("Recipe")
   ])
   .setSortStrategies({
     name: (a, b) => a.menuItemName.localeCompare(b.menuItemName),
-    ingredients: (a, b) => b.recipeItems.length - a.recipeItems.length,
+    ingredients: (a, b) => {
+      const aCount = (a as any).totalAllIngredients ?? a.recipeItems.length;
+      const bCount = (b as any).totalAllIngredients ?? b.recipeItems.length;
+      return bCount - aCount;
+    },
     cost: (a, b) => {
-      const costA = a.recipeItems.reduce((sum, item) => sum + item.cost, 0);
-      const costB = b.recipeItems.reduce((sum, item) => sum + item.cost, 0);
-      return costB - costA;
+      const aCost = (a as any).totalAllCost ?? a.recipeItems.reduce((sum, item) => sum + item.cost, 0);
+      const bCost = (b as any).totalAllCost ?? b.recipeItems.reduce((sum, item) => sum + item.cost, 0);
+      return bCost - aCost;
     },
     costLow: (a, b) => {
-      const costA = a.recipeItems.reduce((sum, item) => sum + item.cost, 0);
-      const costB = b.recipeItems.reduce((sum, item) => sum + item.cost, 0);
-      return costA - costB;
+      const aCost = (a as any).totalAllCost ?? a.recipeItems.reduce((sum, item) => sum + item.cost, 0);
+      const bCost = (b as any).totalAllCost ?? b.recipeItems.reduce((sum, item) => sum + item.cost, 0);
+      return aCost - bCost;
     },
     newest: commonSortStrategies.newest as any,
     oldest: commonSortStrategies.oldest as any,

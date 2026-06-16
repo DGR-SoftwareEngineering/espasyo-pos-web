@@ -188,6 +188,7 @@ export type DialogDataType = {
     variantRecipeCount?: number;
     addOnRecipeCount?: number;
   };
+  RecipeBulkDelete: { ids: string[]; count: number };
 
   InventoryView: InventoryDto;
   InventoryAdjust: InventoryDto;
