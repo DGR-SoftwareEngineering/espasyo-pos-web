@@ -2803,6 +2803,9 @@ export interface RecipeItemPreviewDto {
   ingredientCategoryID?: string;
   packagePrice: number;
   qtyPerPack: number;
+  ingredientDescription?: string;
+  purchaseUnitID?: string;
+  stockUnitID?: string;
 }
 
 export interface RecipePreviewItemDto {
@@ -2820,6 +2823,10 @@ export interface RecipePreviewItemDto {
   hasExistingAddOnGroups: boolean;
   existingAddOnGroupCount: number;
   categoryID?: string;
+  variantGroup?: string;
+  variantSize?: string;
+  description?: string;
+  materialCost?: number;
 }
 
 export interface RecipeImportPreviewDto {
@@ -2845,6 +2852,9 @@ export interface ImportRecipeItemDto {
   packagePrice: number;
   qtyPerPack: number;
   ingredientExistsInDb: boolean;
+  ingredientDescription?: string | null;
+  purchaseUnitID?: string | null;
+  stockUnitID?: string | null;
 }
 
 export interface ImportMenuItemDto {
@@ -2852,6 +2862,10 @@ export interface ImportMenuItemDto {
   sellingPrice: number;
   categoryID: string;
   recipeItems: ImportRecipeItemDto[];
+  variantGroup?: string | null;
+  variantName?: string | null;
+  description?: string | null;
+  materialCost?: number | null;
 }
 
 export interface ImportRecipeExcelDto {
@@ -2921,18 +2935,25 @@ export interface StagedMenuItemDto {
   menuItemName: string;
   sellingPrice: number;
   categoryName: string;
+  description?: string | null;
+  materialCost?: number | null;
 }
 
 export interface StagedRecipeItemDto {
   ingredientName: string;
   quantityRequired: number;
   unitName: string;
+  packagePrice: number;
+  qtyPerPack: number;
+  estimatedIngredientCost: number;
 }
 
 export interface StagedRecipeDto {
   menuItemName: string;
   estimatedCostPerServing: number;
   items: StagedRecipeItemDto[];
+  variantName?: string | null;
+  variantPrice?: number | null;
 }
 
 export interface RecipeImportBatchDetailDto {
@@ -2946,4 +2967,16 @@ export interface RecipeImportBatchDetailDto {
   ingredients: StagedIngredientDto[];
   menuItems: StagedMenuItemDto[];
   recipes: StagedRecipeDto[];
+}
+
+export interface RevertBatchAffectedProductDto {
+  productName: string;
+  isMenuItem: boolean;
+  currentQuantity: number;
+}
+
+export interface RevertBatchSafetyDto {
+  hasInventory: boolean;
+  inventoryCount: number;
+  affectedProducts: RevertBatchAffectedProductDto[];
 }

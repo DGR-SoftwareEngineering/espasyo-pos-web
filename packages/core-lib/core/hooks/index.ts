@@ -29,3 +29,4 @@ export * from "./useFilters";
 export * from "./useCriticalDeleteGuard";
 /* non-hook */
 export * from "./form-validation/field";
+export * from '../contexts/auth/hooks/useAuthenticateToken'

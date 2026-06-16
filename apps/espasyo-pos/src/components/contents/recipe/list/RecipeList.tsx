@@ -21,9 +21,12 @@ interface Props {
   onView: (recipe: ProductRecipeSummaryResponse) => void;
   onEdit: (recipe: ProductRecipeSummaryResponse) => void;
   onDelete: (recipe: ProductRecipeSummaryResponse) => void;
+  selectedIds: Set<string>;
+  onSelectRecipe: (id: string) => void;
+  onSelectAll: () => void;
 }
 
-type TableRecipe = ProductRecipeSummaryResponse & { ingredientCount: number };
+type TableRecipe = ProductRecipeSummaryResponse & { ingredientCount: number; displayCost: number };
 
 export const RecipeList: React.FC<Props> = ({
   data,
@@ -34,14 +37,22 @@ export const RecipeList: React.FC<Props> = ({
   onView,
   onEdit,
   onDelete,
+  selectedIds,
+  onSelectRecipe,
+  onSelectAll,
 }) => {
   const tableData = useMemo((): TableRecipe[] => {
     return data.map((recipe) => ({
       ...recipe,
       ingredientCount: recipe.totalAllIngredients,
-      totalCost: recipe.totalAllCost,
+      displayCost: recipe.totalAllCost,
     }));
   }, [data]);
+
+  const selectableRows = tableData.filter((r) => r.recipeID);
+  const allSelected =
+    selectableRows.length > 0 && selectableRows.every((r) => selectedIds.has(r.recipeID!));
+  const someSelected = !allSelected && selectableRows.some((r) => selectedIds.has(r.recipeID!));
 
   const bodyRowComponent = useCallback(
     (row: TableRecipe) => (
@@ -51,9 +62,12 @@ export const RecipeList: React.FC<Props> = ({
         onView={onView}
         onEdit={onEdit}
         onDelete={onDelete}
+        isSelectable={true}
+        isChecked={row.recipeID ? selectedIds.has(row.recipeID) : false}
+        onSelect={() => row.recipeID && onSelectRecipe(row.recipeID)}
       />
     ),
-    [onView, onEdit, onDelete],
+    [onView, onEdit, onDelete, selectedIds, onSelectRecipe],
   );
 
   return (
@@ -67,6 +81,10 @@ export const RecipeList: React.FC<Props> = ({
         onNextPage={onNextPage}
         onPreviousPage={onPreviousPage}
         bodyRowComponent={bodyRowComponent}
+        selectable={true}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        onSelectAll={onSelectAll}
       />
     </Box>
   );

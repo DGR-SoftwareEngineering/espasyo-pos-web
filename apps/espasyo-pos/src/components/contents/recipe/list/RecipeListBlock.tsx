@@ -5,6 +5,7 @@ import {
   ReloadIcon,
   RocketIcon,
   LightningBoltIcon,
+  TrashIcon,
 } from "@radix-ui/react-icons";
 import {
   RestaurantMenuOutlined,
@@ -41,6 +42,7 @@ export const RecipeListBlock: React.FC = () => {
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [filters, setFilters] = useState<RecipeFilterState>({
     searchQuery: "",
@@ -110,11 +112,45 @@ export const RecipeListBlock: React.FC = () => {
     return count;
   }, [filters]);
 
+  const selectableItems = useMemo(
+    () => paginatedData.filter((r) => r.recipeID),
+    [paginatedData],
+  );
+
   const handleRefresh = useCallback(() => {
     data.execute();
     setFilters({ searchQuery: "", sortBy: "name" });
     setPageNumber(1);
+    setSelectedIds(new Set());
   }, [data]);
+
+  const handleSelectRecipe = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds((prev) =>
+      prev.size === selectableItems.length
+        ? new Set()
+        : new Set(selectableItems.map((r) => r.recipeID!)),
+    );
+  }, [selectableItems]);
+
+  const handleBulkDelete = useCallback(() => {
+    openDialog({
+      title: `Delete ${selectedIds.size} Recipe${selectedIds.size > 1 ? "s" : ""}`,
+      dialogContentType: "RecipeBulkDelete" as unknown as DialogContentType,
+      data: { ids: Array.from(selectedIds), count: selectedIds.size },
+      onSuccess: () => {
+        setSelectedIds(new Set());
+        handleRefresh();
+      },
+    });
+  }, [selectedIds, openDialog, handleRefresh]);
 
   const handleView = useCallback(
     (recipe: ProductRecipeSummaryResponse) => {
@@ -293,16 +329,26 @@ export const RecipeListBlock: React.FC = () => {
             onClearFilters={handleClearFilters}
             showFilterChip
           />
-          <Button
-            type="Secondary"
-            onClick={handleRefresh}
-            disabled={data.loading}
-          >
-            <Flex align="center" gap="2">
-              <ReloadIcon />
-              Refresh
-            </Flex>
-          </Button>
+          <Flex gap="2">
+            {selectedIds.size > 0 && (
+              <Button type="Critical" onClick={handleBulkDelete}>
+                <Flex align="center" gap="2">
+                  <TrashIcon />
+                  Delete Selected ({selectedIds.size})
+                </Flex>
+              </Button>
+            )}
+            <Button
+              type="Secondary"
+              onClick={handleRefresh}
+              disabled={data.loading}
+            >
+              <Flex align="center" gap="2">
+                <ReloadIcon />
+                Refresh
+              </Flex>
+            </Button>
+          </Flex>
         </Flex>
       </Card>
 
@@ -316,6 +362,9 @@ export const RecipeListBlock: React.FC = () => {
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          selectedIds={selectedIds}
+          onSelectRecipe={handleSelectRecipe}
+          onSelectAll={handleSelectAll}
         />
       </Card>
 

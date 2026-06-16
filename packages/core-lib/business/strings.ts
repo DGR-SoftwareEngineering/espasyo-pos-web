@@ -96,9 +96,16 @@ export function caseInsensitiveEquals(a?: string, b?: string): boolean {
   return a.toUpperCase() === b.toUpperCase();
 }
 
-export const formatCurrency = (amount: number | null): string => {
-  if (!amount) return "₱0.00";
-  return `₱${amount.toFixed(2)}`;
+const _phpFormatter = new Intl.NumberFormat("en-PH", {
+  style: "currency",
+  currency: "PHP",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+export const formatCurrency = (amount: number | null | undefined): string => {
+  if (amount === null || amount === undefined || isNaN(Number(amount))) return "₱0.00";
+  return _phpFormatter.format(Number(amount));
 };
 export const truncateId = (
   id: string | null | undefined,

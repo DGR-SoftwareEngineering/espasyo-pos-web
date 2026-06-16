@@ -13,9 +13,11 @@ export const RecipeImportForm: React.FC = () => {
     const recipesToImport = previewData.recipes
       .filter((r) => selectedRecipes.has(r.menuItemName))
       .map((r) => ({
-        menuItemName: r.menuItemName,
+        menuItemName: r.variantGroup ?? r.menuItemName,
         sellingPrice: r.sellingPrice,
         categoryID: r.categoryID ?? "",
+        description: r.description ?? null,
+        materialCost: r.materialCost ?? null,
         recipeItems: r.items.map((item) => ({
           ingredientName: item.ingredientName,
           quantityRequired: item.quantityRequired,
@@ -24,7 +26,12 @@ export const RecipeImportForm: React.FC = () => {
           packagePrice: item.packagePrice ?? 0,
           qtyPerPack: item.qtyPerPack ?? 1,
           ingredientExistsInDb: item.ingredientExistsInDb,
+          ingredientDescription: item.ingredientDescription ?? null,
+          purchaseUnitID: item.purchaseUnitID ?? null,
+          stockUnitID: item.stockUnitID ?? null,
         })),
+        variantGroup: r.variantGroup ?? null,
+        variantName: r.variantSize ?? null,
       }));
 
     const dto: ImportRecipeExcelDto = {

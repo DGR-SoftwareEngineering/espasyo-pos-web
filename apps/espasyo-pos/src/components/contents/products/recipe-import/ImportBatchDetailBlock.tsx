@@ -17,7 +17,7 @@ import { ChevronLeftIcon } from "@radix-ui/react-icons";
 import { WarningAmberOutlined } from "@mui/icons-material";
 import { useApi, useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
-import { RecipeImportBatchDetailDto } from "core-lib/api/commons/types";
+import { RecipeImportBatchDetailDto, RevertBatchSafetyDto } from "core-lib/api/commons/types";
 import { SyncLoadingOverlay } from "./SyncLoadingOverlay";
 
 interface ImportBatchDetailBlockProps {
@@ -35,6 +35,7 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
 
   const syncCb = useApiCallback(async (api, id: string) => api.commons.syncImportBatch(id));
   const revertCb = useApiCallback(async (api, id: string) => api.commons.revertImportBatch(id));
+  const safetyCb = useApiCallback(async (api, id: string) => api.commons.checkRevertBatchSafety(id));
 
   const [syncing, setSyncing] = useState(false);
   const [reverting, setReverting] = useState(false);
@@ -44,6 +45,8 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
   const [localStatus, setLocalStatus] = useState<string | null>(null);
   const [localSyncedAt, setLocalSyncedAt] = useState<string | null>(null);
   const [localRevertedAt, setLocalRevertedAt] = useState<string | null>(null);
+  const [safetyData, setSafetyData] = useState<RevertBatchSafetyDto | null>(null);
+  const [safetyLoading, setSafetyLoading] = useState(false);
 
   const batch = result?.data?.response as RecipeImportBatchDetailDto | undefined;
 
@@ -123,6 +126,25 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
     } finally {
       setReverting(false);
     }
+  };
+
+  const handleRevertClick = async () => {
+    setConfirmError(null);
+    if (displayStatus === "Synced") {
+      setSafetyLoading(true);
+      setSafetyData(null);
+      try {
+        const res = await safetyCb.execute(batchId);
+        setSafetyData(res?.data?.response ?? null);
+      } catch {
+        setSafetyData(null);
+      } finally {
+        setSafetyLoading(false);
+      }
+    } else {
+      setSafetyData(null);
+    }
+    setConfirmDialog("revert");
   };
 
   const formatCurrency = (value: number) => {
@@ -217,10 +239,7 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
                       variant="ghost"
                       size="2"
                       disabled={reverting}
-                      onClick={() => {
-                        setConfirmError(null);
-                        setConfirmDialog("revert");
-                      }}
+                      onClick={handleRevertClick}
                     >
                       Discard
                     </Button>
@@ -231,13 +250,10 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
                     color="red"
                     variant="ghost"
                     size="2"
-                    disabled={reverting}
-                    onClick={() => {
-                      setConfirmError(null);
-                      setConfirmDialog("revert");
-                    }}
+                    disabled={reverting || safetyLoading}
+                    onClick={handleRevertClick}
                   >
-                    {reverting ? "Reverting..." : "Revert"}
+                    {safetyLoading ? "Checking..." : reverting ? "Reverting..." : "Revert"}
                   </Button>
                 )}
               </Flex>
@@ -300,83 +316,155 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
           </Callout.Root>
         )}
 
-        {/* Menu Items Table */}
-        <Card variant="surface" size="2" mb="4">
-          <Heading size="3" mb="3">
-            Menu Items ({batch.menuItems.length})
-          </Heading>
-          <Box style={{ overflowX: "auto" }}>
-            <Table.Root size="2" layout="auto">
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell align="right">Selling Price</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Category</Table.ColumnHeaderCell>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {batch.menuItems.map((item, i) => (
-                  <Table.Row key={i}>
-                    <Table.Cell>
-                      <Text weight="medium">{item.menuItemName}</Text>
-                    </Table.Cell>
-                    <Table.Cell align="right">
-                      <Text>{formatCurrency(item.sellingPrice)}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text>{item.categoryName}</Text>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
-          </Box>
-        </Card>
+        {/* Products & Recipes Section — grouped by menu item, variants shown as tabs */}
+        {(() => {
+          // Group recipes by menuItemName; detect variants by presence of variantName
+          const recipesByMenuName = new Map<string, typeof batch.recipes>();
+          batch.recipes.forEach((r) => {
+            if (!recipesByMenuName.has(r.menuItemName)) recipesByMenuName.set(r.menuItemName, []);
+            recipesByMenuName.get(r.menuItemName)!.push(r);
+          });
 
-        {/* Recipes Section */}
-        <Card variant="surface" size="2">
-          <Heading size="3" mb="3">
-            Recipes ({batch.recipes.length})
-          </Heading>
-          {batch.recipes.map((recipe, i) => (
-            <Box key={i} mb={i < batch.recipes.length - 1 ? "4" : undefined}>
-              <Flex direction="column" gap="2" mb="3">
-                <Text weight="medium" size="3">
-                  {recipe.menuItemName}
-                </Text>
-                <Text size="2" color="gray">
-                  Est. Cost/Serving: {formatCurrency(recipe.estimatedCostPerServing)}
-                </Text>
+          return (
+            <Card variant="surface" size="2">
+              <Heading size="3" mb="3">
+                Products & Recipes ({batch.menuItems.length} product{batch.menuItems.length !== 1 ? "s" : ""}, {batch.recipes.length} recipe{batch.recipes.length !== 1 ? "s" : ""})
+              </Heading>
+              <Flex direction="column" gap="4">
+                {batch.menuItems.map((menuItem, mi) => {
+                  const relatedRecipes = recipesByMenuName.get(menuItem.menuItemName) ?? [];
+                  const isVariantProduct = relatedRecipes.some((r) => r.variantName);
+
+                  return (
+                    <Box
+                      key={mi}
+                      style={{
+                        border: `1px solid ${isVariantProduct ? "var(--blue-a4)" : "var(--gray-a4)"}`,
+                        borderRadius: 6,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {/* Menu item header */}
+                      <Flex
+                        align="center"
+                        gap="2"
+                        px="3"
+                        py="2"
+                        style={{ background: isVariantProduct ? "var(--blue-a2)" : "var(--gray-a2)" }}
+                      >
+                        <Text weight="bold" size="2">{menuItem.menuItemName}</Text>
+                        <Badge color={isVariantProduct ? "blue" : "gray"} variant="soft" size="1">
+                          {isVariantProduct ? `${relatedRecipes.length} variants` : "Standalone"}
+                        </Badge>
+                        <Badge color="gray" variant="soft" size="1">{menuItem.categoryName}</Badge>
+                        {!isVariantProduct && menuItem.sellingPrice > 0 && (
+                          <Text size="2" color="gray">{formatCurrency(menuItem.sellingPrice)}</Text>
+                        )}
+                        {menuItem.description && (
+                          <Text size="1" color="gray" style={{ fontStyle: "italic" }}>
+                            — {menuItem.description}
+                          </Text>
+                        )}
+                      </Flex>
+
+                      {/* Recipes */}
+                      {isVariantProduct ? (
+                        // Variant product: one section per variant
+                        <Box px="3" py="2">
+                          <Flex direction="column" gap="3">
+                            {relatedRecipes.map((recipe, ri) => (
+                              <Box key={ri}>
+                                <Flex align="center" gap="2" mb="2">
+                                  <Badge color="blue" size="1">{recipe.variantName}</Badge>
+                                  {recipe.variantPrice != null && (
+                                    <Text size="2" color="gray">{formatCurrency(recipe.variantPrice)}</Text>
+                                  )}
+                                  <Flex direction="column" gap="3">
+                                    <Text size="1" color="gray">
+                                      Est. {formatCurrency(recipe.estimatedCostPerServing)}/serving
+                                    </Text>
+                                    {recipe.items.some(i => i.qtyPerPack <= 1) && (
+                                      <Text size="1" color="red">
+                                        ⚠ Some ingredients have Purchase Qty = 1 — cost may be inflated
+                                      </Text>
+                                    )}
+                                  </Flex>
+                                </Flex>
+                                <Box style={{ overflowX: "auto" }}>
+                                  <Table.Root size="1" layout="auto">
+                                    <Table.Header>
+                                      <Table.Row>
+                                        <Table.ColumnHeaderCell>Ingredient</Table.ColumnHeaderCell>
+                                        <Table.ColumnHeaderCell align="right">Qty</Table.ColumnHeaderCell>
+                                        <Table.ColumnHeaderCell>Unit</Table.ColumnHeaderCell>
+                                        <Table.ColumnHeaderCell align="right">Pkg Cost</Table.ColumnHeaderCell>
+                                        <Table.ColumnHeaderCell align="right">Pkg Qty</Table.ColumnHeaderCell>
+                                        <Table.ColumnHeaderCell align="right">Est. Cost</Table.ColumnHeaderCell>
+                                      </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
+                                      {recipe.items.map((item, j) => (
+                                        <Table.Row key={j}>
+                                          <Table.Cell><Text size="2">{item.ingredientName}</Text></Table.Cell>
+                                          <Table.Cell align="right"><Text size="2">{item.quantityRequired.toFixed(2)}</Text></Table.Cell>
+                                          <Table.Cell><Text size="2">{item.unitName}</Text></Table.Cell>
+                                          <Table.Cell align="right"><Text size="2" color="gray">{formatCurrency(item.packagePrice)}</Text></Table.Cell>
+                                          <Table.Cell align="right"><Text size="2" color={item.qtyPerPack <= 1 ? "red" : "gray"}>{item.qtyPerPack}</Text></Table.Cell>
+                                          <Table.Cell align="right"><Text size="2" color="amber">{formatCurrency(item.estimatedIngredientCost)}</Text></Table.Cell>
+                                        </Table.Row>
+                                      ))}
+                                    </Table.Body>
+                                  </Table.Root>
+                                </Box>
+                                {ri < relatedRecipes.length - 1 && <Box my="2" style={{ borderBottom: "1px solid var(--gray-a3)" }} />}
+                              </Box>
+                            ))}
+                          </Flex>
+                        </Box>
+                      ) : (
+                        // Standalone product: single recipe
+                        relatedRecipes.length > 0 && (
+                          <Box px="3" py="2">
+                            <Flex direction="column" gap="3" mb="3">
+                              <Text size="1" color="gray">
+                                Est. {formatCurrency(relatedRecipes[0].estimatedCostPerServing)}/serving
+                              </Text>
+                              {relatedRecipes[0].items.some(i => i.qtyPerPack <= 1) && (
+                                <Text size="1" color="red">
+                                  ⚠ Some ingredients have Purchase Qty = 1 — cost may be inflated
+                                </Text>
+                              )}
+                            </Flex>
+                            <Box style={{ overflowX: "auto" }}>
+                              <Table.Root size="1" layout="auto">
+                                <Table.Header>
+                                  <Table.Row>
+                                    <Table.ColumnHeaderCell>Ingredient</Table.ColumnHeaderCell>
+                                    <Table.ColumnHeaderCell align="right">Qty</Table.ColumnHeaderCell>
+                                    <Table.ColumnHeaderCell>Unit</Table.ColumnHeaderCell>
+                                  </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
+                                  {relatedRecipes[0].items.map((item, j) => (
+                                    <Table.Row key={j}>
+                                      <Table.Cell><Text size="2">{item.ingredientName}</Text></Table.Cell>
+                                      <Table.Cell align="right"><Text size="2">{item.quantityRequired.toFixed(2)}</Text></Table.Cell>
+                                      <Table.Cell><Text size="2">{item.unitName}</Text></Table.Cell>
+                                    </Table.Row>
+                                  ))}
+                                </Table.Body>
+                              </Table.Root>
+                            </Box>
+                          </Box>
+                        )
+                      )}
+                    </Box>
+                  );
+                })}
               </Flex>
-              <Box style={{ overflowX: "auto" }}>
-                <Table.Root size="1" layout="auto">
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.ColumnHeaderCell>Ingredient</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell align="right">Qty</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell>Unit</Table.ColumnHeaderCell>
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    {recipe.items.map((item, j) => (
-                      <Table.Row key={j}>
-                        <Table.Cell>
-                          <Text size="2">{item.ingredientName}</Text>
-                        </Table.Cell>
-                        <Table.Cell align="right">
-                          <Text size="2">{item.quantityRequired.toFixed(2)}</Text>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Text size="2">{item.unitName}</Text>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))}
-                  </Table.Body>
-                </Table.Root>
-              </Box>
-            </Box>
-          ))}
-        </Card>
+            </Card>
+          );
+        })()}
       </Box>
 
       {/* Confirmation Dialog */}
@@ -384,20 +472,37 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
         <Dialog.Root
           open={!!confirmDialog}
           onOpenChange={(open) => {
-            if (!open) setConfirmDialog(null);
+            if (!open) { setConfirmDialog(null); setSafetyData(null); }
           }}
         >
           <Dialog.Content>
             <Dialog.Title>
-              {confirmDialog === "sync" ? "Sync to Products" : "Discard / Revert Batch"}
+              {confirmDialog === "sync" ? "Sync to Products" : displayStatus === "Synced" ? "Revert Batch" : "Discard Batch"}
             </Dialog.Title>
             <Text as="p">
               {confirmDialog === "sync"
                 ? "This will create all staged products and recipes in the system. They will be visible in the POS."
                 : displayStatus === "Pending"
                 ? "This will discard all staged data for this batch. This action cannot be undone."
-                : "This will revert all synced products and recipes. This action cannot be undone."}
+                : "This will deactivate all products, ingredients, and recipes that were created from this import batch."}
             </Text>
+            {confirmDialog === "revert" && displayStatus === "Synced" && safetyData?.hasInventory && (
+              <Callout.Root color="orange" variant="surface" mt="3">
+                <Callout.Icon>
+                  <WarningAmberOutlined fontSize="small" />
+                </Callout.Icon>
+                <Callout.Text size="2">
+                  <Text weight="bold">Warning:</Text> {safetyData.inventoryCount} synced product(s) have active inventory records and are currently sellable in the cashier. Reverting will deactivate them.
+                </Callout.Text>
+                <Box mt="2">
+                  {safetyData.affectedProducts.map((p, i) => (
+                    <Text key={i} as="p" size="1" color="orange">
+                      • {p.productName} ({p.isMenuItem ? "Menu Item" : "Ingredient"}) — Qty: {p.currentQuantity}
+                    </Text>
+                  ))}
+                </Box>
+              </Callout.Root>
+            )}
             {confirmError && (
               <Callout.Root color="red" variant="surface" mt="3">
                 <Callout.Icon>

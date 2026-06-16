@@ -92,7 +92,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
             )}
           </Flex>
           <Heading
-            size="7"
+            size="5"
             weight="bold"
             style={{ color: radixVar.accent(accent, 11) }}
           >

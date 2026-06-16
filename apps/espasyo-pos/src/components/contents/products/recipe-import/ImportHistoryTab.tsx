@@ -5,6 +5,7 @@ import { WarningAmberOutlined } from "@mui/icons-material";
 import { useRouter } from "next/router";
 import { useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import type { RevertBatchSafetyDto } from "core-lib/api/commons/types";
 import { SyncLoadingOverlay } from "./SyncLoadingOverlay";
 
 const formatDateTime = (dateStr: string | null) => {
@@ -34,10 +35,13 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
   const [batches, setBatches] = useState<any[]>([]);
   const [batchSearch, setBatchSearch] = useState("");
   const [syncOverlayVisible, setSyncOverlayVisible] = useState(false);
+  const [safetyData, setSafetyData] = useState<RevertBatchSafetyDto | null>(null);
+  const [safetyLoading, setSafetyLoading] = useState(false);
 
   const listCb = useApiCallback(async (api) => api.commons.getImportBatchList());
   const syncCb = useApiCallback(async (api, id: string) => api.commons.syncImportBatch(id));
   const revertCb = useApiCallback(async (api, id: string) => api.commons.revertImportBatch(id));
+  const safetyCb = useApiCallback(async (api, id: string) => api.commons.checkRevertBatchSafety(id));
 
   useEffect(() => {
     listCb.execute();
@@ -121,6 +125,25 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
     } finally {
       setRevertingId(null);
     }
+  };
+
+  const handleRevertClick = async (batch: any) => {
+    setConfirmError(null);
+    if (batch.status === "Synced") {
+      setSafetyLoading(true);
+      setSafetyData(null);
+      try {
+        const res = await safetyCb.execute(batch.batchID);
+        setSafetyData(res?.data?.response ?? null);
+      } catch {
+        setSafetyData(null);
+      } finally {
+        setSafetyLoading(false);
+      }
+    } else {
+      setSafetyData(null);
+    }
+    setConfirmDialog({ id: batch.batchID, action: "revert" });
   };
 
   const getStatusBadge = (status: string) => {
@@ -237,10 +260,7 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
                             size="1"
                             color="red"
                             variant="ghost"
-                            onClick={() => {
-                              setConfirmError(null);
-                              setConfirmDialog({ id: batch.batchID, action: "revert" });
-                            }}
+                            onClick={() => handleRevertClick(batch)}
                           >
                             Discard
                           </Button>
@@ -251,13 +271,10 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
                           size="1"
                           color="red"
                           variant="ghost"
-                          onClick={() => {
-                            setConfirmError(null);
-                            setConfirmDialog({ id: batch.batchID, action: "revert" });
-                          }}
-                          disabled={revertingId === batch.batchID}
+                          onClick={() => handleRevertClick(batch)}
+                          disabled={revertingId === batch.batchID || safetyLoading}
                         >
-                          {revertingId === batch.batchID ? "Reverting..." : "Revert"}
+                          {safetyLoading ? "Checking..." : revertingId === batch.batchID ? "Reverting..." : "Revert"}
                         </Button>
                       )}
                     </Flex>
@@ -270,46 +287,69 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
       )}
 
       {/* Confirmation Dialog */}
-      {confirmDialog && (
-        <Dialog.Root open={!!confirmDialog} onOpenChange={() => setConfirmDialog(null)}>
-          <Dialog.Content>
-            <Dialog.Title>
-              {confirmDialog.action === "sync" ? "Sync to Products" : "Discard Batch"}
-            </Dialog.Title>
-            <Text>
-              {confirmDialog.action === "sync"
-                ? "This will create all staged products and recipes in the system. They will be visible in the POS."
-                : "This will delete all staged data for this batch. This action cannot be undone."}
-            </Text>
-            {confirmError && (
-              <Callout.Root color="red" variant="surface" mt="3">
-                <Callout.Icon>
-                  <WarningAmberOutlined fontSize="small" />
-                </Callout.Icon>
-                <Callout.Text size="2">{confirmError}</Callout.Text>
-              </Callout.Root>
-            )}
-            <Flex gap="2" justify="end" mt="4">
-              <Dialog.Close>
-                <Button variant="outline">Cancel</Button>
-              </Dialog.Close>
-              <Button
-                color={confirmDialog.action === "sync" ? "green" : "red"}
-                onClick={() => {
-                  if (confirmDialog.action === "sync") {
-                    handleSync(confirmDialog.id);
-                  } else {
-                    handleRevert(confirmDialog.id);
-                  }
-                }}
-                disabled={syncingId === confirmDialog.id || revertingId === confirmDialog.id}
-              >
-                {confirmDialog.action === "sync" ? "Sync Now" : "Discard"}
-              </Button>
-            </Flex>
-          </Dialog.Content>
-        </Dialog.Root>
-      )}
+      {confirmDialog && (() => {
+        const confirmBatch = batches.find((b) => b.batchID === confirmDialog.id);
+        const isSyncedRevert = confirmDialog.action === "revert" && confirmBatch?.status === "Synced";
+        return (
+          <Dialog.Root open={!!confirmDialog} onOpenChange={(open) => { if (!open) { setConfirmDialog(null); setSafetyData(null); } }}>
+            <Dialog.Content>
+              <Dialog.Title>
+                {confirmDialog.action === "sync" ? "Sync to Products" : isSyncedRevert ? "Revert Batch" : "Discard Batch"}
+              </Dialog.Title>
+              <Text>
+                {confirmDialog.action === "sync"
+                  ? "This will create all staged products and recipes in the system. They will be visible in the POS."
+                  : isSyncedRevert
+                  ? "This will deactivate all products, ingredients, and recipes that were created from this import batch."
+                  : "This will delete all staged data for this batch. This action cannot be undone."}
+              </Text>
+              {isSyncedRevert && safetyData?.hasInventory && (
+                <Callout.Root color="orange" variant="surface" mt="3">
+                  <Callout.Icon>
+                    <WarningAmberOutlined fontSize="small" />
+                  </Callout.Icon>
+                  <Callout.Text size="2">
+                    <Text weight="bold">Warning:</Text> {safetyData.inventoryCount} synced product(s) have active inventory records and are currently sellable in the cashier. Reverting will deactivate them.
+                  </Callout.Text>
+                  <Box mt="2">
+                    {safetyData.affectedProducts.map((p, i) => (
+                      <Text key={i} as="p" size="1" color="orange">
+                        • {p.productName} ({p.isMenuItem ? "Menu Item" : "Ingredient"}) — Qty: {p.currentQuantity}
+                      </Text>
+                    ))}
+                  </Box>
+                </Callout.Root>
+              )}
+              {confirmError && (
+                <Callout.Root color="red" variant="surface" mt="3">
+                  <Callout.Icon>
+                    <WarningAmberOutlined fontSize="small" />
+                  </Callout.Icon>
+                  <Callout.Text size="2">{confirmError}</Callout.Text>
+                </Callout.Root>
+              )}
+              <Flex gap="2" justify="end" mt="4">
+                <Dialog.Close>
+                  <Button variant="outline">Cancel</Button>
+                </Dialog.Close>
+                <Button
+                  color={confirmDialog.action === "sync" ? "green" : "red"}
+                  onClick={() => {
+                    if (confirmDialog.action === "sync") {
+                      handleSync(confirmDialog.id);
+                    } else {
+                      handleRevert(confirmDialog.id);
+                    }
+                  }}
+                  disabled={syncingId === confirmDialog.id || revertingId === confirmDialog.id}
+                >
+                  {confirmDialog.action === "sync" ? "Sync Now" : isSyncedRevert ? "Revert" : "Discard"}
+                </Button>
+              </Flex>
+            </Dialog.Content>
+          </Dialog.Root>
+        );
+      })()}
 
       <SyncLoadingOverlay visible={syncOverlayVisible} />
     </>
