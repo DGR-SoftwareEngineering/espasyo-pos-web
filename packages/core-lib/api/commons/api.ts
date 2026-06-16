@@ -112,6 +112,7 @@ import {
   RecipeImportBatchDetailDto,
   RecipeImportSyncResultDto,
   ImportRecipeExcelDto,
+  RevertBatchSafetyDto,
 } from "./types";
 import {
   AuditLogListResponse,
@@ -646,6 +647,27 @@ export class CommonsApi {
     );
   }
 
+  public checkBulkRecipeCriticalUsage(recipeIds: string[]) {
+    return this.axios.get<ApiResponse<CriticalUsageResponse>>(
+      `/api/v1/product/recipe-api/recipe/check-bulk-critical-usage`,
+      { params: { recipeIds } },
+    );
+  }
+
+  public bulkDeleteRecipes(ids: string[]) {
+    return this.axios.delete<ApiResponse<number>>(
+      `/api/v1/product/recipe-api/recipe/bulk`,
+      { data: { ids } },
+    );
+  }
+
+  public forceDeleteBulkRecipes(dto: { ids: string[]; password: string; mpin: string }) {
+    return this.axios.post<ApiResponse<number>>(
+      `/api/v1/product/recipe-api/recipe/bulk-force-delete`,
+      dto,
+    );
+  }
+
   public checkInventoryCriticalUsage(inventoryId: string) {
     return this.axios.get<ApiResponse<CriticalUsageResponse>>(
       `/api/v1/inventory-api/inventory/check-critical-usage?inventoryId=${inventoryId}`,
@@ -715,6 +737,12 @@ export class CommonsApi {
   public revertImportBatch(batchId: string) {
     return this.axios.post<ApiResponse<string>>(
       `/api/v1/product-api/Product/import-batches/${batchId}/revert`,
+    );
+  }
+
+  public checkRevertBatchSafety(batchId: string) {
+    return this.axios.get<ApiResponse<RevertBatchSafetyDto>>(
+      `/api/v1/product-api/Product/import-batches/${batchId}/revert-safety`,
     );
   }
 

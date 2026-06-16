@@ -7,7 +7,7 @@ import {
   RecipePreviewItemDto,
 } from "core-lib/api/commons/types";
 
-export type Step = "info" | "upload" | "config" | "preview" | "result";
+export type Step = "info" | "upload" | "config" | "modify" | "summary" | "result";
 
 interface RecipeImportContextValue {
   currentStep: Step;
@@ -81,6 +81,18 @@ export const RecipeImportProvider: React.FC<RecipeImportProviderProps> = ({
   const updateRecipe = (menuItemName: string, patch: Partial<RecipePreviewItemDto>) => {
     setPreviewData(prev => {
       if (!prev) return prev;
+      const target = prev.recipes.find(r => r.menuItemName === menuItemName);
+      // Variant group with categoryID: apply full patch to this recipe, sync only categoryID to others
+      if (target?.variantGroup && 'categoryID' in patch) {
+        return {
+          ...prev,
+          recipes: prev.recipes.map(r => {
+            if (r.menuItemName === menuItemName) return { ...r, ...patch };
+            if (r.variantGroup === target.variantGroup) return { ...r, categoryID: patch.categoryID };
+            return r;
+          }),
+        };
+      }
       return {
         ...prev,
         recipes: prev.recipes.map(r =>
@@ -137,7 +149,7 @@ export const RecipeImportProvider: React.FC<RecipeImportProviderProps> = ({
         return next;
       });
     }
-    setCurrentStep("preview");
+    setCurrentStep("modify");
   };
 
   const applyLimitsAndPreview = (limit: number | "all", skipExistingFull = false) => {

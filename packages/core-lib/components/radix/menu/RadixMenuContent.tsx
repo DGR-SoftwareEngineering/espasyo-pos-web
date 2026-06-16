@@ -131,66 +131,92 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
       </Flex>
 
       {hasNested && isOpen && (
-        <Box mt="1">
-          {item.nestedItems!.map((nested) => {
-            const isNestedSelected = nested.path === selectedPath;
-            return (
-              <Flex
-                key={nested.id}
-                align="center"
-                gap="2"
-                role="link"
-                tabIndex={0}
-                aria-current={isNestedSelected ? "page" : undefined}
-                onClick={() => onSelect(nested.path)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onSelect(nested.path);
-                  }
-                }}
-                style={{
-                  padding: "7px 10px",
-                  paddingLeft: 10 + (depth + 1) * 12,
-                  borderRadius: "var(--radius-3)",
-                  cursor: "pointer",
-                  background: isNestedSelected ? "var(--accent-a4)" : undefined,
-                  color: isNestedSelected
-                    ? "var(--accent-11)"
-                    : "var(--gray-11)",
-                  transition: "background 120ms ease",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isNestedSelected)
-                    e.currentTarget.style.background = "var(--gray-a3)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!isNestedSelected) e.currentTarget.style.background = "";
-                }}
-              >
-                <Box
+        <Box
+          mt="1"
+          style={{
+            position: "relative",
+            marginLeft: 8,
+          }}
+        >
+          {/* Vertical line */}
+          <Box
+            style={{
+              position: "absolute",
+              left: 14, // controls horizontal position of the line
+              top: 4,
+              bottom: 4,
+              width: 1,
+              background: "var(--gray-a5)", // subtle line color
+            }}
+          />
+
+          {/* Submenu items */}
+          <Box>
+            {item.nestedItems!.map((nested) => {
+              const isNestedSelected = nested.path === selectedPath;
+
+              return (
+                <Flex
+                  key={nested.id}
+                  align="center"
+                  gap="2"
+                  role="link"
+                  tabIndex={0}
+                  aria-current={isNestedSelected ? "page" : undefined}
+                  onClick={() => onSelect(nested.path)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect(nested.path);
+                    }
+                  }}
                   style={{
-                    width: 20,
-                    height: 20,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                    color: "inherit",
+                    padding: "7px 10px",
+                    paddingLeft: 30, // 👈 important: pushes content right of the line
+                    borderRadius: "var(--radius-3)",
+                    cursor: "pointer",
+                    background: isNestedSelected
+                      ? "var(--accent-a4)"
+                      : undefined,
+                    color: isNestedSelected
+                      ? "var(--accent-11)"
+                      : "var(--gray-11)",
+                    transition: "background 120ms ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isNestedSelected)
+                      e.currentTarget.style.background = "var(--gray-a3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isNestedSelected)
+                      e.currentTarget.style.background = "";
                   }}
                 >
-                  {nested.icon}
-                </Box>
-                <Text
-                  size="2"
-                  weight={isNestedSelected ? "bold" : "regular"}
-                  style={{ flex: 1, color: "inherit" }}
-                >
-                  {nested.text}
-                </Text>
-              </Flex>
-            );
-          })}
+                  <Box
+                    style={{
+                      width: 20,
+                      height: 20,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      color: "inherit",
+                    }}
+                  >
+                    {nested.icon}
+                  </Box>
+
+                  <Text
+                    size="2"
+                    weight={isNestedSelected ? "bold" : "regular"}
+                    style={{ flex: 1, color: "inherit" }}
+                  >
+                    {nested.text}
+                  </Text>
+                </Flex>
+              );
+            })}
+          </Box>
         </Box>
       )}
     </Box>
@@ -509,61 +535,61 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
             <SectionLabel label="Support" />
             <Flex direction="column" gap="0.5">
               {secondaryMenu.map((item) => {
-              const isSelected = item.path === selectedPath;
-              return (
-                <Flex
-                  key={item.id}
-                  align="center"
-                  gap="2"
-                  role="link"
-                  tabIndex={0}
-                  aria-current={isSelected ? "page" : undefined}
-                  onClick={() => item.path && handleSelect(item.path)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      item.path && handleSelect(item.path);
-                    }
-                  }}
-                  style={{
-                    padding: "7px 10px",
-                    borderRadius: "var(--radius-3)",
-                    cursor: "pointer",
-                    background: isSelected ? "var(--accent-a4)" : undefined,
-                    color: isSelected ? "var(--accent-11)" : "var(--gray-11)",
-                    transition: "background 120ms ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isSelected)
-                      e.currentTarget.style.background = "var(--gray-a3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isSelected) e.currentTarget.style.background = "";
-                  }}
-                >
-                  <Box
+                const isSelected = item.path === selectedPath;
+                return (
+                  <Flex
+                    key={item.id}
+                    align="center"
+                    gap="2"
+                    role="link"
+                    tabIndex={0}
+                    aria-current={isSelected ? "page" : undefined}
+                    onClick={() => item.path && handleSelect(item.path)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        item.path && handleSelect(item.path);
+                      }
+                    }}
                     style={{
-                      width: 20,
-                      height: 20,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      color: "inherit",
+                      padding: "7px 10px",
+                      borderRadius: "var(--radius-3)",
+                      cursor: "pointer",
+                      background: isSelected ? "var(--accent-a4)" : undefined,
+                      color: isSelected ? "var(--accent-11)" : "var(--gray-11)",
+                      transition: "background 120ms ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected)
+                        e.currentTarget.style.background = "var(--gray-a3)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) e.currentTarget.style.background = "";
                     }}
                   >
-                    {item.icon}
-                  </Box>
-                  <Text
-                    size="2"
-                    weight={isSelected ? "bold" : "regular"}
-                    style={{ color: "inherit" }}
-                  >
-                    {item.text}
-                  </Text>
-                </Flex>
-              );
-            })}
+                    <Box
+                      style={{
+                        width: 20,
+                        height: 20,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        color: "inherit",
+                      }}
+                    >
+                      {item.icon}
+                    </Box>
+                    <Text
+                      size="2"
+                      weight={isSelected ? "bold" : "regular"}
+                      style={{ color: "inherit" }}
+                    >
+                      {item.text}
+                    </Text>
+                  </Flex>
+                );
+              })}
             </Flex>
           </Flex>
         )}

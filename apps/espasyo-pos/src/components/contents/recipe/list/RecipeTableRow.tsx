@@ -28,6 +28,7 @@ import type {
   ProductAddOnGroupDto,
   ProductRecipeSummaryResponse,
   ProductVariantDto,
+  RecipeItemResponse,
   RecipeResponse,
   VariantRecipeResponse,
 } from "core-lib/api/commons/types";
@@ -45,11 +46,12 @@ import { VariantRecipeDialog } from "../../products/recipe/VariantRecipeDialog";
 import { AddOnItemRecipeDialog } from "../../products/recipe/AddOnItemRecipeDialog";
 
 interface Props {
-  row: ProductRecipeSummaryResponse & { ingredientCount: number };
+  row: ProductRecipeSummaryResponse & { ingredientCount: number; displayCost: number };
   onView: (recipe: ProductRecipeSummaryResponse) => void;
   onEdit: (recipe: ProductRecipeSummaryResponse) => void;
   onDelete: (recipe: ProductRecipeSummaryResponse) => void;
   isSelectable?: boolean;
+  isChecked?: boolean;
   selectedRowKey?: string | number;
   onSelect?: (rowKey: string | number) => void;
 }
@@ -67,6 +69,7 @@ export const RecipeTableRow: React.FC<Props> = ({
   onEdit,
   onDelete,
   isSelectable,
+  isChecked,
   selectedRowKey,
   onSelect,
 }) => {
@@ -84,6 +87,8 @@ export const RecipeTableRow: React.FC<Props> = ({
     id: string;
     name: string;
   } | null>(null);
+
+  const [expandedVariantId, setExpandedVariantId] = useState<string | null>(null);
 
   const stats = useMemo(
     () => getIngredientCostStats(row as unknown as RecipeResponse),
@@ -106,6 +111,7 @@ export const RecipeTableRow: React.FC<Props> = ({
   useEffect(() => {
     if (!expanded) {
       setSubData(null);
+      setExpandedVariantId(null);
       return;
     }
     setSubLoading(true);
@@ -219,24 +225,42 @@ export const RecipeTableRow: React.FC<Props> = ({
         <Flex direction="column" gap="1">
           <MetricDisplay
             label="Total Cost"
-            value={formatCurrency(row.totalCost)}
+            value={formatCurrency(row.displayCost)}
             valueColor="var(--green-11)"
             tooltip={
               <Box>
                 <Text as="div" size="2">
-                  <strong>Total Cost:</strong> {formatCurrency(row.totalCost)}
+                  <strong>Total Cost:</strong> {formatCurrency(row.displayCost)}
                 </Text>
                 <Text as="div" size="2">
                   <strong>Number of Ingredients:</strong> {row.ingredientCount}
                 </Text>
-                <Text as="div" size="2">
-                  <strong>Average per Ingredient:</strong>{" "}
-                  {formatCurrency(stats.avg)}
-                </Text>
-                <Text as="div" size="2">
-                  <strong>Range:</strong> {formatCurrency(stats.min)} -{" "}
-                  {formatCurrency(stats.max)}
-                </Text>
+                {row.totalCost > 0 && (
+                  <>
+                    <Text as="div" size="2">
+                      <strong>Base Recipe:</strong>{" "}
+                      {formatCurrency(row.totalCost)}
+                    </Text>
+                    {row.displayCost > row.totalCost && (
+                      <Text as="div" size="2">
+                        <strong>Variants & Add-Ons:</strong>{" "}
+                        {formatCurrency(row.displayCost - row.totalCost)}
+                      </Text>
+                    )}
+                  </>
+                )}
+                {(row.recipeItems ?? []).length > 0 && (
+                  <>
+                    <Text as="div" size="2">
+                      <strong>Average per Ingredient:</strong>{" "}
+                      {formatCurrency(stats.avg)}
+                    </Text>
+                    <Text as="div" size="2">
+                      <strong>Range:</strong> {formatCurrency(stats.min)} -{" "}
+                      {formatCurrency(stats.max)}
+                    </Text>
+                  </>
+                )}
               </Box>
             }
             showTooltip
@@ -246,8 +270,8 @@ export const RecipeTableRow: React.FC<Props> = ({
               style={{ fontSize: 12, color: "var(--gray-11)" }}
             />
             <Text size="1" color="gray">
-              {(row.recipeItems ?? []).length} item
-              {(row.recipeItems ?? []).length !== 1 ? "s" : ""}
+              {row.ingredientCount} item
+              {row.ingredientCount !== 1 ? "s" : ""}
             </Text>
           </Flex>
         </Flex>
@@ -284,8 +308,9 @@ export const RecipeTableRow: React.FC<Props> = ({
         rowKey={row.recipeID ?? row.menuItemProductID}
         columns={columns}
         isSelectable={isSelectable}
+        isChecked={isChecked && !!row.recipeID}
         selectedRowKey={selectedRowKey}
-        onSelect={onSelect}
+        onSelect={!!row.recipeID ? onSelect : undefined}
         onRowClick={handleRowClick}
       />
 
@@ -309,7 +334,7 @@ export const RecipeTableRow: React.FC<Props> = ({
                     <Flex align="center" gap="2">
                       <KitchenOutlined style={{ color: "var(--accent-11)" }} />
                       <Heading size="3" weight="bold">
-                        Base Recipe ({row.ingredientCount})
+                        Base Recipe ({(row.recipeItems ?? []).length})
                       </Heading>
                     </Flex>
 
@@ -409,94 +434,193 @@ export const RecipeTableRow: React.FC<Props> = ({
                             const recipe = subData.variantRecipeMap.get(
                               v.productVariantID,
                             );
+                            const isVariantExpanded =
+                              expandedVariantId === v.productVariantID;
+                            const variantStats = recipe
+                              ? getIngredientCostStats({
+                                  recipeItems: recipe.recipeItems,
+                                  totalCost: recipe.totalCost,
+                                } as unknown as RecipeResponse)
+                              : null;
+
                             return (
-                              <Flex
-                                key={v.productVariantID}
-                                align="center"
-                                justify="between"
-                                px="3"
-                                py="2"
-                                gap="3"
-                                style={{
-                                  border: "1px solid var(--indigo-a4)",
-                                  borderRadius: "var(--radius-2)",
-                                  background: "var(--indigo-a2)",
-                                }}
-                              >
-                                <Flex align="center" gap="2">
-                                  <LayersOutlined
-                                    style={{
-                                      fontSize: 16,
-                                      color: "var(--indigo-10)",
-                                    }}
-                                  />
-                                  <Box>
-                                    <Text size="2" weight="medium" as="div">
-                                      {v.name}
-                                    </Text>
-                                    {recipe ? (
-                                      <Text size="1" color="gray" as="div">
-                                        {recipe.recipeItems.length} ingredient
-                                        {recipe.recipeItems.length !== 1
-                                          ? "s"
-                                          : ""}{" "}
-                                        · {formatCurrency(recipe.totalCost)}
-                                      </Text>
-                                    ) : (
-                                      <Text size="1" color="gray" as="div">
-                                        Uses base recipe
-                                      </Text>
-                                    )}
-                                  </Box>
-                                </Flex>
-                                <Flex align="center" gap="2">
-                                  {recipe ? (
-                                    <Badge
-                                      color="green"
-                                      variant="soft"
-                                      size="1"
-                                    >
-                                      Has Recipe
-                                    </Badge>
-                                  ) : (
-                                    <Badge
-                                      color="gray"
-                                      variant="soft"
-                                      size="1"
-                                    >
-                                      No Override
-                                    </Badge>
-                                  )}
-                                  <Button
-                                    size="1"
-                                    variant="soft"
-                                    color="indigo"
-                                    onClick={(e) => {
+                              <Box key={v.productVariantID}>
+                                <Flex
+                                  align="center"
+                                  justify="between"
+                                  px="3"
+                                  py="2"
+                                  gap="3"
+                                  style={{
+                                    border: "1px solid var(--indigo-a4)",
+                                    borderRadius: "var(--radius-2)",
+                                    background: "var(--indigo-a2)",
+                                    cursor: recipe ? "pointer" : undefined,
+                                  }}
+                                  onClick={(e) => {
+                                    if (recipe) {
                                       e.stopPropagation();
-                                      setVariantDialog({
-                                        id: v.productVariantID,
-                                        name: v.name,
-                                      });
+                                      setExpandedVariantId(
+                                        isVariantExpanded
+                                          ? null
+                                          : v.productVariantID,
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <Flex align="center" gap="2">
+                                    <LayersOutlined
+                                      style={{
+                                        fontSize: 16,
+                                        color: "var(--indigo-10)",
+                                      }}
+                                    />
+                                    <Box>
+                                      <Text
+                                        size="2"
+                                        weight="medium"
+                                        as="div"
+                                      >
+                                        {v.name}
+                                      </Text>
+                                      {recipe ? (
+                                        <Text
+                                          size="1"
+                                          color="gray"
+                                          as="div"
+                                        >
+                                          {recipe.recipeItems.length}{" "}
+                                          ingredient
+                                          {recipe.recipeItems.length !== 1
+                                            ? "s"
+                                            : ""}{" "}
+                                          · {formatCurrency(recipe.totalCost)}
+                                        </Text>
+                                      ) : (
+                                        <Text
+                                          size="1"
+                                          color="gray"
+                                          as="div"
+                                        >
+                                          Uses base recipe
+                                        </Text>
+                                      )}
+                                    </Box>
+                                  </Flex>
+                                  <Flex align="center" gap="2">
+                                    {recipe ? (
+                                      <Badge
+                                        color="green"
+                                        variant="soft"
+                                        size="1"
+                                      >
+                                        Has Recipe
+                                      </Badge>
+                                    ) : (
+                                      <Badge
+                                        color="gray"
+                                        variant="soft"
+                                        size="1"
+                                      >
+                                        No Override
+                                      </Badge>
+                                    )}
+                                    <Button
+                                      size="1"
+                                      variant="soft"
+                                      color="indigo"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setVariantDialog({
+                                          id: v.productVariantID,
+                                          name: v.name,
+                                        });
+                                      }}
+                                    >
+                                      {recipe ? (
+                                        <>
+                                          <EditOutlined
+                                            style={{ fontSize: 13 }}
+                                          />
+                                          Edit
+                                        </>
+                                      ) : (
+                                        <>
+                                          <AddCircleOutlineOutlined
+                                            style={{ fontSize: 13 }}
+                                          />
+                                          Add Recipe
+                                        </>
+                                      )}
+                                    </Button>
+                                  </Flex>
+                                </Flex>
+
+                                {isVariantExpanded && recipe && (
+                                  <Box
+                                    ml="2"
+                                    mt="2"
+                                    mb="2"
+                                    p="3"
+                                    style={{
+                                      background: "var(--indigo-a1)",
+                                      borderRadius: "var(--radius-2)",
                                     }}
                                   >
-                                    {recipe ? (
+                                    <Grid columns="1" gap="2">
+                                      {recipe.recipeItems
+                                        .sort(
+                                          (a, b) =>
+                                            a.displayOrder - b.displayOrder,
+                                        )
+                                        .map((item) => (
+                                          <IngredientDetail
+                                            key={item.variantRecipeItemID}
+                                            ingredient={
+                                              item as unknown as RecipeItemResponse
+                                            }
+                                          />
+                                        ))}
+                                    </Grid>
+                                    {variantStats && (
                                       <>
-                                        <EditOutlined
-                                          style={{ fontSize: 13 }}
-                                        />
-                                        Edit
-                                      </>
-                                    ) : (
-                                      <>
-                                        <AddCircleOutlineOutlined
-                                          style={{ fontSize: 13 }}
-                                        />
-                                        Add Recipe
+                                        <Flex gap="2" mt="3">
+                                          <MetricBadge
+                                            label="Min"
+                                            value={formatCurrency(
+                                              variantStats.min,
+                                            )}
+                                            color="green"
+                                            tooltip={`Cheapest ingredient: ${formatCurrency(variantStats.min)}`}
+                                          />
+                                          <MetricBadge
+                                            label="Avg"
+                                            value={formatCurrency(
+                                              variantStats.avg,
+                                            )}
+                                            color="blue"
+                                            tooltip={`Average ingredient cost: ${formatCurrency(variantStats.avg)}`}
+                                          />
+                                          <MetricBadge
+                                            label="Max"
+                                            value={formatCurrency(
+                                              variantStats.max,
+                                            )}
+                                            color="amber"
+                                            tooltip={`Most expensive ingredient: ${formatCurrency(variantStats.max)}`}
+                                          />
+                                        </Flex>
+                                        <Box mt="2">
+                                          <CostDistributionBar
+                                            stats={variantStats}
+                                            total={recipe.totalCost}
+                                          />
+                                        </Box>
                                       </>
                                     )}
-                                  </Button>
-                                </Flex>
-                              </Flex>
+                                  </Box>
+                                )}
+                              </Box>
                             );
                           })}
                       </Flex>

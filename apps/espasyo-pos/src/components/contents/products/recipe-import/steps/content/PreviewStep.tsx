@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Flex,
@@ -11,6 +11,8 @@ import {
   Callout,
   TextField as RadixTextField,
   Separator,
+  Tabs,
+  Select,
 } from "@radix-ui/themes";
 import {
   TableIcon,
@@ -24,6 +26,7 @@ import { RecipeImportList } from "../../RecipeImportList";
 import { StepShell } from "./StepShell";
 import { StepNavigation } from "./StepNavigation";
 import { RecipeImportStepProps } from "../RecipeImportSteps";
+import { useApi } from "core-lib/core/hooks";
 
 interface PreviewStepProps extends RecipeImportStepProps {
   onSubmit: (args: { password: string; mpin: string }) => Promise<void>;
@@ -53,12 +56,44 @@ export const PreviewStep: React.FC<PreviewStepProps> = ({
     selectedRecipes.has(r.menuItemName)
   );
 
+  // Split selected recipes into variant groups and standalone
+  const variantGroupMap = useMemo(() => {
+    const map = new Map<string, typeof selectedRecipesArray>();
+    for (const r of selectedRecipesArray) {
+      if (r.variantGroup) {
+        if (!map.has(r.variantGroup)) map.set(r.variantGroup, []);
+        map.get(r.variantGroup)!.push(r);
+      }
+    }
+    return map;
+  }, [selectedRecipesArray]);
+
+  const standaloneSelectedRecipes = useMemo(
+    () => selectedRecipesArray.filter((r) => !r.variantGroup),
+    [selectedRecipesArray]
+  );
+
   const newMenuItems = selectedRecipesArray.filter((r) => !r.menuItemAlreadyExistsInDb);
   const existingMenuItems = selectedRecipesArray.filter((r) => r.menuItemAlreadyExistsInDb);
-  const recipesToCreate = newMenuItems.filter((r) => !r.hasExistingActiveRecipe).length;
 
-  // Validation: all new menu items need a category
-  const missingMenuItemCat = newMenuItems.filter((r) => !r.categoryID).length;
+  // For variant groups: count the group as one "recipe to create" (not per-variant)
+  const variantGroupsToCreate = Array.from(variantGroupMap.values()).filter(
+    variants => variants.some(v => !v.menuItemAlreadyExistsInDb)
+  ).length;
+  const standaloneToCreate = standaloneSelectedRecipes.filter((r) => !r.menuItemAlreadyExistsInDb && !r.hasExistingActiveRecipe).length;
+  const recipesToCreate = variantGroupsToCreate + standaloneToCreate;
+
+  // Validation: variant groups — need a category (synced to all variants)
+  const missingVariantGroupCat = Array.from(variantGroupMap.values()).filter(
+    variants => variants.some(v => !v.menuItemAlreadyExistsInDb) && !variants[0]?.categoryID
+  ).length;
+
+  // Validation: standalone new menu items need a category
+  const missingStandaloneCat = standaloneSelectedRecipes.filter(
+    (r) => !r.menuItemAlreadyExistsInDb && !r.categoryID
+  ).length;
+
+  const missingMenuItemCat = missingVariantGroupCat + missingStandaloneCat;
 
   // Validation: all new ingredients (within selected recipes) need a category
   const missingIngredientCat = selectedRecipesArray
@@ -76,12 +111,20 @@ export const PreviewStep: React.FC<PreviewStepProps> = ({
       maximumFractionDigits: 0,
     }).format(v);
 
-  const filteredRecipes = selectedRecipesArray.filter((r) =>
+  const filteredStandalone = standaloneSelectedRecipes.filter((r) =>
     r.menuItemName.toLowerCase().includes(recipeSearch.toLowerCase())
   );
 
-  const recipePageCount = Math.ceil(filteredRecipes.length / RECIPE_PAGE_SIZE);
-  const paginatedRecipes = filteredRecipes.slice(
+  const filteredGroups = useMemo(() => {
+    if (!recipeSearch) return Array.from(variantGroupMap.entries());
+    return Array.from(variantGroupMap.entries()).filter(([groupName]) =>
+      groupName.toLowerCase().includes(recipeSearch.toLowerCase())
+    );
+  }, [variantGroupMap, recipeSearch]);
+
+  // Pagination applies to standalone items only (variant groups are always shown)
+  const recipePageCount = Math.ceil(filteredStandalone.length / RECIPE_PAGE_SIZE);
+  const paginatedRecipes = filteredStandalone.slice(
     (recipePage - 1) * RECIPE_PAGE_SIZE,
     recipePage * RECIPE_PAGE_SIZE
   );
@@ -161,6 +204,19 @@ export const PreviewStep: React.FC<PreviewStepProps> = ({
               />
             </Box>
 
+            {/* Variant Group Cards */}
+            {filteredGroups.map(([groupName, variants]) => (
+              <VariantGroupCard
+                key={groupName}
+                groupName={groupName}
+                variants={variants}
+                onUpdateRecipe={updateRecipe}
+                onRemoveVariant={toggleRecipe}
+                formatCurrency={formatCurrency}
+              />
+            ))}
+
+            {/* Standalone Items */}
             <RecipeImportList
               items={paginatedRecipes}
               onRemove={toggleRecipe}
@@ -284,5 +340,129 @@ export const PreviewStep: React.FC<PreviewStepProps> = ({
         onConfirm={handleConfirmImport}
       />
     </>
+  );
+};
+
+interface VariantGroupCardProps {
+  groupName: string;
+  variants: import("core-lib/api/commons/types").RecipePreviewItemDto[];
+  onUpdateRecipe: (menuItemName: string, patch: Partial<import("core-lib/api/commons/types").RecipePreviewItemDto>) => void;
+  onRemoveVariant: (name: string) => void;
+  formatCurrency: (v: number) => string;
+}
+
+const VariantGroupCard: React.FC<VariantGroupCardProps> = ({
+  groupName,
+  variants,
+  onUpdateRecipe,
+  formatCurrency,
+}) => {
+  const { result: menuCatResult, loading: menuCatLoading } = useApi(
+    (api) => api.commons.productCategoryList(),
+    []
+  );
+  const menuItemCategories = menuCatResult?.data?.response ?? [];
+  const sharedCategoryID = variants[0]?.categoryID ?? "";
+  const missingCategory = variants.some(v => !v.menuItemAlreadyExistsInDb) && !sharedCategoryID;
+
+  return (
+    <Box
+      style={{
+        border: `1px solid ${missingCategory ? "var(--red-a7)" : "var(--blue-a6)"}`,
+        borderRadius: "6px",
+        overflow: "hidden",
+        marginBottom: "0.5rem",
+      }}
+    >
+      <Box style={{ background: "var(--blue-a2)", padding: "0.75rem 1rem" }}>
+        <Flex justify="between" align="center" wrap="wrap" gap="2">
+          <Flex align="center" gap="2">
+            <Text weight="bold" size="3">{groupName}</Text>
+            <Badge color="blue" variant="soft" size="1">
+              {variants.length} size variant{variants.length !== 1 ? "s" : ""}
+            </Badge>
+            {missingCategory && <Badge color="red" size="1">No category</Badge>}
+          </Flex>
+          <Box style={{ minWidth: 220 }}>
+            <Select.Root
+              size="2"
+              value={sharedCategoryID}
+              onValueChange={(val) => {
+                if (variants[0]) onUpdateRecipe(variants[0].menuItemName, { categoryID: val });
+              }}
+              disabled={menuCatLoading || variants[0]?.menuItemAlreadyExistsInDb}
+            >
+              <Select.Trigger placeholder="Assign product category…" style={{ width: "100%" }} />
+              <Select.Content>
+                {menuItemCategories.map((c) => (
+                  <Select.Item key={c.productCategoryID} value={c.productCategoryID}>
+                    {c.name}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </Box>
+        </Flex>
+      </Box>
+
+      <Tabs.Root defaultValue={variants[0]?.menuItemName ?? ""}>
+        <Tabs.List style={{ paddingLeft: "0.5rem" }}>
+          {variants.map((v) => (
+            <Tabs.Trigger key={v.menuItemName} value={v.menuItemName}>
+              {v.variantSize ?? v.menuItemName}
+              {v.sellingPrice > 0 && (
+                <Text size="1" color="gray" ml="1">· {formatCurrency(v.sellingPrice)}</Text>
+              )}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+        {variants.map((v) => (
+          <Tabs.Content key={v.menuItemName} value={v.menuItemName}>
+            <Box style={{ padding: "0.75rem" }}>
+              <Box style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--gray-a4)" }}>
+                      <th style={{ textAlign: "left", padding: "0.35rem 0.5rem", color: "var(--gray-11)", fontWeight: 500 }}>Ingredient</th>
+                      <th style={{ textAlign: "right", padding: "0.35rem 0.5rem", color: "var(--gray-11)", fontWeight: 500 }}>Qty</th>
+                      <th style={{ textAlign: "left", padding: "0.35rem 0.5rem", color: "var(--gray-11)", fontWeight: 500 }}>Unit</th>
+                      <th style={{ textAlign: "left", padding: "0.35rem 0.5rem", color: "var(--gray-11)", fontWeight: 500 }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {v.items.map((item, i) => (
+                      <tr key={i} style={{ borderBottom: "1px solid var(--gray-a2)" }}>
+                        <td style={{ padding: "0.35rem 0.5rem" }}>{item.ingredientName}</td>
+                        <td style={{ textAlign: "right", padding: "0.35rem 0.5rem" }}>{item.quantityRequired.toFixed(3)}</td>
+                        <td style={{ padding: "0.35rem 0.5rem" }}>{item.unitName || "—"}</td>
+                        <td style={{ padding: "0.35rem 0.5rem" }}>
+                          {item.ingredientExistsInDb ? (
+                            <Badge color="gray" size="1">Exists</Badge>
+                          ) : item.ingredientCategoryID ? (
+                            <Badge color="green" size="1">Will Create</Badge>
+                          ) : (
+                            <Badge color="red" size="1">Needs Category</Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Box>
+              {v.items.some(i => !i.ingredientExistsInDb && !i.ingredientCategoryID) && (
+                <Callout.Root color="amber" variant="surface" mt="2" size="1">
+                  <Callout.Text size="1">
+                    <Flex align="center" gap="1">
+                      <Pencil1Icon />
+                      Some ingredients need a category. Use the pencil icon in the list above to edit.
+                    </Flex>
+                  </Callout.Text>
+                </Callout.Root>
+              )}
+            </Box>
+          </Tabs.Content>
+        ))}
+      </Tabs.Root>
+    </Box>
   );
 };
