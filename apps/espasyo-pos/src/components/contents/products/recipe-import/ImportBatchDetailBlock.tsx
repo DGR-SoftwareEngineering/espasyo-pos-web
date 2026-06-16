@@ -379,16 +379,9 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
                                   {recipe.variantPrice != null && (
                                     <Text size="2" color="gray">{formatCurrency(recipe.variantPrice)}</Text>
                                   )}
-                                  <Flex direction="column" gap="3">
-                                    <Text size="1" color="gray">
-                                      Est. {formatCurrency(recipe.estimatedCostPerServing)}/serving
-                                    </Text>
-                                    {recipe.items.some(i => i.qtyPerPack <= 1) && (
-                                      <Text size="1" color="red">
-                                        ⚠ Some ingredients have Purchase Qty = 1 — cost may be inflated
-                                      </Text>
-                                    )}
-                                  </Flex>
+                                  <Text size="1" color="gray">
+                                    Est. {formatCurrency(recipe.estimatedCostPerServing)}/serving
+                                  </Text>
                                 </Flex>
                                 <Box style={{ overflowX: "auto" }}>
                                   <Table.Root size="1" layout="auto">
@@ -409,7 +402,7 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
                                           <Table.Cell align="right"><Text size="2">{item.quantityRequired.toFixed(2)}</Text></Table.Cell>
                                           <Table.Cell><Text size="2">{item.unitName}</Text></Table.Cell>
                                           <Table.Cell align="right"><Text size="2" color="gray">{formatCurrency(item.packagePrice)}</Text></Table.Cell>
-                                          <Table.Cell align="right"><Text size="2" color={item.qtyPerPack <= 1 ? "red" : "gray"}>{item.qtyPerPack}</Text></Table.Cell>
+                                          <Table.Cell align="right"><Text size="2" color="gray">{item.qtyPerPack}</Text></Table.Cell>
                                           <Table.Cell align="right"><Text size="2" color="amber">{formatCurrency(item.estimatedIngredientCost)}</Text></Table.Cell>
                                         </Table.Row>
                                       ))}
@@ -425,16 +418,9 @@ export const ImportBatchDetailBlock: React.FC<ImportBatchDetailBlockProps> = ({ 
                         // Standalone product: single recipe
                         relatedRecipes.length > 0 && (
                           <Box px="3" py="2">
-                            <Flex direction="column" gap="3" mb="3">
-                              <Text size="1" color="gray">
-                                Est. {formatCurrency(relatedRecipes[0].estimatedCostPerServing)}/serving
-                              </Text>
-                              {relatedRecipes[0].items.some(i => i.qtyPerPack <= 1) && (
-                                <Text size="1" color="red">
-                                  ⚠ Some ingredients have Purchase Qty = 1 — cost may be inflated
-                                </Text>
-                              )}
-                            </Flex>
+                            <Text size="1" color="gray" mb="2">
+                              Est. {formatCurrency(relatedRecipes[0].estimatedCostPerServing)}/serving
+                            </Text>
                             <Box style={{ overflowX: "auto" }}>
                               <Table.Root size="1" layout="auto">
                                 <Table.Header>
