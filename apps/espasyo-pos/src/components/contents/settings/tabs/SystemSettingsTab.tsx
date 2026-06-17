@@ -28,6 +28,7 @@ import {
   LinkOutlined,
   PlayCircleOutlined,
   CardMembershipOutlined,
+  SmartToyOutlined,
 } from "@mui/icons-material";
 import { useApi, useApiCallback, useMpinStatus, useCashDrawer } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
@@ -40,6 +41,7 @@ import { AdminConfirmationParams } from "core-lib/api/authentication/types";
 import {
   IMAGE_SETTING_KEYS,
   SETTING_CATEGORIES,
+  SETTING_KEYS,
 } from "core-lib/business/settings";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import { MessageBlock } from "core-lib/components/radix/blocks/messages";
@@ -47,6 +49,12 @@ import { MessageType } from "core-lib/components/topAlertMessages/types";
 import { AdminConfirmDialog } from "core-lib/components/radix/security";
 import { SettingValueEditor } from "../editors/SettingValueEditor";
 import { ImageSettingEditor } from "../editors/ImageSettingEditor";
+
+const HIDDEN_AI_KEYS = new Set<string>([
+  SETTING_KEYS.AiTimeoutSeconds,
+  SETTING_KEYS.AiMaxTokens,
+  SETTING_KEYS.AiProvider,
+]);
 
 const CATEGORY_ORDER: string[] = [
   SETTING_CATEGORIES.System,
@@ -58,6 +66,7 @@ const CATEGORY_ORDER: string[] = [
   SETTING_CATEGORIES.Security,
   SETTING_CATEGORIES.Features,
   SETTING_CATEGORIES.Crm,
+  SETTING_CATEGORIES.Ai,
 ];
 
 const CATEGORY_META: Record<
@@ -115,6 +124,12 @@ const CATEGORY_META: Record<
     icon: <CardMembershipOutlined fontSize="small" />,
     description:
       "Loyalty program configuration, including stamp requirements for free drink rewards.",
+  },
+  AI: {
+    label: "AI",
+    icon: <SmartToyOutlined fontSize="small" />,
+    description:
+      "Configure the AI provider, API key, and model. Enable or disable AI-powered features per module.",
   },
 };
 
@@ -206,6 +221,7 @@ export const SystemSettingsTab: React.FC = () => {
     const map = new Map<string, SystemSettingDto[]>();
     for (const c of CATEGORY_ORDER) map.set(c, []);
     for (const s of settings) {
+      if (HIDDEN_AI_KEYS.has(s.key)) continue;
       const list = map.get(s.category) ?? [];
       list.push(s);
       map.set(s.category, list);
@@ -222,7 +238,9 @@ export const SystemSettingsTab: React.FC = () => {
   const handleDraftChange = (s: SystemSettingDto, next: string) => {
     setDrafts((prev) => {
       const updated = { ...prev };
-      if (next === s.value) {
+      // Secret fields: treat blank as "no change" (keep existing key)
+      const isNoChange = s.dataType === 99 ? next === "" : next === s.value;
+      if (isNoChange) {
         delete updated[s.systemSettingID];
       } else {
         updated[s.systemSettingID] = next;

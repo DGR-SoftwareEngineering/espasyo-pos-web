@@ -192,6 +192,8 @@ import {
   FinancialReportQueryParams,
   FinancialReportResponse,
   SalesForecastResponse,
+  SalesInsightResponse,
+  SalesInsightQueryParams,
   CreateProductVariantDto,
   UpdateProductVariantDto,
   ProductVariantResponse,
@@ -1998,6 +2000,13 @@ export class CommonsApi {
 
   public salesForecast() {
     return this.axios.get<SalesForecastResponse>(`/api/v1/smart-api/SalesForecast`);
+  }
+
+  public getSalesInsight(params: SalesInsightQueryParams = {}) {
+    const queryStr = qs.stringify(params, { skipNull: true, skipEmptyString: true });
+    return this.axios.get<SalesInsightResponse>(
+      `/api/v1/smart-api/SalesInsight${queryStr ? `?${queryStr}` : ""}`,
+    );
   }
 
   // ─── Customer Dashboard API ────────────────────────────────────────────────────

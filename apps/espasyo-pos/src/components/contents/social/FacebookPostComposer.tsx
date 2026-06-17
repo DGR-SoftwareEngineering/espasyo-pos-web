@@ -13,7 +13,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Cross2Icon, ImageIcon, InfoCircledIcon } from "@radix-ui/react-icons";
 import { useApiCallback, useResolution } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
-import { mobileDialogStyle, mobileContentStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
+import { mobileDialogStyle, mobileContentStyle, mobileHeaderStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import {
   CreateFacebookPostParams,
   FacebookPageInfoDto,
