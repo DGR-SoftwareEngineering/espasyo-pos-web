@@ -11,8 +11,9 @@ import {
 } from "@radix-ui/themes";
 import { AnimatePresence, motion } from "framer-motion";
 import { Cross2Icon, ImageIcon, InfoCircledIcon } from "@radix-ui/react-icons";
-import { useApiCallback } from "core-lib/core/hooks";
+import { useApiCallback, useResolution } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
+import { mobileDialogStyle, mobileContentStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import {
   CreateFacebookPostParams,
   FacebookPageInfoDto,
@@ -70,6 +71,7 @@ export const FacebookPostComposer: React.FC<Props> = ({
   onSuccess,
 }) => {
   const { showToast } = useToastContext();
+  const { isSmallMobile } = useResolution();
   const isEdit = !!editPost;
 
   const [message, setMessage] = useState("");
@@ -228,11 +230,10 @@ export const FacebookPostComposer: React.FC<Props> = ({
     <Dialog.Root open={open} onOpenChange={(v) => { if (!v && !submitting) onClose(); }}>
       <Dialog.Content
         style={{
-          maxWidth: 560,
+          ...(isSmallMobile
+            ? mobileDialogStyle
+            : { maxWidth: 560, borderRadius: "var(--radius-5)", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.22)" }),
           padding: 0,
-          borderRadius: "var(--radius-5)",
-          overflow: "hidden",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.22)",
         }}
       >
         {/* Header */}
@@ -241,7 +242,10 @@ export const FacebookPostComposer: React.FC<Props> = ({
           justify="between"
           px="4"
           py="3"
-          style={{ borderBottom: "1px solid var(--gray-a4)" }}
+          style={{
+            borderBottom: "1px solid var(--gray-a4)",
+            ...(isSmallMobile ? mobileHeaderStyle : {}),
+          }}
         >
           <Text size="4" weight="bold">
             {isEdit ? "Edit post" : "Create post"}
@@ -299,7 +303,11 @@ export const FacebookPostComposer: React.FC<Props> = ({
         <Box
           px="4"
           py="2"
-          style={{ maxHeight: "52vh", overflowY: "auto" }}
+          style={{
+            ...(isSmallMobile
+              ? { flex: 1, overflowY: "auto", minHeight: 0 }
+              : { maxHeight: "52vh", overflowY: "auto" }),
+          }}
         >
           <textarea
             ref={textareaRef}
@@ -536,7 +544,10 @@ export const FacebookPostComposer: React.FC<Props> = ({
           justify="between"
           px="4"
           py="3"
-          style={{ borderTop: "1px solid var(--gray-a4)" }}
+          style={{
+            borderTop: "1px solid var(--gray-a4)",
+            ...(isSmallMobile ? mobileFooterStyle : {}),
+          }}
         >
           <Flex align="center" gap="1" style={{ position: "relative" }}>
             <Text size="1" color="gray" mr="1" style={{ userSelect: "none" }}>

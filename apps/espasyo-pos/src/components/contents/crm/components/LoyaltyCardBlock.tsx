@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from "react";
 import { AlertDialog, Button, Flex } from "@radix-ui/themes";
 import { EmojiEventsOutlined, UndoOutlined } from "@mui/icons-material";
-import { useApiCallback } from "core-lib/core/hooks";
+import { useApiCallback, useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { useToastContext } from "core-lib";
 import { CustomerDetailDto } from "core-lib/api/crm";
 import { LoyaltyCard, LoyaltyCardMode } from "./LoyaltyCard";
@@ -31,6 +32,7 @@ export const LoyaltyCardBlock: React.FC<LoyaltyCardBlockProps> = ({
   const [stampLoading, setStampLoading] = useState(false);
   const [removeLoading, setRemoveLoading] = useState(false);
   const [redeemLoading, setRedeemLoading] = useState(false);
+  const { isSmallMobile } = useResolution();
 
   const addStampCb = useApiCallback(
     async (api, args: { id: string; reason: string | null }) =>
@@ -219,14 +221,14 @@ export const LoyaltyCardBlock: React.FC<LoyaltyCardBlockProps> = ({
         open={redeemConfirmOpen}
         onOpenChange={(o) => (!o && !redeemLoading ? setRedeemConfirmOpen(false) : undefined)}
       >
-        <AlertDialog.Content style={{ maxWidth: 440 }}>
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 440 }}>
           <AlertDialog.Title>{DIALOG_TITLES.redeemReward}</AlertDialog.Title>
           <AlertDialog.Description size="2">
             Redeem one free 12oz drink for{" "}
             <strong>{customer?.fullName ?? "this customer"}</strong>?
             They have <strong>{customer?.loyaltyCard?.availableRewards ?? 0}</strong> reward(s) available.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray" disabled={redeemLoading}>
                 Cancel

@@ -8,9 +8,10 @@ import {
   PieChartIcon,
 } from "@radix-ui/react-icons";
 import { ChartCard, ProductOption } from "core-lib/components/radix/charts";
-import { useApi } from "core-lib/core/hooks";
+import { useApi, useResolution } from "core-lib/core/hooks";
 
 export const AdminChartsRow: React.FC = () => {
+  const { isSmallMobile } = useResolution();
   const productsApi = useApi((api) => api.commons.productList());
   const productOptions = useMemo<ProductOption[]>(
     () =>
@@ -27,7 +28,7 @@ export const AdminChartsRow: React.FC = () => {
       mb="5"
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
+        gridTemplateColumns: `repeat(auto-fit, minmax(${isSmallMobile ? "280px" : "360px"}, 1fr))`,
         gap: 16,
       }}
     >

@@ -28,7 +28,7 @@ import {
   AddOnItemRecipeItemResponse,
 } from "../../../../api/commons/types";
 import { formatCurrency } from "../../../../business";
-import { useApi, useApiCallback } from "../../../../core/hooks";
+import { useApi, useApiCallback, useResolution } from "../../../../core/hooks";
 
 interface Props {
   recipe: RecipeResponse;
@@ -52,7 +52,50 @@ const IngredientRow: React.FC<IngredientRowProps> = ({
   cost,
   totalCost,
 }) => {
+  const { isSmallMobile } = useResolution();
   const pct = totalCost > 0 ? (cost / totalCost) * 100 : 0;
+
+  if (isSmallMobile) {
+    return (
+      <Box py="2" style={{ borderBottom: "1px solid var(--gray-a3)" }}>
+        <Text size="2" weight="medium" style={{ wordBreak: "break-word" }}>
+          {name}
+        </Text>
+        <Flex gap="3" mt="1" wrap="wrap">
+          <Text size="2" color="gray">
+            {quantity} {unitName}
+          </Text>
+          <Text size="2" weight="bold" style={{ color: "var(--green-11)" }}>
+            {formatCurrency(cost)}
+          </Text>
+        </Flex>
+        <Flex align="center" gap="2" mt="1">
+          <Text size="1" color="gray">
+            {pct.toFixed(1)}%
+          </Text>
+          <Box
+            style={{
+              flex: 1,
+              height: 4,
+              borderRadius: "var(--radius-2)",
+              background: "var(--gray-a4)",
+              overflow: "hidden",
+            }}
+          >
+            <Box
+              style={{
+                height: "100%",
+                width: `${Math.min(pct, 100)}%`,
+                background: "var(--accent-9)",
+                borderRadius: "var(--radius-2)",
+              }}
+            />
+          </Box>
+        </Flex>
+      </Box>
+    );
+  }
+
   return (
     <Flex align="center" gap="3" py="2" style={{ borderBottom: "1px solid var(--gray-a3)" }}>
       <Box style={{ flex: "1 1 35%", minWidth: 0 }}>
@@ -125,6 +168,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   recipeId,
   recipeType,
 }) => {
+  const { isSmallMobile } = useResolution();
   const capacityCb = useApiCallback(
     async (api, { id, type }: { id: string; type: "variant" | "addon" }) =>
       type === "variant"
@@ -202,12 +246,14 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           <Text size="2" color="gray">No ingredients defined.</Text>
         ) : (
           <Box>
+            {!isSmallMobile && (
             <Flex align="center" gap="3" pb="1" style={{ borderBottom: "2px solid var(--gray-a4)" }}>
               <Text size="1" color="gray" style={{ flex: "1 1 35%" }}>Ingredient</Text>
               <Text size="1" color="gray" style={{ flex: "0 0 120px", textAlign: "right" }}>Quantity</Text>
               <Text size="1" color="gray" style={{ flex: "0 0 90px", textAlign: "right" }}>Cost</Text>
               <Text size="1" color="gray" style={{ flex: "0 0 80px" }}>Share</Text>
             </Flex>
+            )}
             {items.map((item, idx) => {
               const cost = item.calculatedCost ?? item.ingredientCost ?? 0;
               return (
@@ -378,7 +424,7 @@ export const RecipeVariantAddonViewContent: React.FC<Props> = ({
 
         {/* Summary Bar */}
         {!isLoading && (
-          <Grid columns="3" gap="3">
+          <Grid columns={{ initial: "1", sm: "3" }} gap="3">
             <Card variant="surface" style={{ background: "var(--indigo-a2)", padding: "var(--space-3)" }}>
               <Flex direction="column" gap="1">
                 <Text size="1" color="gray">Total Ingredients</Text>

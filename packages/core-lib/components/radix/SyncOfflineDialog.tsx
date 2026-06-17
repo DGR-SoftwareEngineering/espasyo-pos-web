@@ -13,6 +13,7 @@ import {
   CheckIcon,
   Cross2Icon,
 } from "@radix-ui/react-icons";
+import { useResolution } from "../../core/hooks";
 import { useOfflineMode } from "../../core/contexts/OfflineModeContext";
 import {
   getPendingOfflineSales,
@@ -37,6 +38,8 @@ export const SyncOfflineDialog: React.FC = () => {
     refreshPendingCount,
   } = useOfflineMode();
 
+  const { isSmallMobile } = useResolution();
+  const isFullScreen = isSmallMobile;
   const [stage, setStage] = useState<Stage>("preview");
   const [rows, setRows] = useState<SyncRow[]>([]);
   const doneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,7 +128,25 @@ export const SyncOfflineDialog: React.FC = () => {
       }}
     >
       <Dialog.Content
-        maxWidth="580px"
+        style={{
+          ...(isFullScreen
+            ? {
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                transform: "none",
+                maxWidth: "100dvw",
+                width: "100dvw",
+                height: "100dvh",
+                maxHeight: "100dvh",
+                borderRadius: 0,
+                display: "flex",
+                flexDirection: "column",
+              }
+            : { maxWidth: 580 }),
+        }}
         onEscapeKeyDown={(e) => {
           if (isSyncing) e.preventDefault();
         }}
@@ -141,51 +162,53 @@ export const SyncOfflineDialog: React.FC = () => {
 
         {stage === "preview" && (
           <>
-            <Text size="2" color="gray">
-              Review the queued sales below before uploading them to the server.
-            </Text>
-            <Box mt="3" mb="4">
-              <Table.Root variant="surface" size="1">
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>Items</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>Total</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {rows.length === 0 && (
+            <Box style={isFullScreen ? { flex: 1, overflowY: "auto", minHeight: 0 } : {}}>
+              <Text size="2" color="gray">
+                Review the queued sales below before uploading them to the server.
+              </Text>
+              <Box mt="3" mb="4">
+                <Table.Root variant="surface" size="1">
+                  <Table.Header>
                     <Table.Row>
-                      <Table.Cell colSpan={4}>
-                        <Text size="2" color="gray">
-                          No pending sales.
-                        </Text>
-                      </Table.Cell>
+                      <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Items</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Total</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
                     </Table.Row>
-                  )}
-                  {rows.map((row) => (
-                    <Table.Row key={row.localId}>
-                      <Table.Cell>
-                        <Text size="2">{formatTime(row.createdAt)}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text size="2">{row.payload.items.length}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text size="2">
-                          ₱{totalAmount(row).toFixed(2)}
-                        </Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge color="orange" size="1">
-                          Pending
-                        </Badge>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
+                  </Table.Header>
+                  <Table.Body>
+                    {rows.length === 0 && (
+                      <Table.Row>
+                        <Table.Cell colSpan={4}>
+                          <Text size="2" color="gray">
+                            No pending sales.
+                          </Text>
+                        </Table.Cell>
+                      </Table.Row>
+                    )}
+                    {rows.map((row) => (
+                      <Table.Row key={row.localId}>
+                        <Table.Cell>
+                          <Text size="2">{formatTime(row.createdAt)}</Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Text size="2">{row.payload.items.length}</Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Text size="2">
+                            ₱{totalAmount(row).toFixed(2)}
+                          </Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Badge color="orange" size="1">
+                            Pending
+                          </Badge>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Root>
+              </Box>
             </Box>
             <Flex justify="end" gap="2">
               <Button variant="soft" color="gray" onClick={handleClose}>
@@ -203,66 +226,68 @@ export const SyncOfflineDialog: React.FC = () => {
 
         {stage === "progress" && (
           <>
-            {isSyncing && (
-              <Flex align="center" gap="2" my="2">
-                <Spinner loading size="2" />
-                <Text size="2">Uploading sales to server…</Text>
-              </Flex>
-            )}
-            {allFinished && (
-              <Text size="2" color={hasFailed ? "red" : "green"} my="2">
-                {hasFailed
-                  ? "Some sales failed to sync. See details below."
-                  : "All sales synced successfully!"}
-              </Text>
-            )}
-            <Box mt="3" mb="4">
-              <Table.Root variant="surface" size="1">
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>Items</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>Total</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>Result</Table.ColumnHeaderCell>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {rows.map((row) => (
-                    <Table.Row key={row.localId}>
-                      <Table.Cell>
-                        <Text size="2">{formatTime(row.createdAt)}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text size="2">{row.payload.items.length}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text size="2">₱{totalAmount(row).toFixed(2)}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        {row.rowStatus === "pending" && (
-                          <Spinner loading size="1" />
-                        )}
-                        {row.rowStatus === "synced" && (
-                          <Flex align="center" gap="1">
-                            <CheckIcon color="green" />
-                            <Text size="1" color="green">
-                              Synced
-                            </Text>
-                          </Flex>
-                        )}
-                        {row.rowStatus === "failed" && (
-                          <Flex align="center" gap="1">
-                            <Cross2Icon color="red" />
-                            <Text size="1" color="red">
-                              {row.rowError ?? "Failed"}
-                            </Text>
-                          </Flex>
-                        )}
-                      </Table.Cell>
+            <Box style={isFullScreen ? { flex: 1, overflowY: "auto", minHeight: 0 } : {}}>
+              {isSyncing && (
+                <Flex align="center" gap="2" my="2">
+                  <Spinner loading size="2" />
+                  <Text size="2">Uploading sales to server…</Text>
+                </Flex>
+              )}
+              {allFinished && (
+                <Text size="2" color={hasFailed ? "red" : "green"} my="2">
+                  {hasFailed
+                    ? "Some sales failed to sync. See details below."
+                    : "All sales synced successfully!"}
+                </Text>
+              )}
+              <Box mt="3" mb="4">
+                <Table.Root variant="surface" size="1">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Items</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Total</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Result</Table.ColumnHeaderCell>
                     </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
+                  </Table.Header>
+                  <Table.Body>
+                    {rows.map((row) => (
+                      <Table.Row key={row.localId}>
+                        <Table.Cell>
+                          <Text size="2">{formatTime(row.createdAt)}</Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Text size="2">{row.payload.items.length}</Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Text size="2">₱{totalAmount(row).toFixed(2)}</Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {row.rowStatus === "pending" && (
+                            <Spinner loading size="1" />
+                          )}
+                          {row.rowStatus === "synced" && (
+                            <Flex align="center" gap="1">
+                              <CheckIcon color="green" />
+                              <Text size="1" color="green">
+                                Synced
+                              </Text>
+                            </Flex>
+                          )}
+                          {row.rowStatus === "failed" && (
+                            <Flex align="center" gap="1">
+                              <Cross2Icon color="red" />
+                              <Text size="1" color="red">
+                                {row.rowError ?? "Failed"}
+                              </Text>
+                            </Flex>
+                          )}
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Root>
+              </Box>
             </Box>
             <Flex justify="end">
               <Button

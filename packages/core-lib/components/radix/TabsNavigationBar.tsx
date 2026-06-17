@@ -3,6 +3,7 @@ import { Box, ContextMenu, Text } from "@radix-ui/themes";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/router";
+import { useResolution } from "../../core/hooks";
 import { NavTab, useTabsNavigation } from "../../core/contexts/TabsNavigationContext";
 import { useFilteredMenu } from "../menu/hooks/useFilteredMenu";
 
@@ -23,6 +24,7 @@ interface SingleTabProps {
   closeAllTabs: () => void;
   closeTab: (path: string) => void;
   tabRef?: (el: HTMLDivElement | null) => void;
+  isSmallMobile?: boolean;
 }
 
 const SingleTab: React.FC<SingleTabProps> = ({
@@ -38,6 +40,7 @@ const SingleTab: React.FC<SingleTabProps> = ({
   closeAllTabs,
   closeTab,
   tabRef,
+  isSmallMobile = false,
 }) => {
   const [hovered, setHovered] = useState(false);
 
@@ -45,7 +48,9 @@ const SingleTab: React.FC<SingleTabProps> = ({
   const hasTabsToRight = allTabs.slice(tabIndex + 1).some((t) => t.closable);
   const hasAnyClosableTab = allTabs.some((t) => t.closable);
 
-  const tabHeight = isActive ? TAB_HEIGHT_ACTIVE : TAB_HEIGHT_INACTIVE;
+  const tabHeight = isActive
+    ? isSmallMobile ? 28 : TAB_HEIGHT_ACTIVE
+    : isSmallMobile ? 26 : TAB_HEIGHT_INACTIVE;
 
   const tabStyle: React.CSSProperties = isActive
     ? {
@@ -203,12 +208,16 @@ interface TabsNavigationBarProps {
 }
 
 export const TabsNavigationBar: React.FC<TabsNavigationBarProps> = ({ role }) => {
+  const { isSmallMobile } = useResolution();
   const { tabs, closeTab, closeOtherTabs, closeTabsToRight, closeAllTabs } =
     useTabsNavigation();
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const prevTabCount = useRef(tabs.length);
+
+  const responsiveBarHeight = isSmallMobile ? 40 : BAR_HEIGHT;
+  const responsiveTabHeight = isSmallMobile ? 28 : TAB_HEIGHT_ACTIVE;
 
   // Derive path → icon map from the live menu (same source as the sidebar)
   const { mainMenu, secondaryMenu } = useFilteredMenu(role ?? "");
@@ -276,10 +285,10 @@ export const TabsNavigationBar: React.FC<TabsNavigationBarProps> = ({ role }) =>
         borderBottom: "1px solid var(--gray-a5)",
         minWidth: 0,
         width: "100%",
-        height: BAR_HEIGHT,
+        height: responsiveBarHeight,
         flexShrink: 0,
-        paddingLeft: 6,
-        paddingTop: 4,
+        paddingLeft: isSmallMobile ? 4 : 6,
+        paddingTop: isSmallMobile ? 2 : 4,
         boxSizing: "border-box",
         position: "relative",
         overflow: "visible",
@@ -295,9 +304,9 @@ export const TabsNavigationBar: React.FC<TabsNavigationBarProps> = ({ role }) =>
           msOverflowStyle: "auto",
           display: "flex",
           alignItems: "flex-end",
-          height: BAR_HEIGHT,
+          height: responsiveBarHeight,
 
-          paddingTop: "4px",
+          paddingTop: isSmallMobile ? "2px" : "4px",
           marginTop: "0",
 
         }}
@@ -307,7 +316,7 @@ export const TabsNavigationBar: React.FC<TabsNavigationBarProps> = ({ role }) =>
             display: "flex",
             alignItems: "flex-end",
             minWidth: "max-content",
-            height: BAR_HEIGHT,
+            height: responsiveBarHeight,
           }}
         >
           <AnimatePresence initial={false} mode="popLayout">
@@ -325,6 +334,7 @@ export const TabsNavigationBar: React.FC<TabsNavigationBarProps> = ({ role }) =>
                 closeOtherTabs={closeOtherTabs}
                 closeTabsToRight={closeTabsToRight}
                 closeAllTabs={closeAllTabs}
+                isSmallMobile={isSmallMobile}
                 tabRef={(el) => {
                   if (el) tabRefs.current.set(tab.path, el);
                   else tabRefs.current.delete(tab.path);

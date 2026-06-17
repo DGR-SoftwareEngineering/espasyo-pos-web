@@ -18,6 +18,8 @@ import { RedeemableProductDto } from "core-lib/api/crm";
 import type { SellableProductDto, SellableVariantDto } from "core-lib/api/commons/types";
 import { formatCurrency } from "../format";
 import { usePublicSettings } from "core-lib/core/contexts";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileContentStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { AddProductOptions } from "./hooks";
 
 interface RedeemRewardDialogProps {
@@ -39,6 +41,7 @@ export const RedeemRewardDialog: React.FC<RedeemRewardDialogProps> = ({
   targetSize = "12oz",
 }) => {
   const { currencyCode } = usePublicSettings();
+  const { isSmallMobile } = useResolution();
 
   const [products, setProducts] = useState<RedeemableProductDto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -170,7 +173,12 @@ export const RedeemRewardDialog: React.FC<RedeemRewardDialogProps> = ({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content
-        style={{ maxWidth: 480, padding: 0 }}
+        style={{
+          ...(isSmallMobile
+            ? mobileDialogStyle
+            : { maxWidth: 480 }),
+          padding: 0,
+        }}
         onInteractOutside={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
       >
@@ -181,7 +189,10 @@ export const RedeemRewardDialog: React.FC<RedeemRewardDialogProps> = ({
           px="4"
           pt="4"
           pb="3"
-          style={{ borderBottom: "1px solid var(--gray-a4)" }}
+          style={{
+            borderBottom: "1px solid var(--gray-a4)",
+            ...(isSmallMobile ? { flexShrink: 0 } : {}),
+          }}
         >
           {step === "customize" && (
             <Button
@@ -213,7 +224,14 @@ export const RedeemRewardDialog: React.FC<RedeemRewardDialogProps> = ({
 
         {step === "list" && (
           <>
-            <ScrollArea type="auto" style={{ maxHeight: "60vh" }}>
+            <ScrollArea
+              type="auto"
+              style={{
+                ...(isSmallMobile
+                  ? mobileContentStyle
+                  : { maxHeight: "60vh" }),
+              }}
+            >
               <Box p="4">
                 {loading && (
                   <Flex justify="center" py="6">
@@ -310,7 +328,7 @@ export const RedeemRewardDialog: React.FC<RedeemRewardDialogProps> = ({
               </Box>
             </ScrollArea>
 
-            <Box px="4" pb="4" pt="2">
+            <Box px="4" pb="4" pt="2" style={isSmallMobile ? mobileFooterStyle : undefined}>
               <Flex gap="3" justify="end">
                 <Dialog.Close>
                   <Button variant="soft" color="gray">
@@ -324,7 +342,14 @@ export const RedeemRewardDialog: React.FC<RedeemRewardDialogProps> = ({
 
         {step === "customize" && pendingProduct && pendingSellable && (
           <>
-            <ScrollArea type="auto" style={{ maxHeight: "60vh" }}>
+            <ScrollArea
+              type="auto"
+              style={{
+                ...(isSmallMobile
+                  ? mobileContentStyle
+                  : { maxHeight: "60vh" }),
+              }}
+            >
               <Box p="4">
                 {/* Selected product summary */}
                 <Flex align="center" gap="3" mb="4">
@@ -428,7 +453,11 @@ export const RedeemRewardDialog: React.FC<RedeemRewardDialogProps> = ({
               px="4"
               pb="4"
               pt="3"
-              style={{ borderTop: "1px solid var(--gray-a4)", background: "var(--gray-a1)" }}
+              style={{
+                borderTop: "1px solid var(--gray-a4)",
+                background: "var(--gray-a1)",
+                ...(isSmallMobile ? mobileFooterStyle : {}),
+              }}
             >
               <Separator size="4" mb="3" />
               <Flex justify="between" align="center" gap="3">

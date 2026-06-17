@@ -12,7 +12,7 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { ChevronLeftIcon, ChevronRightIcon, Cross2Icon } from "@radix-ui/react-icons";
-import { useApi } from "core-lib/core/hooks";
+import { useApi, useResolution } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
 import type { OrderDto, SaleDetailDto } from "core-lib/api/commons/types";
@@ -22,6 +22,7 @@ import { formatCurrency } from "../../contents/procurement/format";
 import { getStatusBadge } from "../types";
 import { tableStyles } from "../styles";
 import type { DailyTransactionsPanelProps } from "../types";
+import { mobileDialogStyle, mobileContentStyle, mobileHeaderStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 export const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
   date,
@@ -31,6 +32,7 @@ export const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
   const { openDialog } = useDialogContext();
   const { systemName, theme, currencyCode, pos } = usePublicSettings();
   const [pageNumber, setPageNumber] = useState(1);
+  const { isSmallMobile } = useResolution();
   const pageSize = 20;
 
   const ordersApi = useApi(
@@ -95,13 +97,14 @@ export const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
   return (
     <Dialog.Root open={date !== null} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Content
-        style={{
+        style={isSmallMobile ? { ...mobileDialogStyle, overflowY: "auto" } : {
           maxWidth: "860px",
           maxHeight: "80vh",
           overflowY: "auto",
         }}
       >
-        <Flex justify="between" align="center" mb="4">
+        <Flex direction="column" style={{ height: "100%" }}>
+        <Flex justify="between" align="center" mb="4" style={isSmallMobile ? mobileHeaderStyle : undefined}>
           <Heading size="5" weight="bold">
             Transactions \u2014 {dateFormatted}
           </Heading>
@@ -111,6 +114,7 @@ export const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
             </IconButton>
           </Dialog.Close>
         </Flex>
+        <Box style={isSmallMobile ? mobileContentStyle : undefined}>
 
         <Flex gap="2" mb="4">
           <Card
@@ -245,6 +249,8 @@ export const DailyTransactionsPanel: React.FC<DailyTransactionsPanelProps> = ({
             </Text>
           </Flex>
         )}
+        </Box>
+        </Flex>
       </Dialog.Content>
     </Dialog.Root>
   );

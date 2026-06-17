@@ -111,6 +111,7 @@ import {
   RecipeImportBatchSummaryDto,
   RecipeImportBatchDetailDto,
   RecipeImportSyncResultDto,
+  RecipeImportStepSyncResultDto,
   ImportRecipeExcelDto,
   RevertBatchSafetyDto,
 } from "./types";
@@ -731,6 +732,20 @@ export class CommonsApi {
   public syncImportBatch(batchId: string) {
     return this.axios.post<ApiResponse<RecipeImportSyncResultDto>>(
       `/api/v1/product-api/Product/import-batches/${batchId}/sync`,
+    );
+  }
+
+  public syncImportBatchStep(batchId: string, count: number) {
+    return this.axios.post<ApiResponse<RecipeImportStepSyncResultDto>>(
+      `/api/v1/product-api/Product/import-batches/${batchId}/sync-step`,
+      { count },
+    );
+  }
+
+  public syncImportBatchSelected(batchId: string, menuItemStagingIDs: string[]) {
+    return this.axios.post<ApiResponse<RecipeImportStepSyncResultDto>>(
+      `/api/v1/product-api/Product/import-batches/${batchId}/sync-selected`,
+      { menuItemStagingIDs },
     );
   }
 

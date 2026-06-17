@@ -8,6 +8,7 @@ import { PAGE_KEYS } from "../../business/settings";
 import { SideMenu } from "./SideMenu";
 import { Header } from "./Header";
 import { TabsNavigationBar } from "./TabsNavigationBar";
+import { BottomNav } from "./BottomNav";
 import {
   MaintenanceBanner,
   MaintenancePageBlock,
@@ -50,7 +51,7 @@ export const RadixDashboard: React.FC<Props> = ({
   initials,
   email,
 }) => {
-  const { isMobile } = useResolution();
+  const { isMobile, isSmallMobile, isTablet, isDesktop } = useResolution();
   const router = useRouter();
   const { maintenance } = usePublicSettings();
   const isAdmin = (role ?? "").toLowerCase() === "admin";
@@ -95,6 +96,12 @@ export const RadixDashboard: React.FC<Props> = ({
     [storageKey],
   );
 
+  const handleNavigate = useCallback(() => {
+    if (!isDesktop) {
+      handleToggleSidebar(true);
+    }
+  }, [isDesktop, handleToggleSidebar]);
+
   const currentPageKey = useMemo(
     () => routeToPageKey(router?.pathname ?? ""),
     [router?.pathname],
@@ -133,6 +140,7 @@ export const RadixDashboard: React.FC<Props> = ({
             collapsible
             collapsed={sidebarCollapsed}
             onToggleCollapsed={handleToggleSidebar}
+            onNavigate={handleNavigate}
           />
 
           <Flex
@@ -147,7 +155,9 @@ export const RadixDashboard: React.FC<Props> = ({
               style={{
                 flex: 1,
                 overflowY: "auto",
-                padding: isMobile ? "16px" : "24px 32px",
+                overflowX: isSmallMobile ? "hidden" : undefined,
+                padding: isSmallMobile ? "12px" : isTablet ? "16px" : "24px 32px",
+                paddingBottom: isSmallMobile ? "calc(env(safe-area-inset-bottom, 0px) + 64px)" : undefined,
               }}
             >
               {pageInMaintenance ? (
@@ -158,6 +168,7 @@ export const RadixDashboard: React.FC<Props> = ({
             </Box>
           </Flex>
         </Flex>
+        {isSmallMobile && <BottomNav roleName={role ?? ""} loading={loading} />}
         <OfflineDisconnectDialog />
         <SyncOfflineDialog />
     </TabsNavigationProvider>

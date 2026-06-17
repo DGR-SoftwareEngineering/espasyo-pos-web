@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";
 import { CashierShiftDto, ShiftSummaryDto } from "core-lib/api/commons/types";
 import { formatCurrency } from "core-lib/business/strings";
 import {
@@ -29,6 +29,7 @@ import {
 import { PrintPreviewDialog } from "core-lib/components/print";
 import { PrintableDocument } from "core-lib/components/print";
 import { ShiftDetailView } from "../contents/shift-management/list/ShiftDetailView";
+import { mobileDialogStyle, mobileContentStyle, mobileHeaderStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -107,6 +108,7 @@ export const ShiftDetailsTab: React.FC = () => {
   const [fromDate, setFromDate] = useState(daysAgoIso(30));
   const [toDate, setToDate] = useState(todayIso());
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { isSmallMobile } = useResolution();
   const [printOpen, setPrintOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedSummary, setSelectedSummary] = useState<ShiftSummaryDto | null>(null);
@@ -386,34 +388,38 @@ export const ShiftDetailsTab: React.FC = () => {
 
       {/* ── Detail Dialog ── */}
       <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-        <Dialog.Content maxWidth="520px">
-          <Dialog.Title>
-            Shift {selectedShiftNum}
-          </Dialog.Title>
-          <Separator size="4" mb="4" />
-
-          {detailLoading ? (
-            <Flex direction="column" gap="3">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} height="80px" />
-              ))}
+        <Dialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: "520px" }}>
+          <Flex direction="column" style={{ height: "100%" }}>
+            <Box style={isSmallMobile ? mobileHeaderStyle : undefined}>
+              <Dialog.Title>
+                Shift {selectedShiftNum}
+              </Dialog.Title>
+              <Separator size="4" mb="4" />
+            </Box>
+            <Box style={isSmallMobile ? mobileContentStyle : undefined}>
+              {detailLoading ? (
+                <Flex direction="column" gap="3">
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} height="80px" />
+                  ))}
+                </Flex>
+              ) : selectedSummary ? (
+                <ShiftDetailView summary={selectedSummary} />
+              ) : (
+                <Flex align="center" justify="center" py="4">
+                  <Text size="2" color="gray">
+                    Could not load shift details.
+                  </Text>
+                </Flex>
+              )}
+            </Box>
+            <Flex justify="end" mt="4" style={isSmallMobile ? mobileFooterStyle : undefined}>
+              <Dialog.Close>
+                <Button variant="soft" color="gray">
+                  Close
+                </Button>
+              </Dialog.Close>
             </Flex>
-          ) : selectedSummary ? (
-            <ShiftDetailView summary={selectedSummary} />
-          ) : (
-            <Flex align="center" justify="center" py="4">
-              <Text size="2" color="gray">
-                Could not load shift details.
-              </Text>
-            </Flex>
-          )}
-
-          <Flex justify="end" mt="4">
-            <Dialog.Close>
-              <Button variant="soft" color="gray">
-                Close
-              </Button>
-            </Dialog.Close>
           </Flex>
         </Dialog.Content>
       </Dialog.Root>

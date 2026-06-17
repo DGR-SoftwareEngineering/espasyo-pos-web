@@ -6,6 +6,7 @@ import {
   ChevronDownIcon,
 } from "@radix-ui/react-icons";
 import { PaginationData } from "../../../api/types";
+import { useResolution } from "../../../core/hooks";
 import { cn } from "../_utils";
 
 export interface DataTableHeader {
@@ -60,10 +61,11 @@ export const DataTableV2 = <T,>({
   onSelectAll,
   ...rest
 }: Props<T>) => {
+  const { isSmallMobile } = useResolution();
   const headerColSpan = selectable ? tableHeaders.length + 1 : tableHeaders.length;
 
   return (
-    <Box id={id} className={cn(className)}>
+    <Box id={id} className={cn(className)} style={{ overflowX: isSmallMobile ? "auto" : undefined }}>
       <Table.Root variant="surface" data-testid={rest["data-testid"]}>
         <Table.Header style={sx?.tableHead}>
           <Table.Row>

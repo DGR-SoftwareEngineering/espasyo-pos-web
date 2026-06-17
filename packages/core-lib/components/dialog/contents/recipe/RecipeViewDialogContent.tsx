@@ -132,7 +132,7 @@ const RecipeViewIngredientCard: React.FC<RecipeViewIngredientCardProps> = ({
           </Flex>
 
           {/* Row 2: Quantity | Cost | Cost % bar */}
-          <Grid columns="3" gap="3" mt="1">
+          <Grid columns={{ initial: "1", sm: "3" }} gap="3" mt="1">
             {/* Quantity */}
             <Box>
               <Text size="1" color="gray">
@@ -335,7 +335,7 @@ export const RecipeViewDialogContent: React.FC<Props> = ({
         </Box>
 
         {/* Overview Metrics */}
-        <Grid columns="3" gap="3">
+        <Grid columns={{ initial: "1", sm: "3" }} gap="3">
           <Card variant="surface" style={{ background: "var(--indigo-a2)", padding: "var(--space-3)" }}>
             <Flex direction="column" gap="2">
               <Text size="1" color="gray">
@@ -395,7 +395,7 @@ export const RecipeViewDialogContent: React.FC<Props> = ({
                 }}
               />
             ) : (
-              <Grid columns="3" gap="2">
+              <Grid columns={{ initial: "1", sm: "3" }} gap="2">
                 <StatsCard
                   label="Maximum Units"
                   value={maxUnits}

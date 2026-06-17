@@ -11,7 +11,8 @@ import {
 } from "@radix-ui/themes";
 import { CheckCircledIcon, Cross2Icon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { motion, AnimatePresence } from "framer-motion";
-import { useApiCallback } from "core-lib/core/hooks";
+import { useApiCallback, useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileContentStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { FacebookConnectionStatusDto } from "core-lib/api/commons/types";
 
 interface Props {
@@ -42,6 +43,7 @@ const StepBadge: React.FC<{ n: number }> = ({ n }) => (
 );
 
 export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSuccess }) => {
+  const { isSmallMobile } = useResolution();
   const [step, setStep] = useState<Step>("instructions");
   const [token, setToken] = useState("");
   const [pageId, setPageId] = useState("");
@@ -160,10 +162,10 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
     <Dialog.Root open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
       <Dialog.Content
         style={{
-          maxWidth: 520,
+          ...(isSmallMobile
+            ? mobileDialogStyle
+            : { maxWidth: 520, borderRadius: "var(--radius-5)", overflow: "hidden" }),
           padding: 0,
-          borderRadius: "var(--radius-5)",
-          overflow: "hidden",
         }}
       >
         {/* Header */}
@@ -172,7 +174,10 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
           justify="between"
           px="5"
           py="4"
-          style={{ borderBottom: "1px solid var(--gray-a4)" }}
+          style={{
+            borderBottom: "1px solid var(--gray-a4)",
+            ...(isSmallMobile ? { flexShrink: 0 } : {}),
+          }}
         >
           <Box>
             <Text size="4" weight="bold" as="div">
@@ -199,6 +204,13 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
           </Button>
         </Flex>
 
+        <Box
+          style={{
+            ...(isSmallMobile
+              ? { flex: 1, overflowY: "auto", minHeight: 0 }
+              : {}),
+          }}
+        >
         <AnimatePresence mode="wait">
           {/* Step 1: Instructions */}
           {step === "instructions" && (
@@ -369,7 +381,13 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
 
               <Separator size="4" />
 
-              <Flex align="center" justify="between" px="5" py="3">
+              <Flex
+                align="center"
+                justify="between"
+                px="5"
+                py="3"
+                style={isSmallMobile ? mobileFooterStyle : undefined}
+              >
                 <Button variant="ghost" color="gray" onClick={handleClose}>
                   Cancel
                 </Button>
@@ -420,7 +438,14 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
 
               <Separator size="4" />
 
-              <Flex align="center" justify="end" gap="3" px="5" py="3">
+              <Flex
+                align="center"
+                justify="end"
+                gap="3"
+                px="5"
+                py="3"
+                style={isSmallMobile ? mobileFooterStyle : undefined}
+              >
                 <Button
                   variant="soft"
                   color="gray"
@@ -521,7 +546,13 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
 
               <Separator size="4" />
 
-              <Flex align="center" justify="between" px="5" py="3">
+              <Flex
+                align="center"
+                justify="between"
+                px="5"
+                py="3"
+                style={isSmallMobile ? mobileFooterStyle : undefined}
+              >
                 <Button
                   variant="ghost"
                   color="gray"
@@ -593,6 +624,7 @@ export const FacebookReconnectDialog: React.FC<Props> = ({ open, onClose, onSucc
             </motion.div>
           )}
         </AnimatePresence>
+        </Box>
       </Dialog.Content>
     </Dialog.Root>
   );

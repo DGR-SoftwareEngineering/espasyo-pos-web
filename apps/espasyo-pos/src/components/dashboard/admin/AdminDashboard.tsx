@@ -3,13 +3,13 @@ import { Box } from "@radix-ui/themes";
 import { useAuthContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
 import { getDailySalesGross } from "core-lib/business";
+import { useApi, useResolution } from "core-lib/core/hooks";
 import { AdminHero } from "./AdminHero";
 import { AdminKpiRow } from "./AdminKpiRow";
 import { AdminChartsRow } from "./AdminChartsRow";
 import { AdminRecentActivity } from "./AdminRecentActivity";
 import { AdminSystemHealth } from "./AdminSystemHealth";
 import { SalesCelebrationModal } from "./SalesCelebrationModal";
-import { useApi } from "core-lib/core/hooks";
 
 // The ".v2" suffix is a one-time cache-buster: it invalidates any stale flag
 // set before the open/flag ordering below was corrected.
@@ -37,6 +37,7 @@ interface Props {
 }
 
 export const AdminDashboard: React.FC<Props> = ({ initials, role }) => {
+  const { isSmallMobile } = useResolution();
   const { systemName, operationalStatus, maintenance, pos, currencyCode } = usePublicSettings();
   const [showCelebration, setShowCelebration] = useState(false);
   const dailySummary = useApi((api) => api.commons.salesDailySummary(), []);
@@ -81,7 +82,7 @@ export const AdminDashboard: React.FC<Props> = ({ initials, role }) => {
         pb="4"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gridTemplateColumns: `repeat(auto-fit, minmax(${isSmallMobile ? "280px" : "320px"}, 1fr))`,
           gap: 16,
         }}
       >

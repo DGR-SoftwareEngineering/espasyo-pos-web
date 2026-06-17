@@ -17,6 +17,7 @@ import {
   WarningAmberOutlined,
   KeyOutlined,
 } from "@mui/icons-material";
+import { useResolution } from "../../../core/hooks";
 import { Button } from "../buttons/Button";
 import { MpinInput, isValidMpin } from "./MpinInput";
 
@@ -45,6 +46,8 @@ export const AdminConfirmDialog: React.FC<Props> = ({
   errorMessage,
   onConfirm,
 }) => {
+  const { isSmallMobile } = useResolution();
+  const isFullScreen = isSmallMobile;
   const [password, setPassword] = useState("");
   const [mpin, setMpin] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -74,7 +77,27 @@ export const AdminConfirmDialog: React.FC<Props> = ({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 460 }}>
+      <Dialog.Content
+        style={{
+          ...(isFullScreen
+            ? {
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                transform: "none",
+                maxWidth: "100dvw",
+                width: "100dvw",
+                height: "100dvh",
+                maxHeight: "100dvh",
+                borderRadius: 0,
+                display: "flex",
+                flexDirection: "column",
+              }
+            : { maxWidth: 460 }),
+        }}
+      >
         <Dialog.Title>
           <Flex align="center" gap="2">
             <Box style={{ color: "var(--red-11)" }}>
@@ -87,6 +110,7 @@ export const AdminConfirmDialog: React.FC<Props> = ({
           {description}
         </Dialog.Description>
 
+        <Box style={isFullScreen ? { flex: 1, overflowY: "auto", minHeight: 0 } : {}}>
         {warning && (
           <Callout.Root color="amber" variant="surface" mt="3">
             <Callout.Icon>
@@ -173,6 +197,7 @@ export const AdminConfirmDialog: React.FC<Props> = ({
           )}
         </Flex>
 
+        </Box>
         <Flex justify="end" gap="3" mt="4">
           <Button
             type="Secondary"

@@ -3,10 +3,11 @@ import { Table, Badge, Button, Text, Flex, Box, Card, Dialog, Spinner, Callout, 
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { WarningAmberOutlined } from "@mui/icons-material";
 import { useRouter } from "next/router";
-import { useApiCallback } from "core-lib/core/hooks";
+import { useApiCallback, useResolution } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
 import type { RevertBatchSafetyDto } from "core-lib/api/commons/types";
 import { SyncLoadingOverlay } from "./SyncLoadingOverlay";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 const formatDateTime = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -27,6 +28,7 @@ interface ImportHistoryTabProps {
 export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey = 0 }) => {
   const router = useRouter();
   const { showToast } = useToastContext();
+  const { isSmallMobile } = useResolution();
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [revertingId, setRevertingId] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
@@ -58,9 +60,11 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
   );
 
   const handleSync = async (batchId: string) => {
+    // Close dialog first so the loading overlay is visible immediately
+    setConfirmDialog(null);
+    setConfirmError(null);
     setSyncingId(batchId);
     setSyncOverlayVisible(true);
-    setConfirmError(null);
     try {
       const result = await syncCb.execute(batchId);
       if (result?.data?.success && result.data.response) {
@@ -71,7 +75,6 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
         } else {
           showToast(summary, "success");
         }
-        setConfirmDialog(null);
         setBatches((prev) =>
           prev.map((b) =>
             b.batchID === batchId
@@ -81,18 +84,17 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
         );
         setLocalRefreshKey((k) => k + 1);
       } else {
-        setConfirmError(
-          Array.isArray(result?.data?.errors) && result.data.errors[0]
-            ? result.data.errors[0]
-            : "Sync failed. Please try again."
-        );
+        const msg = Array.isArray(result?.data?.errors) && result.data.errors[0]
+          ? result.data.errors[0]
+          : "Sync failed. Please try again.";
+        showToast(msg, "error");
       }
     } catch (error) {
       const msg =
         Array.isArray(error) && typeof error[0] === "string"
           ? error[0]
           : "Sync failed. Please try again.";
-      setConfirmError(msg);
+      showToast(msg, "error");
     } finally {
       setSyncingId(null);
       setSyncOverlayVisible(false);
@@ -240,7 +242,16 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
                   <Table.Cell align="right">
                     <Text size="2">{batch.totalRecipes}</Text>
                   </Table.Cell>
-                  <Table.Cell>{getStatusBadge(batch.status)}</Table.Cell>
+                  <Table.Cell>
+                    <Flex direction="column" gap="1" align="start">
+                      {getStatusBadge(batch.status)}
+                      {batch.status === "Pending" && batch.syncedMenuItemCount > 0 && (
+                        <Badge color="blue" variant="soft" size="1">
+                          {batch.syncedMenuItemCount}/{batch.totalMenuItems} synced
+                        </Badge>
+                      )}
+                    </Flex>
+                  </Table.Cell>
                   <Table.Cell onClick={(e) => e.stopPropagation()}>
                     <Flex gap="2">
                       {batch.status === "Pending" && (
@@ -292,7 +303,7 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
         const isSyncedRevert = confirmDialog.action === "revert" && confirmBatch?.status === "Synced";
         return (
           <Dialog.Root open={!!confirmDialog} onOpenChange={(open) => { if (!open) { setConfirmDialog(null); setSafetyData(null); } }}>
-            <Dialog.Content>
+            <Dialog.Content style={isSmallMobile ? mobileDialogStyle : undefined}>
               <Dialog.Title>
                 {confirmDialog.action === "sync" ? "Sync to Products" : isSyncedRevert ? "Revert Batch" : "Discard Batch"}
               </Dialog.Title>
@@ -328,7 +339,7 @@ export const ImportHistoryTab: React.FC<ImportHistoryTabProps> = ({ refreshKey =
                   <Callout.Text size="2">{confirmError}</Callout.Text>
                 </Callout.Root>
               )}
-              <Flex gap="2" justify="end" mt="4">
+              <Flex gap="2" justify="end" mt="4" style={isSmallMobile ? mobileFooterStyle : undefined}>
                 <Dialog.Close>
                   <Button variant="outline">Cancel</Button>
                 </Dialog.Close>

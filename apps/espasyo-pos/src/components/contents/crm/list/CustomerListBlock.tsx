@@ -11,7 +11,8 @@ import {
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { AddCircleOutlined, PeopleAltOutlined } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { useToastContext } from "core-lib";
 import { extractApiError } from "core-lib/business/errorUtils";
 import { PillTabBar } from "core-lib/components/radix/PillTabBar";
@@ -56,6 +57,7 @@ export const CustomerListBlock: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<CustomerDto | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [loadingEditDetail, setLoadingEditDetail] = useState(false);
+  const { isSmallMobile } = useResolution();
 
   const customersData = useApi(
     (api) => api.crm.list({ pageNumber: 1, pageSize: 100 }),
@@ -306,14 +308,14 @@ export const CustomerListBlock: React.FC = () => {
         open={!!deleteTarget}
         onOpenChange={(o) => (!o && !deleteLoading ? setDeleteTarget(null) : undefined)}
       >
-        <AlertDialog.Content style={{ maxWidth: 440 }}>
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 440 }}>
           <AlertDialog.Title>Remove this customer?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             <strong>&quot;{deleteTarget?.fullName}&quot;</strong> will be hidden from
             lookups. Their past purchases and loyalty stamps stay on the record
             and won&apos;t be affected. This is a soft delete.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray" disabled={deleteLoading}>
                 Cancel

@@ -21,7 +21,7 @@ import {
   ManageHistory,
   DeleteForeverOutlined,
 } from "@mui/icons-material";
-import { useApi, useApiCallback, useMpinStatus } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useMpinStatus, useResolution } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
 import {
@@ -34,6 +34,7 @@ import { AUDIT_EVENT_TYPES, SETTING_KEYS } from "core-lib/business/settings";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import { AdminConfirmDialog } from "core-lib/components/radix/security";
 import { formatDateTime } from "core-lib/business/dates";
+import { mobileDialogStyle, mobileContentStyle, mobileHeaderStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 const EVENT_OPTIONS = [
   { value: "all", label: "All events" },
@@ -564,6 +565,7 @@ const AuditLogDetailDialog: React.FC<{
   log: AuditLogDto | null;
   onClose: () => void;
 }> = ({ log, onClose }) => {
+  const { isSmallMobile } = useResolution();
   const formatted = useMemo(() => {
     if (!log?.changesJson) return null;
     try {
@@ -576,71 +578,77 @@ const AuditLogDetailDialog: React.FC<{
 
   return (
     <Dialog.Root open={!!log} onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Content style={{ maxWidth: 720 }}>
-        <Dialog.Title>
-          <Flex align="center" gap="2">
-            <FactCheckOutlined fontSize="small" />
-            Audit detail
-          </Flex>
-        </Dialog.Title>
-        {log && (
-          <Box mt="3">
-            <Flex gap="2" wrap="wrap" mb="3">
-              <Badge color={eventBadgeColor(log.eventType)} variant="soft">
-                {log.eventType}
-              </Badge>
-              {log.action && (
-                <Badge color={ACTION_COLOR[log.action] ?? "gray"} variant="soft">
-                  {log.action}
-                </Badge>
-              )}
-              <Badge variant="surface" color="gray">
-                {formatDateTime(log.createdAt)}
-              </Badge>
-            </Flex>
-
-            <Flex direction="column" gap="2">
-              <DetailRow label="Entity" value={log.entityName} />
-              <DetailRow label="Entity ID" value={log.entityID} />
-              <DetailRow label="User ID" value={log.userID} />
-              <DetailRow label="IP Address" value={log.ipAddress} />
-              <DetailRow label="Message" value={log.message} />
-            </Flex>
-
-            {formatted && (
+      <Dialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 720 }}>
+        <Flex direction="column" style={{ height: "100%" }}>
+          <Box style={isSmallMobile ? mobileHeaderStyle : undefined}>
+            <Dialog.Title>
+              <Flex align="center" gap="2">
+                <FactCheckOutlined fontSize="small" />
+                Audit detail
+              </Flex>
+            </Dialog.Title>
+          </Box>
+          <Box style={isSmallMobile ? mobileContentStyle : undefined}>
+            {log && (
               <Box mt="3">
-                <Text size="1" color="gray" as="div" mb="1">
-                  Changes
-                </Text>
-                <Box
-                  style={{
-                    background: "var(--gray-a2)",
-                    border: "1px solid var(--gray-a4)",
-                    borderRadius: "var(--radius-3)",
-                    padding: 12,
-                    overflow: "auto",
-                    maxHeight: 320,
-                  }}
-                >
-                  <Code
-                    size="1"
-                    style={{
-                      whiteSpace: "pre",
-                      fontFamily: "monospace",
-                      background: "transparent",
-                    }}
-                  >
-                    {formatted}
-                  </Code>
-                </Box>
+                <Flex gap="2" wrap="wrap" mb="3">
+                  <Badge color={eventBadgeColor(log.eventType)} variant="soft">
+                    {log.eventType}
+                  </Badge>
+                  {log.action && (
+                    <Badge color={ACTION_COLOR[log.action] ?? "gray"} variant="soft">
+                      {log.action}
+                    </Badge>
+                  )}
+                  <Badge variant="surface" color="gray">
+                    {formatDateTime(log.createdAt)}
+                  </Badge>
+                </Flex>
+
+                <Flex direction="column" gap="2">
+                  <DetailRow label="Entity" value={log.entityName} />
+                  <DetailRow label="Entity ID" value={log.entityID} />
+                  <DetailRow label="User ID" value={log.userID} />
+                  <DetailRow label="IP Address" value={log.ipAddress} />
+                  <DetailRow label="Message" value={log.message} />
+                </Flex>
+
+                {formatted && (
+                  <Box mt="3">
+                    <Text size="1" color="gray" as="div" mb="1">
+                      Changes
+                    </Text>
+                    <Box
+                      style={{
+                        background: "var(--gray-a2)",
+                        border: "1px solid var(--gray-a4)",
+                        borderRadius: "var(--radius-3)",
+                        padding: 12,
+                        overflow: "auto",
+                        maxHeight: 320,
+                      }}
+                    >
+                      <Code
+                        size="1"
+                        style={{
+                          whiteSpace: "pre",
+                          fontFamily: "monospace",
+                          background: "transparent",
+                        }}
+                      >
+                        {formatted}
+                      </Code>
+                    </Box>
+                  </Box>
+                )}
               </Box>
             )}
           </Box>
-        )}
-        <Flex justify="end" mt="4">
-          <Button type="Secondary" onClick={onClose}>
-            Close
-          </Button>
+          <Flex justify="end" mt="4" style={isSmallMobile ? mobileFooterStyle : undefined}>
+            <Button type="Secondary" onClick={onClose}>
+              Close
+            </Button>
+          </Flex>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

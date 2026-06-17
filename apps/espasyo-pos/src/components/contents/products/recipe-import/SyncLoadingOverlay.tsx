@@ -13,9 +13,10 @@ const SYNC_MESSAGES = [
 
 interface SyncLoadingOverlayProps {
   visible: boolean;
+  progress?: { done: number; total: number } | null;
 }
 
-export const SyncLoadingOverlay: React.FC<SyncLoadingOverlayProps> = ({ visible }) => {
+export const SyncLoadingOverlay: React.FC<SyncLoadingOverlayProps> = ({ visible, progress }) => {
   const [msgIdx, setMsgIdx] = useState(0);
 
   useEffect(() => {
@@ -31,6 +32,10 @@ export const SyncLoadingOverlay: React.FC<SyncLoadingOverlayProps> = ({ visible 
 
   if (!visible) return null;
 
+  const pct = progress && progress.total > 0
+    ? Math.round((progress.done / progress.total) * 100)
+    : null;
+
   return (
     <Box
       style={{
@@ -43,13 +48,42 @@ export const SyncLoadingOverlay: React.FC<SyncLoadingOverlayProps> = ({ visible 
         zIndex: 9999,
       }}
     >
-      <Card style={{ padding: "2.5rem", minWidth: 340, textAlign: "center" }}>
+      <Card style={{ padding: "2.5rem", minWidth: 360, textAlign: "center" }}>
         <Flex direction="column" align="center" gap="4">
           <Spinner size="3" />
           <Heading size="4">Syncing...</Heading>
           <Text size="3" color="gray" style={{ minHeight: "1.5em" }}>
             {SYNC_MESSAGES[msgIdx]}
           </Text>
+
+          {progress && progress.total > 0 && (
+            <Flex direction="column" align="center" gap="2" style={{ width: "100%" }}>
+              {/* Progress bar */}
+              <Box
+                style={{
+                  width: "100%",
+                  height: 8,
+                  background: "var(--gray-a4)",
+                  borderRadius: 4,
+                  overflow: "hidden",
+                }}
+              >
+                <Box
+                  style={{
+                    height: "100%",
+                    width: `${pct}%`,
+                    background: "var(--green-9)",
+                    borderRadius: 4,
+                    transition: "width 0.4s ease",
+                  }}
+                />
+              </Box>
+              <Text size="2" color="gray">
+                {progress.done} of {progress.total} products synced ({pct}%)
+              </Text>
+            </Flex>
+          )}
+
           <Text size="1" color="gray">
             Please do not close this window
           </Text>
