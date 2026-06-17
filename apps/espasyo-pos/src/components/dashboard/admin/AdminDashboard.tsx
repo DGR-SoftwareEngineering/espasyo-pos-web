@@ -9,6 +9,7 @@ import { AdminKpiRow } from "./AdminKpiRow";
 import { AdminChartsRow } from "./AdminChartsRow";
 import { AdminRecentActivity } from "./AdminRecentActivity";
 import { AdminSystemHealth } from "./AdminSystemHealth";
+import { AdminSalesInsight } from "./AdminSalesInsight";
 import { SalesCelebrationModal } from "./SalesCelebrationModal";
 
 // The ".v2" suffix is a one-time cache-buster: it invalidates any stale flag
@@ -64,7 +65,7 @@ export const AdminDashboard: React.FC<Props> = ({ initials, role }) => {
   }, [todaySales, pos]);
 
   return (
-    <Box style={{ minHeight: "100%", background: "var(--gray-2)" }}>
+    <Box style={{ minHeight: "100%", background: "var(--gray-2)", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
       <Box pt="4">
         <AdminHero
           name={initials || "Admin"}
@@ -74,11 +75,12 @@ export const AdminDashboard: React.FC<Props> = ({ initials, role }) => {
           maintenanceEnabled={maintenance.enabled}
         />
       </Box>
-      
+
+      <AdminSalesInsight />
       <AdminKpiRow />
       <AdminChartsRow />
-      
-      <Box 
+
+      <Box
         pb="4"
         style={{
           display: "grid",

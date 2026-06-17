@@ -19,7 +19,7 @@ import type { SellableProductDto, SellableVariantDto } from "core-lib/api/common
 import { formatCurrency } from "../format";
 import { usePublicSettings } from "core-lib/core/contexts";
 import { useResolution } from "core-lib/core/hooks";
-import { mobileDialogStyle, mobileContentStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
+import { mobileDialogStyle, mobileContentStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { AddProductOptions } from "./hooks";
 
 interface RedeemRewardDialogProps {

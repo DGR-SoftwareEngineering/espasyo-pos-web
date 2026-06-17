@@ -1078,7 +1078,7 @@ export type SupplierListResponse = ApiResponse<PaginatedResponse<SupplierDto>>;
 
 // ===== Settings =====
 
-export type SettingDataType = 1 | 2 | 3 | 4 | 5 | 6;
+export type SettingDataType = 1 | 2 | 3 | 4 | 5 | 6 | 99;
 
 export const SETTING_DATA_TYPE = {
   String: 1 as SettingDataType,
@@ -1087,6 +1087,7 @@ export const SETTING_DATA_TYPE = {
   Decimal: 4 as SettingDataType,
   Json: 5 as SettingDataType,
   Color: 6 as SettingDataType,
+  Secret: 99 as SettingDataType,
 } as const;
 
 export interface SystemSettingDto {
@@ -1102,6 +1103,7 @@ export interface SystemSettingDto {
   isActive: boolean;
   updatedBy: string | null;
   updatedAt: string | null;
+  isConfigured: boolean;
 }
 
 export interface UpdateSystemSettingParams {
@@ -2460,6 +2462,25 @@ export interface SalesForecastResponseDto {
 }
 
 export type SalesForecastResponse = ApiResponse<SalesForecastResponseDto>;
+
+// ─── Sales Insight ────────────────────────────────────────────────────────────
+
+export interface SalesInsightDto {
+  summary: string;
+  highlights: string[];
+  recommendations: string[];
+  isAiGenerated: boolean;
+  periodLabel: string;
+  from: string;
+  to: string;
+}
+
+export interface SalesInsightQueryParams {
+  From?: string;
+  To?: string;
+}
+
+export type SalesInsightResponse = ApiResponse<SalesInsightDto>;
 
 // ─── Customer Dashboard API ────────────────────────────────────────────────────
 // Self-service customer portal endpoints under /api/v1/customer-api/customerdashboard.

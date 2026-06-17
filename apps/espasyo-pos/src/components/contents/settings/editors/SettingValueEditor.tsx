@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Badge,
   Box,
+  Button,
   Flex,
   Select,
   Switch,
@@ -8,12 +10,18 @@ import {
   TextArea,
   TextField,
 } from "@radix-ui/themes";
+import { Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
 import { SystemSettingDto } from "core-lib/api/commons/types";
 import {
+  AI_MODEL_LABELS,
+  AI_PROVIDER_MODELS,
   CLOSED_SET_SETTINGS,
+  SETTING_KEYS,
   parseSettingValue,
   serializeSettingValue,
 } from "core-lib/business/settings";
+import { SETTING_DATA_TYPE } from "core-lib/api/commons/types";
+import { DialogBox } from "core-lib/components/radix/dialog/DialogBox";
 
 interface Props {
   setting: SystemSettingDto;
@@ -37,6 +45,26 @@ export const SettingValueEditor: React.FC<Props> = ({
 }) => {
   const disabled = !setting.isEditable;
   const closedOptions = CLOSED_SET_SETTINGS[setting.key];
+
+  if (setting.key === SETTING_KEYS.AiModel) {
+    return (
+      <Select.Root value={value || ""} disabled={disabled} onValueChange={onChange}>
+        <Select.Trigger style={{ maxWidth: 280, width: "100%" }} />
+        <Select.Content>
+          {Object.entries(AI_PROVIDER_MODELS).map(([provider, models]) => (
+            <Select.Group key={provider}>
+              <Select.Label style={{ textTransform: "capitalize" }}>{provider}</Select.Label>
+              {(models as ReadonlyArray<string>).map((model) => (
+                <Select.Item key={model} value={model}>
+                  {AI_MODEL_LABELS[model] ?? model}
+                </Select.Item>
+              ))}
+            </Select.Group>
+          ))}
+        </Select.Content>
+      </Select.Root>
+    );
+  }
 
   if (closedOptions && setting.dataType === 1) {
     return (
@@ -101,6 +129,14 @@ export const SettingValueEditor: React.FC<Props> = ({
     case 6:
       return (
         <ColorEditor value={value} disabled={disabled} onChange={onChange} />
+      );
+    case SETTING_DATA_TYPE.Secret:
+      return (
+        <SecretEditor
+          setting={setting}
+          disabled={disabled}
+          onChange={onChange}
+        />
       );
     default:
       if (isLongString(setting.key)) {
@@ -210,6 +246,79 @@ const JsonEditor: React.FC<SubProps> = ({ value, disabled, onChange }) => {
           {error}
         </Text>
       )}
+    </Flex>
+  );
+};
+
+interface SecretEditorProps {
+  setting: SystemSettingDto;
+  disabled?: boolean;
+  onChange: (next: string) => void;
+}
+
+const SecretEditor: React.FC<SecretEditorProps> = ({ setting, disabled, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [pendingConfigured, setPendingConfigured] = useState(false);
+
+  const isConfigured = setting.isConfigured || pendingConfigured;
+
+  const handleConfirm = () => {
+    if (!inputValue.trim()) return;
+    onChange(inputValue);
+    setPendingConfigured(true);
+    setOpen(false);
+    setInputValue("");
+  };
+
+  return (
+    <Flex align="center" gap="3" wrap="wrap">
+      <Button
+        variant="soft"
+        size="2"
+        disabled={disabled}
+        onClick={() => { setInputValue(""); setOpen(true); }}
+      >
+        {isConfigured ? (
+          <><Pencil1Icon /> Edit API Key</>
+        ) : (
+          <><PlusIcon /> Add API Key</>
+        )}
+      </Button>
+      {isConfigured ? (
+        <Text size="2" color="gray">●●●● Configured</Text>
+      ) : (
+        <Badge color="gray" variant="soft" size="1">Not set</Badge>
+      )}
+      <DialogBox
+        open={open}
+        onClose={() => { setOpen(false); setInputValue(""); }}
+        title={isConfigured ? "Edit API Key" : "Add API Key"}
+        subtitle="The key is encrypted and stored securely. Leave blank to keep the existing key."
+        maxWidth="sm"
+        actions={
+          <Flex gap="2">
+            <Button variant="outline" size="2" onClick={() => { setOpen(false); setInputValue(""); }}>
+              Cancel
+            </Button>
+            <Button size="2" disabled={!inputValue.trim()} onClick={handleConfirm}>
+              Confirm
+            </Button>
+          </Flex>
+        }
+      >
+        <Box p="4">
+          <TextField.Root
+            type="password"
+            value={inputValue}
+            placeholder="Paste your API key here"
+            autoComplete="new-password"
+            autoFocus
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
+          />
+        </Box>
+      </DialogBox>
     </Flex>
   );
 };
