@@ -13,6 +13,8 @@ import {
 import { DotsHorizontalIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { FacebookPostDto, FacebookPostStatus } from "core-lib/api/commons/types";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 interface Props {
   post: FacebookPostDto;
@@ -122,6 +124,7 @@ export const FacebookPostCard: React.FC<Props> = ({
 }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const { isSmallMobile } = useResolution();
   const badge = STATUS_BADGE[post.status] ?? { label: post.statusName, color: "gray" as const };
   const message = post.message;
   const isLong = message.length > 280;
@@ -281,13 +284,13 @@ export const FacebookPostCard: React.FC<Props> = ({
       </motion.div>
 
       <AlertDialog.Root open={confirmOpen} onOpenChange={(open) => { if (!open) setConfirmOpen(false); }}>
-        <AlertDialog.Content style={{ maxWidth: 440 }}>
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 440 }}>
           <AlertDialog.Title>Delete this post?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             This will permanently delete the post from Facebook and your records.
             This action cannot be undone.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray">Cancel</Button>
             </AlertDialog.Cancel>

@@ -1,6 +1,8 @@
 import React from "react";
 import { Dialog, Box, Button, Flex, Text, Badge, Heading, Separator } from "@radix-ui/themes";
 import { PromoDto, SellableProductDto } from "core-lib/api/commons/types";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileContentStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 interface Props {
   product: SellableProductDto;
@@ -45,6 +47,7 @@ export const PromoSelectDialog: React.FC<Props> = ({
   onApply,
   onClose,
 }) => {
+  const { isSmallMobile } = useResolution();
   if (promos.length === 0) {
     return null;
   }
@@ -53,8 +56,9 @@ export const PromoSelectDialog: React.FC<Props> = ({
     <Dialog.Root open={true} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Content
         style={{
-          maxWidth: 500,
-          borderRadius: "var(--radius-3)",
+          ...(isSmallMobile
+            ? mobileDialogStyle
+            : { maxWidth: 500, borderRadius: "var(--radius-3)" }),
         }}
       >
         <Dialog.Title>
@@ -68,9 +72,15 @@ export const PromoSelectDialog: React.FC<Props> = ({
           </Text>
         </Dialog.Title>
 
-        <Separator my="3" />
+        <Separator my="3" style={isSmallMobile ? { flexShrink: 0 } : undefined} />
 
-        <Box style={{ maxHeight: "60vh", overflowY: "auto" }}>
+        <Box
+          style={{
+            ...(isSmallMobile
+              ? mobileContentStyle
+              : { maxHeight: "60vh", overflowY: "auto" }),
+          }}
+        >
           <Flex direction="column" gap="3">
             {promos.map((promo) => (
               <Box
@@ -159,9 +169,7 @@ export const PromoSelectDialog: React.FC<Props> = ({
           </Flex>
         </Box>
 
-        <Separator my="3" />
-
-        <Flex justify="end" gap="2">
+        <Flex justify="end" gap="2" style={isSmallMobile ? { flexShrink: 0, padding: "var(--space-3)" } : undefined}>
           <Dialog.Close>
             <Button variant="soft" color="gray">
               Cancel

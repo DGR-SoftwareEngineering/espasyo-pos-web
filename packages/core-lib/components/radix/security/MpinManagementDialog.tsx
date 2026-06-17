@@ -20,7 +20,7 @@ import {
   InfoOutlined,
   PinOutlined,
 } from "@mui/icons-material";
-import { useApi, useApiCallback } from "../../../core/hooks";
+import { useApi, useApiCallback, useResolution } from "../../../core/hooks";
 import { useToastContext } from "../../../core/contexts";
 import {
   ChangeMpinParams,
@@ -42,6 +42,8 @@ export const MpinManagementDialog: React.FC<Props> = ({
   open,
   onOpenChange,
 }) => {
+  const { isSmallMobile } = useResolution();
+  const isFullScreen = isSmallMobile;
   const { showToast } = useToastContext();
   const [mode, setMode] = useState<Mode>("view");
 
@@ -66,7 +68,27 @@ export const MpinManagementDialog: React.FC<Props> = ({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 460 }}>
+      <Dialog.Content
+        style={{
+          ...(isFullScreen
+            ? {
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                transform: "none",
+                maxWidth: "100dvw",
+                width: "100dvw",
+                height: "100dvh",
+                maxHeight: "100dvh",
+                borderRadius: 0,
+                display: "flex",
+                flexDirection: "column",
+              }
+            : { maxWidth: 460 }),
+        }}
+      >
         <Dialog.Title>
           <Flex align="center" gap="2">
             <Box style={{ color: "var(--accent-11)" }}>
@@ -80,6 +102,7 @@ export const MpinManagementDialog: React.FC<Props> = ({
           settings or clearing audit logs.
         </Dialog.Description>
 
+        <Box style={isFullScreen ? { flex: 1, overflowY: "auto", minHeight: 0 } : {}}>
         {statusApi.loading && !status ? (
           <Flex align="center" justify="center" py="6">
             <Text color="gray">Loading MPIN status…</Text>
@@ -169,6 +192,7 @@ export const MpinManagementDialog: React.FC<Props> = ({
             }}
           />
         )}
+        </Box>
       </Dialog.Content>
     </Dialog.Root>
   );

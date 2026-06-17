@@ -7,7 +7,7 @@ import {
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
-import { useApi } from "core-lib/core/hooks";
+import { useApi, useResolution } from "core-lib/core/hooks";
 import { usePublicSettings } from "core-lib/core/contexts";
 
 type Accent = "indigo" | "violet" | "teal" | "amber" | "red";
@@ -80,6 +80,7 @@ const TileCard: React.FC<{ tile: Tile; delay: number }> = ({ tile, delay }) => (
 );
 
 export const AdminKpiRow: React.FC = () => {
+  const { isSmallMobile } = useResolution();
   const { inventory } = usePublicSettings();
   const lowStockEnabled = inventory.lowStockAlertEnabled;
 
@@ -162,7 +163,7 @@ export const AdminKpiRow: React.FC = () => {
       mb="5"
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gridTemplateColumns: `repeat(auto-fit, minmax(${isSmallMobile ? "160px" : "220px"}, 1fr))`,
         gap: 16,
       }}
     >

@@ -4,6 +4,8 @@ import { Box, Dialog, Flex } from "@radix-ui/themes";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { PrintOutlined } from "@mui/icons-material";
 import { Button } from "../radix/buttons/Button";
+import { useResolution } from "../../core/hooks";
+import { mobileDialogStyle } from "../radix/dialog/mobileFullScreen";
 import {
   PRINT_HIDE_CLASS,
   PRINT_PORTAL_CLASS,
@@ -39,6 +41,7 @@ export const PrintPreviewDialog: React.FC<PrintPreviewDialogProps> = ({
   headerActions,
   children,
 }) => {
+  const { isSmallMobile } = useResolution();
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -52,9 +55,13 @@ export const PrintPreviewDialog: React.FC<PrintPreviewDialogProps> = ({
     <>
       <Dialog.Root open={open} onOpenChange={onOpenChange}>
         <Dialog.Content
-          maxWidth="900px"
-          width="calc(100vw - 32px)"
-          style={{ padding: 0, maxHeight: "calc(100vh - 32px)" }}
+          {...(isSmallMobile ? {} : { maxWidth: "900px" })}
+          style={{
+            ...(isSmallMobile
+              ? mobileDialogStyle
+              : { padding: 0, maxHeight: "calc(100vh - 32px)", width: "calc(100vw - 32px)" }),
+            padding: 0,
+          }}
         >
           <Flex
             align="center"
@@ -66,9 +73,10 @@ export const PrintPreviewDialog: React.FC<PrintPreviewDialogProps> = ({
             style={{
               borderBottom: "1px solid var(--gray-a4)",
               background: "var(--color-panel-solid)",
-              position: "sticky",
+              position: isSmallMobile ? undefined : "sticky",
               top: 0,
               zIndex: 2,
+              ...(isSmallMobile ? { flexShrink: 0 } : {}),
             }}
           >
             <Dialog.Title size="3" mb="0">
@@ -92,7 +100,9 @@ export const PrintPreviewDialog: React.FC<PrintPreviewDialogProps> = ({
             p="4"
             style={{
               overflowY: "auto",
-              maxHeight: "calc(100vh - 100px)",
+              ...(isSmallMobile
+                ? { flex: 1 }
+                : { maxHeight: "calc(100vh - 100px)" }),
               background: "var(--gray-a2)",
             }}
           >

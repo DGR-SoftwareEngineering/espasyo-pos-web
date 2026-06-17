@@ -34,7 +34,8 @@ import {
 } from "./validation";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import { SelectField } from "core-lib/components/radix/form/SelectField";
-import { useApi } from "core-lib/core/hooks";
+import { useApi, useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileContentStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 interface RecipeImportListProps {
   items: RecipePreviewItemDto[];
@@ -307,6 +308,7 @@ const ImportRecipeEditDialog: React.FC<{
   onOpenChange: (open: boolean) => void;
   onSave: (patch: Partial<RecipePreviewItemDto>) => void;
 }> = ({ recipe, open, onOpenChange, onSave }) => {
+  const { isSmallMobile } = useResolution();
   // Fetch all lookups locally so SelectFields show correct loading state
   const { result: menuCatResult, loading: menuCatLoading } = useApi(
     (api) => api.commons.productCategoryList(),
@@ -422,14 +424,14 @@ const ImportRecipeEditDialog: React.FC<{
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 760, maxHeight: "85vh" }}>
+      <Dialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 760, maxHeight: "85vh" }}>
         <Dialog.Title>Edit Recipe — {recipe.menuItemName}</Dialog.Title>
         <Dialog.Description size="2" color="gray" mb="4">
           Set the menu item details and ingredient information before importing.
         </Dialog.Description>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <ScrollArea style={{ maxHeight: "calc(85vh - 180px)" }}>
+          <ScrollArea style={isSmallMobile ? mobileContentStyle : { maxHeight: "calc(85vh - 180px)" }}>
             <Flex direction="column" gap="5" pr="2">
               {/* Section 1: Menu Item */}
               <Box>
@@ -752,7 +754,7 @@ const ImportRecipeEditDialog: React.FC<{
             </Flex>
           </ScrollArea>
 
-          <Flex gap="2" justify="end" mt="4">
+          <Flex gap="2" justify="end" mt="4" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <Dialog.Close>
               <Button variant="outline" type="button">
                 Cancel

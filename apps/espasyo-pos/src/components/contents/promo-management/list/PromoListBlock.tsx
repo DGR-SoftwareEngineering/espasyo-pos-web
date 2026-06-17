@@ -10,7 +10,8 @@ import {
 } from "@radix-ui/themes";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { AddCircleOutlined } from "@mui/icons-material";
-import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { useToastContext } from "core-lib";
 import { extractApiError } from "core-lib/business/errorUtils";
 import { PromoDto, PromoSuggestionDto, SystemSettingDto } from "core-lib/api/commons/types";
@@ -46,6 +47,7 @@ export const PromoListBlock: React.FC = () => {
   const [deactivateTarget, setDeactivateTarget] = useState<PromoDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PromoDto | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const { isSmallMobile } = useResolution();
 
   const promosData = useApi((api) => api.commons.promoList(), []);
   const promoSettingsData = useApi(
@@ -310,13 +312,13 @@ export const PromoListBlock: React.FC = () => {
         open={!!activateTarget}
         onOpenChange={(open) => { if (!open) setActivateTarget(null); }}
       >
-        <AlertDialog.Content style={{ maxWidth: 440 }}>
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 440 }}>
           <AlertDialog.Title>Activate this promo?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             <strong>&quot;{activateTarget?.title}&quot;</strong> will become the active promo.
             Any currently active promo will be automatically deactivated.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray" disabled={actionLoading}>Cancel</Button>
             </AlertDialog.Cancel>
@@ -336,13 +338,13 @@ export const PromoListBlock: React.FC = () => {
         open={!!deactivateTarget}
         onOpenChange={(open) => { if (!open) setDeactivateTarget(null); }}
       >
-        <AlertDialog.Content style={{ maxWidth: 440 }}>
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 440 }}>
           <AlertDialog.Title>Deactivate this promo?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             <strong>&quot;{deactivateTarget?.title}&quot;</strong> will be set to Inactive
             and will no longer apply at checkout.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray" disabled={actionLoading}>Cancel</Button>
             </AlertDialog.Cancel>
@@ -362,13 +364,13 @@ export const PromoListBlock: React.FC = () => {
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
       >
-        <AlertDialog.Content style={{ maxWidth: 440 }}>
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 440 }}>
           <AlertDialog.Title>Delete this promo?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             <strong>&quot;{deleteTarget?.title}&quot;</strong> will be permanently deleted.
             This action cannot be undone.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray" disabled={actionLoading}>Cancel</Button>
             </AlertDialog.Cancel>

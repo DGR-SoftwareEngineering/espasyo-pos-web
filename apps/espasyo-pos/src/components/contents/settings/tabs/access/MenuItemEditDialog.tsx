@@ -19,6 +19,8 @@ import {
 } from "core-lib/api/access/types";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import { ICON_NAMES, resolveIcon } from "core-lib/components/menu/icons";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 interface Props {
   open: boolean;
@@ -38,6 +40,7 @@ export const MenuItemEditDialog: React.FC<Props> = ({
   onSaved,
 }) => {
   const { showToast } = useToastContext();
+  const { isSmallMobile } = useResolution();
   const [permissionKey, setPermissionKey] = useState("");
   const [label, setLabel] = useState("");
   const [iconName, setIconName] = useState("List");
@@ -193,7 +196,7 @@ export const MenuItemEditDialog: React.FC<Props> = ({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 560 }}>
+      <Dialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 560 }}>
         <Dialog.Title>{item ? "Edit menu item" : "New menu item"}</Dialog.Title>
         <Dialog.Description size="2" color="gray">
           Sidebar entries are keyed by a stable{" "}
@@ -392,7 +395,12 @@ export const MenuItemEditDialog: React.FC<Props> = ({
           </Flex>
         </Flex>
 
-        <Flex justify="end" gap="3" mt="4">
+        <Flex
+          justify="end"
+          gap="3"
+          mt="4"
+          style={isSmallMobile ? mobileFooterStyle : undefined}
+        >
           <Button
             type="Secondary"
             disabled={loading}

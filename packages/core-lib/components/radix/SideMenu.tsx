@@ -6,7 +6,6 @@ import {
   ExitIcon,
   LockClosedIcon,
   GearIcon,
-  HamburgerMenuIcon,
 } from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
 import { useResolution } from "../../core/hooks";
@@ -14,7 +13,6 @@ import { usePublicSettings, useOfflineMode } from "../../core/contexts";
 import { MpinManagementDialog } from "./security/MpinManagementDialog";
 import { RadixMenuContent } from "./menu/RadixMenuContent";
 import { RadixOptionsMenu } from "./menu/RadixOptionsMenu";
-import { SideMenuMobile } from "./SideMenuMobile";
 
 interface SideMenuProps {
   logout: () => Promise<void>;
@@ -32,6 +30,7 @@ interface SideMenuProps {
   collapsible?: boolean;
   collapsed?: boolean;
   onToggleCollapsed?: (next: boolean) => void;
+  onNavigate?: () => void;
 }
 
 const DEFAULT_BRAND = "Espasyo";
@@ -113,12 +112,42 @@ const UserFooter: React.FC<{
                 }}
               >
                 <Tooltip content={`${displayName} · ${email}`} side="right">
-                  <Avatar
-                    size="2"
-                    radius="full"
-                    variant="soft"
-                    fallback={userInitial}
-                  />
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <button
+                style={{
+                  all: "unset",
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                  display: "flex",
+                }}
+              >
+                <Avatar
+                  size="2"
+                  radius="full"
+                  variant="soft"
+                  fallback={userInitial}
+                />
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content side="bottom" align="end" size="2">
+              <Box px="2" py="2">
+                <Text size="2" weight="bold" as="div">
+                  {initials || "User"}
+                </Text>
+                <Text size="1" color="gray" as="div">
+                  {email || "—"}
+                </Text>
+              </Box>
+              <DropdownMenu.Separator />
+              <DropdownMenu.Item color="red" onSelect={logout}>
+                <Flex align="center" gap="2">
+                  <ExitIcon />
+                  Logout
+                </Flex>
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
                 </Tooltip>
               </button>
             </DropdownMenu.Trigger>
@@ -188,10 +217,13 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   collapsible = false,
   collapsed = false,
   onToggleCollapsed,
+  onNavigate,
 }) => {
   const { isMobile } = useResolution();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileMpinOpen, setMobileMpinOpen] = useState(false);
   const { systemName, theme } = usePublicSettings();
+  const { isOnline, pendingSalesCount } = useOfflineMode();
+  const router = useRouter();
   const brand = brandProp ?? systemName ?? DEFAULT_BRAND;
   const brandMark =
     brandMarkProp ??
@@ -209,6 +241,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const userInitial = (initials || email || "?").charAt(0).toUpperCase();
   const collapsedWidth = 72;
   const effectiveWidth = collapsed ? collapsedWidth : width;
+
+  const logoutBlocked = !isOnline || pendingSalesCount > 0;
 
   if (isMobile) {
     return (
@@ -231,15 +265,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           }}
         >
           <Flex align="center" gap="2" style={{ minWidth: 0 }}>
-            <IconButton
-              variant="ghost"
-              color="gray"
-              size="2"
-              aria-label="Open menu"
-              onClick={() => setMobileOpen(true)}
-            >
-              <HamburgerMenuIcon />
-            </IconButton>
             <Box
               style={{
                 width: 28,
@@ -266,23 +291,64 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             </Text>
           </Flex>
 
-          <Avatar
-            size="2"
-            radius="full"
-            variant="soft"
-            fallback={userInitial}
-          />
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <button
+                style={{
+                  all: "unset",
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                  display: "flex",
+                }}
+              >
+                <Avatar
+                  size="2"
+                  radius="full"
+                  variant="soft"
+                  fallback={userInitial}
+                />
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content side="bottom" align="end" size="2">
+              <Box px="2" py="2">
+                <Text size="2" weight="bold" as="div">
+                  {initials || "User"}
+                </Text>
+                <Text size="1" color="gray" as="div">
+                  {email || "—"}
+                </Text>
+              </Box>
+              <DropdownMenu.Separator />
+              <DropdownMenu.Item onSelect={() => setMobileMpinOpen(true)}>
+                <Flex align="center" gap="2">
+                  <LockClosedIcon />
+                  MPIN Security
+                </Flex>
+              </DropdownMenu.Item>
+              {(role ?? "").trim().toLowerCase() === "admin" && (
+                <DropdownMenu.Item
+                  onSelect={() => router.push("/admin/hub/settings")}
+                >
+                  <Flex align="center" gap="2">
+                    <GearIcon />
+                    Settings
+                  </Flex>
+                </DropdownMenu.Item>
+              )}
+              <DropdownMenu.Separator />
+              <DropdownMenu.Item color="red" disabled={logoutBlocked} onSelect={logout}>
+                <Flex align="center" gap="2">
+                  <ExitIcon />
+                  Logout
+                </Flex>
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </Flex>
 
-        <SideMenuMobile
-          open={mobileOpen}
-          onOpenChange={setMobileOpen}
-          role={role}
-          initials={initials}
-          email={email}
-          logout={logout}
-          loading={loading}
-          brand={brand}
+        <MpinManagementDialog
+          open={mobileMpinOpen}
+          onOpenChange={setMobileMpinOpen}
         />
       </>
     );
@@ -294,7 +360,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       style={{
         width: effectiveWidth,
         flexShrink: 0,
-        background: "var(--color-panel-solid)",
+        background: "linear-gradient(180deg, var(--color-panel-solid), var(--gray-2))",
         borderRight: "1px solid var(--gray-a3)",
         display: "flex",
         flexDirection: "column",
@@ -318,12 +384,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             gap="3"
             style={{ minWidth: 0, flex: 1 }}
           >
-            {/* Brand mark — 36×36, rounded, gradient */}
+            {/* Brand mark — 44×44, rounded, gradient, subtle glow */}
             <Box
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: "var(--radius-3)",
+                width: 44,
+                height: 44,
+                borderRadius: "var(--radius-4)",
                 background:
                   "linear-gradient(135deg, var(--accent-9), var(--accent-10))",
                 color: "var(--accent-contrast)",
@@ -332,6 +398,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 justifyContent: "center",
                 flexShrink: 0,
                 overflow: "hidden",
+                boxShadow: "0 2px 12px var(--accent-a6)",
               }}
             >
               {brandMark ?? (
@@ -386,7 +453,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           )}
         </Flex>
 
-        <Separator size="4" />
+        <Box style={{ height: 1, background: "linear-gradient(90deg, var(--accent-a6), var(--accent-a4), var(--gray-a5))", flexShrink: 0 }} />
 
         {/* ── Menu list ── */}
         <Box style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
@@ -394,10 +461,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             roleName={role}
             loading={loading}
             collapsed={collapsed}
+            onNavigate={onNavigate}
           />
         </Box>
 
-        <Separator size="4" />
+        <Box style={{ height: 1, background: "var(--accent-a4)", flexShrink: 0 }} />
 
         {/* ── User footer ── */}
         <UserFooter

@@ -6,7 +6,8 @@ import {
   ArrowDownIcon,
   SwitchIcon,
 } from "@radix-ui/react-icons";
-import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { useToastContext } from "core-lib";
 import { useDialogContext } from "core-lib";
 import { registerForm } from "core-lib/components/radix/form/FormRenderer";
@@ -39,6 +40,7 @@ export const UnitConversionListBlock: React.FC = () => {
   });
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [depsData, setDepsData] = useState<UnitConversionDependenciesDto | null>(null);
+  const { isSmallMobile } = useResolution();
 
   const data = useApi((api) =>
     api.commons.getUnitConversions(pageNumber, pageSize),
@@ -271,7 +273,7 @@ export const UnitConversionListBlock: React.FC = () => {
           setDepsData(null);
         }
       }}>
-        <AlertDialog.Content maxWidth="500px">
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: "500px" }}>
           <AlertDialog.Title>Delete Unit Conversion</AlertDialog.Title>
           {depsData && (
             <Box my="3">
@@ -340,7 +342,7 @@ export const UnitConversionListBlock: React.FC = () => {
             </Box>
           )}
 
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button type="Secondary" onClick={() => {
       setDeletingId(null);

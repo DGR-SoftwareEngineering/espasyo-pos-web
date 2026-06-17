@@ -8,8 +8,9 @@ import {
   useDialogContext,
   useOfflineMode,
 } from "core-lib/core/contexts";
-import { useApi, useApiCallback, useLogout, useCashDrawer } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useLogout, useCashDrawer, useResolution } from "core-lib/core/hooks";
 import { extractApiError } from "core-lib/business/errorUtils";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { addOfflineSale } from "core-lib/core/services/offlineDb";
 import { ConfettiCanvas, ConfettiHandle } from "core-lib/components/confetti";
 import { cashDrawerService } from "core-lib/business/cashDrawer";
@@ -100,11 +101,9 @@ export const PosRegisterBlock: React.FC = () => {
   const { logout } = useLogout();
   const { isSupported: drawerSupported, isConnected: drawerConnected, testKick: openDrawer } = useCashDrawer();
   const confettiRef = useRef<ConfettiHandle>(null);
+  const { isSmallMobile, isTablet, isDesktop } = useResolution();
   const [isPosMode, setIsPosMode] = useState(false);
   const [orderSource, setOrderSource] = useState<'store' | 'online'>('store');
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 1280,
-  );
   const [addedExclusiveIds, setAddedExclusiveIds] = useState<Set<string>>(new Set());
   const targetSales = useTargetSales();
   const [targetDialogOpen, setTargetDialogOpen] = useState(false);
@@ -127,12 +126,6 @@ export const PosRegisterBlock: React.FC = () => {
       }
     }
   }, [isPosMode]);
-
-  useEffect(() => {
-    const onResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
 
   // Close shift flow
   const [closeShiftConfirmOpen, setCloseShiftConfirmOpen] = useState(false);
@@ -627,15 +620,16 @@ export const PosRegisterBlock: React.FC = () => {
         </Flex>
       )}
       <Box
-        style={
-          isPosMode
+        style={{
+          ...(isSmallMobile ? { maxWidth: "100vw", overflowX: "hidden" } : {}),
+          ...(isPosMode
             ? { flex: 1, minHeight: 0, padding: 16, display: "flex", flexDirection: "column" }
             : {
                 height: "calc(100vh - 120px)", minHeight: 560, margin: "-24px -32px", padding: 20,
                 background: "radial-gradient(ellipse 80% 60% at 50% 0%, var(--indigo-a2) 0%, transparent 60%), var(--gray-2)",
                 position: "relative", display: "flex", flexDirection: "column", gap: 12,
-              }
-        }
+              }),
+        }}
       >
         {!isPosMode && !pos.allowSales && (
           <Callout.Root color="red" variant="surface" size="1">
@@ -671,12 +665,12 @@ export const PosRegisterBlock: React.FC = () => {
 
         <Box
           style={
-            windowWidth < 768
+            isSmallMobile
               ? { display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0 }
-              : { display: "grid", gridTemplateColumns: windowWidth < 1024 ? "minmax(0, 1fr) minmax(300px, 340px)" : "minmax(0, 1fr) minmax(380px, 440px)", gap: 16, flex: 1, minHeight: 0 }
+              : { display: "grid", gridTemplateColumns: isTablet ? "minmax(0, 1fr) minmax(280px, 320px)" : "minmax(0, 1fr) minmax(380px, 440px)", gap: 16, flex: 1, minHeight: 0 }
           }
         >
-          <Box style={windowWidth < 768 ? { flex: "0 0 55%", minHeight: 0 } : { minHeight: 0, display: "contents" }}>
+          <Box style={isSmallMobile ? { flex: 1, minHeight: 0, overflow: "hidden" } : { minHeight: 0, display: "contents" }}>
             <ProductGrid
               onAdd={handleAdd}
               cartCountByProductID={cartCountByProductID}
@@ -684,7 +678,7 @@ export const PosRegisterBlock: React.FC = () => {
               onPromoClick={setPromoDialogProduct}
             />
           </Box>
-          <Box style={windowWidth < 768 ? { flex: "0 0 45%", minHeight: 0 } : { minHeight: 0, display: "contents" }}>
+          <Box style={isSmallMobile ? { flex: "0 0 auto", maxHeight: "50vh", overflow: "hidden", minHeight: 0 } : { minHeight: 0, display: "contents" }}>
             <CartPanel
               state={cart}
               totals={totals}
@@ -709,12 +703,12 @@ export const PosRegisterBlock: React.FC = () => {
 
       {/* Close Shift — Confirmation */}
       <AlertDialog.Root open={closeShiftConfirmOpen} onOpenChange={(open) => { if (!open && !fetchingShift) setCloseShiftConfirmOpen(false); }}>
-        <AlertDialog.Content style={{ maxWidth: 440, zIndex: 9999 }}>
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 440, zIndex: 9999 }}>
           <AlertDialog.Title>End your shift?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             Closing your shift will log you out automatically. Make sure all transactions are complete before proceeding.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray" disabled={fetchingShift}>Cancel</Button>
             </AlertDialog.Cancel>

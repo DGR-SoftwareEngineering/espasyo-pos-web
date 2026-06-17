@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertDialog, Box, Button, Flex, Spinner, Text } from "@radix-ui/themes";
 import { motion } from "framer-motion";
-import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { useToastContext } from "core-lib";
 import {
   FacebookPageInfoDto,
@@ -23,6 +24,7 @@ export const FacebookBlock: React.FC = () => {
   const [pageInfo, setPageInfo] = useState<FacebookPageInfoDto | null>(null);
   const [reconnectOpen, setReconnectOpen] = useState(false);
   const [disconnectOpen, setDisconnectOpen] = useState(false);
+  const { isSmallMobile } = useResolution();
 
   const postsData = useApi((api) => api.commons.facebookPostList(), []);
   const pageInfoData = useApi((api) => api.commons.facebookPageInfo(), []);
@@ -209,12 +211,12 @@ export const FacebookBlock: React.FC = () => {
       />
 
       <AlertDialog.Root open={disconnectOpen} onOpenChange={setDisconnectOpen}>
-        <AlertDialog.Content maxWidth="420px">
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: "420px" }}>
           <AlertDialog.Title>Disconnect Facebook Page?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             This will remove the stored access token. You will need to reconnect to publish new posts.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray">
                 Cancel

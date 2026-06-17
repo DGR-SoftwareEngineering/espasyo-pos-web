@@ -7,6 +7,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { editIngredientSchema, EditIngredientFormValues } from "./validation";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import { SelectField } from "core-lib/components/radix/form/SelectField";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 interface IngredientImportTableProps {
   items: IngredientPreviewItemDto[];
@@ -24,6 +26,7 @@ const EditIngredientDialog: React.FC<{
   ingredientCategories: IngredientCategoryDto[];
   ingredientCategoriesLoading?: boolean;
 }> = ({ item, open, onOpenChange, onSave, ingredientCategories, ingredientCategoriesLoading }) => {
+  const { isSmallMobile } = useResolution();
   const { control, handleSubmit } = useForm<EditIngredientFormValues>({
     resolver: yupResolver(editIngredientSchema),
     defaultValues: {
@@ -48,7 +51,7 @@ const EditIngredientDialog: React.FC<{
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content>
+      <Dialog.Content style={isSmallMobile ? mobileDialogStyle : undefined}>
         <Dialog.Title>Edit Ingredient</Dialog.Title>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Flex direction="column" gap="4">
@@ -93,7 +96,7 @@ const EditIngredientDialog: React.FC<{
               label="Unit Name"
               size="3"
             />
-            <Flex gap="2" justify="end">
+            <Flex gap="2" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
               <Dialog.Close>
                 <Button variant="outline">Cancel</Button>
               </Dialog.Close>

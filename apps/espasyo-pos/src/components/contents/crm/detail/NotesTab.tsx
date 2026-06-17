@@ -11,7 +11,8 @@ import {
 } from "@radix-ui/themes";
 import { TrashIcon } from "@radix-ui/react-icons";
 import { StickyNote2Outlined, AddCircleOutline } from "@mui/icons-material";
-import { useApiCallback } from "core-lib/core/hooks";
+import { useApiCallback, useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { useToastContext } from "core-lib";
 import { CustomerDetailDto, CustomerNoteDto } from "core-lib/api/crm";
 import { AddNoteDialog } from "../forms/AddNoteDialog";
@@ -31,6 +32,7 @@ export const NotesTab: React.FC<NotesTabProps> = ({
   const [addLoading, setAddLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CustomerNoteDto | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const { isSmallMobile } = useResolution();
 
   const addNoteCb = useApiCallback(
     async (api, args: { id: string; note: string }) =>
@@ -181,12 +183,12 @@ export const NotesTab: React.FC<NotesTabProps> = ({
         open={!!deleteTarget}
         onOpenChange={(o) => (!o && !deleteLoading ? setDeleteTarget(null) : undefined)}
       >
-        <AlertDialog.Content style={{ maxWidth: 400 }}>
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 400 }}>
           <AlertDialog.Title>Remove this note?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             The note will be soft-deleted and hidden from the customer&apos;s profile.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray" disabled={deleteLoading}>
                 Cancel

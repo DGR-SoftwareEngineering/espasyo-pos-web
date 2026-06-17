@@ -17,6 +17,8 @@ import {
   UpdateAccessRoleParams,
 } from "core-lib/api/access/types";
 import { Button } from "core-lib/components/radix/buttons/Button";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 interface Props {
   open: boolean;
@@ -32,6 +34,7 @@ export const RoleEditDialog: React.FC<Props> = ({
   onSaved,
 }) => {
   const { showToast } = useToastContext();
+  const { isSmallMobile } = useResolution();
   const [name, setName] = useState("");
   const [level, setLevel] = useState<number>(50);
   const [description, setDescription] = useState("");
@@ -111,7 +114,7 @@ export const RoleEditDialog: React.FC<Props> = ({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 480 }}>
+      <Dialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 480 }}>
         <Dialog.Title>
           <Flex align="center" gap="2">
             {role ? "Edit role" : "New role"}
@@ -192,7 +195,12 @@ export const RoleEditDialog: React.FC<Props> = ({
           )}
         </Flex>
 
-        <Flex justify="end" gap="3" mt="4">
+        <Flex
+          justify="end"
+          gap="3"
+          mt="4"
+          style={isSmallMobile ? mobileFooterStyle : undefined}
+        >
           <Button
             type="Secondary"
             disabled={loading}

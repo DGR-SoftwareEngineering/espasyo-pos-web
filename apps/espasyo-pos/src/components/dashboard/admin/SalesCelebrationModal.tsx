@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { EmojiEvents } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { ConfettiCanvas, ConfettiHandle } from "core-lib/components/confetti";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { formatCurrency } from "../../contents/pos/format";
 
 interface SalesCelebrationModalProps {
@@ -57,6 +59,7 @@ export const SalesCelebrationModal: React.FC<SalesCelebrationModalProps> = ({
   transactionCount,
   currencyCode,
 }) => {
+  const { isSmallMobile } = useResolution();
   const confettiRef = useRef<ConfettiHandle>(null);
   const router = useRouter();
 
@@ -77,10 +80,10 @@ export const SalesCelebrationModal: React.FC<SalesCelebrationModalProps> = ({
       <Dialog.Root open={open} onOpenChange={onClose}>
         <Dialog.Content
           style={{
-            maxWidth: 480,
-            borderRadius: "var(--radius-4)",
+            ...(isSmallMobile
+              ? mobileDialogStyle
+              : { maxWidth: 480, borderRadius: "var(--radius-4)", overflow: "hidden" }),
             padding: 0,
-            overflow: "hidden",
           }}
         >
           <AnimatePresence mode="wait">
