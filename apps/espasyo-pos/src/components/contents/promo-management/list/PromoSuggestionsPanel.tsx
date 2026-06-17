@@ -180,14 +180,14 @@ export const PromoSuggestionsPanel: React.FC<PromoSuggestionsPanelProps> = ({
           <Callout.Text>
             <strong>Upgrade to AI-powered suggestions.</strong> Enable{" "}
             <Text weight="bold" style={{ color: "var(--violet-11)" }}>
-              Promo.AI.SuggestionEnabled
+              Promo Suggestions AI
             </Text>{" "}
             in{" "}
             <Flex align="center" gap="1" display="inline-flex">
               <SettingsOutlined style={{ fontSize: 12 }} />
-              <Text size="1" weight="medium">Settings → System Settings → Promo</Text>
+              <Text size="1" weight="medium">Settings → System Settings → AI</Text>
             </Flex>{" "}
-            and configure an API key to get Claude-powered, context-aware recommendations.
+            and configure your AI provider and API key to get AI-powered, context-aware recommendations.
           </Callout.Text>
         </Callout.Root>
       )}

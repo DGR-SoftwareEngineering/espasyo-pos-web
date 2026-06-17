@@ -84,6 +84,14 @@ export const SETTING_KEYS = {
   CrmLoyaltyStampRequirement: "CRM.LoyaltyStampRequirement",
   CrmMaxStampsPerDay: "CRM.MaxStampsPerDay",
 
+  // AI
+  AiProvider: "Ai.Provider",
+  AiApiKey: "Ai.ApiKey",
+  AiModel: "Ai.Model",
+  AiTimeoutSeconds: "Ai.TimeoutSeconds",
+  AiMaxTokens: "Ai.MaxTokens",
+  AiSalesInsightEnabled: "Ai.SalesInsight.Enabled",
+
   // Localization
   LocalizationTimezone: "System.Timezone",
   LocalizationTimezoneMultiEnabled: "System.Timezone.MultiEnabled",
@@ -138,10 +146,37 @@ export const LOADER_TRANSITION_VARIANTS = [
 export type LoaderTransitionVariant =
   (typeof LOADER_TRANSITION_VARIANTS)[number];
 
+export const AI_PROVIDERS = ["openai", "anthropic", "deepseek", "gemini"] as const;
+export type AiProvider = (typeof AI_PROVIDERS)[number];
+
+export const AI_PROVIDER_MODELS: Record<string, ReadonlyArray<string>> = {
+  openai:    ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
+  anthropic: ["claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"],
+  deepseek:  ["deepseek-chat", "deepseek-reasoner"],
+  gemini:    ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-1.5-pro"],
+};
+
+export const AI_MODEL_LABELS: Record<string, string> = {
+  "gpt-4o":                    "GPT-4o",
+  "gpt-4o-mini":               "GPT-4o Mini",
+  "gpt-4-turbo":               "GPT-4 Turbo",
+  "gpt-3.5-turbo":             "GPT-3.5 Turbo",
+  "claude-opus-4-8":           "Claude Opus 4.8",
+  "claude-sonnet-4-6":         "Claude Sonnet 4.6",
+  "claude-haiku-4-5-20251001": "Claude Haiku 4.5",
+  "deepseek-chat":             "DeepSeek Chat",
+  "deepseek-reasoner":         "DeepSeek Reasoner",
+  "gemini-2.0-flash":          "Gemini 2.0 Flash",
+  "gemini-2.0-flash-lite":     "Gemini 2.0 Flash Lite",
+  "gemini-1.5-flash":          "Gemini 1.5 Flash",
+  "gemini-1.5-pro":            "Gemini 1.5 Pro",
+};
+
 export const CLOSED_SET_SETTINGS: Record<string, ReadonlyArray<string>> = {
   [SETTING_KEYS.SystemOperationalStatus]: Object.values(OPERATIONAL_STATUSES),
   [SETTING_KEYS.LoaderVariant]: LOADER_VARIANTS,
   [SETTING_KEYS.LoaderTransitionVariant]: LOADER_TRANSITION_VARIANTS,
+  [SETTING_KEYS.AiProvider]: AI_PROVIDERS,
 };
 
 export const SETTING_CATEGORIES = {
@@ -156,6 +191,7 @@ export const SETTING_CATEGORIES = {
   Procurement: "Procurement",
   Promo: "Promo",
   Crm: "CRM",
+  Ai: "AI",
 } as const;
 
 export type SettingCategory =

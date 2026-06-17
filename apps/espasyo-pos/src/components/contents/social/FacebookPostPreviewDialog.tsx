@@ -13,7 +13,7 @@ import {
 import { Cross2Icon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { useResolution } from "core-lib/core/hooks";
-import { mobileDialogStyle, mobileContentStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
+import { mobileDialogStyle, mobileContentStyle, mobileHeaderStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { FacebookPageInfoDto, FacebookPostDto, FacebookPostStatus } from "core-lib/api/commons/types";
 
 interface Props {
