@@ -17,6 +17,7 @@ import {
   Spinner,
 } from "@radix-ui/themes";
 import { Cross1Icon } from "@radix-ui/react-icons";
+import { useResolution } from "../../../core/hooks";
 
 export interface DialogBoxProps {
   open: boolean;
@@ -86,6 +87,8 @@ export const DialogBox = memo(
 
     const titleId = useId();
     const contentId = useId();
+    const { isSmallMobile } = useResolution();
+    const isFullScreen = fullScreenOnMobile && isSmallMobile;
 
     const resolvedMaxWidth = useMemo(() => {
       if (maxWidth in SIZE_TO_WIDTH) return SIZE_TO_WIDTH[maxWidth];
@@ -120,10 +123,21 @@ export const DialogBox = memo(
             maxWidth: resolvedMaxWidth,
             position: "relative",
             padding: 0,
-            ...(fullScreenOnMobile
+            ...(isFullScreen
               ? {
-                  // Radix already handles small viewports well; this gives us
-                  // an extra nudge to full-screen on phones.
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  transform: "none",
+                  maxWidth: "100dvw",
+                  maxHeight: "100dvh",
+                  width: "100dvw",
+                  height: "100dvh",
+                  borderRadius: 0,
+                  display: "flex",
+                  flexDirection: "column",
                 }
               : {}),
           }}
@@ -208,13 +222,14 @@ export const DialogBox = memo(
 
           <Box
             id={contentId}
-            px="5"
-            py="4"
+            px={isFullScreen ? "4" : "5"}
+            py={isFullScreen ? "3" : "4"}
             className={contentClassName}
             style={{
-              maxHeight: "70vh",
-              overflowY: "auto",
-              position: "relative",
+              ...(isFullScreen
+                ? { flex: 1, overflowY: "auto", position: "relative", minHeight: 0 }
+                : { maxHeight: "70vh", overflowY: "auto", position: "relative" }
+              ),
             }}
           >
             {children}

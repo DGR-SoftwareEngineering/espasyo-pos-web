@@ -22,6 +22,7 @@ interface Props {
   logout?: () => Promise<void> | void;
   loading?: boolean;
   brand?: string;
+  onNavigate?: () => void;
 }
 
 const DRAWER_WIDTH = "min(320px, 82dvw)";
@@ -36,7 +37,12 @@ export const SideMenuMobile: React.FC<Props> = ({
   logout,
   loading,
   brand = DEFAULT_BRAND,
+  onNavigate,
 }) => {
+  const handleNavigate = React.useCallback(() => {
+    onOpenChange(false);
+    onNavigate?.();
+  }, [onOpenChange, onNavigate]);
   const { theme } = usePublicSettings();
   const displayName = initials || "User";
   const userInitial = (initials || email || "?").charAt(0).toUpperCase();
@@ -58,7 +64,7 @@ export const SideMenuMobile: React.FC<Props> = ({
           height: "100vh",
           padding: 0,
           borderRadius: 0,
-          background: "var(--color-panel-solid)",
+          background: "linear-gradient(180deg, var(--color-panel-solid), var(--gray-2))",
           display: "flex",
           flexDirection: "column",
         }}
@@ -71,16 +77,17 @@ export const SideMenuMobile: React.FC<Props> = ({
             px="4"
             py="3"
             style={{
-              borderBottom: "1px solid var(--gray-a3)",
+              borderBottom: "1px solid",
+              borderImage: "linear-gradient(90deg, var(--accent-a6), var(--accent-a4), var(--gray-a5)) 1",
               flexShrink: 0,
             }}
           >
             <Flex align="center" gap="2" style={{ minWidth: 0 }}>
               <Box
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "var(--radius-3)",
+                  width: 44,
+                  height: 44,
+                  borderRadius: "var(--radius-4)",
                   background:
                     "linear-gradient(135deg, var(--accent-9), var(--accent-11))",
                   color: "var(--accent-contrast)",
@@ -89,6 +96,7 @@ export const SideMenuMobile: React.FC<Props> = ({
                   justifyContent: "center",
                   flexShrink: 0,
                   overflow: "hidden",
+                  boxShadow: "0 2px 12px var(--accent-a6)",
                 }}
               >
                 {theme.logoUrl ? (
@@ -114,7 +122,7 @@ export const SideMenuMobile: React.FC<Props> = ({
             <IconButton
               variant="ghost"
               color="gray"
-              size="2"
+              size="3"
               aria-label="Close menu"
               onClick={() => onOpenChange(false)}
             >
@@ -124,7 +132,7 @@ export const SideMenuMobile: React.FC<Props> = ({
         </Dialog.Title>
 
         <Box style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-          <RadixMenuContent roleName={role} loading={loading} />
+          <RadixMenuContent roleName={role} loading={loading} onNavigate={handleNavigate} />
         </Box>
 
         <Separator size="4" />
@@ -133,7 +141,8 @@ export const SideMenuMobile: React.FC<Props> = ({
           px="3"
           py="3"
           style={{
-            borderTop: "1px solid var(--gray-a3)",
+            borderTop: "1px solid",
+            borderImage: "linear-gradient(90deg, var(--gray-a5), var(--accent-a4), var(--accent-a6)) 1",
             flexShrink: 0,
             background: "var(--color-panel-translucent)",
           }}

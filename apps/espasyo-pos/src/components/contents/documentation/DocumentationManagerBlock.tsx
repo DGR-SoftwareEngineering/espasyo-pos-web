@@ -24,7 +24,7 @@ import {
   MenuBookOutlined,
 } from "@mui/icons-material";
 import { ReloadIcon } from "@radix-ui/react-icons";
-import { useApiCallback } from "core-lib/core/hooks";
+import { useApiCallback, useResolution } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
 import {
   CreateDocumentationParams,
@@ -32,6 +32,7 @@ import {
   UpdateDocumentationParams,
 } from "core-lib/api/commons/types";
 import { DOC_CONTENT_CSS } from "./docContentStyles";
+import { mobileDialogStyle, mobileContentStyle, mobileHeaderStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 type TargetRole = "Admin" | "Cashier" | "Both";
 
@@ -74,6 +75,7 @@ export const DocumentationManagerBlock: React.FC = () => {
 
   const [articles, setArticles] = useState<DocumentationDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isSmallMobile } = useResolution();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<DocumentationDto | null>(null);
   const [editTarget, setEditTarget] = useState<DocumentationDto | null>(null);
@@ -446,7 +448,7 @@ export const DocumentationManagerBlock: React.FC = () => {
       {/* Create / Edit dialog — full screen */}
       <Dialog.Root open={dialogOpen} onOpenChange={(o) => !saveLoading && setDialogOpen(o)}>
         <Dialog.Content
-          style={{
+          style={isSmallMobile ? { ...mobileDialogStyle, overflow: "hidden", display: "flex", flexDirection: "column" } : {
             maxWidth: "95vw",
             width: "95vw",
             height: "92vh",
@@ -464,7 +466,7 @@ export const DocumentationManagerBlock: React.FC = () => {
             justify="between"
             px="4"
             py="3"
-            style={{
+            style={isSmallMobile ? mobileHeaderStyle : {
               borderBottom: "1px solid var(--gray-a4)",
               flexShrink: 0,
               background: "var(--color-panel-solid)",
@@ -487,7 +489,7 @@ export const DocumentationManagerBlock: React.FC = () => {
           </Flex>
 
           {/* Dialog body — three panes */}
-          <Flex style={{ flex: 1, overflow: "hidden" }}>
+          <Flex style={isSmallMobile ? { ...mobileContentStyle, overflow: "hidden" } : { flex: 1, overflow: "hidden" }}>
             {/* Left: metadata */}
             <Box
               style={{
@@ -711,18 +713,22 @@ export const DocumentationManagerBlock: React.FC = () => {
 
       {/* Delete confirm */}
       <AlertDialog.Root open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialog.Content>
-          <AlertDialog.Title>Delete Article</AlertDialog.Title>
-          <AlertDialog.Description>
-            Delete <strong>&ldquo;{deleteTarget?.title}&rdquo;</strong>? Users will no longer see this article in the documentation reader.
-          </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
-            <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">Cancel</Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button color="red" onClick={handleDelete} loading={deleteLoading}>Delete</Button>
-            </AlertDialog.Action>
+        <AlertDialog.Content style={isSmallMobile ? mobileDialogStyle : undefined}>
+          <Flex direction="column" style={{ height: "100%" }}>
+            <Box style={isSmallMobile ? mobileHeaderStyle : undefined}>
+              <AlertDialog.Title>Delete Article</AlertDialog.Title>
+              <AlertDialog.Description>
+                Delete <strong>&ldquo;{deleteTarget?.title}&rdquo;</strong>? Users will no longer see this article in the documentation reader.
+              </AlertDialog.Description>
+            </Box>
+            <Flex gap="3" mt="4" justify="end" style={isSmallMobile ? mobileFooterStyle : undefined}>
+              <AlertDialog.Cancel>
+                <Button variant="soft" color="gray">Cancel</Button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action>
+                <Button color="red" onClick={handleDelete} loading={deleteLoading}>Delete</Button>
+              </AlertDialog.Action>
+            </Flex>
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>

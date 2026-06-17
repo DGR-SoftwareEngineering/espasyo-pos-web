@@ -60,8 +60,61 @@ const CATEGORY_TABS: CategoryTab[] = [
 ];
 
 const CategoriesSidebarLayout: React.FC = () => {
+  const { isMobile } = useResolution();
   const [activeCategory, setActiveCategory] = useState<string>(CATEGORY_TABS[0].id);
   const activeComponent = CATEGORY_TABS.find((t) => t.id === activeCategory)?.component;
+
+  if (isMobile) {
+    return (
+      <Flex direction="column" gap="3">
+        <style>{`
+          .cat-pill-scroll::-webkit-scrollbar { display: none; }
+          .cat-pill-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+        `}</style>
+        <Flex
+          className="cat-pill-scroll"
+          gap="2"
+          style={{
+            overflowX: "auto",
+            overflowY: "hidden",
+            paddingBottom: 4,
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          {CATEGORY_TABS.map((tab) => {
+            const isActive = activeCategory === tab.id;
+            return (
+              <Box
+                key={tab.id}
+                onClick={() => setActiveCategory(tab.id)}
+                px="3"
+                py="1"
+                style={{
+                  flexShrink: 0,
+                  cursor: "pointer",
+                  borderRadius: "9999px",
+                  background: isActive ? "var(--accent-9)" : "var(--gray-a3)",
+                  color: isActive ? "var(--accent-contrast)" : "var(--gray-11)",
+                  userSelect: "none",
+                  whiteSpace: "nowrap",
+                  transition: "background 0.15s ease, color 0.15s ease",
+                }}
+              >
+                <Text
+                  size="2"
+                  weight={isActive ? "bold" : "regular"}
+                  style={{ color: "inherit" }}
+                >
+                  {tab.label}
+                </Text>
+              </Box>
+            );
+          })}
+        </Flex>
+        <Box key={activeCategory}>{activeComponent}</Box>
+      </Flex>
+    );
+  }
 
   return (
     <Flex gap="4" align="start">

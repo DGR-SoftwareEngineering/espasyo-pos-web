@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Box, Flex, Heading, Text, Link as RadixLink } from "@radix-ui/themes";
 import { ChevronRightIcon } from "@radix-ui/react-icons";
 import { useRouter } from "../../core/router";
+import { useResolution } from "../../core/hooks";
 import { useHeaderTitleContext } from "../../core/contexts";
 import { HeaderSearch } from "./menu/HeaderSearch";
 import { HeaderSalesTarget } from "./menu/HeaderSalesTarget";
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   sticky = true,
 }) => {
   const router = useRouter();
+  const { isSmallMobile, isDesktop } = useResolution();
   const { headerTitle } = safeHeaderTitle();
 
   const homeHref = (() => {
@@ -57,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Top row — breadcrumb (left) + search (center) + user menu (right). */}
         <Flex justify="between" align="center" gap="3" style={{ minHeight: 32 }}>
           <Box style={{ flex: "0 0 auto", minWidth: 0 }}>
-            {segments.length > 1 ? (
+            {segments.length > 1 && !isSmallMobile ? (
               <Flex align="center" gap="1" wrap="wrap">
                 <RadixLink
                   size="1"
@@ -111,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
             style={{ flex: "1 1 auto", justifyContent: "flex-end", minWidth: 0 }}
           >
             <HeaderSalesTarget />
-            <HeaderSearch />
+            {isDesktop && <HeaderSearch />}
             <ThemeToggleButton />
           </Flex>
         </Flex>

@@ -2908,6 +2908,7 @@ export interface RecipeImportBatchSummaryDto {
   totalIngredients: number;
   totalMenuItems: number;
   totalRecipes: number;
+  syncedMenuItemCount: number;
   syncedAt: string | null;
   revertedAt: string | null;
 }
@@ -2924,19 +2925,23 @@ export type RecipeImportBatchListResponse = ApiResponse<RecipeImportBatchSummary
 export type RecipeImportSyncResponse = ApiResponse<RecipeImportSyncResultDto>;
 
 export interface StagedIngredientDto {
+  ingredientStagingID: string;
   name: string;
   packagePrice: number;
   qtyPerPack: number;
   unitName: string;
   categoryName: string;
+  isSynced: boolean;
 }
 
 export interface StagedMenuItemDto {
+  menuItemStagingID: string;
   menuItemName: string;
   sellingPrice: number;
   categoryName: string;
   description?: string | null;
   materialCost?: number | null;
+  isSynced: boolean;
 }
 
 export interface StagedRecipeItemDto {
@@ -2946,14 +2951,17 @@ export interface StagedRecipeItemDto {
   packagePrice: number;
   qtyPerPack: number;
   estimatedIngredientCost: number;
+  isIngredientSynced: boolean;
 }
 
 export interface StagedRecipeDto {
+  recipeStagingID: string;
   menuItemName: string;
   estimatedCostPerServing: number;
   items: StagedRecipeItemDto[];
   variantName?: string | null;
   variantPrice?: number | null;
+  isSynced: boolean;
 }
 
 export interface RecipeImportBatchDetailDto {
@@ -2964,9 +2972,20 @@ export interface RecipeImportBatchDetailDto {
   status: string;
   syncedAt: string | null;
   revertedAt: string | null;
+  syncedMenuItemCount: number;
   ingredients: StagedIngredientDto[];
   menuItems: StagedMenuItemDto[];
   recipes: StagedRecipeDto[];
+}
+
+export interface RecipeImportStepSyncResultDto {
+  stepProcessed: number;
+  totalMenuItems: number;
+  syncedSoFar: number;
+  isComplete: boolean;
+  ingredientsCreated: number;
+  recipesCreated: number;
+  errors: string[];
 }
 
 export interface RevertBatchAffectedProductDto {

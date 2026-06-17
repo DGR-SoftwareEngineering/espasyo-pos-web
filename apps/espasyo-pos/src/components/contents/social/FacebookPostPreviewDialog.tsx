@@ -12,6 +12,8 @@ import {
 } from "@radix-ui/themes";
 import { Cross2Icon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileContentStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import { FacebookPageInfoDto, FacebookPostDto, FacebookPostStatus } from "core-lib/api/commons/types";
 
 interface Props {
@@ -127,6 +129,7 @@ export const FacebookPostPreviewDialog: React.FC<Props> = ({
   onEdit,
   onDelete,
 }) => {
+  const { isSmallMobile } = useResolution();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!post) return null;
@@ -138,11 +141,10 @@ export const FacebookPostPreviewDialog: React.FC<Props> = ({
       <Dialog.Root open={!!post} onOpenChange={(v) => { if (!v) onClose(); }}>
         <Dialog.Content
           style={{
-            maxWidth: 500,
+            ...(isSmallMobile
+              ? mobileDialogStyle
+              : { maxWidth: 500, borderRadius: "var(--radius-5)", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.22)" }),
             padding: 0,
-            borderRadius: "var(--radius-5)",
-            overflow: "hidden",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.22)",
           }}
         >
           {/* Header */}
@@ -151,7 +153,10 @@ export const FacebookPostPreviewDialog: React.FC<Props> = ({
             justify="between"
             px="4"
             py="3"
-            style={{ borderBottom: "1px solid var(--gray-a4)" }}
+            style={{
+              borderBottom: "1px solid var(--gray-a4)",
+              ...(isSmallMobile ? mobileHeaderStyle : {}),
+            }}
           >
             <Flex align="center" gap="3">
               <Avatar
@@ -187,7 +192,13 @@ export const FacebookPostPreviewDialog: React.FC<Props> = ({
           </Flex>
 
           {/* Scrollable body */}
-          <Box style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          <Box
+            style={{
+              ...(isSmallMobile
+                ? mobileContentStyle
+                : { maxHeight: "60vh", overflowY: "auto" }),
+            }}
+          >
             {/* Message */}
             <Box px="4" pt="3" pb="2">
               <Text
@@ -251,7 +262,11 @@ export const FacebookPostPreviewDialog: React.FC<Props> = ({
             justify="between"
             px="4"
             py="3"
-            style={{ borderTop: "1px solid var(--gray-a4)", background: "var(--gray-a1)" }}
+            style={{
+              borderTop: "1px solid var(--gray-a4)",
+              background: "var(--gray-a1)",
+              ...(isSmallMobile ? mobileFooterStyle : {}),
+            }}
           >
             <Flex gap="2">
               <Button
@@ -289,7 +304,9 @@ export const FacebookPostPreviewDialog: React.FC<Props> = ({
         open={confirmDelete}
         onOpenChange={(v) => { if (!v) setConfirmDelete(false); }}
       >
-        <AlertDialog.Content style={{ maxWidth: 440 }}>
+        <AlertDialog.Content
+          style={isSmallMobile ? mobileDialogStyle : { maxWidth: 440 }}
+        >
           <AlertDialog.Title>Delete this post?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             This will permanently delete the post from Facebook and your records.

@@ -29,10 +29,11 @@ import {
   Inventory2Outlined,
   PrintOutlined,
 } from "@mui/icons-material";
-import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
 import { Button } from "core-lib/components/radix/buttons/Button";
+import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import {
   FulfillmentMethodDto,
   PaymentDto,
@@ -88,6 +89,7 @@ export const PurchaseOrderDetailBlock: React.FC<Props> = ({
   const [reloadToken, setReloadToken] = useState(0);
   const [printTarget, setPrintTarget] = useState<PrintTarget | null>(null);
   const [unifiedReceiveOpen, setUnifiedReceiveOpen] = useState(false);
+  const { isSmallMobile } = useResolution();
 
   const detailApi = useApi(
     (api) => api.commons.purchaseOrderGetById(purchaseOrderID),
@@ -750,7 +752,7 @@ export const PurchaseOrderDetailBlock: React.FC<Props> = ({
       </PrintPreviewDialog>
 
       <Dialog.Root open={cancelOpen} onOpenChange={setCancelOpen}>
-        <Dialog.Content style={{ maxWidth: 480 }}>
+        <Dialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 480 }}>
           <Dialog.Title>Cancel purchase order?</Dialog.Title>
           <Dialog.Description size="2" color="gray">
             This marks <strong>{po.orderNumber}</strong> as cancelled. It
@@ -767,7 +769,7 @@ export const PurchaseOrderDetailBlock: React.FC<Props> = ({
               onChange={(e) => setCancelReason(e.target.value)}
             />
           </Box>
-          <Flex justify="end" gap="3" mt="4">
+          <Flex justify="end" gap="3" mt="4" style={isSmallMobile ? mobileFooterStyle : undefined}>
             <Button
               type="Secondary"
               disabled={cancelCb.loading}
@@ -792,13 +794,17 @@ export const PurchaseOrderDetailBlock: React.FC<Props> = ({
 
       <Dialog.Root open={unifiedReceiveOpen} onOpenChange={setUnifiedReceiveOpen}>
         <Dialog.Content
-          maxWidth="680px"
-          style={{
-            maxHeight: "90vh",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-          }}
+          style={
+            isSmallMobile
+              ? mobileDialogStyle
+              : {
+                  maxWidth: "680px",
+                  maxHeight: "90vh",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                }
+          }
         >
           <Dialog.Title>Receive items</Dialog.Title>
           <Separator size="4" mb="3" />

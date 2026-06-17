@@ -20,6 +20,8 @@ import type {
 } from "core-lib/api/commons/types";
 import { formatCurrency } from "../format";
 import { usePublicSettings } from "core-lib/core/contexts";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileContentStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 export interface VariantAddOnConfirmPayload {
   variant: SellableVariantDto | null;
@@ -40,6 +42,7 @@ export const VariantAddOnDialog: React.FC<Props> = ({
   onClose,
 }) => {
   const { currencyCode } = usePublicSettings();
+  const { isSmallMobile } = useResolution();
 
   const variants = useMemo(
     () =>
@@ -146,14 +149,22 @@ export const VariantAddOnDialog: React.FC<Props> = ({
   return (
     <Dialog.Root open={true} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Content
-        style={{ maxWidth: 520, borderRadius: "var(--radius-3)", padding: 0 }}
+        style={{
+          ...(isSmallMobile
+            ? mobileDialogStyle
+            : { maxWidth: 520, borderRadius: "var(--radius-3)" }),
+          padding: 0,
+        }}
       >
         {/* Header */}
         <Flex
           align="center"
           justify="between"
           p="4"
-          style={{ borderBottom: "1px solid var(--gray-a4)" }}
+          style={{
+            borderBottom: "1px solid var(--gray-a4)",
+            ...(isSmallMobile ? { flexShrink: 0 } : {}),
+          }}
         >
           <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
             <Dialog.Title>
@@ -178,7 +189,14 @@ export const VariantAddOnDialog: React.FC<Props> = ({
           </IconButton>
         </Flex>
 
-        <ScrollArea type="auto" style={{ maxHeight: "60vh" }}>
+        <ScrollArea
+          type="auto"
+          style={{
+            ...(isSmallMobile
+              ? mobileContentStyle
+              : { maxHeight: "60vh" }),
+          }}
+        >
           <Box p="4">
             <Flex direction="column" gap="4">
               {/* Variants */}
@@ -389,6 +407,7 @@ export const VariantAddOnDialog: React.FC<Props> = ({
           style={{
             borderTop: "1px solid var(--gray-a4)",
             background: "var(--gray-a1)",
+            ...(isSmallMobile ? { flexShrink: 0 } : {}),
           }}
         >
           <Flex align="center" justify="between" gap="3" mb="3">

@@ -27,7 +27,7 @@ import {
 import { useRouter } from "next/router";
 import { HeaderV2 } from "core-lib/components/radix/header/HeaderV2";
 import { Button } from "core-lib/components/radix/buttons/Button";
-import { useApi } from "core-lib/core/hooks";
+import { useApi, useResolution } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";
 import { usePublicSettings, useOfflineMode } from "core-lib/core/contexts";
 import {
@@ -106,6 +106,7 @@ const resolveSourceType = (source: number | undefined): SourceType => {
 // ─── OrdersBlock ──────────────────────────────────────────────────────────────
 
 export const OrdersBlock: React.FC = () => {
+  const { isSmallMobile } = useResolution();
   const { currencyCode, pos, systemName, theme } = usePublicSettings();
   const { openDialog } = useDialogContext();
   const router = useRouter();
@@ -231,7 +232,7 @@ export const OrdersBlock: React.FC = () => {
           border: "1px solid var(--gray-a4)",
         }}
       >
-        <Flex gap="2" wrap="wrap" align="end">
+        <Flex gap="2" wrap="wrap" align="end" direction={isSmallMobile ? "column" : "row"}>
           {/* Search */}
           <Box style={{ flex: "2 1 180px", minWidth: 160 }}>
             <Text size="1" color="gray" as="div" mb="1">

@@ -19,7 +19,7 @@ import {
   DeleteOutlined,
   Restore,
 } from "@mui/icons-material";
-import { useApi, useApiCallback } from "core-lib/core/hooks";
+import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
 import {
   BulkUpdateContentBlockParams,
@@ -30,6 +30,7 @@ import { PAGE_KEYS } from "core-lib/business/settings";
 import { Button } from "core-lib/components/radix/buttons/Button";
 import { MessageBlock } from "core-lib/components/radix/blocks/messages";
 import { MessageType } from "core-lib/components/topAlertMessages/types";
+import { mobileDialogStyle, mobileContentStyle, mobileHeaderStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 
 const PAGE_OPTIONS = Object.entries(PAGE_KEYS).map(([label, value]) => ({
   label,
@@ -321,6 +322,7 @@ const CreateContentBlockDialog: React.FC<CreateDialogProps> = ({
   defaultPageKey,
   onCreated,
 }) => {
+  const { isSmallMobile } = useResolution();
   const { showToast } = useToastContext();
   const [pageKey, setPageKey] = useState(defaultPageKey);
   const [contentKey, setContentKey] = useState("");
@@ -383,12 +385,15 @@ const CreateContentBlockDialog: React.FC<CreateDialogProps> = ({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 520 }}>
-        <Dialog.Title>New content block</Dialog.Title>
-        <Dialog.Description size="2" color="gray">
-          Add a fresh string keyed by pageKey + contentKey.
-        </Dialog.Description>
-
+      <Dialog.Content style={isSmallMobile ? mobileDialogStyle : { maxWidth: 520 }}>
+        <Flex direction="column" style={{ height: "100%" }}>
+        <Box style={isSmallMobile ? mobileHeaderStyle : undefined}>
+          <Dialog.Title>New content block</Dialog.Title>
+          <Dialog.Description size="2" color="gray">
+            Add a fresh string keyed by pageKey + contentKey.
+          </Dialog.Description>
+        </Box>
+        <Box style={isSmallMobile ? mobileContentStyle : undefined}>
         <Flex direction="column" gap="3" mt="4">
           <Box>
             <Text size="2" weight="medium" as="div" mb="1">
@@ -460,8 +465,8 @@ const CreateContentBlockDialog: React.FC<CreateDialogProps> = ({
             />
           </Box>
         </Flex>
-
-        <Flex justify="end" gap="3" mt="4">
+        </Box>
+        <Flex justify="end" gap="3" mt="4" style={isSmallMobile ? mobileFooterStyle : undefined}>
           <Button
             type="Secondary"
             disabled={createCb.loading}
@@ -477,6 +482,7 @@ const CreateContentBlockDialog: React.FC<CreateDialogProps> = ({
           >
             Create
           </Button>
+        </Flex>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

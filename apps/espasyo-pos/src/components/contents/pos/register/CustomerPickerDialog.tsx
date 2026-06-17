@@ -19,6 +19,8 @@ import {
   Cross1Icon,
   TrashIcon,
 } from "@radix-ui/react-icons";
+import { useResolution } from "core-lib/core/hooks";
+import { mobileDialogStyle, mobileContentStyle, mobileHeaderStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";
 import {
   CloseRounded,
   EmojiEventsOutlined,
@@ -69,6 +71,7 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
   excludeIds = [],
 }) => {
   const { showToast } = useToastContext();
+  const { isSmallMobile } = useResolution();
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -528,7 +531,12 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
     <>
       <Dialog.Root open={open} onOpenChange={onOpenChange}>
         <Dialog.Content
-          style={{ maxWidth: 820, padding: 0, overflow: "hidden", borderRadius: 16 }}
+          style={{
+            ...(isSmallMobile
+              ? mobileDialogStyle
+              : { maxWidth: 820, padding: 0, overflow: "hidden", borderRadius: 16 }),
+            padding: 0,
+          }}
           aria-describedby={undefined}
           onInteractOutside={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
@@ -539,7 +547,10 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
             px="4"
             py="3"
             gap="3"
-            style={{ borderBottom: "1px solid var(--gray-a4)" }}
+            style={{
+              borderBottom: "1px solid var(--gray-a4)",
+              ...(isSmallMobile ? mobileHeaderStyle : {}),
+            }}
           >
             <Flex align="center" gap="2" style={{ flex: 1 }}>
               <PersonAddAlt1Outlined style={{ fontSize: 18, color: "var(--indigo-11)" }} />
@@ -557,14 +568,20 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
           </Flex>
 
           {/* Two-pane body */}
-          <Flex style={{ height: 520 }}>
+          <Flex
+            style={{
+              ...(isSmallMobile
+                ? { flex: 1, minHeight: 0, flexDirection: "column" }
+                : { height: 520 }),
+            }}
+          >
             {/* ── Left: browse list ───────────────────────── */}
             <Flex
               direction="column"
               style={{
-                width: "42%",
-                borderRight: "1px solid var(--gray-a4)",
-                minWidth: 0,
+                ...(isSmallMobile
+                  ? { flex: "0 0 auto", maxHeight: "45%", borderBottom: "1px solid var(--gray-a4)", minWidth: 0 }
+                  : { width: "42%", borderRight: "1px solid var(--gray-a4)", minWidth: 0 }),
               }}
             >
               {/* Search + New Customer */}
@@ -812,6 +829,7 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
                       borderBottom: "1px solid var(--gray-a4)",
                       background:
                         "linear-gradient(180deg, var(--indigo-a2) 0%, var(--color-panel-solid) 100%)",
+                      ...(isSmallMobile ? mobileHeaderStyle : {}),
                     }}
                   >
                     <Flex align="center" gap="2" wrap="wrap">
@@ -1059,6 +1077,7 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
                     style={{
                       borderTop: "1px solid var(--gray-a4)",
                       background: "var(--color-panel-solid)",
+                      ...(isSmallMobile ? mobileFooterStyle : {}),
                     }}
                   >
                     <button
@@ -1114,7 +1133,11 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
       {/* New Customer Dialog */}
       <Dialog.Root open={createOpen} onOpenChange={setCreateOpen}>
         <Dialog.Content
-          style={{ maxWidth: 520 }}
+          style={{
+            ...(isSmallMobile
+              ? mobileDialogStyle
+              : { maxWidth: 520 }),
+          }}
           aria-describedby={undefined}
           onInteractOutside={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
@@ -1143,13 +1166,20 @@ export const CustomerPickerDialog: React.FC<CustomerPickerDialogProps> = ({
         open={!!deleteRowTarget}
         onOpenChange={(o) => !o && setDeleteRowTarget(null)}
       >
-        <AlertDialog.Content>
+        <AlertDialog.Content
+          style={isSmallMobile ? mobileDialogStyle : undefined}
+        >
           <AlertDialog.Title>Delete Customer</AlertDialog.Title>
           <AlertDialog.Description>
             Soft-delete <strong>{deleteRowTarget?.fullName}</strong>? They will be removed from
             the list but can be restored later from the Deleted Customers page.
           </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex
+            gap="3"
+            mt="4"
+            justify="end"
+            style={isSmallMobile ? { flexShrink: 0 } : undefined}
+          >
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray">Cancel</Button>
             </AlertDialog.Cancel>
