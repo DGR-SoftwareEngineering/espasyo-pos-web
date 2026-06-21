@@ -1,5 +1,3 @@
-const React = require("react");
-
 function Head({ children }) {
   return null;
 }
