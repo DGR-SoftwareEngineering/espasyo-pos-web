@@ -24,7 +24,7 @@ jobs:
           cache: yarn
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
 
       - name: Lint
         run: yarn turbo run lint --filter=espasyo-pos
@@ -46,7 +46,7 @@ jobs:
           cache: yarn
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
 
       - name: Run tests with coverage
         run: yarn turbo run test --filter=core-lib
