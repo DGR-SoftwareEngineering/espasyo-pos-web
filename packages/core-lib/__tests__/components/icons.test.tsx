@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { CheckedIcon } from "../../components/icons/CheckedIcon";
 import { UncheckedIcon } from "../../components/icons/UncheckedIcon";
 
