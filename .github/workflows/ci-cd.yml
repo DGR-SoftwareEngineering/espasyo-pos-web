@@ -32,9 +32,37 @@ jobs:
       - name: Build
         run: yarn turbo run build --filter=espasyo-pos
 
+  test:
+    name: Test & Coverage
+    runs-on: ubuntu-latest
+    needs: ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: yarn turbo run test --filter=core-lib
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: packages/core-lib/coverage
+          flags: core-lib
+          fail_ci_if_error: false
+          verbose: true
+
   deploy:
     name: Deploy to ${{ github.ref == 'refs/heads/main' && 'Production' || 'Preview' }}
-    needs: ci
+    needs: [ci, test]
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'push' &&
