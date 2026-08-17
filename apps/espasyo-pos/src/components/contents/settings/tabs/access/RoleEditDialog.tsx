@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import {
   Badge,
   Box,
-  Dialog,
   Flex,
-  Switch,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Dialog,
+  Switch,
   TextArea,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";
 import {

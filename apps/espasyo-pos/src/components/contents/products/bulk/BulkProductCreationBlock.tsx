@@ -1,12 +1,14 @@
 import React, { useMemo, useRef, useState } from "react";
 import {
   Box,
-  Card,
   Flex,
-  ScrollArea,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  ScrollArea,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   DownloadIcon,
   PlusIcon,

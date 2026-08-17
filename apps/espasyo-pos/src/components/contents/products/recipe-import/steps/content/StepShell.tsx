@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Card, Flex, Text, Separator } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+  Separator,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 
 interface StepShellProps {
   icon: React.ReactNode;

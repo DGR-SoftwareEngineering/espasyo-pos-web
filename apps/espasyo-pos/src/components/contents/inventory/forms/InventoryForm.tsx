@@ -2,13 +2,15 @@ import React from "react";
 import {
   Badge,
   Box,
-  Callout,
-  Card,
   Flex,
-  Grid,
   Heading,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  Card,
+  Grid,
+} from "@radix-ui/themes";;
 import {
   Inventory2Outlined,
   KitchenOutlined,

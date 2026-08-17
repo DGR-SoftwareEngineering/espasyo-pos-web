@@ -1,14 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
-  Button,
-  Dialog,
   Flex,
   Separator,
-  Spinner,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Dialog,
+  Spinner,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { CheckCircledIcon, Cross2Icon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApiCallback, useResolution } from "core-lib/core/hooks";

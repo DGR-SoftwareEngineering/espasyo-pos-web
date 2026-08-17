@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import {
-  AlertDialog,
-  Avatar,
   Badge,
   Box,
-  Button,
-  Dialog,
   Flex,
   Separator,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
+  Avatar,
+  Button,
+  Dialog,
+} from "@radix-ui/themes";;
 import { Cross2Icon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { useResolution } from "core-lib/core/hooks";

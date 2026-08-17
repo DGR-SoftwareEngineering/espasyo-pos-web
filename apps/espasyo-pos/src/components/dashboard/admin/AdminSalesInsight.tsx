@@ -1,14 +1,16 @@
 import React from "react";
 import {
   Box,
-  Button,
-  Card,
   Flex,
   Text,
   Badge,
-  Skeleton,
   Separator,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Card,
+  Skeleton,
+} from "@radix-ui/themes";;
 import {
   LightningBoltIcon,
   MagicWandIcon,

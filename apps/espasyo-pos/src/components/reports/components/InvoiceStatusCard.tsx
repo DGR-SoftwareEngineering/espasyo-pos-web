@@ -2,11 +2,13 @@ import React, { memo, useMemo } from "react";
 import {
   Badge,
   Box,
-  Card,
   Flex,
   Heading,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { ReceiptLongOutlined } from "@mui/icons-material";
 import { ChartEmpty, ChartLoader } from "core-lib/components/radix/charts";
 import type { SupplierInvoiceDto } from "core-lib/api/commons/types";

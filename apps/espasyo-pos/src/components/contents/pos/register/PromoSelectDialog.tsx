@@ -1,5 +1,16 @@
 import React from "react";
-import { Dialog, Box, Button, Flex, Text, Badge, Heading, Separator } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+  Badge,
+  Heading,
+  Separator,
+} from "core-lib/components/radix/proxies";
+import {
+  Dialog,
+  Button,
+} from "@radix-ui/themes";;
 import { PromoDto, SellableProductDto } from "core-lib/api/commons/types";
 import { useResolution } from "core-lib/core/hooks";
 import { mobileDialogStyle, mobileContentStyle } from "core-lib/components/radix/dialog/mobileFullScreen";

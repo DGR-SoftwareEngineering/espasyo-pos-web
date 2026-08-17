@@ -1,5 +1,14 @@
 import React from "react";
-import { Badge, Box, Card, Flex, Separator, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { AttachMoneyOutlined, LockOutlined, NotesOutlined, SummarizeOutlined } from "@mui/icons-material";
 import { Controller } from "react-hook-form";
 import { TextField } from "core-lib/components/radix/form/TextField";

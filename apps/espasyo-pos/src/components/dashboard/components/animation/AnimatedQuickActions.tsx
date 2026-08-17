@@ -1,4 +1,11 @@
-import { Avatar, Card, Flex, Text } from "@radix-ui/themes";
+import {
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+  Card,
+} from "@radix-ui/themes";;
 import { motion } from "framer-motion";
 import { QUICK_ACTIONS } from "../../constants/actions";
 

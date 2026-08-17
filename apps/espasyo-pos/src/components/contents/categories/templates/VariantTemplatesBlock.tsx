@@ -3,10 +3,12 @@ import {
   Box,
   Flex,
   Text,
-  Card,
   Badge,
   IconButton,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { PlusIcon, Pencil1Icon, TrashIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { useApi, useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";

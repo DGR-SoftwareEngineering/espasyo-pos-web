@@ -1,6 +1,13 @@
 import React, { useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Box, Flex, IconButton, Text } from "@radix-ui/themes";
+import {
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  AnimatePresence,
+  motion } from "framer-motion"; import { Box,
+} from "@radix-ui/themes";;
 import { Cross2Icon, ImageIcon, PlusIcon } from "@radix-ui/react-icons";
 import {
   DndContext,

@@ -2,18 +2,20 @@ import React, { useMemo, useState } from "react";
 import {
   Badge,
   Box,
+  Flex,
+  Heading,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
   Button,
   Callout,
   Card,
-  Flex,
   Grid,
-  Heading,
-  IconButton,
   ScrollArea,
   Skeleton,
   Table,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   AutoAwesomeOutlined,
   InfoOutlined,

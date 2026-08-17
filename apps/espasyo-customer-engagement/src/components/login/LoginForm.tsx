@@ -6,9 +6,11 @@ import {
   Heading,
   Separator,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
   Theme,
-  Grid
-} from "@radix-ui/themes";
+  Grid,
+} from "@radix-ui/themes";;
 import {
   PersonIcon,
   LockClosedIcon,

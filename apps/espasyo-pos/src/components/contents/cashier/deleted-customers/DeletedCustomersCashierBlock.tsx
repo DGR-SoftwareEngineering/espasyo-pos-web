@@ -1,17 +1,18 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import {
-  AlertDialog,
   Badge,
   Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import {   AlertDialog,
   Button,
   Callout,
   Card,
-  Flex,
   Table,
-  Text,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   ArrowLeftIcon,
   MagnifyingGlassIcon,

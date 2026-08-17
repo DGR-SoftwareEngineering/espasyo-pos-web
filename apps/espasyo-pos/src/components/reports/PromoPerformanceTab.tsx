@@ -2,14 +2,16 @@ import React, { memo, useMemo, useState } from "react";
 import {
   Badge,
   Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
   Callout,
   Card,
-  Flex,
   Grid,
-  Heading,
   Skeleton,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { InfoCircledIcon, TriangleUpIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { LocalOfferOutlined } from "@mui/icons-material";
 import { motion } from "framer-motion";

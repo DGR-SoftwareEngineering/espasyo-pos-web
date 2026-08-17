@@ -1,5 +1,13 @@
 import React, { memo } from "react";
-import { Box, Card, Flex, Skeleton, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Skeleton,
+} from "@radix-ui/themes";;
 import { motion } from "framer-motion";
 import type { KpiTile } from "../types";
 

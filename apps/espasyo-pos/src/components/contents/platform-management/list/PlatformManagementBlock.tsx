@@ -1,5 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Box, Card, Flex, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { PlusIcon } from "@radix-ui/react-icons";
 import { useDialogContext } from "core-lib";
 import { useApi } from "core-lib/core/hooks";

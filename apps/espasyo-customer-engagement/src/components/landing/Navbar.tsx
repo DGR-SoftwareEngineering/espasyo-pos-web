@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Box, Flex, Heading, Button, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+} from "@radix-ui/themes";;
 import { HamburgerMenuIcon, Cross1Icon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";

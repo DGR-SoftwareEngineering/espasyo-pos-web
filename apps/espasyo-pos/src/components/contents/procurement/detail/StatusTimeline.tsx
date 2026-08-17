@@ -1,5 +1,9 @@
 import React from "react";
-import { Box, Flex, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import { PurchaseOrderStatusDto } from "core-lib/api/commons/types";
 import { PO_STATUS_META, PO_STATUS_ORDER } from "../constants";
 

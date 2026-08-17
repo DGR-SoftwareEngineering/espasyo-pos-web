@@ -1,6 +1,15 @@
 "use client";
 import React, { useState } from "react";
-import { Box, Flex, Heading, Text, Grid, Badge } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+  Badge,
+} from "core-lib/components/radix/proxies";
+import {
+  Grid,
+} from "@radix-ui/themes";;
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
   CustomerLoyaltyDto,

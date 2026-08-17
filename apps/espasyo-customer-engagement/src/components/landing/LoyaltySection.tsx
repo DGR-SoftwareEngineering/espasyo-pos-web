@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { Box, Container, Grid, Heading, Text, Flex, Badge, Button } from "@radix-ui/themes";
+import {
+  Box,
+  Heading,
+  Text,
+  Flex,
+  Badge,
+} from "core-lib/components/radix/proxies";
+import {
+  Container,
+  Grid,
+  Button,
+} from "@radix-ui/themes";;
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { TimerIcon } from "@radix-ui/react-icons";

@@ -1,5 +1,14 @@
 import React from "react";
-import { Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Tooltip,
+} from "@radix-ui/themes";;
 import { DeleteOutline, InfoOutlined } from "@mui/icons-material";
 import { FieldArrayWithId } from "react-hook-form";
 import { RecipeForm } from "./contents/recipe/forms/validation";

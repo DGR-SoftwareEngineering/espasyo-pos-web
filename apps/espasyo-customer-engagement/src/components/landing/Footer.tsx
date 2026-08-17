@@ -1,6 +1,17 @@
 // components/landing/Footer.tsx - Completely Redesigned
 import React, { useState } from "react";
-import { Box, Container, Grid, Heading, Text, Flex, Button, TextField } from "@radix-ui/themes";
+import {
+  Box,
+  Heading,
+  Text,
+  Flex,
+} from "core-lib/components/radix/proxies";
+import {
+  Container,
+  Grid,
+  Button,
+  TextField,
+} from "@radix-ui/themes";;
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";

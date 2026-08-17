@@ -1,5 +1,7 @@
 import React from "react";
-import { Flex } from "@radix-ui/themes";
+import {
+  Flex,
+} from "core-lib/components/radix/proxies";;
 import { ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
 import { Button } from "core-lib/components/radix/buttons/Button";
 

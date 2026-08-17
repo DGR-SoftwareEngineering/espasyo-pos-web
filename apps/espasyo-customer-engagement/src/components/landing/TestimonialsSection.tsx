@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Box, Container, Grid, Heading, Text, Card, Flex, Avatar } from "@radix-ui/themes";
+import {
+  Box,
+  Heading,
+  Text,
+  Flex,
+} from "core-lib/components/radix/proxies";
+import {
+  Container,
+  Grid,
+  Card,
+  Avatar,
+} from "@radix-ui/themes";;
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 

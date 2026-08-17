@@ -1,5 +1,14 @@
 import React, { useMemo } from "react";
-import { Badge, Box, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { TuneRounded } from "@mui/icons-material";
 import {
   TabsContextProvider,

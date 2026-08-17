@@ -3,13 +3,15 @@ import {
   Box,
   Flex,
   Text,
-  Card,
   Heading,
   Badge,
+  Separator,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
   Callout,
   Table,
-  Separator,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   InfoCircledIcon,
   CheckCircledIcon,

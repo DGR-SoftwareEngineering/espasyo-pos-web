@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Flex, Text, TextArea } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  TextArea,
+} from "@radix-ui/themes";;
 import { StickyNote2Outlined } from "@mui/icons-material";
 import { DialogBox } from "core-lib/components/radix/dialog/DialogBox";
 import { DIALOG_TITLES } from "../constants";

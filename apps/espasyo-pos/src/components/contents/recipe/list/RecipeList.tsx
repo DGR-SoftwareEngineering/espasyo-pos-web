@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo } from "react";
-import { Box } from "@radix-ui/themes";
+import {
+  Box,
+} from "core-lib/components/radix/proxies";;
 import { DataTableV2 } from "core-lib/components/radix/table/DataTableV2";
 import { TABLE_HEADERS } from "../constants";
 import { ProductRecipeSummaryResponse } from "core-lib/api/commons/types";

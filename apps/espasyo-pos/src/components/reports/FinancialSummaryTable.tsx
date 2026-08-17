@@ -1,5 +1,14 @@
 import React from "react";
-import { Box, Card, Flex, Heading, Table, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Table,
+} from "@radix-ui/themes";;
 import { formatCurrency } from "../contents/procurement/format";
 
 export interface FinancialData {

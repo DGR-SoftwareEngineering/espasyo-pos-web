@@ -1,5 +1,15 @@
 import React from "react";
-import { Badge, Box, Card, Flex, Heading, Tabs, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Tabs,
+} from "@radix-ui/themes";;
 import {
   AdminPanelSettingsOutlined,
   MenuOpenOutlined,

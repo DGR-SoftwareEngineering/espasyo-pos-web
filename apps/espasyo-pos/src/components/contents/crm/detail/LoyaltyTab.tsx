@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { Box, Card, Flex, Grid, Text, Button, Callout } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Grid,
+  Button,
+  Callout,
+} from "@radix-ui/themes";;
 import {
   LocalCafeOutlined,
   EmojiEventsOutlined,

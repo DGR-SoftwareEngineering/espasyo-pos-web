@@ -1,12 +1,14 @@
 import React from "react";
 import {
-  Avatar,
   Box,
-  Card,
   Flex,
   Heading,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+  Card,
+} from "@radix-ui/themes";;
 import { motion } from "framer-motion";
 import { ArrowUpIcon, ArrowDownIcon } from "@radix-ui/react-icons";
 import { STATS_CARDS } from "../../constants/stats";

@@ -1,5 +1,7 @@
 import React from "react";
-import { Box } from "@radix-ui/themes";
+import {
+  Box,
+} from "core-lib/components/radix/proxies";;
 import { useSupplierCreateContext } from "./SupplierCreateContext";
 import { useSupplierCreateWizardSteps } from "./steps/useSteps";
 

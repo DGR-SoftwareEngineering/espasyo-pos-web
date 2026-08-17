@@ -1,5 +1,14 @@
 import React, { useMemo } from "react";
-import { Badge, Box, Callout, Flex, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  Tooltip,
+} from "@radix-ui/themes";;
 import {
   LocalCafeOutlined,
   EmojiEventsOutlined,

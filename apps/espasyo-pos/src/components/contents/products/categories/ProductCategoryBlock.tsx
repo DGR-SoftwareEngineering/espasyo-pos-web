@@ -1,15 +1,17 @@
 import React, { useCallback, useMemo, useState } from "react";
 import {
-  Avatar,
   Badge,
   Box,
-  Card,
   Flex,
   IconButton,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+  Card,
   TextField as RadixTextField,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   ChevronDownIcon,
   ChevronRightIcon,

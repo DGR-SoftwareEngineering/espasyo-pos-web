@@ -1,5 +1,13 @@
 import React from "react";
-import { Badge, Box, Card, Flex, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { CustomerSegment } from "core-lib/api/crm";
 import { SEGMENT_CONFIG } from "../constants";
 

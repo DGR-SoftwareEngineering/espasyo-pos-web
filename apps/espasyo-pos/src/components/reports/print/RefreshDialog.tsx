@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Dialog, Flex, Heading, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Dialog,
+} from "@radix-ui/themes";;
 import { RefreshOutlined } from "@mui/icons-material";
 import { motion } from "framer-motion";
 

@@ -1,5 +1,9 @@
-import { useEffect } from "react";
-import { Flex, Text } from "@radix-ui/themes";
+import {
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useEffect } from "react"; import { Flex,
+} from "@radix-ui/themes";;
 
 const FacebookOAuthSuccessPage = () => {
   useEffect(() => {

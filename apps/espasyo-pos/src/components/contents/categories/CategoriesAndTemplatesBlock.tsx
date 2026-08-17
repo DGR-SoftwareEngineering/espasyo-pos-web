@@ -1,5 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { Box, Flex, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import {
   TabsContextProvider,
   TabsHeaderDesktop,

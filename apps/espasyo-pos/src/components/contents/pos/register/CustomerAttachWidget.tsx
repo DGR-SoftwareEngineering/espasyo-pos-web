@@ -2,14 +2,16 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Badge,
   Box,
-  Button,
-  Callout,
-  Card,
   Flex,
   IconButton,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Callout,
+  Card,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { ChevronDownIcon, Cross1Icon } from "@radix-ui/react-icons";
 import {
   EmojiEventsOutlined,

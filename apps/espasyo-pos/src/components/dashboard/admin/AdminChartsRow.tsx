@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
-import { Box } from "@radix-ui/themes";
+import {
+  Box,
+} from "core-lib/components/radix/proxies";;
 import {
   ActivityLogIcon,
   BarChartIcon,

@@ -2,15 +2,17 @@ import React, { useCallback, useState } from "react";
 import {
   Badge,
   Box,
-  Button,
-  Card,
-  Dialog,
   Flex,
   Heading,
   IconButton,
-  Spinner,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Card,
+  Dialog,
+  Spinner,
+} from "@radix-ui/themes";;
 import { ChevronLeftIcon, ChevronRightIcon, Cross2Icon } from "@radix-ui/react-icons";
 import { useApi, useResolution } from "core-lib/core/hooks";
 import { useDialogContext } from "core-lib";

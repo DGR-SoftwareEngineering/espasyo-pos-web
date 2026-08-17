@@ -1,13 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
   Callout,
   Dialog,
-  Flex,
   Select,
-  Text,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { InfoOutlined, WarningAmberOutlined } from "@mui/icons-material";
 import { useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";

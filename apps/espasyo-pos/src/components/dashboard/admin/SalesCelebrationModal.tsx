@@ -1,14 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import {
-  Dialog,
   Box,
   Flex,
   Heading,
   Text,
-  Button,
   Separator,
+} from "core-lib/components/radix/proxies";
+import {
+  Dialog,
+  Button,
   Grid,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { motion, AnimatePresence } from "framer-motion";
 import { EmojiEvents } from "@mui/icons-material";
 import { useRouter } from "next/navigation";

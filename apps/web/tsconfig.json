@@ -17,6 +17,13 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "../../packages/core-lib/core/types/global.d.ts",
+    "../../packages/core-lib/core/types/theme.d.ts",
+    "../../packages/core-lib/core/types/eva-icons.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

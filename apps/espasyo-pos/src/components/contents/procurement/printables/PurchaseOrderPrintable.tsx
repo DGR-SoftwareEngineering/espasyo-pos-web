@@ -1,5 +1,10 @@
 import React from "react";
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import {
   FulfillmentMethodDto,
   PurchaseOrderDetailDto,

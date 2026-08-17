@@ -1,5 +1,15 @@
 import React from "react";
-import { Avatar, Box, DropdownMenu, Flex, IconButton, Skeleton, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+  DropdownMenu,
+  Skeleton,
+} from "@radix-ui/themes";;
 import { motion } from "framer-motion";
 import { GearIcon, PlusIcon } from "@radix-ui/react-icons";
 import { FacebookPageInfoDto } from "core-lib/api/commons/types";

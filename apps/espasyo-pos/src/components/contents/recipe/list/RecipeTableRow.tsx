@@ -1,18 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Avatar,
   Badge,
   Box,
-  Button,
-  Callout,
   Flex,
-  Grid,
   Heading,
   Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+  Button,
+  Callout,
+  Grid,
   Spinner,
   Table,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   RestaurantMenuOutlined,
   KitchenOutlined,

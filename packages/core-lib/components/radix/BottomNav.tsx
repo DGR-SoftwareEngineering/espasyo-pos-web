@@ -4,12 +4,12 @@ import {
   Dialog,
   Flex,
   ScrollArea,
-  Separator,
   Text,
 } from "@radix-ui/themes";
 import { useRouter } from "next/router";
 import { useFilteredMenu } from "../menu/hooks/useFilteredMenu";
 import { useOfflineMode, usePageLoaderContext } from "../../core/contexts";
+import { useThemePreference } from "../../core/contexts/theme/ThemePreferenceContext";
 import { useTabsNavigation, deriveLabel } from "../../core/contexts/TabsNavigationContext";
 import { MenuItem } from "../menu/config/menuConfig";
 
@@ -23,15 +23,14 @@ const OFFLINE_ALLOWED_PATHS = ["/cashier/pos", "/cashier/orders"];
 export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
   const router = useRouter();
   const { isOnline } = useOfflineMode();
+  const { appearance } = useThemePreference();
+  const isDark = appearance === "dark";
   const { startContentTransition } = usePageLoaderContext();
   const { openTab } = useTabsNavigation();
   const { mainMenu, secondaryMenu } = useFilteredMenu(roleName);
   const [sheetItem, setSheetItem] = useState<MenuItem | null>(null);
 
-  const allItems = useMemo(
-    () => [...mainMenu, ...secondaryMenu],
-    [mainMenu, secondaryMenu],
-  );
+  const allItems = useMemo(() => [...mainMenu, ...secondaryMenu], [mainMenu, secondaryMenu]);
 
   const isPathActive = useCallback(
     (path: string | undefined) => {
@@ -44,8 +43,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
   const isItemActive = useCallback(
     (item: MenuItem): boolean => {
       if (item.path && isPathActive(item.path)) return true;
-      if (item.nestedItems?.some((n) => n.path && isPathActive(n.path)))
-        return true;
+      if (item.nestedItems?.some((n) => n.path && isPathActive(n.path))) return true;
       return false;
     },
     [isPathActive],
@@ -53,9 +51,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
 
   const isOfflineBlocked = useCallback(
     (path: string | undefined) =>
-      !isOnline &&
-      !!path &&
-      !OFFLINE_ALLOWED_PATHS.some((allowed) => path?.startsWith(allowed)),
+      !isOnline && !!path && !OFFLINE_ALLOWED_PATHS.some((allowed) => path?.startsWith(allowed)),
     [isOnline],
   );
 
@@ -92,6 +88,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
 
   if (loading || allItems.length === 0) return null;
 
+  const textPrimary = isDark ? "#fafafa" : "#171717";
+  const bg = isDark ? "#000" : "#fff";
+  const borderColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+  const dividerColor = isDark ? "#222" : "#eaeaea";
+  const defaultColor = isDark ? "#666" : "#888";
+  const activeColor = isDark ? "#fafafa" : "#171717";
+  const activeBg = isDark ? "#111" : "#fafafa";
+
   return (
     <>
       <Box
@@ -101,8 +105,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
           left: 0,
           right: 0,
           zIndex: 100,
-          background: "var(--color-panel-solid)",
-          borderTop: "1px solid var(--gray-a5)",
+          background: bg,
+          boxShadow: `0 0 0 1px ${borderColor}`,
           paddingTop: 4,
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)",
         }}
@@ -135,13 +139,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
                 role="button"
                 tabIndex={0}
                 aria-current={active ? "page" : undefined}
-                title={
-                  blocked
-                    ? "Available when online"
-                    : item.nestedItems
-                      ? item.text
-                      : item.text
-                }
+                title={blocked ? "Available when online" : item.text}
                 onClick={() => handleItemTap(item)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -153,31 +151,33 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
                   flexShrink: 0,
                   cursor: blocked ? "not-allowed" : "pointer",
                   opacity: blocked ? 0.4 : 1,
-                  padding: "4px 12px",
-                  borderRadius: "var(--radius-3)",
-                  background: active ? "var(--accent-a3)" : undefined,
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  background: active ? activeBg : undefined,
                   minWidth: 0,
-                  color: active ? "var(--accent-11)" : "var(--gray-11)",
-                  transition: "background 200ms ease, color 200ms ease",
+                  color: active ? activeColor : defaultColor,
+                  transition: "background 100ms ease, color 100ms ease",
                 }}
               >
                 <Box
                   style={{
-                    width: 22,
-                    height: 22,
+                    width: 20,
+                    height: 20,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
                     color: "inherit",
+                    opacity: active ? 1 : 0.65,
+                    transition: "opacity 100ms ease",
                   }}
                 >
                   {item.icon}
                 </Box>
                 <Text
                   size="1"
-                  weight={active ? "bold" : "regular"}
-                  style={{ color: "inherit", whiteSpace: "nowrap" }}
+                  weight={active ? "medium" : "regular"}
+                  style={{ color: "inherit", whiteSpace: "nowrap", fontSize: 10 }}
                 >
                   {item.text}
                 </Text>
@@ -207,8 +207,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
             maxHeight: "50vh",
             margin: 0,
             padding: 0,
-            borderRadius: "16px 16px 0 0",
-            background: "var(--color-panel-solid)",
+            borderRadius: "12px 12px 0 0",
+            background: bg,
           }}
         >
           <Dialog.Title>
@@ -217,9 +217,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
               gap="2"
               px="4"
               py="3"
-              style={{
-                borderBottom: "1px solid var(--gray-a4)",
-              }}
+              style={{ borderBottom: `1px solid ${dividerColor}` }}
             >
               <Box
                 style={{
@@ -228,21 +226,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--accent-11)",
+                  color: defaultColor,
                 }}
               >
                 {sheetItem?.icon}
               </Box>
-              <Text size="3" weight="bold">
+              <Text size="3" weight="bold" style={{ color: textPrimary }}>
                 {sheetItem?.text}
               </Text>
             </Flex>
           </Dialog.Title>
 
-          <ScrollArea
-            scrollbars="vertical"
-            style={{ maxHeight: "calc(50vh - 56px)" }}
-          >
+          <ScrollArea scrollbars="vertical" style={{ maxHeight: "calc(50vh - 56px)" }}>
             <Flex direction="column" gap="1" p="2">
               {sheetItem?.nestedItems?.map((nested) => {
                 const isNestedActive = isPathActive(nested.path);
@@ -266,44 +261,40 @@ export const BottomNav: React.FC<BottomNavProps> = ({ roleName, loading }) => {
                       }
                     }}
                     style={{
-                      padding: "10px 12px",
-                      borderRadius: "var(--radius-3)",
+                      padding: "8px 12px",
+                      margin: "0 4px",
+                      borderRadius: 6,
                       cursor: nestedBlocked ? "not-allowed" : "pointer",
                       opacity: nestedBlocked ? 0.4 : 1,
-                      background: isNestedActive
-                        ? "var(--accent-a3)"
-                        : undefined,
-                      color: isNestedActive
-                        ? "var(--accent-11)"
-                        : "var(--gray-11)",
-                      transition: "background 200ms ease, color 200ms ease",
+                      background: isNestedActive ? activeBg : undefined,
+                      color: isNestedActive ? activeColor : defaultColor,
+                      transition: "background 100ms ease, color 100ms ease",
                     }}
                     onMouseEnter={(e) => {
-                      if (!isNestedActive)
-                        e.currentTarget.style.background = "var(--gray-a3)";
+                      if (!isNestedActive) (e.currentTarget as HTMLElement).style.background = activeBg;
                     }}
                     onMouseLeave={(e) => {
-                      if (!isNestedActive)
-                        e.currentTarget.style.background = "";
+                      if (!isNestedActive) (e.currentTarget as HTMLElement).style.background = "";
                     }}
                   >
                     <Box
                       style={{
-                        width: 20,
-                        height: 20,
+                        width: 18,
+                        height: 18,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         flexShrink: 0,
                         color: "inherit",
+                        opacity: isNestedActive ? 1 : 0.65,
                       }}
                     >
                       {nested.icon}
                     </Box>
                     <Text
                       size="2"
-                      weight={isNestedActive ? "bold" : "regular"}
-                      style={{ color: "inherit" }}
+                      weight={isNestedActive ? "medium" : "regular"}
+                      style={{ color: "inherit", fontSize: 13 }}
                     >
                       {nested.text}
                     </Text>

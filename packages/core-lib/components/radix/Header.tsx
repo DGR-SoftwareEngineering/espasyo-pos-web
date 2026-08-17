@@ -6,12 +6,9 @@ import { useResolution } from "../../core/hooks";
 import { useHeaderTitleContext } from "../../core/contexts";
 import { HeaderSearch } from "./menu/HeaderSearch";
 import { HeaderSalesTarget } from "./menu/HeaderSalesTarget";
-import { ThemeToggleButton } from "./ThemeToggleButton";
 
 interface HeaderProps {
-  /** Right-side slot (notifications, search, theme toggle, etc.). */
   endSlot?: React.ReactNode;
-  /** Sticky header (default true). */
   sticky?: boolean;
 }
 
@@ -49,14 +46,11 @@ export const Header: React.FC<HeaderProps> = ({
     <Box
       data-layout="app-header"
       style={{
-        background: "var(--color-panel-solid)",
-        boxShadow: "0 1px 0 var(--gray-a5)",
         padding: "12px 24px",
         flexShrink: 0,
       }}
     >
       <Flex direction="column" gap="2">
-        {/* Top row — breadcrumb (left) + search (center) + user menu (right). */}
         <Flex justify="between" align="center" gap="3" style={{ minHeight: 32 }}>
           <Box style={{ flex: "0 0 auto", minWidth: 0 }}>
             {segments.length > 1 && !isSmallMobile ? (
@@ -104,9 +98,6 @@ export const Header: React.FC<HeaderProps> = ({
             ) : null}
           </Box>
 
-          {/* Search + notifications + user menu — always renders. The search
-              is unconditional so admins can navigate by typing, regardless of
-              whether the user context has fully resolved yet. */}
           <Flex
             align="center"
             gap="3"
@@ -114,11 +105,9 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <HeaderSalesTarget />
             {isDesktop && <HeaderSearch />}
-            <ThemeToggleButton />
           </Flex>
         </Flex>
 
-        {/* Title row */}
         <Flex justify="between" align="center" gap="3">
           <Heading size="6" weight="bold">
             {pageTitle}
@@ -134,10 +123,6 @@ export const Header: React.FC<HeaderProps> = ({
   );
 };
 
-/**
- * `useHeaderTitleContext` throws if used outside its provider. Until every
- * route is wrapped, fall back gracefully so the header still renders.
- */
 function safeHeaderTitle(): { headerTitle?: string } {
   try {
     return useHeaderTitleContext();
@@ -147,7 +132,6 @@ function safeHeaderTitle(): { headerTitle?: string } {
 }
 
 function humanizeSegment(seg: string): string {
-  // Strip dynamic-route brackets ("[id]" → "id"), then title-case.
   const clean = seg.replace(/^\[(.+)\]$/, "$1").replace(/-/g, " ");
   return clean.charAt(0).toUpperCase() + clean.slice(1);
 }

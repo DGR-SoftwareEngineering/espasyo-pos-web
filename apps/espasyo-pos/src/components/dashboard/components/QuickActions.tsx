@@ -1,4 +1,10 @@
-import { Card, Grid, Heading } from "@radix-ui/themes";
+import {
+  Heading,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Grid,
+} from "@radix-ui/themes";;
 import { QUICK_ACTIONS } from "../constants/actions";
 import { AnimatedQuickAction } from "./animation/AnimatedQuickActions";
 

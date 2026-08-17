@@ -5,14 +5,16 @@ import {
   Text,
   Flex,
   Box,
+  Heading,
+  Separator,
+} from "core-lib/components/radix/proxies";
+import {
   Table,
   Dialog,
   Button,
   Callout,
-  Heading,
-  Separator,
   ScrollArea,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   Cross2Icon,
   ChevronDownIcon,

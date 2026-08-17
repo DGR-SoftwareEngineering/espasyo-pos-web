@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo } from "react";
-import { Box, Flex } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+} from "core-lib/components/radix/proxies";;
 import {
   useActiveSteps,
   useWizardForm,

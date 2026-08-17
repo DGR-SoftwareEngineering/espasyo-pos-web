@@ -1,6 +1,11 @@
 "use client";
 import React from "react";
-import { Badge, Box, Flex, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import { motion } from "framer-motion";
 import { ListLoader } from "core-lib/components/radix";
 import { CustomerPromoDto } from "core-lib/api/commons/types";

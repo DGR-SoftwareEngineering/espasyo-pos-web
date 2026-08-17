@@ -2,16 +2,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
-  Callout,
   Flex,
   Heading,
-  ScrollArea,
   Separator,
-  Switch,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  ScrollArea,
+  Switch,
   TextArea,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   Inventory2Outlined,
   PaymentsOutlined,

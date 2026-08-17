@@ -1,6 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import { Badge, Box, Flex, IconButton, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import { PlusIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { useCart } from "core-lib/components/radix";

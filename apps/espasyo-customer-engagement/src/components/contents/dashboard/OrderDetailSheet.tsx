@@ -1,6 +1,17 @@
 "use client";
 import React, { useMemo } from "react";
-import { Dialog, Box, Flex, Text, Badge, IconButton, Spinner, VisuallyHidden } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+  Badge,
+  IconButton,
+} from "core-lib/components/radix/proxies";
+import {
+  Dialog,
+  Spinner,
+  VisuallyHidden,
+} from "@radix-ui/themes";;
 import { motion, AnimatePresence } from "framer-motion";
 import { useApi } from "core-lib/core/hooks";
 import { CustomerOrderDetailDto, CustomerOrderStatus } from "core-lib/api/commons/types";

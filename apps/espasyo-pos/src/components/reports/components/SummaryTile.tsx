@@ -1,5 +1,11 @@
 import React, { memo } from "react";
-import { Box, Skeleton, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Skeleton,
+} from "@radix-ui/themes";;
 
 interface SummaryTileProps {
   label: string;

@@ -1,5 +1,14 @@
 import React from "react";
-import { Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Tooltip,
+} from "@radix-ui/themes";;
 import { EyeOpenIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import { EmojiEventsOutlined, LocalCafeOutlined } from "@mui/icons-material";
 import { CustomerDto } from "core-lib/api/crm";

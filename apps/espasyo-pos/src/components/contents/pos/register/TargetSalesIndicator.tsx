@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, Flex, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import { motion } from "framer-motion";
 import { EmojiEvents } from "@mui/icons-material";
 import { formatCurrency } from "../format";

@@ -1,5 +1,14 @@
 import React from "react";
-import { Badge, Box, Card, Flex, Separator, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { ShiftSummaryDto } from "core-lib/api/commons/types";
 import { formatCurrency } from "core-lib/business/strings";
 import { STATUS_CONFIG } from "../constants";

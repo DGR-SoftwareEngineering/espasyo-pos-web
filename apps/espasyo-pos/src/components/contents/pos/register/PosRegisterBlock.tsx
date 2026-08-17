@@ -1,5 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertDialog, Box, Button, Callout, Flex, Heading, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
+  Button,
+  Callout,
+  Tooltip,
+} from "@radix-ui/themes";;
 import { InfoCircledIcon, ExitIcon } from "@radix-ui/react-icons";
 import { FullscreenOutlined, LockOpenOutlined, PointOfSaleRounded, ReceiptLongOutlined } from "@mui/icons-material";
 import {

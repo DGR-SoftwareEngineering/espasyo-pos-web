@@ -2,18 +2,20 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
+  Flex,
+  Heading,
+  IconButton,
+  Text,
+  Separator,
+} from "core-lib/components/radix/proxies";
+import {
   Button,
   Card,
   Callout,
-  Flex,
   Grid,
-  Heading,
-  IconButton,
   Skeleton,
-  Text,
   Tooltip,
-  Separator,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   AssessmentOutlined,
   ExpandLessOutlined,

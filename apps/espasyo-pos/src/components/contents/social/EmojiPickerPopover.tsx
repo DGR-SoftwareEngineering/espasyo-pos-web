@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Box, Flex, Text } from "@radix-ui/themes";
+import {
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  AnimatePresence,
+  motion } from "framer-motion"; import { Box,
+} from "@radix-ui/themes";;
 
 const CATEGORIES: { icon: string; label: string; emojis: string[] }[] = [
   {

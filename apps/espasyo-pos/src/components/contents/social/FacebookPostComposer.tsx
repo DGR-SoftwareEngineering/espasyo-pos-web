@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Avatar,
   Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
   Button,
   Callout,
   Dialog,
-  Flex,
   Spinner,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { AnimatePresence, motion } from "framer-motion";
 import { Cross2Icon, ImageIcon, InfoCircledIcon } from "@radix-ui/react-icons";
 import { useApiCallback, useResolution } from "core-lib/core/hooks";

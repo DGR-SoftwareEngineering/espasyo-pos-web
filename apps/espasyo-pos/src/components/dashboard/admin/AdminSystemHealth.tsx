@@ -2,13 +2,15 @@ import React from "react";
 import {
   Badge,
   Box,
-  Card,
   Flex,
   Heading,
   Separator,
-  Skeleton,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Skeleton,
+} from "@radix-ui/themes";;
 import {
   GearIcon,
   LockClosedIcon,

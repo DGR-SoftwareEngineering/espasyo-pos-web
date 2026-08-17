@@ -1,6 +1,15 @@
 // components/landing/HeroSection.tsx - With Inline STATS
 import React, { useRef, useState, useEffect } from "react";
-import { Box, Flex, Heading, Button, Text, Container } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Container,
+} from "@radix-ui/themes";;
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ChevronDownIcon, PlayIcon, ArrowRightIcon } from "@radix-ui/react-icons";

@@ -1,6 +1,17 @@
 // components/landing/PromosSection.tsx - Completely Redesigned
 import React, { useState } from "react";
-import { Box, Container, Grid, Heading, Text, Badge, Flex, Button } from "@radix-ui/themes";
+import {
+  Box,
+  Heading,
+  Text,
+  Badge,
+  Flex,
+} from "core-lib/components/radix/proxies";
+import {
+  Container,
+  Grid,
+  Button,
+} from "@radix-ui/themes";;
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";

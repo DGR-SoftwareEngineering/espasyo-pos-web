@@ -1,18 +1,20 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  AlertDialog,
   Badge,
   Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
   Button,
   Callout,
   Dialog,
-  Flex,
-  IconButton,
   ScrollArea,
   Spinner,
-  Text,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   ChevronLeftIcon,
   ChevronRightIcon,

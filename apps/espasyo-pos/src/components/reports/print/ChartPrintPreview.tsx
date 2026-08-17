@@ -1,5 +1,7 @@
 import React from "react";
-import { Box } from "@radix-ui/themes";
+import {
+  Box,
+} from "core-lib/components/radix/proxies";;
 import { type SupplierInvoiceDto } from "core-lib/api/commons/types";
 import { formatCurrency } from "../../contents/procurement/format";
 import { PrintPreviewDialog, PrintableDocument } from "core-lib/components/print";

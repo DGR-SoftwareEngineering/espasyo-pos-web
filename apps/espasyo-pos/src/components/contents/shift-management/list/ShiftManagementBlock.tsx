@@ -1,5 +1,16 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { Badge, Box, Button, Callout, Card, Flex, Separator, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Callout,
+  Card,
+} from "@radix-ui/themes";;
 import { InfoCircledIcon, ReloadIcon } from "@radix-ui/react-icons";
 import {
   AccessTimeRounded,

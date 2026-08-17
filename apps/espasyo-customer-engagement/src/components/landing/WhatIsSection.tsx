@@ -1,6 +1,17 @@
 // components/landing/WhatIsSection.tsx - Redesigned without wave
 import React, { useRef } from "react";
-import { Box, Container, Grid, Heading, Text, Button, Badge, Flex } from "@radix-ui/themes";
+import {
+  Box,
+  Heading,
+  Text,
+  Badge,
+  Flex,
+} from "core-lib/components/radix/proxies";
+import {
+  Container,
+  Grid,
+  Button,
+} from "@radix-ui/themes";;
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { CheckCircledIcon, HeartIcon, RocketIcon, MagicWandIcon, ArrowRightIcon } from "@radix-ui/react-icons";

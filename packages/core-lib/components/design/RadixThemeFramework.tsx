@@ -2,6 +2,7 @@
 import React, { ReactNode } from "react";
 import { Theme, ThemeProps, Flex } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
+import { DesignProvider } from "../../design-system";
 import {
   DialogContextProvider,
   FormSubmissionContextProvider,
@@ -9,6 +10,7 @@ import {
   NotificationsContextProvider,
   PageLoaderContextProvider,
   ToastContextProvider,
+  usePublicSettings,
 } from "../../core/contexts";
 import { Toastify } from "../toast/Toastify";
 import { ErrorBoundary } from "../ErrorBoundary";
@@ -56,6 +58,8 @@ export const RadixThemeFramework: React.FC<RadixThemeFrameworkProps> = ({
   platform,
   children,
 }) => {
+  const { theme } = usePublicSettings();
+
   return (
     <Theme
       appearance={appearance}
@@ -65,6 +69,12 @@ export const RadixThemeFramework: React.FC<RadixThemeFrameworkProps> = ({
       scaling={scaling}
       panelBackground={panelBackground}
     >
+      <DesignProvider
+        primaryColor={theme.primaryColor}
+        secondaryColor={theme.secondaryColor}
+        accentColor={accentColor}
+        grayColor={grayColor}
+      >
       <ToastContextProvider>
         <DialogContextProvider>
           <HeaderTitleContextProvider>
@@ -114,6 +124,7 @@ export const RadixThemeFramework: React.FC<RadixThemeFrameworkProps> = ({
           </HeaderTitleContextProvider>
         </DialogContextProvider>
       </ToastContextProvider>
+      </DesignProvider>
     </Theme>
   );
 };

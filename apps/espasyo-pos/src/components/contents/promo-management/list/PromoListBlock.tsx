@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  AlertDialog,
   Badge,
   Box,
-  Button,
-  Card,
   Flex,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
+  Button,
+  Card,
+} from "@radix-ui/themes";;
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { AddCircleOutlined } from "@mui/icons-material";
 import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";

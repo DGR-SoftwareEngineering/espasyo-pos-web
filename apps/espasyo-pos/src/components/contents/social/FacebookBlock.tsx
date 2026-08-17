@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertDialog, Box, Button, Flex, Spinner, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
+  Button,
+  Spinner,
+} from "@radix-ui/themes";;
 import { motion } from "framer-motion";
 import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";
 import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";

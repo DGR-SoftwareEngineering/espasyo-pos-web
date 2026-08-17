@@ -2,16 +2,18 @@ import React, { useRef, useState } from "react";
 import {
   Badge,
   Box,
-  Callout,
-  Card,
   Flex,
   Heading,
   IconButton,
-  RadioGroup,
   Separator,
-  Table,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  Card,
+  RadioGroup,
+  Table,
+} from "@radix-ui/themes";;
 import {
   CloudUploadOutlined,
   WarningAmberOutlined,

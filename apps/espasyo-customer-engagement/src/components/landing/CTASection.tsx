@@ -1,5 +1,15 @@
 import React, { useRef, useState } from "react";
-import { Box, Container, Heading, Text, Button, Flex, Badge } from "@radix-ui/themes";
+import {
+  Box,
+  Heading,
+  Text,
+  Flex,
+  Badge,
+} from "core-lib/components/radix/proxies";
+import {
+  Container,
+  Button,
+} from "@radix-ui/themes";;
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { ArrowRightIcon } from "@radix-ui/react-icons";

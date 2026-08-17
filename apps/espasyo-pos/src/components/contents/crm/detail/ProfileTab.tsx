@@ -1,5 +1,18 @@
 import React from "react";
-import { Badge, Box, Button, Callout, Card, Flex, Grid, Separator, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Callout,
+  Card,
+  Grid,
+  Tooltip,
+} from "@radix-ui/themes";;
 import {
   Pencil1Icon,
 } from "@radix-ui/react-icons";

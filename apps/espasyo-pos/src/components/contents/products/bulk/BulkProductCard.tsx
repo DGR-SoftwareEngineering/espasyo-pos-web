@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import {
   Badge,
   Box,
-  Card,
   Flex,
   IconButton,
-  Select,
   Separator,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Select,
+} from "@radix-ui/themes";;
 import {
   ChevronDownIcon,
   ChevronRightIcon,

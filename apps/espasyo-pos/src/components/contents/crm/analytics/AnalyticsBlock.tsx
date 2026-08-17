@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import { Badge, Box, Button, Card, Flex, Grid, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import { Badge,
+  Button,
+  Card,
+  Grid,
+} from "@radix-ui/themes";;
 import { ReloadIcon } from "@radix-ui/react-icons";
 import {
   AttachMoneyOutlined,

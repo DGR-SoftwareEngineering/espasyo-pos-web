@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { Table, Badge, IconButton, Text, Flex, Box, Dialog, Button } from "@radix-ui/themes";
+import {
+  Badge,
+  IconButton,
+  Text,
+  Flex,
+  Box,
+} from "core-lib/components/radix/proxies";
+import {
+  Table,
+  Dialog,
+  Button,
+} from "@radix-ui/themes";;
 import { Cross2Icon, Pencil1Icon } from "@radix-ui/react-icons";
 import { IngredientPreviewItemDto, IngredientCategoryDto } from "core-lib/api/commons/types";
 import { useForm } from "react-hook-form";

@@ -1,20 +1,21 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
 import {
-  Badge,
   Box,
-  Callout,
-  Card,
-  Dialog,
   Flex,
   Heading,
   IconButton,
   Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import {   Badge,
+  Callout,
+  Card,
+  Dialog,
   Table,
   Tabs,
-  Text,
   TextArea,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   ArrowLeftIcon,
   CheckCircledIcon,

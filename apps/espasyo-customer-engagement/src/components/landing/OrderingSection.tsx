@@ -1,6 +1,18 @@
 // components/landing/OrderingSection.tsx - Fixed image alignment
 import React, { useState } from "react";
-import { Box, Container, Grid, Heading, Text, Button, Badge, Flex, Card } from "@radix-ui/themes";
+import {
+  Box,
+  Heading,
+  Text,
+  Badge,
+  Flex,
+} from "core-lib/components/radix/proxies";
+import {
+  Container,
+  Grid,
+  Button,
+  Card,
+} from "@radix-ui/themes";;
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";

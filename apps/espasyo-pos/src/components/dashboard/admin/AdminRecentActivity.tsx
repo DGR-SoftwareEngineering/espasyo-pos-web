@@ -2,13 +2,15 @@ import React, { useMemo } from "react";
 import {
   Badge,
   Box,
-  Card,
   Flex,
   Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
   ScrollArea,
   Skeleton,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { ActivityLogIcon, ClockIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { useApi } from "core-lib/core/hooks";

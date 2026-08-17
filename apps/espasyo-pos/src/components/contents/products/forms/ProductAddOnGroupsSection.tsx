@@ -1,5 +1,17 @@
 import React from "react";
-import { Badge, Box, Card, Flex, IconButton, Select, Switch, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Select,
+  Switch,
+  Tooltip,
+} from "@radix-ui/themes";;
 import { TrashIcon, PlusIcon, ChevronDownIcon, ChevronRightIcon, CheckCircledIcon, FileTextIcon } from "@radix-ui/react-icons";
 import { Control, Controller, useFieldArray, type FieldArrayPath, type FieldValues } from "react-hook-form";
 import { TextField } from "core-lib/components/radix/form/TextField";

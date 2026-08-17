@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Flex,
-  Theme,
   Text,
   Badge,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Theme,
+} from "@radix-ui/themes";;
 import {
   CoffeeOutlined,
 } from "@mui/icons-material";

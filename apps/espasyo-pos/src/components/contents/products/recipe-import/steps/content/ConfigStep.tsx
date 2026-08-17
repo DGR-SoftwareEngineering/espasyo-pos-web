@@ -3,17 +3,19 @@ import {
   Box,
   Flex,
   Text,
-  Card,
   Heading,
   Badge,
+  Separator,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
   Callout,
   RadioGroup,
   Switch,
   TextField as RadixTextField,
-  Separator,
   Checkbox,
   Button,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { MagnifyingGlassIcon, MixerHorizontalIcon, ChevronDownIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { useRecipeImportContext } from "../../RecipeImportContext";
 import { StepShell } from "./StepShell";

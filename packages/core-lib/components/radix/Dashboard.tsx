@@ -18,7 +18,6 @@ import { OfflineDisconnectDialog } from "./OfflineDisconnectDialog";
 import { SyncOfflineDialog } from "./SyncOfflineDialog";
 
 const SIDEBAR_COLLAPSED_KEY_PREFIX = "espasyo.sidebarCollapsed.";
-// Legacy single-key (kept for one-time cleanup so old prefs don't leak across roles).
 const LEGACY_SIDEBAR_COLLAPSED_KEY = "espasyo.sidebarCollapsed";
 
 const routeToPageKey = (pathname: string): string | null => {
@@ -58,28 +57,22 @@ export const RadixDashboard: React.FC<Props> = ({
 
   const normalizedRole = (role ?? "").trim().toLowerCase();
   const isCashier = normalizedRole === "cashier";
-  // Per-role storage key — cashier and admin track collapse state independently
-  // so they don't leak across roles when sharing a browser.
   const storageKey = normalizedRole
     ? `${SIDEBAR_COLLAPSED_KEY_PREFIX}${normalizedRole}`
     : null;
 
-  // Admin defaults to expanded. Cashier defaults to collapsed so the POS gets
-  // maximum horizontal space. User's manual toggle is persisted per role.
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(isCashier);
 
   useEffect(() => {
     if (typeof window === "undefined" || !storageKey) return;
     try {
-      // One-time cleanup of the legacy global key so it doesn't override.
       window.localStorage.removeItem(LEGACY_SIDEBAR_COLLAPSED_KEY);
-
       const stored = window.localStorage.getItem(storageKey);
       if (stored === "1") setSidebarCollapsed(true);
       else if (stored === "0") setSidebarCollapsed(false);
       else setSidebarCollapsed(isCashier);
     } catch {
-      // localStorage unavailable (private mode, etc.) — silently use the default.
+      // localStorage unavailable
     }
   }, [storageKey, isCashier]);
 
@@ -90,7 +83,7 @@ export const RadixDashboard: React.FC<Props> = ({
       try {
         window.localStorage.setItem(storageKey, next ? "1" : "0");
       } catch {
-        // Persistence is best-effort.
+        // best-effort
       }
     },
     [storageKey],
@@ -112,7 +105,6 @@ export const RadixDashboard: React.FC<Props> = ({
     maintenance.pages.includes(currentPageKey) &&
     !(currentPageKey === PAGE_KEYS.Settings && isAdmin);
 
-  // Pages that manage their own full-screen layout — skip the dashboard chrome.
   const STANDALONE_ROUTES = ["/cashier/shift/open", "/404"];
   const isLoginPage = (router?.pathname ?? "") === "/";
   const isStandaloneRoute =
@@ -126,51 +118,50 @@ export const RadixDashboard: React.FC<Props> = ({
 
   return (
     <TabsNavigationProvider homePath={homePath} homeLabel="Dashboard">
-      
-        <Flex
-          direction={isMobile ? "column" : "row"}
-          style={{ minHeight: "100vh" }}
-        >
-          <SideMenu
-            logout={logout}
-            loading={loading}
-            role={role}
-            initials={initials}
-            email={email}
-            collapsible
-            collapsed={sidebarCollapsed}
-            onToggleCollapsed={handleToggleSidebar}
-            onNavigate={handleNavigate}
-          />
+      <Flex
+        direction={isMobile ? "column" : "row"}
+        style={{ minHeight: "100vh" }}
+      >
+        <SideMenu
+          logout={logout}
+          loading={loading}
+          role={role}
+          initials={initials}
+          email={email}
+          collapsible
+          collapsed={sidebarCollapsed}
+          onToggleCollapsed={handleToggleSidebar}
+          onNavigate={handleNavigate}
+        />
 
-          <Flex
-            direction="column"
-            style={{ flex: 1, minWidth: 0, height: "100vh", overflow: "hidden" }}
+        <Flex
+          direction="column"
+          style={{ flex: 1, minWidth: 0, height: "100vh", overflow: "hidden" }}
+        >
+          <MaintenanceBanner />
+          <Header />
+          <OfflineIndicatorBar />
+          {isAdmin && <TabsNavigationBar role={role} />}
+          <Box
+            style={{
+              flex: 1,
+              overflowY: "auto",
+              overflowX: isSmallMobile ? "hidden" : undefined,
+              padding: isSmallMobile ? "12px" : isTablet ? "16px" : "24px 32px",
+              paddingBottom: isSmallMobile ? "calc(env(safe-area-inset-bottom, 0px) + 64px)" : undefined,
+            }}
           >
-            <MaintenanceBanner />
-            <Header />
-            <OfflineIndicatorBar />
-            {isAdmin && <TabsNavigationBar role={role} />}
-            <Box
-              style={{
-                flex: 1,
-                overflowY: "auto",
-                overflowX: isSmallMobile ? "hidden" : undefined,
-                padding: isSmallMobile ? "12px" : isTablet ? "16px" : "24px 32px",
-                paddingBottom: isSmallMobile ? "calc(env(safe-area-inset-bottom, 0px) + 64px)" : undefined,
-              }}
-            >
-              {pageInMaintenance ? (
-                <MaintenancePageBlock pageKey={currentPageKey!} />
-              ) : (
-                children
-              )}
-            </Box>
-          </Flex>
+            {pageInMaintenance ? (
+              <MaintenancePageBlock pageKey={currentPageKey!} />
+            ) : (
+              children
+            )}
+          </Box>
         </Flex>
-        {isSmallMobile && <BottomNav roleName={role ?? ""} loading={loading} />}
-        <OfflineDisconnectDialog />
-        <SyncOfflineDialog />
+      </Flex>
+      {isSmallMobile && <BottomNav roleName={role ?? ""} loading={loading} />}
+      <OfflineDisconnectDialog />
+      <SyncOfflineDialog />
     </TabsNavigationProvider>
   );
 };
