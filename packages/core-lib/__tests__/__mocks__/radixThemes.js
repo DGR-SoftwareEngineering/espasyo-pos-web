@@ -7,7 +7,7 @@ function el(tag, extraProps) {
       if (k === "children") return;
       // allow standard HTML attrs and data-* attrs
       if (
-        ["onClick","onKeyDown","disabled","style","className","id","role","href","type","aria-label","aria-current","title","tabIndex"].includes(k) ||
+        ["onClick","onKeyDown","onMouseEnter","onMouseLeave","onMouseDown","onMouseUp","onFocus","onBlur","disabled","style","className","id","role","href","type","aria-label","aria-current","title","tabIndex"].includes(k) ||
         k.startsWith("data-")
       ) {
         safe[k] = props[k];

@@ -14,6 +14,7 @@ import { Separator } from "../../components/radix/proxies/Separator";
 import { Button } from "../../components/radix/proxies/Button";
 import { IconButton } from "../../components/radix/proxies/IconButton";
 import { Badge } from "../../components/radix/proxies/Badge";
+import { Card } from "../../components/radix/proxies/Card";
 import { ContentCard } from "../../components/radix/primitives/ContentCard";
 
 describe("Box", () => {
@@ -145,5 +146,17 @@ describe("ContentCard", () => {
     );
     const el = container.firstChild as HTMLElement;
     expect(el).toBeTruthy();
+  });
+});
+
+describe("Card (proxy)", () => {
+  it("renders children with the default surface variant", () => {
+    render(<Card>card body</Card>);
+    expect(screen.getByText("card body")).toBeTruthy();
+  });
+
+  it("passes a custom variant prop through", () => {
+    render(<Card variant="classic">x</Card>);
+    expect(screen.getByText("x")).toBeTruthy();
   });
 });
