@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import "../test-utils";
 import {
   HeaderTitleContextProvider,
   useHeaderTitleContext,
@@ -9,14 +10,8 @@ const mockTitle = "Test Page";
 
 jest.mock("../../core/router", () => ({
   useRouter: jest.fn(() => ({
+    ...require("../test-utils").mockRouter(),
     title: mockTitle,
-    asPath: "/",
-    pathname: "/",
-    query: {},
-    push: jest.fn(),
-    events: { on: jest.fn(), off: jest.fn(), emit: jest.fn() },
-    loading: false,
-    staticRoutes: {},
   })),
 }));
 

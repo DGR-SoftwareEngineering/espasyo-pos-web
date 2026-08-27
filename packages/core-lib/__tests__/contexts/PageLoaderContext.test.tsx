@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, act } from "@testing-library/react";
+import "../test-utils";
 import {
   PageLoaderContextProvider,
   usePageLoaderContext,
@@ -23,11 +24,8 @@ const mockRouterEvents = {
 
 jest.mock("../../core/router", () => ({
   useRouter: jest.fn(() => ({
-    push: jest.fn().mockResolvedValue(true),
+    ...require("../test-utils").mockRouter(),
     events: mockRouterEvents,
-    asPath: "/",
-    loading: false,
-    pathname: "/",
     query: {},
     title: "",
     staticRoutes: {},
