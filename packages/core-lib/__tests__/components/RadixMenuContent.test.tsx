@@ -209,10 +209,10 @@ describe("RadixMenuContent", () => {
     });
     const { container } = render(<RadixMenuContent roleName="admin" collapsed />);
 
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
-    expect(screen.getByText("Inventory")).toBeInTheDocument();
+    // Collapsed items render their text only inside a Tooltip (dropped by the
+    // mock), so we assert on the icons and the rendered nested (popover) item.
+    expect(screen.getAllByTestId("ic").length).toBeGreaterThanOrEqual(3);
     expect(screen.getByText("Inventory List")).toBeInTheDocument();
-    expect(screen.getByText("Settings")).toBeInTheDocument();
     hoverAll(container);
   });
 
@@ -224,7 +224,7 @@ describe("RadixMenuContent", () => {
     });
     const { container } = render(<RadixMenuContent roleName="admin" />);
 
-    const item = screen.getByText("Settings");
+    const item = screen.getByRole("button", { name: "Settings" });
     expect(item.getAttribute("aria-disabled")).toBe("true");
     expect(item.getAttribute("title")).toBe("Available when online");
 

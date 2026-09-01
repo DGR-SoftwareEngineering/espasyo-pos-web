@@ -4,26 +4,6 @@ import "../test-utils";
 
 jest.mock("framer-motion", () => require("../test-utils").mockFramerMotion());
 
-// Override the radix mock so DropdownMenu.Item forwards onSelect -> onClick
-// (the shared mock only forwards onClick, which would leave the user-menu
-// handlers in SideMenu uncovered).
-jest.mock("@radix-ui/themes", () => {
-  const ReactMod = require("react");
-  const base = require("../__mocks__/radixThemes.js");
-  return {
-    ...base,
-    DropdownMenu: {
-      ...base.DropdownMenu,
-      Item: ({ children, onClick, onSelect, disabled, ...rest }: any) =>
-        ReactMod.createElement(
-          "button",
-          { onClick: onClick || onSelect, disabled, ...rest },
-          children,
-        ),
-    },
-  };
-});
-
 jest.mock("../../core/hooks", () => ({
   useResolution: jest.fn(() => require("../test-utils").mockResolution()),
 }));

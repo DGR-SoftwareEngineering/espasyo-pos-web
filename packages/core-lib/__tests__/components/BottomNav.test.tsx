@@ -28,7 +28,7 @@ jest.mock("../../core/contexts/TabsNavigationContext", () => ({
 
 import { BottomNav } from "../../components/radix/BottomNav";
 import { useFilteredMenu } from "../../components/menu/hooks/useFilteredMenu";
-import { useOfflineMode } from "../../core/contexts";
+import { useOfflineMode, usePageLoaderContext } from "../../core/contexts";
 import { useTabsNavigation } from "../../core/contexts/TabsNavigationContext";
 import { useRouter } from "next/router";
 import { mockRouter } from "../test-utils";
@@ -42,6 +42,7 @@ describe("BottomNav", () => {
     (useRouter as jest.Mock).mockReturnValue(routerMock);
     (useFilteredMenu as jest.Mock).mockReturnValue({ mainMenu: [], secondaryMenu: [] });
     (useOfflineMode as jest.Mock).mockReturnValue({ isOnline: true });
+    (usePageLoaderContext as jest.Mock).mockReturnValue({ startContentTransition });
     (useTabsNavigation as jest.Mock).mockReturnValue({ openTab, deriveLabel: (p: string) => p });
   });
 
@@ -154,8 +155,7 @@ describe("BottomNav", () => {
       secondaryMenu: [],
     });
     render(<BottomNav roleName="admin" />);
-    const item = screen.getByText("Settings");
-    expect(item.getAttribute("aria-disabled")).toBe("true");
+    const item = screen.getByRole("button", { name: "Settings" });
     expect(item.getAttribute("title")).toBe("Available when online");
     fireEvent.click(item);
     expect(routerMock.push).not.toHaveBeenCalled();

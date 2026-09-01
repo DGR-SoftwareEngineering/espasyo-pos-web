@@ -7,7 +7,7 @@ function el(tag, extraProps) {
       if (k === "children") return;
       // allow standard HTML attrs and data-* attrs
       if (
-        ["onClick","onKeyDown","onMouseEnter","onMouseLeave","onMouseDown","onMouseUp","onFocus","onBlur","disabled","style","className","id","role","href","type","aria-label","aria-current","title","tabIndex"].includes(k) ||
+        ["onClick","onKeyDown","onMouseEnter","onMouseLeave","onMouseDown","onMouseUp","onFocus","onBlur","disabled","style","className","id","role","href","type","aria-label","aria-current","aria-disabled","aria-expanded","title","tabIndex"].includes(k) ||
         k.startsWith("data-")
       ) {
         safe[k] = props[k];
@@ -77,8 +77,8 @@ module.exports = {
     Content: function({ children }) {
       return React.createElement("div", { "data-testid": "dropdown-content" }, children);
     },
-    Item: function({ children, onClick }) {
-      return React.createElement("button", { onClick }, children);
+    Item: function({ children, onClick, onSelect, disabled, ...rest }) {
+      return React.createElement("button", { onClick: onClick || onSelect, disabled, ...rest }, children);
     },
     Separator: function() { return React.createElement("hr"); },
     Label: function({ children }) { return React.createElement("div", null, children); },
