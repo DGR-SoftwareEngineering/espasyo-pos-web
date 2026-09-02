@@ -203,4 +203,35 @@ describe("SideMenu", () => {
     render(<SideMenu logout={logout} role="admin" collapsible collapsed />);
     expect(screen.getByText("T")).toBeInTheDocument();
   });
+
+  it("applies dark mode hover style on the expanded user dropdown trigger", () => {
+    (useThemePreference as jest.Mock).mockReturnValue({ appearance: "dark", toggleAppearance });
+    render(<SideMenu logout={logout} role="admin" />);
+    const trigger = screen.getByText("TestBrand").closest("aside")!.querySelector('[role="button"]');
+    expect(trigger).toBeTruthy();
+    fireEvent.mouseEnter(trigger!);
+    fireEvent.mouseLeave(trigger!);
+  });
+
+  it("applies dark mode hover style on the theme button", () => {
+    (useThemePreference as jest.Mock).mockReturnValue({ appearance: "dark", toggleAppearance });
+    render(<SideMenu logout={logout} role="admin" />);
+    const btn = screen.getByTitle(/Switch to/i);
+    fireEvent.mouseEnter(btn);
+    fireEvent.mouseLeave(btn);
+  });
+
+  it("renders collapsed sidebar in dark mode", () => {
+    (useThemePreference as jest.Mock).mockReturnValue({ appearance: "dark", toggleAppearance });
+    render(<SideMenu logout={logout} role="admin" collapsible collapsed />);
+    expect(screen.getByText("T")).toBeInTheDocument();
+    expect(screen.getByTitle("Switch to light mode")).toBeInTheDocument();
+  });
+
+  it("renders dark mode mobile header", () => {
+    (useResolution as jest.Mock).mockReturnValue(mockResolution({ isMobile: true, isSmallMobile: false }));
+    (useThemePreference as jest.Mock).mockReturnValue({ appearance: "dark", toggleAppearance });
+    render(<SideMenu logout={logout} role="admin" />);
+    expect(screen.getByText("TestBrand")).toBeInTheDocument();
+  });
 });

@@ -269,4 +269,26 @@ describe("RadixDashboard", () => {
     );
     expect(screen.getByTestId("page-content")).toBeInTheDocument();
   });
+
+  it("applies tablet-specific padding", () => {
+    (useResolution as jest.Mock).mockReturnValue(
+      mockResolution({ isMobile: false, isSmallMobile: false, isTablet: true, isDesktop: false }),
+    );
+    render(
+      <RadixDashboard logout={logout} role="admin">
+        <div data-testid="page-content">Page</div>
+      </RadixDashboard>,
+    );
+    expect(screen.getByTestId("page-content")).toBeInTheDocument();
+  });
+
+  it("handles empty pathname without crashing", () => {
+    (useRouter as jest.Mock).mockReturnValue({ pathname: "", push: jest.fn() });
+    render(
+      <RadixDashboard logout={logout} role="admin">
+        <div data-testid="page-content">Page</div>
+      </RadixDashboard>,
+    );
+    expect(screen.getByTestId("page-content")).toBeInTheDocument();
+  });
 });

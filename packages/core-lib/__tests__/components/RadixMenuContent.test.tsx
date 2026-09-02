@@ -371,4 +371,60 @@ describe("RadixMenuContent", () => {
     fireEvent.mouseLeave(activeItem);
     hoverAll(container);
   });
+
+  it("renders dark mode expanded with active item", () => {
+    routerMock = mockRouter({ pathname: "/admin/hub" });
+    (useRouter as jest.Mock).mockReturnValue(routerMock);
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        flat("dash", "Dashboard", "/admin/hub"),
+        group("inv", "Inventory", [
+          { id: "inv-list", text: "Inventory List", icon, path: "/admin/hub/inventory/list", permissionKey: "inv.list" },
+        ]),
+      ],
+      secondaryMenu: [],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" isDark />);
+    const activeItem = screen.getByText("Dashboard");
+    expect(activeItem.closest('[aria-current="page"]')).toBeTruthy();
+    fireEvent.mouseEnter(activeItem);
+    fireEvent.mouseLeave(activeItem);
+    hoverAll(container);
+  });
+
+  it("renders dark mode collapsed with active grouped item", () => {
+    const childPath = "/admin/hub/inventory/list";
+    routerMock = mockRouter({ pathname: childPath });
+    (useRouter as jest.Mock).mockReturnValue(routerMock);
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        group("inv", "Inventory", [
+          { id: "inv-list", text: "Inventory List", icon, path: childPath, permissionKey: "inv.list" },
+        ]),
+      ],
+      secondaryMenu: [flat("settings", "Settings", "/admin/hub/settings")],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" collapsed isDark />);
+    const trigger = screen.getAllByRole("button")[0];
+    fireEvent.click(trigger);
+    fireEvent.keyDown(trigger, { key: "Enter" });
+    fireEvent.mouseEnter(trigger);
+    fireEvent.mouseLeave(trigger);
+    hoverAll(container);
+  });
+
+  it("renders dark mode secondary items with selected state", () => {
+    routerMock = mockRouter({ pathname: "/admin/hub/settings" });
+    (useRouter as jest.Mock).mockReturnValue(routerMock);
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [],
+      secondaryMenu: [flat("settings", "Settings", "/admin/hub/settings")],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" isDark />);
+    const selected = screen.getByRole("link", { name: "Settings" });
+    expect(selected.getAttribute("aria-current")).toBe("page");
+    fireEvent.mouseEnter(selected);
+    fireEvent.mouseLeave(selected);
+    hoverAll(container);
+  });
 });
