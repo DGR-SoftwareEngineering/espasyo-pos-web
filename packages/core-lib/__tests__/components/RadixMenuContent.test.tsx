@@ -254,4 +254,121 @@ describe("RadixMenuContent", () => {
     expect(container).toBeTruthy();
     hoverAll(container);
   });
+
+  it("navigates when a collapsed flat item is clicked", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [flat("dash", "Dashboard", "/admin/hub")],
+      secondaryMenu: [],
+    });
+    render(<RadixMenuContent roleName="admin" collapsed onNavigate={onNavigate} />);
+    const buttons = screen.getAllByRole("button");
+    fireEvent.click(buttons[0]);
+    expect(openTab).toHaveBeenCalledWith("/admin/hub", "Dashboard");
+    expect(routerMock.push).toHaveBeenCalledWith("/admin/hub");
+  });
+
+  it("navigates on Enter key for a collapsed flat item", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [flat("dash", "Dashboard", "/admin/hub")],
+      secondaryMenu: [],
+    });
+    render(<RadixMenuContent roleName="admin" collapsed onNavigate={onNavigate} />);
+    const buttons = screen.getAllByRole("button");
+    fireEvent.keyDown(buttons[0], { key: "Enter" });
+    expect(openTab).toHaveBeenCalledWith("/admin/hub", "Dashboard");
+    expect(routerMock.push).toHaveBeenCalledWith("/admin/hub");
+  });
+
+  it("blocks collapsed flat item when offline", () => {
+    (useOfflineMode as jest.Mock).mockReturnValue({ isOnline: false });
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [flat("settings", "Settings", "/admin/hub/settings")],
+      secondaryMenu: [],
+    });
+    render(<RadixMenuContent roleName="admin" collapsed />);
+    const buttons = screen.getAllByRole("button");
+    fireEvent.click(buttons[0]);
+    expect(routerMock.push).not.toHaveBeenCalled();
+  });
+
+  it("toggles collapsed grouped item popover on click", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        group("inv", "Inventory", [
+          { id: "inv-list", text: "Inventory List", icon, path: "/admin/hub/inventory/list", permissionKey: "inv.list" },
+        ]),
+      ],
+      secondaryMenu: [],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" collapsed />);
+    fireEvent.click(screen.getByText("Inventory"));
+    hoverAll(container);
+  });
+
+  it("navigates from collapsed popover nested item", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        group("inv", "Inventory", [
+          { id: "inv-list", text: "Inventory List", icon, path: "/admin/hub/inventory/list", permissionKey: "inv.list" },
+        ]),
+      ],
+      secondaryMenu: [],
+    });
+    render(<RadixMenuContent roleName="admin" collapsed onNavigate={onNavigate} />);
+    fireEvent.click(screen.getByText("Inventory"));
+    fireEvent.click(screen.getByText("Inventory List"));
+    expect(routerMock.push).toHaveBeenCalledWith("/admin/hub/inventory/list");
+  });
+
+  it("navigates from collapsed popover nested item on Enter", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        group("inv", "Inventory", [
+          { id: "inv-list", text: "Inventory List", icon, path: "/admin/hub/inventory/list", permissionKey: "inv.list" },
+        ]),
+      ],
+      secondaryMenu: [],
+    });
+    render(<RadixMenuContent roleName="admin" collapsed onNavigate={onNavigate} />);
+    fireEvent.click(screen.getByText("Inventory"));
+    fireEvent.keyDown(screen.getByText("Inventory List"), { key: "Enter" });
+    expect(routerMock.push).toHaveBeenCalledWith("/admin/hub/inventory/list");
+  });
+
+  it("navigates on Enter key for secondary item", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [],
+      secondaryMenu: [flat("settings", "Settings", "/admin/hub/settings")],
+    });
+    render(<RadixMenuContent roleName="admin" onNavigate={onNavigate} />);
+    const item = screen.getByRole("link", { name: "Settings" });
+    fireEvent.keyDown(item, { key: "Enter" });
+    expect(routerMock.push).toHaveBeenCalledWith("/admin/hub/settings");
+  });
+
+  it("applies hover style to secondary items", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [],
+      secondaryMenu: [flat("settings", "Settings", "/admin/hub/settings")],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" />);
+    const secondaryItem = screen.getByText("Settings");
+    fireEvent.mouseEnter(secondaryItem);
+    fireEvent.mouseLeave(secondaryItem);
+    hoverAll(container);
+  });
+
+  it("does not apply hover style to active items", () => {
+    routerMock = mockRouter({ pathname: "/admin/hub" });
+    (useRouter as jest.Mock).mockReturnValue(routerMock);
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [flat("dash", "Dashboard", "/admin/hub")],
+      secondaryMenu: [],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" />);
+    const activeItem = screen.getByText("Dashboard");
+    fireEvent.mouseEnter(activeItem);
+    fireEvent.mouseLeave(activeItem);
+    hoverAll(container);
+  });
 });

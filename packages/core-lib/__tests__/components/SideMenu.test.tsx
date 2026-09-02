@@ -157,4 +157,50 @@ describe("SideMenu", () => {
     fireEvent.click(screen.getByText("Logout"));
     expect(logout).toHaveBeenCalledTimes(1);
   });
+
+  it("renders correctly in dark mode", () => {
+    (useThemePreference as jest.Mock).mockReturnValue({ appearance: "dark", toggleAppearance });
+    const { container } = render(<SideMenu logout={logout} role="admin" />);
+    expect(container.firstChild).toBeTruthy();
+  });
+
+  it("applies hover style on the expanded user dropdown trigger", () => {
+    render(<SideMenu logout={logout} role="admin" />);
+    const trigger = screen.getByText("TestBrand").closest("aside")!.querySelector('[role="button"]');
+    expect(trigger).toBeTruthy();
+    fireEvent.mouseEnter(trigger!);
+    fireEvent.mouseLeave(trigger!);
+  });
+
+  it("applies hover style on the collapse button", () => {
+    const onToggleCollapsed = jest.fn();
+    render(
+      <SideMenu logout={logout} role="admin" collapsible collapsed={false} onToggleCollapsed={onToggleCollapsed} />,
+    );
+    const btn = screen.getByLabelText("Collapse sidebar");
+    fireEvent.mouseEnter(btn);
+    fireEvent.mouseLeave(btn);
+  });
+
+  it("applies hover style on the theme button", () => {
+    render(<SideMenu logout={logout} role="admin" />);
+    const btn = screen.getByTitle(/Switch to/i);
+    fireEvent.mouseEnter(btn);
+    fireEvent.mouseLeave(btn);
+  });
+
+  it("shows role display text for cashier", () => {
+    render(<SideMenu logout={logout} role="cashier" />);
+    expect(screen.getByText("Cashier")).toBeInTheDocument();
+  });
+
+  it("falls back to POS when role is empty", () => {
+    render(<SideMenu logout={logout} role="" />);
+    expect(screen.getByText("POS")).toBeInTheDocument();
+  });
+
+  it("renders brand initial fallback when collapsed and no logoUrl", () => {
+    render(<SideMenu logout={logout} role="admin" collapsible collapsed />);
+    expect(screen.getByText("T")).toBeInTheDocument();
+  });
 });

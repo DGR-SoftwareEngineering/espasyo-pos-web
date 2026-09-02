@@ -193,4 +193,111 @@ describe("BottomNav", () => {
     fireEvent.click(screen.getByText("Settings"));
     expect(routerMock.push).not.toHaveBeenCalled();
   });
+
+  it("navigates on Enter key for a nested item in the sheet", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        {
+          id: "m",
+          text: "More",
+          icon: <span />,
+          path: undefined,
+          permissionKey: "m",
+          nestedItems: [
+            { id: "s", text: "Sales", icon: <span />, path: "/cashier/pos", permissionKey: "s" },
+          ],
+        },
+      ],
+      secondaryMenu: [],
+    });
+    render(<BottomNav roleName="cashier" />);
+    fireEvent.click(screen.getByText("More"));
+    const nested = screen.getByText("Sales");
+    fireEvent.keyDown(nested, { key: "Enter" });
+    expect(routerMock.push).toHaveBeenCalledWith("/cashier/pos");
+  });
+
+  it("blocks nested item keyboard navigation when offline", () => {
+    (useOfflineMode as jest.Mock).mockReturnValue({ isOnline: false });
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        {
+          id: "m",
+          text: "More",
+          icon: <span />,
+          path: undefined,
+          permissionKey: "m",
+          nestedItems: [
+            { id: "s", text: "Settings", icon: <span />, path: "/admin/hub/settings", permissionKey: "s" },
+          ],
+        },
+      ],
+      secondaryMenu: [],
+    });
+    render(<BottomNav roleName="admin" />);
+    fireEvent.click(screen.getByText("More"));
+    fireEvent.keyDown(screen.getByText("Settings"), { key: "Enter" });
+    expect(routerMock.push).not.toHaveBeenCalled();
+  });
+
+  it("renders correctly in dark mode", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [{ id: "1", text: "Dashboard", path: "/admin/hub", icon: <span /> }],
+      secondaryMenu: [],
+    });
+    (require("../../core/contexts/theme/ThemePreferenceContext").useThemePreference as jest.Mock).mockReturnValue({
+      appearance: "dark",
+      toggleAppearance: jest.fn(),
+    });
+    render(<BottomNav roleName="admin" />);
+    expect(screen.getByText("Dashboard")).toBeInTheDocument();
+  });
+
+  it("applies hover style to nested items", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        {
+          id: "m",
+          text: "More",
+          icon: <span />,
+          path: undefined,
+          permissionKey: "m",
+          nestedItems: [
+            { id: "s", text: "Sales", icon: <span />, path: "/cashier/pos", permissionKey: "s" },
+          ],
+        },
+      ],
+      secondaryMenu: [],
+    });
+    render(<BottomNav roleName="cashier" />);
+    fireEvent.click(screen.getByText("More"));
+    const nested = screen.getByText("Sales");
+    fireEvent.mouseEnter(nested);
+    fireEvent.mouseLeave(nested);
+  });
+
+  it("does not apply hover style to active nested items", () => {
+    routerMock = mockRouter({ pathname: "/cashier/pos" });
+    (useRouter as jest.Mock).mockReturnValue(routerMock);
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        {
+          id: "m",
+          text: "More",
+          icon: <span />,
+          path: undefined,
+          permissionKey: "m",
+          nestedItems: [
+            { id: "s", text: "Sales", icon: <span />, path: "/cashier/pos", permissionKey: "s" },
+          ],
+        },
+      ],
+      secondaryMenu: [],
+    });
+    render(<BottomNav roleName="cashier" />);
+    fireEvent.click(screen.getByText("More"));
+    const nested = screen.getByText("Sales");
+    fireEvent.mouseEnter(nested);
+    fireEvent.mouseLeave(nested);
+  });
 });

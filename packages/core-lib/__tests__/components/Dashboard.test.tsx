@@ -248,4 +248,25 @@ describe("RadixDashboard", () => {
     );
     expect(screen.getByTestId("page-content")).toBeInTheDocument();
   });
+
+  it("renders children for an unknown route path", () => {
+    (useRouter as jest.Mock).mockReturnValue(mockRouter({ pathname: "/admin/hub/something-random" }));
+    render(
+      <RadixDashboard logout={logout} role="admin">
+        <div data-testid="page-content">Page</div>
+      </RadixDashboard>,
+    );
+    expect(screen.getByTestId("page-content")).toBeInTheDocument();
+    expect(screen.queryByTestId("maintenance-block")).toBeNull();
+  });
+
+  it("renders children for a sales route path", () => {
+    (useRouter as jest.Mock).mockReturnValue(mockRouter({ pathname: "/admin/hub/sales" }));
+    render(
+      <RadixDashboard logout={logout} role="admin">
+        <div data-testid="page-content">Page</div>
+      </RadixDashboard>,
+    );
+    expect(screen.getByTestId("page-content")).toBeInTheDocument();
+  });
 });

@@ -141,4 +141,34 @@ describe("SideMenuMobile", () => {
     );
     expect(screen.getByTestId("logout-btn")).toBeDisabled();
   });
+
+  it("renders correctly in dark mode", () => {
+    (require("../../core/contexts/theme/ThemePreferenceContext").useThemePreference as jest.Mock).mockReturnValue({
+      appearance: "dark",
+      toggleAppearance: jest.fn(),
+    });
+    render(
+      <SideMenuMobile open={true} onOpenChange={onOpenChange} role="admin" />,
+    );
+    expect(screen.getByTestId("menu-content")).toBeInTheDocument();
+  });
+
+  it("handles navigation when onNavigate is not provided", () => {
+    render(
+      <SideMenuMobile open={true} onOpenChange={onOpenChange} role="admin" />,
+    );
+    fireEvent.click(screen.getByTestId("menu-content"));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("handles logout when logout function is not provided", async () => {
+    const { waitFor } = require("@testing-library/react");
+    render(
+      <SideMenuMobile open={true} onOpenChange={onOpenChange} role="admin" />,
+    );
+    fireEvent.click(screen.getByTestId("logout-btn"));
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+  });
 });
