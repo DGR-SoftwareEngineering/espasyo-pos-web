@@ -1,5 +1,14 @@
 import React, { useEffect, useState, KeyboardEvent } from "react";
-import { Badge, Box, Button, Flex, Text, TextField } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  TextField,
+} from "@radix-ui/themes";;
 import { AddRounded, CloseRounded, LocalOfferOutlined } from "@mui/icons-material";
 import { DialogBox } from "core-lib/components/radix/dialog/DialogBox";
 import { DIALOG_TITLES, SUGGESTED_TAGS } from "../constants";

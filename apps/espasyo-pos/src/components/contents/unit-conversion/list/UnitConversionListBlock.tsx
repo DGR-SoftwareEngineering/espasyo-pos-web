@@ -1,5 +1,14 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { AlertDialog, Badge, Box, Card, Flex, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
+  Card,
+} from "@radix-ui/themes";;
 import {
   ReloadIcon,
   ArrowUpIcon,

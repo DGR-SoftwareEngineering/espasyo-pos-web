@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Card, Flex, Grid, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Grid,
+} from "@radix-ui/themes";;
 import { TuneOutlined, InfoOutlined } from "@mui/icons-material";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import { FormHeader } from "core-lib/components/radix/FormHeader";

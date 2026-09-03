@@ -1,6 +1,16 @@
 // components/landing/StatsSection.tsx - Fixed Icons
 import React, { useEffect, useState, useRef } from "react";
-import { Box, Container, Grid, Text, Heading, Flex, Badge } from "@radix-ui/themes";
+import {
+  Box,
+  Text,
+  Heading,
+  Flex,
+  Badge,
+} from "core-lib/components/radix/proxies";
+import {
+  Container,
+  Grid,
+} from "@radix-ui/themes";;
 import { motion, useMotionValue, animate, useInView } from "framer-motion";
 import { 
   HeartIcon, 

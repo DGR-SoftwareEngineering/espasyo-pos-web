@@ -2,21 +2,23 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
+  Flex,
+  Heading,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
   Button,
   Card,
   Callout,
-  Flex,
   Grid,
-  Heading,
   RadioGroup,
   Select,
-  Separator,
   Skeleton,
   Switch,
-  Text,
   TextArea,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   AccessTimeOutlined,
   CalendarTodayOutlined,

@@ -1,6 +1,15 @@
 "use client";
 import React, { useMemo, useState } from "react";
-import { Box, Checkbox, Flex, RadioGroup, Separator, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Checkbox,
+  RadioGroup,
+} from "@radix-ui/themes";;
 import { Modal, PrimaryButton, useCart } from "core-lib/components/radix";
 import { formatCurrency } from "core-lib/business/strings";
 import {

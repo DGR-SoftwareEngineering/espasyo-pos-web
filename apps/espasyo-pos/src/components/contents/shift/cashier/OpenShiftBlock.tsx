@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/router";
 import {
-  Badge,
   Box,
-  Callout,
   Flex,
   Heading,
   Separator,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import {   Badge,
+  Callout,
   Theme,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import {
   AccessTimeOutlined,

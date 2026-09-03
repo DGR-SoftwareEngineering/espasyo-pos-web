@@ -4,9 +4,11 @@ import {
   Box,
   Flex,
   Separator,
-  Spinner,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Spinner,
+} from "@radix-ui/themes";;
 import { ReceiptLongOutlined } from "@mui/icons-material";
 import { DialogBox } from "core-lib/components/radix/dialog/DialogBox";
 import { useApi } from "core-lib/core/hooks";

@@ -12,6 +12,8 @@ module.exports = {
     "^next/head$": "<rootDir>/__tests__/__mocks__/nextHead.js",
     "^next/navigation$": "<rootDir>/__tests__/__mocks__/nextNavigation.js",
     "^core-lib/(.*)$": "<rootDir>/$1",
+    "^@radix-ui/themes$": "<rootDir>/__tests__/__mocks__/radixThemes.js",
+    "^@radix-ui/react-icons$": "<rootDir>/__tests__/__mocks__/radixIcons.js",
   },
   coverageDirectory: "coverage",
   collectCoverageFrom: [

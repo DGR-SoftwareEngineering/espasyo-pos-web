@@ -1,5 +1,15 @@
 import React from "react";
-import { Avatar, Badge, Box, Flex, Heading, Progress, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+  Progress,
+} from "@radix-ui/themes";;
 import { motion } from "framer-motion";
 import { StarFilledIcon } from "@radix-ui/react-icons";
 import { TIME_OF_DAY } from "../constants/timeOfDay";

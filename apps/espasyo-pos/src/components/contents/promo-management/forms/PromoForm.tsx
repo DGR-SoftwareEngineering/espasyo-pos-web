@@ -2,15 +2,17 @@ import React, { useEffect } from "react";
 import {
   Badge,
   Box,
-  Button,
-  Callout,
-  Card,
   Flex,
   IconButton,
   Separator,
-  Skeleton,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Callout,
+  Card,
+  Skeleton,
+} from "@radix-ui/themes";;
 import {
   AddCircleOutlined,
   AutoGraphOutlined,

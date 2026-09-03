@@ -1,15 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
 import {
-  Box,
-  Card,
   Flex,
   Heading,
   IconButton,
-  Select,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import {   Box,
+  Card,
+  Select,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   MagnifyingGlassIcon,
   PlusIcon,

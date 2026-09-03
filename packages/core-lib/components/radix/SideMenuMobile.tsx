@@ -10,6 +10,7 @@ import {
 } from "@radix-ui/themes";
 import { Cross1Icon, ExitIcon } from "@radix-ui/react-icons";
 import { usePublicSettings } from "../../core/contexts";
+import { useThemePreference } from "../../core/contexts/theme/ThemePreferenceContext";
 import { RadixMenuContent } from "./menu/RadixMenuContent";
 import { Button } from "./buttons/Button";
 
@@ -44,8 +45,14 @@ export const SideMenuMobile: React.FC<Props> = ({
     onNavigate?.();
   }, [onOpenChange, onNavigate]);
   const { theme } = usePublicSettings();
+  const { appearance } = useThemePreference();
+  const isDark = appearance === "dark";
   const displayName = initials || "User";
   const userInitial = (initials || email || "?").charAt(0).toUpperCase();
+
+  const bg = isDark ? "#000" : "#fff";
+  const dividerColor = isDark ? "#222" : "#eaeaea";
+  const textPrimary = isDark ? "#fafafa" : "#171717";
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -64,7 +71,7 @@ export const SideMenuMobile: React.FC<Props> = ({
           height: "100vh",
           padding: 0,
           borderRadius: 0,
-          background: "linear-gradient(180deg, var(--color-panel-solid), var(--gray-2))",
+          background: bg,
           display: "flex",
           flexDirection: "column",
         }}
@@ -77,47 +84,26 @@ export const SideMenuMobile: React.FC<Props> = ({
             px="4"
             py="3"
             style={{
-              borderBottom: "1px solid",
-              borderImage: "linear-gradient(90deg, var(--accent-a6), var(--accent-a4), var(--gray-a5)) 1",
+              borderBottom: `1px solid ${dividerColor}`,
               flexShrink: 0,
             }}
           >
             <Flex align="center" gap="2" style={{ minWidth: 0 }}>
               <Box
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: "var(--radius-4)",
-                  background:
-                    "linear-gradient(135deg, var(--accent-9), var(--accent-11))",
-                  color: "var(--accent-contrast)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  overflow: "hidden",
-                  boxShadow: "0 2px 12px var(--accent-a6)",
+                  width: 32, height: 32, borderRadius: 6,
+                  background: isDark ? "#111" : "#fafafa",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, overflow: "hidden",
                 }}
               >
                 {theme.logoUrl ? (
-                  <img
-                    src={theme.logoUrl}
-                    alt={brand}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
+                  <img src={theme.logoUrl} alt={brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <Text size="2" weight="bold">
-                    {brand.charAt(0)}
-                  </Text>
+                  <Text size="2" weight="bold" style={{ color: textPrimary }}>{brand.charAt(0)}</Text>
                 )}
               </Box>
-              <Text size="3" weight="bold" truncate>
-                {brand}
-              </Text>
+              <Text size="3" weight="bold" style={{ color: textPrimary }} truncate>{brand}</Text>
             </Flex>
             <IconButton
               variant="ghost"
@@ -132,7 +118,7 @@ export const SideMenuMobile: React.FC<Props> = ({
         </Dialog.Title>
 
         <Box style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-          <RadixMenuContent roleName={role} loading={loading} onNavigate={handleNavigate} />
+          <RadixMenuContent roleName={role} loading={loading} onNavigate={handleNavigate} isDark={isDark} />
         </Box>
 
         <Separator size="4" />
@@ -141,21 +127,14 @@ export const SideMenuMobile: React.FC<Props> = ({
           px="3"
           py="3"
           style={{
-            borderTop: "1px solid",
-            borderImage: "linear-gradient(90deg, var(--gray-a5), var(--accent-a4), var(--accent-a6)) 1",
+            borderTop: `1px solid ${dividerColor}`,
             flexShrink: 0,
-            background: "var(--color-panel-translucent)",
           }}
         >
           <Flex align="center" gap="3" mb="3">
-            <Avatar
-              size="2"
-              radius="full"
-              variant="soft"
-              fallback={userInitial}
-            />
+            <Avatar size="2" radius="full" variant="soft" fallback={userInitial} />
             <Box style={{ flex: 1, minWidth: 0 }}>
-              <Text size="2" weight="bold" as="div" truncate>
+              <Text size="2" weight="bold" as="div" style={{ color: textPrimary }} truncate>
                 {displayName}
               </Text>
               <Text size="1" color="gray" as="div" truncate>

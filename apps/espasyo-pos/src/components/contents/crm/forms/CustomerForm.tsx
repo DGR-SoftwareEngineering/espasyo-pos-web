@@ -1,5 +1,12 @@
 import React from "react";
-import { Box, Flex, Grid, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Grid,
+} from "@radix-ui/themes";;
 import {
   PersonOutlined,
   ContactPageOutlined,

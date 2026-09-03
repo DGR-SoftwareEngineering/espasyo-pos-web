@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Table, Badge, Button, Text, Flex, Box, Card, Dialog, Spinner, Callout, TextField } from "@radix-ui/themes";
+import {
+  Badge,
+  Text,
+  Flex,
+  Box,
+} from "core-lib/components/radix/proxies";
+import {
+  Table,
+  Button,
+  Card,
+  Dialog,
+  Spinner,
+  Callout,
+  TextField,
+} from "@radix-ui/themes";;
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { WarningAmberOutlined } from "@mui/icons-material";
 import { useRouter } from "next/router";

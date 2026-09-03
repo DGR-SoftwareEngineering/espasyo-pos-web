@@ -1,6 +1,15 @@
 "use client";
 import React, { useMemo } from "react";
-import { Badge, Box, Flex, Text, Callout, Progress } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  Progress,
+} from "@radix-ui/themes";;
 import { motion } from "framer-motion";
 import {
   LocalCafeOutlined,

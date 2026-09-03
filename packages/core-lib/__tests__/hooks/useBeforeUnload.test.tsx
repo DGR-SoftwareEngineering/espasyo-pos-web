@@ -1,7 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
+import "../test-utils";
 import { useBeforeUnload } from "../../core/hooks/useBeforeUnload";
 
-// Mock useRouter — variables starting with "mock" are hoisted by babel-jest
 const mockEvents = {
   on: jest.fn(),
   off: jest.fn(),
@@ -12,14 +12,9 @@ const mockPush = jest.fn().mockResolvedValue(true);
 
 jest.mock("../../core/router", () => ({
   useRouter: jest.fn(() => ({
+    ...require("../test-utils").mockRouter(),
     push: mockPush,
     events: mockEvents,
-    asPath: "/",
-    loading: false,
-    pathname: "/",
-    query: {},
-    title: "",
-    staticRoutes: {},
   })),
 }));
 

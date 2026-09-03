@@ -8,17 +8,19 @@ import React, {
 import {
   Badge,
   Box,
+  Flex,
+  Heading,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
   Button,
   Callout,
   Card,
-  Flex,
   Grid,
-  Heading,
   ScrollArea,
-  Separator,
   Skeleton,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   ActivityLogIcon,
   BarChartIcon,

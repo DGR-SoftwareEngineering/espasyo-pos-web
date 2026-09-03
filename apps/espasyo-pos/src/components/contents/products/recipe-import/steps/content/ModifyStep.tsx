@@ -3,16 +3,18 @@ import {
   Box,
   Flex,
   Text,
-  Card,
   Heading,
   Badge,
+  Separator,
+  IconButton,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
   Button,
   Tabs,
-  Separator,
   Callout,
   ScrollArea,
-  IconButton,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   CheckCircledIcon,
   ExclamationTriangleIcon,

@@ -1,5 +1,13 @@
 import React, { memo, useMemo } from "react";
-import { Box, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { BarChartIcon } from "@radix-ui/react-icons";
 import { ChartEmpty, ChartLoader } from "core-lib/components/radix/charts";
 import type { SupplierInvoiceDto } from "core-lib/api/commons/types";

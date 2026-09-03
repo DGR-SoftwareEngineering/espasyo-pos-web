@@ -1,13 +1,15 @@
 import React, { useMemo } from "react";
 import {
-  Avatar,
   Badge,
   Box,
   Flex,
   IconButton,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   KitchenOutlined,
   SwapVertOutlined,

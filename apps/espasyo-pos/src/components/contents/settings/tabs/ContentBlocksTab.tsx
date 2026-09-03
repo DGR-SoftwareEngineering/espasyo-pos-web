@@ -2,17 +2,19 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
-  Card,
-  Dialog,
   Flex,
   Heading,
   IconButton,
-  Select,
   Separator,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Dialog,
+  Select,
   TextArea,
   TextField as RxTextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   AddCircleOutlined,
   CheckCircleOutlined,

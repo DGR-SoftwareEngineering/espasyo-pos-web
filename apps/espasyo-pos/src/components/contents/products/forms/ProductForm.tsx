@@ -1,6 +1,15 @@
 import React from "react";
-import { useWatch } from "react-hook-form";
-import { Box, Callout, Card, Flex, Grid, Select, Text } from "@radix-ui/themes";
+import {
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useWatch } from "react-hook-form"; import { Box,
+  Callout,
+  Card,
+  Grid,
+  Select,
+} from "@radix-ui/themes";;
 import {
   DescriptionOutlined,
   ImageOutlined,

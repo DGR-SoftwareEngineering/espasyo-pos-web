@@ -2,15 +2,17 @@ import React from "react";
 import {
   Badge,
   Box,
+  Flex,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
   Button,
   Callout,
   Card,
-  Flex,
   Link,
-  Separator,
   Skeleton,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { ReloadIcon } from "@radix-ui/react-icons";
 import {
   AutoAwesomeOutlined,

@@ -2,15 +2,17 @@ import React, { useEffect, useState } from "react";
 import {
   Badge,
   Box,
-  Button,
   Flex,
-  Grid,
   IconButton,
-  ScrollArea,
   Separator,
-  Skeleton,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Grid,
+  ScrollArea,
+  Skeleton,
+} from "@radix-ui/themes";;
 import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { EmojiEvents, TrendingUpOutlined } from "@mui/icons-material";

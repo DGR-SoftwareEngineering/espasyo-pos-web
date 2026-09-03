@@ -2,18 +2,20 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   Badge,
   Box,
-  Button,
-  Callout,
   Flex,
   Heading,
   IconButton,
-  ScrollArea,
   Separator,
-  Spinner,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Callout,
+  ScrollArea,
+  Spinner,
   TextField,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   Cross2Icon,
   PlusIcon,

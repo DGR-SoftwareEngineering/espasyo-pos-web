@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import {
   Badge,
   Box,
-  Callout,
-  Card,
-  Checkbox,
   Flex,
   Heading,
   Separator,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  Card,
+  Checkbox,
+} from "@radix-ui/themes";;
 import {
   CloudDownloadOutlined,
   InfoOutlined,

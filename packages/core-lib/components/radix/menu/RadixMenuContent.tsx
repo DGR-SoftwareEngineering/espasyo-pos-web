@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { ChevronRightIcon, ChevronDownIcon } from "@radix-ui/react-icons";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "../../../core/router";
 import { usePageLoaderContext, useOfflineMode } from "../../../core/contexts";
 import { useTabsNavigation, deriveLabel } from "../../../core/contexts/TabsNavigationContext";
@@ -16,6 +17,126 @@ import { MenuItem } from "../../menu/config/menuConfig";
 import { useFilteredMenu } from "../../menu/hooks/useFilteredMenu";
 
 const OFFLINE_ALLOWED_PATHS = ["/cashier/pos", "/cashier/orders"];
+
+interface RadixMenuContentProps {
+  roleName: string;
+  loading?: boolean;
+  collapsed?: boolean;
+  onNavigate?: () => void;
+  isDark?: boolean;
+}
+
+const SectionLabel: React.FC<{ label: string; isDark: boolean }> = ({ label, isDark }) => (
+  <Box px="2" pb="1" pt="3">
+    <Text
+      size="1"
+      weight="medium"
+      style={{
+        color: isDark ? "#555" : "#999",
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+        fontSize: 11,
+      }}
+    >
+      {label}
+    </Text>
+  </Box>
+);
+
+const NavItem: React.FC<{
+  icon: React.ReactNode;
+  text: string;
+  active: boolean;
+  hasNested: boolean;
+  isOpen: boolean;
+  depth: number;
+  offlineBlocked: boolean;
+  onClick: () => void;
+  onToggle?: () => void;
+  isDark: boolean;
+}> = ({ icon, text, active, hasNested, isOpen, depth, offlineBlocked, onClick, onToggle, isDark }) => {
+  const bg = isDark ? "#000" : "#fff";
+  const hoverBg = isDark ? "#111" : "#fafafa";
+  const activeBg = isDark ? "#111" : "#fafafa";
+  const defaultColor = isDark ? "#666" : "#888";
+  const activeColor = isDark ? "#fafafa" : "#171717";
+
+  const handleClick = () => {
+    if (offlineBlocked) return;
+    onClick();
+    if (hasNested) onToggle?.();
+  };
+
+  return (
+    <Flex
+      align="center"
+      gap="2"
+      role="button"
+      tabIndex={0}
+      aria-expanded={hasNested ? isOpen : undefined}
+      aria-current={active ? "page" : undefined}
+      aria-disabled={offlineBlocked}
+      title={offlineBlocked ? "Available when online" : undefined}
+      onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+      style={{
+        padding: "7px 12px",
+        paddingLeft: depth > 0 ? 12 + depth * 16 : 12,
+        margin: "0 4px",
+        borderRadius: 6,
+        cursor: offlineBlocked ? "not-allowed" : "pointer",
+        opacity: offlineBlocked ? 0.4 : 1,
+        background: active ? activeBg : undefined,
+        color: active ? activeColor : defaultColor,
+        transition: "background 100ms ease, color 100ms ease",
+        userSelect: "none",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) (e.currentTarget as HTMLElement).style.background = hoverBg;
+      }}
+      onMouseLeave={(e) => {
+        if (!active) (e.currentTarget as HTMLElement).style.background = "";
+      }}
+    >
+      <Box
+        style={{
+          width: 18,
+          height: 18,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          color: "inherit",
+          opacity: active ? 1 : 0.65,
+          transition: "opacity 100ms ease",
+        }}
+      >
+        {icon}
+      </Box>
+      <Text
+        size="2"
+        weight={active ? "medium" : "regular"}
+        style={{ flex: 1, color: "inherit", fontSize: 13 }}
+      >
+        {text}
+      </Text>
+      {hasNested && (
+        <motion.div
+          animate={{ rotate: isOpen ? 90 : 0 }}
+          transition={{ duration: 0.15, ease: "easeInOut" }}
+          style={{ display: "inline-flex", color: isDark ? "#555" : "#bbb", flexShrink: 0 }}
+        >
+          <ChevronRightIcon width={14} height={14} />
+        </motion.div>
+      )}
+    </Flex>
+  );
+};
 
 interface NestedMenuItemProps {
   item: MenuItem;
@@ -25,23 +146,8 @@ interface NestedMenuItemProps {
   onSelect: (path: string) => void;
   onToggle: (itemId: string) => void;
   offlineBlocked?: boolean;
+  isDark: boolean;
 }
-
-const SectionLabel: React.FC<{ label: string }> = ({ label }) => (
-  <Box px="2" pb="1" pt="3">
-    <Text
-      size="1"
-      weight="medium"
-      style={{
-        color: "var(--gray-10)",
-        textTransform: "uppercase",
-        letterSpacing: "0.08em",
-      }}
-    >
-      {label}
-    </Text>
-  </Box>
-);
 
 const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
   item,
@@ -51,182 +157,67 @@ const NestedMenuItem: React.FC<NestedMenuItemProps> = ({
   onSelect,
   onToggle,
   offlineBlocked = false,
+  isDark,
 }) => {
   const hasNested = !!item.nestedItems?.length;
   const isOpen = openStates[item.id] || false;
   const isSelected = item.path === selectedPath;
-  const hasSelectedChild = item.nestedItems?.some(
-    (n) => n.path === selectedPath,
-  );
+  const hasSelectedChild = item.nestedItems?.some((n) => n.path === selectedPath) ?? false;
   const active = isSelected || hasSelectedChild;
 
-  const handleClick = () => {
+  const handleSelect = () => {
     if (offlineBlocked) return;
-    // Navigate if the item has a direct path (even if it also has children)
     if (item.path) onSelect(item.path);
-    // Toggle children independently of navigation
+  };
+
+  const handleToggle = () => {
+    if (offlineBlocked) return;
     if (hasNested) onToggle(item.id);
   };
 
   return (
     <Box>
-      <Flex
-        align="center"
-        gap="2"
-        role="button"
-        tabIndex={0}
-        aria-expanded={hasNested ? isOpen : undefined}
-        aria-current={isSelected ? "page" : undefined}
-        aria-disabled={offlineBlocked}
-        title={offlineBlocked ? "Available when online" : undefined}
-        onClick={handleClick}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleClick();
-          }
-        }}
-        style={{
-          padding: "7px 10px",
-          paddingLeft: 14 + depth * 12,
-          borderRadius: "var(--radius-3)",
-          cursor: offlineBlocked ? "not-allowed" : "pointer",
-          opacity: offlineBlocked ? 0.4 : 1,
-          background: active ? "var(--accent-a3)" : undefined,
-          color: active ? "var(--accent-11)" : "var(--gray-11)",
-          transition: "background 200ms ease, color 200ms ease",
-        }}
-        onMouseEnter={(e) => {
-          if (!active) e.currentTarget.style.background = "var(--gray-a3)";
-        }}
-        onMouseLeave={(e) => {
-          if (!active) e.currentTarget.style.background = "";
-        }}
-      >
-        <Box
-          style={{
-            width: 20,
-            height: 20,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            color: "inherit",
-          }}
-        >
-          {item.icon}
-        </Box>
-        <Text
-          size="2"
-          weight={active ? "bold" : "regular"}
-          style={{ flex: 1, color: "inherit" }}
-        >
-          {item.text}
-        </Text>
-        {hasNested && (
-          <Box
-            style={{
-              display: "inline-flex",
-              color: "var(--gray-10)",
-              transition: "transform 250ms ease",
-              transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
-            }}
+      <NavItem
+        icon={item.icon}
+        text={item.text}
+        active={active}
+        hasNested={hasNested}
+        isOpen={isOpen}
+        depth={depth}
+        offlineBlocked={offlineBlocked}
+        onClick={handleSelect}
+        onToggle={handleToggle}
+        isDark={isDark}
+      />
+
+      <AnimatePresence initial={false}>
+        {hasNested && isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+            style={{ overflow: "hidden" }}
           >
-            <ChevronRightIcon />
-          </Box>
-        )}
-      </Flex>
-
-      {hasNested && isOpen && (
-        <Box
-          mt="1"
-          style={{
-            position: "relative",
-            marginLeft: 8,
-          }}
-        >
-          {/* Vertical line — dashed style */}
-          <Box
-            style={{
-              position: "absolute",
-              left: 14,
-              top: 4,
-              bottom: 4,
-              width: 1.5,
-              background: "var(--gray-a6)",
-              opacity: 0.5,
-            }}
-          />
-
-          {/* Submenu items */}
-          <Box>
-            {item.nestedItems!.map((nested) => {
-              const isNestedSelected = nested.path === selectedPath;
-
-              return (
-                <Flex
+            <Box mt="1">
+              {item.nestedItems!.map((nested) => (
+                <NavItem
                   key={nested.id}
-                  align="center"
-                  gap="2"
-                  role="link"
-                  tabIndex={0}
-                  aria-current={isNestedSelected ? "page" : undefined}
+                  icon={nested.icon}
+                  text={nested.text}
+                  active={nested.path === selectedPath}
+                  hasNested={false}
+                  isOpen={false}
+                  depth={depth + 1}
+                  offlineBlocked={false}
                   onClick={() => onSelect(nested.path)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      onSelect(nested.path);
-                    }
-                  }}
-                  style={{
-                    padding: "7px 10px",
-                    paddingLeft: 30,
-                    borderRadius: "var(--radius-3)",
-                    cursor: "pointer",
-                    background: isNestedSelected
-                      ? "var(--accent-a3)"
-                      : undefined,
-                    color: isNestedSelected
-                      ? "var(--accent-11)"
-                      : "var(--gray-11)",
-                    transition: "background 200ms ease, color 200ms ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isNestedSelected)
-                      e.currentTarget.style.background = "var(--gray-a3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isNestedSelected)
-                      e.currentTarget.style.background = "";
-                  }}
-                >
-                  <Box
-                    style={{
-                      width: 20,
-                      height: 20,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      color: "inherit",
-                    }}
-                  >
-                    {nested.icon}
-                  </Box>
-
-                  <Text
-                    size="2"
-                    weight={isNestedSelected ? "medium" : "regular"}
-                    style={{ flex: 1, color: "inherit" }}
-                  >
-                    {nested.text}
-                  </Text>
-                </Flex>
-              );
-            })}
-          </Box>
-        </Box>
-      )}
+                  isDark={isDark}
+                />
+              ))}
+            </Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 };
@@ -236,6 +227,7 @@ interface CollapsedMenuItemProps {
   selectedPath: string;
   onSelect: (path: string) => void;
   offlineBlocked?: boolean;
+  isDark: boolean;
 }
 
 const CollapsedMenuItem: React.FC<CollapsedMenuItemProps> = ({
@@ -243,14 +235,18 @@ const CollapsedMenuItem: React.FC<CollapsedMenuItemProps> = ({
   selectedPath,
   onSelect,
   offlineBlocked = false,
+  isDark,
 }) => {
   const hasNested = !!item.nestedItems?.length;
   const isSelected = item.path === selectedPath;
-  const hasSelectedChild = item.nestedItems?.some(
-    (n) => n.path === selectedPath,
-  );
+  const hasSelectedChild = item.nestedItems?.some((n) => n.path === selectedPath);
   const active = isSelected || hasSelectedChild;
   const [popoverOpen, setPopoverOpen] = useState(false);
+
+  const hoverBg = isDark ? "#111" : "#fafafa";
+  const activeBg = isDark ? "#111" : "#fafafa";
+  const defaultColor = isDark ? "#666" : "#888";
+  const activeColor = isDark ? "#fafafa" : "#171717";
 
   const trigger = (
     <Flex
@@ -277,27 +273,33 @@ const CollapsedMenuItem: React.FC<CollapsedMenuItemProps> = ({
       style={{
         width: 44,
         height: 40,
-        borderRadius: "var(--radius-2)",
+        borderRadius: 6,
         cursor: offlineBlocked ? "not-allowed" : "pointer",
         opacity: offlineBlocked ? 0.4 : 1,
-        background: active ? "var(--accent-a3)" : undefined,
-        color: active ? "var(--accent-11)" : "var(--gray-11)",
-        transition: "background 200ms ease, color 200ms ease",
+        background: active ? activeBg : undefined,
+        color: active ? activeColor : defaultColor,
+        transition: "background 100ms ease, color 100ms ease",
       }}
       onMouseEnter={(e) => {
-        if (!active) e.currentTarget.style.background = "var(--gray-a3)";
+        if (!active) (e.currentTarget as HTMLElement).style.background = hoverBg;
       }}
       onMouseLeave={(e) => {
-        if (!active) e.currentTarget.style.background = "";
+        if (!active) (e.currentTarget as HTMLElement).style.background = "";
       }}
     >
-      <Box style={{ display: "inline-flex", color: "inherit" }}>
+      <Box
+        style={{
+          display: "inline-flex",
+          color: "inherit",
+          opacity: active ? 1 : 0.65,
+          transition: "opacity 100ms ease",
+        }}
+      >
         {item.icon}
       </Box>
     </Flex>
   );
 
-  // Parent items with only nested children open a flyout popover.
   if (!item.path && hasNested) {
     return (
       <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -331,17 +333,16 @@ const CollapsedMenuItem: React.FC<CollapsedMenuItemProps> = ({
                   }}
                   style={{
                     padding: "6px 8px",
-                    borderRadius: "var(--radius-2)",
+                    borderRadius: 6,
                     cursor: "pointer",
-                    background: isNestedSelected ? "var(--accent-a3)" : undefined,
-                    color: isNestedSelected ? "var(--accent-11)" : "var(--gray-12)",
+                    background: isNestedSelected ? "var(--gray-a3)" : undefined,
+                    color: isNestedSelected ? "var(--gray-12)" : "var(--gray-11)",
                   }}
                   onMouseEnter={(e) => {
-                    if (!isNestedSelected)
-                      e.currentTarget.style.background = "var(--gray-a2)";
+                    if (!isNestedSelected) (e.currentTarget as HTMLElement).style.background = "var(--gray-a2)";
                   }}
                   onMouseLeave={(e) => {
-                    if (!isNestedSelected) e.currentTarget.style.background = "";
+                    if (!isNestedSelected) (e.currentTarget as HTMLElement).style.background = "";
                   }}
                 >
                   <Box style={{ display: "inline-flex", opacity: 0.85 }}>
@@ -366,18 +367,12 @@ const CollapsedMenuItem: React.FC<CollapsedMenuItemProps> = ({
   );
 };
 
-interface RadixMenuContentProps {
-  roleName: string;
-  loading?: boolean;
-  collapsed?: boolean;
-  onNavigate?: () => void;
-}
-
 export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
   roleName,
   loading,
   collapsed = false,
   onNavigate,
+  isDark = false,
 }) => {
   const router = useRouter();
   const { startContentTransition } = usePageLoaderContext();
@@ -388,23 +383,15 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
 
   const isPathOfflineBlocked = useCallback(
     (path: string | undefined) =>
-      !isOnline &&
-      !!path &&
-      !OFFLINE_ALLOWED_PATHS.some((allowed) => path.startsWith(allowed)),
+      !isOnline && !!path && !OFFLINE_ALLOWED_PATHS.some((allowed) => path.startsWith(allowed)),
     [isOnline],
   );
 
   const { mainMenu, secondaryMenu } = useFilteredMenu(roleName);
   const mainMenuKey = useMemo(
-    () =>
-      mainMenu
-        .map(
-          (item) =>
-            `${item.id}:${item.path ?? ""}:${(item.nestedItems ?? [])
-              .map((n) => `${n.id}=${n.path}`)
-              .join(",")}`,
-        )
-        .join("|"),
+    () => mainMenu.map((item) =>
+      `${item.id}:${item.path ?? ""}:${(item.nestedItems ?? []).map((n) => `${n.id}=${n.path}`).join(",")}`
+    ).join("|"),
     [mainMenu],
   );
 
@@ -425,7 +412,6 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.pathname, mainMenuKey]);
 
-  // Build a flat path → label map from all menu items so openTab gets the correct label
   const pathLabelMap = useMemo(() => {
     const map: Record<string, string> = {};
     [...mainMenu, ...secondaryMenu].forEach((item) => {
@@ -453,13 +439,11 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
     setOpenStates((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
   }, []);
 
+  const defaultColor = isDark ? "#666" : "#888";
+
   if (loading) {
     return (
-      <Flex
-        align="center"
-        justify="center"
-        style={{ height: "100%", padding: 32 }}
-      >
+      <Flex align="center" justify="center" style={{ height: "100%", padding: 32 }}>
         <Spinner size="3" loading />
       </Flex>
     );
@@ -467,11 +451,7 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
 
   if (collapsed) {
     return (
-      <ScrollArea
-        scrollbars="vertical"
-        type="hover"
-        style={{ height: "100%", width: "100%" }}
-      >
+      <ScrollArea scrollbars="vertical" type="hover" style={{ height: "100%", width: "100%" }}>
         <Flex direction="column" align="center" gap="1" p="2">
           {mainMenu.map((item) => (
             <CollapsedMenuItem
@@ -480,6 +460,7 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
               selectedPath={selectedPath}
               onSelect={handleSelect}
               offlineBlocked={isPathOfflineBlocked(item.path)}
+              isDark={isDark}
             />
           ))}
           {secondaryMenu.length > 0 && (
@@ -488,7 +469,7 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
               pt="2"
               style={{
                 width: "100%",
-                borderTop: "1px solid var(--gray-a4)",
+                borderTop: `1px solid ${isDark ? "#222" : "#eaeaea"}`,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -502,6 +483,7 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
                   selectedPath={selectedPath}
                   onSelect={handleSelect}
                   offlineBlocked={isPathOfflineBlocked(item.path)}
+                  isDark={isDark}
                 />
               ))}
             </Box>
@@ -512,15 +494,10 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
   }
 
   return (
-    <ScrollArea
-      scrollbars="vertical"
-      type="hover"
-      style={{ height: "100%", width: "100%" }}
-    >
+    <ScrollArea scrollbars="vertical" type="hover" style={{ height: "100%", width: "100%" }}>
       <Flex direction="column" gap="1" p="2" style={{ flex: 1 }}>
-        {/* Main menu */}
         <Flex direction="column">
-          <SectionLabel label="Navigation" />
+          <SectionLabel label="Navigation" isDark={isDark} />
           <Flex direction="column" gap="0.5">
             {mainMenu.map((item) => (
               <NestedMenuItem
@@ -532,21 +509,21 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
                 onSelect={handleSelect}
                 onToggle={handleToggle}
                 offlineBlocked={isPathOfflineBlocked(item.path)}
+                isDark={isDark}
               />
             ))}
           </Flex>
         </Flex>
 
-        {/* Section separator */}
-        <Box mx="2" my="1" style={{ height: 1, background: "var(--accent-a4)", flexShrink: 0 }} />
+        <Box mx="2" my="1" style={{ height: 1, background: isDark ? "#222" : "#eaeaea", flexShrink: 0 }} />
 
-        {/* Secondary menu */}
         {secondaryMenu.length > 0 && (
           <Flex direction="column">
-            <SectionLabel label="Support" />
+            <SectionLabel label="Support" isDark={isDark} />
             <Flex direction="column" gap="0.5">
               {secondaryMenu.map((item) => {
                 const isSelected = item.path === selectedPath;
+                const activeBg = isDark ? "#111" : "#fafafa";
                 return (
                   <Flex
                     key={item.id}
@@ -563,38 +540,41 @@ export const RadixMenuContent: React.FC<RadixMenuContentProps> = ({
                       }
                     }}
                     style={{
-                      padding: "7px 14px",
-                      borderRadius: "var(--radius-3)",
+                      padding: "7px 12px",
+                      margin: "0 4px",
+                      borderRadius: 6,
                       cursor: "pointer",
-                      background: isSelected ? "var(--accent-a3)" : undefined,
-                      color: isSelected ? "var(--accent-11)" : "var(--gray-11)",
-                      transition: "background 200ms ease, color 200ms ease",
+                      background: isSelected ? activeBg : undefined,
+                      color: isSelected ? (isDark ? "#fafafa" : "#171717") : defaultColor,
+                      transition: "background 100ms ease, color 100ms ease",
+                      userSelect: "none",
                     }}
                     onMouseEnter={(e) => {
-                      if (!isSelected)
-                        e.currentTarget.style.background = "var(--gray-a3)";
+                      if (!isSelected) (e.currentTarget as HTMLElement).style.background = isDark ? "#111" : "#fafafa";
                     }}
                     onMouseLeave={(e) => {
-                      if (!isSelected) e.currentTarget.style.background = "";
+                      if (!isSelected) (e.currentTarget as HTMLElement).style.background = "";
                     }}
                   >
                     <Box
                       style={{
-                        width: 20,
-                        height: 20,
+                        width: 18,
+                        height: 18,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         flexShrink: 0,
                         color: "inherit",
+                        opacity: isSelected ? 1 : 0.65,
+                        transition: "opacity 100ms ease",
                       }}
                     >
                       {item.icon}
                     </Box>
                     <Text
                       size="2"
-                      weight={isSelected ? "bold" : "regular"}
-                      style={{ color: "inherit" }}
+                      weight={isSelected ? "medium" : "regular"}
+                      style={{ color: "inherit", fontSize: 13 }}
                     >
                       {item.text}
                     </Text>

@@ -1,22 +1,24 @@
 import React, { useMemo, useState } from "react";
-import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";
-import { CashierShiftDto, ShiftSummaryDto } from "core-lib/api/commons/types";
-import { formatCurrency } from "core-lib/business/strings";
 import {
-  Badge,
   Box,
+  Flex,
+  IconButton,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useApi,
+  useApiCallback,
+  useResolution } from "core-lib/core/hooks"; import { CashierShiftDto,
+  ShiftSummaryDto } from "core-lib/api/commons/types"; import { formatCurrency } from "core-lib/business/strings"; import {   Badge,
   Button,
   Card,
   Dialog,
-  Flex,
   Grid,
-  IconButton,
   ScrollArea,
-  Separator,
   Skeleton,
   Table,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   AccessTimeOutlined,
   CalendarTodayOutlined,

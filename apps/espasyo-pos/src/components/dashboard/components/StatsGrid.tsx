@@ -1,4 +1,6 @@
-import { Grid } from "@radix-ui/themes";
+import {
+  Grid,
+} from "@radix-ui/themes";;
 import { STATS_CARDS } from "../constants/stats";
 import { AnimatedStatsCard } from "./animation/AnimatedStatsCard";
 

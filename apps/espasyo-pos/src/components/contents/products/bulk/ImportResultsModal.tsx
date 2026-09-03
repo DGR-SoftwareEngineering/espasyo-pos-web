@@ -1,5 +1,13 @@
 import React from "react";
-import { Badge, Box, Flex, Table, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Table,
+} from "@radix-ui/themes";;
 import { CheckIcon } from "@radix-ui/react-icons";
 import { DialogBox } from "core-lib/components/radix/dialog/DialogBox";
 import { Button } from "core-lib/components/radix/buttons/Button";

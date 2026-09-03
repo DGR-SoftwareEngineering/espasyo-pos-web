@@ -5,7 +5,7 @@ import {
   Flex,
   Heading,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";;
 import {
   ArrowBackIosNewOutlined,
   ArrowForwardIosOutlined,

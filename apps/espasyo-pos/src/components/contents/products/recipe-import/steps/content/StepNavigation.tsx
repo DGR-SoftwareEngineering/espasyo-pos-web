@@ -1,5 +1,11 @@
 import React from "react";
-import { Button, Flex, Spinner } from "@radix-ui/themes";
+import {
+  Flex,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Spinner,
+} from "@radix-ui/themes";;
 import { ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
 
 interface StepNavigationProps {

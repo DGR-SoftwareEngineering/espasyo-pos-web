@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Tooltip,
+} from "@radix-ui/themes";;
 import { Cross1Icon } from "@radix-ui/react-icons";
 import { PersonSearchOutlined } from "@mui/icons-material";
 import { Control, Controller, useWatch } from "react-hook-form";

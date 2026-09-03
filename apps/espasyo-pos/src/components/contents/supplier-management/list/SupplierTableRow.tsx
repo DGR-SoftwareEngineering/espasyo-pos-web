@@ -1,5 +1,13 @@
 import React from "react";
-import { Badge, Box, Flex, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Tooltip,
+} from "@radix-ui/themes";;
 import { SupplierDto } from "core-lib/api/commons/types";
 import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";
 import { ActionButtons } from "core-lib/components/radix/buttons/ActionButtons";

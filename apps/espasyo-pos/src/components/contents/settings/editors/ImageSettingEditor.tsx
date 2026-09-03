@@ -1,5 +1,9 @@
 import React, { useRef, useState } from "react";
-import { Box, Flex, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import { UploadIcon, ImageIcon } from "@radix-ui/react-icons";
 import { useApiCallback } from "core-lib/core/hooks";
 import { useToastContext } from "core-lib";

@@ -2,13 +2,15 @@ import React from "react";
 import {
   Badge,
   Box,
-  Callout,
   Flex,
-  Grid,
   Heading,
   Separator,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  Grid,
+} from "@radix-ui/themes";;
 import {
   CheckCircleOutlineOutlined,
   TaskAltOutlined,

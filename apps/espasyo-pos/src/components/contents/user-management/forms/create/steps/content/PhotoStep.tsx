@@ -1,5 +1,8 @@
 import React from "react";
-import { Flex, Text } from "@radix-ui/themes";
+import {
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import { PhotoCameraOutlined } from "@mui/icons-material";
 import { ImageUploadField } from "core-lib/components/radix/form/ImageUploadField";
 import { useUserCreateContext } from "../../UserCreateContext";

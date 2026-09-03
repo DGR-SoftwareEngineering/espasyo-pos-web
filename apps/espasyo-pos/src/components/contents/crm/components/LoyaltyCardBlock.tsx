@@ -1,5 +1,11 @@
 import React, { useCallback, useState } from "react";
-import { AlertDialog, Button, Flex } from "@radix-ui/themes";
+import {
+  Flex,
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
+  Button,
+} from "@radix-ui/themes";;
 import { EmojiEventsOutlined, UndoOutlined } from "@mui/icons-material";
 import { useApiCallback, useResolution } from "core-lib/core/hooks";
 import { mobileDialogStyle, mobileFooterStyle } from "core-lib/components/radix/dialog/mobileFullScreen";

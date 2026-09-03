@@ -1,5 +1,15 @@
 import React from "react";
-import { Avatar, Badge, Box, Flex, Grid, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+  Grid,
+  Tooltip,
+} from "@radix-ui/themes";;
 import { RecipeItemResponse } from "core-lib/api/commons/types";
 import {
   NotesOutlined,

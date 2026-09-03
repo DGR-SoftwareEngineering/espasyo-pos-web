@@ -4,9 +4,11 @@ import {
   Flex,
   Heading,
   Text,
-  Grid,
   Separator,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Grid,
+} from "@radix-ui/themes";;
 import {
   PersonIcon,
   LockClosedIcon,

@@ -3,11 +3,13 @@ import Link from "next/link";
 import {
   Badge,
   Box,
-  Button,
   Flex,
   Heading,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+} from "@radix-ui/themes";;
 import {
   ArrowBackIosNewOutlined,
   ArrowForwardIosOutlined,

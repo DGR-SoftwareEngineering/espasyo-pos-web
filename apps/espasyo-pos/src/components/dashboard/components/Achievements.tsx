@@ -1,4 +1,10 @@
-import { Card, Flex, Heading } from "@radix-ui/themes";
+import {
+  Flex,
+  Heading,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { ACHIEVEMENTS } from "../constants/actions";
 import { AnimatedAchievement } from "./animation/AnimatedAchievement";
 

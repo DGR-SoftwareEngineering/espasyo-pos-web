@@ -1,5 +1,7 @@
 import React from "react";
-import { Box } from "@radix-ui/themes";
+import {
+  Box,
+} from "core-lib/components/radix/proxies";;
 import { useRecipeImportContext } from "./RecipeImportContext";
 import { useRecipeImportSteps } from "./steps/useSteps";
 import { ImportRecipeExcelDto } from "core-lib/api/commons/types";

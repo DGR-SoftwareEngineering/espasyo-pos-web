@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Box, Card, Flex, Heading, Text, Spinner } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Spinner,
+} from "@radix-ui/themes";;
 
 const SYNC_MESSAGES = [
   "Syncing your data...",

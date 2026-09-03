@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import {
-  AlertDialog,
-  Avatar,
   Badge,
   Box,
-  Button,
   Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
+  Avatar,
+  Button,
   Popover,
   Spinner,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { DotsHorizontalIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import { motion } from "framer-motion";
 import { FacebookPostDto, FacebookPostStatus } from "core-lib/api/commons/types";

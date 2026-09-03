@@ -2,15 +2,17 @@ import React, { memo, useCallback, useMemo, useState } from "react";
 import {
   Badge,
   Box,
-  Card,
   Flex,
-  Grid,
   Heading,
   IconButton,
   Separator,
-  Skeleton,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Grid,
+  Skeleton,
+} from "@radix-ui/themes";;
 import {
   CategoryOutlined,
   ExpandLessOutlined,

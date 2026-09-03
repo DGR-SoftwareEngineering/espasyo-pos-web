@@ -2,14 +2,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
-  Callout,
   Flex,
   Heading,
   IconButton,
   Separator,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
   TextArea,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   DeleteOutline,
   KitchenOutlined,

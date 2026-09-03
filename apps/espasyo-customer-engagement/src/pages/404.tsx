@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import { Button, Flex, Text, Box } from "@radix-ui/themes";
+import {
+  Flex,
+  Text,
+  Box,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import { Button,
+} from "@radix-ui/themes";;
 import { motion, useReducedMotion } from "framer-motion";
 import { useAuthContext } from "core-lib/core/contexts";
 

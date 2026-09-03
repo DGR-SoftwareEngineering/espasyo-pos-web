@@ -1,21 +1,24 @@
-import { useToastContext } from "core-lib";
-import React, { useEffect, useMemo, useState } from "react";
 import {
-  Badge,
   Box,
+  Flex,
+  Heading,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useToastContext } from "core-lib"; import React,
+  { useEffect,
+  useMemo,
+  useState } from "react"; import {   Badge,
   Button,
   Callout,
   Card,
-  Flex,
-  Heading,
   ScrollArea,
   Select,
-  Separator,
   Spinner,
   Tabs,
-  Text,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   ArrowLeftIcon,
   ArrowRightIcon,

@@ -1,5 +1,10 @@
 import React from "react";
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import { PrintableDocument } from "core-lib/components/print";
 import { SalesForecastResponseDto } from "core-lib/api/commons/types";
 import { formatCurrency } from "../contents/procurement/format";

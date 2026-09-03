@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Box, Card, Flex, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { ReloadIcon, PlusIcon, PersonIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
 import { useDialogContext } from "core-lib";

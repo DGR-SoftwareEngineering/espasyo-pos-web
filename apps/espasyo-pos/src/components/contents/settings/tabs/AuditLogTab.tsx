@@ -2,18 +2,20 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
+  Flex,
+  Heading,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
   Card,
   Code,
   Dialog,
-  Flex,
-  Heading,
   Select,
-  Separator,
   Switch,
-  Text,
   TextField,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   Restore,
   Search,

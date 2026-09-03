@@ -2,14 +2,16 @@ import React, { useMemo, useState } from "react";
 import {
   Badge,
   Box,
-  Card,
   Flex,
   Heading,
   IconButton,
   Separator,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   AddCircleOutlined,
   DeleteOutlined,

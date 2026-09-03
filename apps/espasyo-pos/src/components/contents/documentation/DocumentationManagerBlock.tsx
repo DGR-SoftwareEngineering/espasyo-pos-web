@@ -1,20 +1,22 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  AlertDialog,
   Badge,
   Box,
-  Button,
-  Dialog,
   Flex,
   Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
+  Button,
+  Dialog,
   ScrollArea,
   Select,
   Switch,
-  Text,
   TextArea,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   AddCircleOutlined,
   ArrowBackOutlined,

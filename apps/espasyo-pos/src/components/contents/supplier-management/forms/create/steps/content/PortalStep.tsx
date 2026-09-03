@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Callout, Checkbox, Flex, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  Checkbox,
+} from "@radix-ui/themes";;
 import {
   PersonAddAlt1Outlined,
   InfoOutlined,

@@ -2,16 +2,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
-  Callout,
-  Card,
   Flex,
   Heading,
   IconButton,
   Separator,
-  Tabs,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  Card,
+  Tabs,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   CheckCircleOutlined,
   Restore,

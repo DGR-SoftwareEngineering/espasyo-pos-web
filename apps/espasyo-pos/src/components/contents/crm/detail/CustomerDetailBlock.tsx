@@ -1,6 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import { Badge, Box, Button, Card, Flex, Skeleton, Tabs, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import { Badge,
+  Button,
+  Card,
+  Skeleton,
+  Tabs,
+} from "@radix-ui/themes";;
 import { Pencil1Icon } from "@radix-ui/react-icons";
 import {
   PersonOutlined,

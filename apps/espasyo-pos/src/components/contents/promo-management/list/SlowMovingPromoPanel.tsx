@@ -2,13 +2,15 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
-  Button,
-  Card,
   Flex,
   Separator,
-  Skeleton,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Card,
+  Skeleton,
+} from "@radix-ui/themes";;
 import { ReloadIcon } from "@radix-ui/react-icons";
 import {
   TrendingDownOutlined,

@@ -1,6 +1,15 @@
 "use client";
 import React, { useMemo, useState } from "react";
-import { Badge, Box, Flex, Grid, Text, TextField } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Grid,
+  TextField,
+} from "@radix-ui/themes";;
 import { MagnifyingGlassIcon, ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { ListLoader } from "core-lib/components/radix";

@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import {
   Box,
-  Card,
   Flex,
   Text,
+  Separator,
+  Badge,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
   Callout,
   Grid,
   Button,
-  Separator,
-  Badge,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { CheckCircledIcon, ClipboardIcon, CheckIcon } from "@radix-ui/react-icons";
 import { useRecipeImportContext, useGoToHistory } from "../../RecipeImportContext";
 import { StepShell } from "./StepShell";

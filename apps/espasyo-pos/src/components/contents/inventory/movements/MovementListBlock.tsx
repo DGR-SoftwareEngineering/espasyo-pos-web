@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
-  Card,
   Flex,
-  Select,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Select,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   ReloadIcon,
   MagnifyingGlassIcon,

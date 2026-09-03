@@ -1,5 +1,12 @@
 import React from "react";
-import { Box, Card, Flex, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { PlatformDto, CreatePlatformParams, UpdatePlatformParams } from "core-lib/api/platform/types";
 
 interface PlatformFormProps {

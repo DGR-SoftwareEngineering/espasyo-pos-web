@@ -1,4 +1,6 @@
-import { Badge } from "@radix-ui/themes";
+import {
+  Badge,
+} from "core-lib/components/radix/proxies";;
 import { CustomerOrderStatus } from "core-lib/api/commons/types";
 
 type BadgeColor = React.ComponentProps<typeof Badge>["color"];

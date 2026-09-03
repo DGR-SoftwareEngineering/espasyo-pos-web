@@ -1,5 +1,11 @@
 import React from "react";
-import { Flex, Grid, Text } from "@radix-ui/themes";
+import {
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Grid,
+} from "@radix-ui/themes";;
 import { BusinessOutlined, PersonOutlineOutlined } from "@mui/icons-material";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import { useSupplierCreateContext } from "../../SupplierCreateContext";

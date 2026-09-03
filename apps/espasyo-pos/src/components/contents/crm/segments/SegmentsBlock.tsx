@@ -1,6 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
-import { Box, Button, Card, Flex, Grid, Text } from "@radix-ui/themes";
+import {
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import { Box,
+  Button,
+  Card,
+  Grid,
+} from "@radix-ui/themes";;
 import { ReloadIcon } from "@radix-ui/react-icons";
 import {
   NewReleasesOutlined,

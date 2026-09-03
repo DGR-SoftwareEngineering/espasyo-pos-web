@@ -2,14 +2,16 @@ import React, { useMemo } from "react";
 import {
   Badge,
   Box,
-  Callout,
   Flex,
   Heading,
   IconButton,
   Separator,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
   Theme,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   PersonIcon,
   LockClosedIcon,

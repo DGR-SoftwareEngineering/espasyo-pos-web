@@ -1,6 +1,15 @@
 // components/landing/FeaturesSection.tsx - Fully Fixed
 import React, { useRef, useState } from "react";
-import { Box, Container, Grid, Heading, Text, Flex } from "@radix-ui/themes";
+import {
+  Box,
+  Heading,
+  Text,
+  Flex,
+} from "core-lib/components/radix/proxies";
+import {
+  Container,
+  Grid,
+} from "@radix-ui/themes";;
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
 const features = [

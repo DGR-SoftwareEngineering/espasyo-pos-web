@@ -1,15 +1,16 @@
 import React, { useMemo } from "react";
-import { useRouter } from "next/router";
 import {
-  Avatar,
   Badge,
   Box,
   Flex,
   Heading,
   Separator,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import {   Avatar,
   Theme,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   CoffeeOutlined,
   HomeOutlined,

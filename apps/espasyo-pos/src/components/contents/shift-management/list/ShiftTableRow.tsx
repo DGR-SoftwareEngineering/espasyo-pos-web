@@ -1,5 +1,13 @@
 import React from "react";
-import { Badge, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Tooltip,
+} from "@radix-ui/themes";;
 import { EyeOpenIcon } from "@radix-ui/react-icons";
 import { DeleteOutlined, LockOpenOutlined } from "@mui/icons-material";
 import { CashierShiftDto } from "core-lib/api/commons/types";

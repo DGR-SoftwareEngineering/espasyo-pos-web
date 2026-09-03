@@ -1,5 +1,14 @@
 import React from "react";
-import { Avatar, Badge, Box, Flex, Heading, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+} from "@radix-ui/themes";;
 import {
   PersonIcon,
   LightningBoltIcon,

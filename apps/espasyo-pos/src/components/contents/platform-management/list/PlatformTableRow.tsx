@@ -1,5 +1,15 @@
 import React from "react";
-import { Avatar, Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+  Tooltip,
+} from "@radix-ui/themes";;
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlined from "@mui/icons-material/DeleteOutlined";

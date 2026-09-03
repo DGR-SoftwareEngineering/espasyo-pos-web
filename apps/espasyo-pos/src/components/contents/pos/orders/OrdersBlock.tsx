@@ -2,15 +2,17 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
-  Callout,
   Flex,
   Heading,
   IconButton,
-  Select,
   Separator,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
+  Select,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   ChevronLeftIcon,
   ChevronRightIcon,

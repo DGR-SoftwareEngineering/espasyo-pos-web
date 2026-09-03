@@ -2,15 +2,17 @@ import React, { useMemo, useState } from "react";
 import {
   Badge,
   Box,
-  Button,
-  Dialog,
   Flex,
   IconButton,
-  ScrollArea,
   Separator,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
+  Dialog,
+  ScrollArea,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { Cross2Icon, MinusIcon, PlusIcon } from "@radix-ui/react-icons";
 import type {
   SellableVariantDto,

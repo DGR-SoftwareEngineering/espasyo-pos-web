@@ -1,5 +1,10 @@
 import React, { useMemo } from "react";
-import { Badge, Box, Flex, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import {
   ArrowDownwardRounded,
   ArrowUpwardRounded,

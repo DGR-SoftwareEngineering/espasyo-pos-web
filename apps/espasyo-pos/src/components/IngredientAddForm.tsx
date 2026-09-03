@@ -1,5 +1,12 @@
 import React from "react";
-import { Box, Flex, Heading, Tooltip } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+} from "core-lib/components/radix/proxies";
+import {
+  Tooltip,
+} from "@radix-ui/themes";;
 import { InfoOutlined } from "@mui/icons-material";
 import { TextField } from "core-lib/components/radix/form/TextField";
 import {

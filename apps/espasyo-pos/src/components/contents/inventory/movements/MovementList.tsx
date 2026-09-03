@@ -1,5 +1,7 @@
 import React, { useCallback } from "react";
-import { Box } from "@radix-ui/themes";
+import {
+  Box,
+} from "core-lib/components/radix/proxies";;
 import { DataTableV2 } from "core-lib/components/radix/table/DataTableV2";
 import { StockMovementDto } from "core-lib/api/commons/types";
 import { MovementTableRow } from "./MovementTableRow";

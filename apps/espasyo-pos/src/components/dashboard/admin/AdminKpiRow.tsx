@@ -1,5 +1,14 @@
 import React, { useMemo } from "react";
-import { Box, Card, Flex, Heading, Skeleton, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Skeleton,
+} from "@radix-ui/themes";;
 import {
   PersonIcon,
   CubeIcon,

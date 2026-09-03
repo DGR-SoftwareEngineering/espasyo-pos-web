@@ -1,5 +1,14 @@
 import React from "react";
-import { Badge, Box, Flex, IconButton, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Tooltip,
+} from "@radix-ui/themes";;
 import { LockClosedIcon, LockOpen1Icon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { UserDto } from "core-lib/api/commons/types";
 import { BaseTableRow } from "core-lib/components/radix/table/BaseTableRow";

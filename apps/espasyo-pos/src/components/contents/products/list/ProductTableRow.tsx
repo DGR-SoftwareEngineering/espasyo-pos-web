@@ -1,5 +1,13 @@
 import React, { useMemo } from "react";
-import { Avatar, Badge, Box, Flex, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+} from "@radix-ui/themes";;
 import {
   RestaurantMenuOutlined,
   KitchenOutlined,

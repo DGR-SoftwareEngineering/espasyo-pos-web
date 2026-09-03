@@ -2,15 +2,17 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
+  Flex,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
   Button,
   Card,
   Dialog,
-  Flex,
   ScrollArea,
-  Separator,
   Spinner,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import { EmojiEventsOutlined } from "@mui/icons-material";
 import { useApiCallback } from "core-lib/core/hooks";

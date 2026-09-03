@@ -1,5 +1,11 @@
 import React from "react";
-import { Avatar, Flex, Text } from "@radix-ui/themes";
+import {
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+} from "@radix-ui/themes";;
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaceIcon,

@@ -1,6 +1,14 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/router";
-import { Badge, Box, Card, Flex, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "next/router"; import { Badge,
+  Card,
+  Tooltip,
+} from "@radix-ui/themes";;
 import {
   ReloadIcon,
   RocketIcon,

@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import {
-  Avatar,
   Badge,
   Box,
   Flex,
-  Table,
   Text,
-} from "@radix-ui/themes";
+} from "core-lib/components/radix/proxies";
+import {
+  Avatar,
+  Table,
+} from "@radix-ui/themes";;
 import {
   SwitchIcon,
   CheckCircledIcon,

@@ -2,15 +2,17 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   Badge,
   Box,
-  Callout,
   Flex,
   IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Callout,
   ScrollArea,
   Spinner,
-  Text,
   TextField,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   MagnifyingGlassIcon,
   PlusIcon,

@@ -1,5 +1,10 @@
 import React, { memo } from "react";
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import { motion } from "framer-motion";
 import type { Accent } from "../types";
 

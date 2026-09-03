@@ -1,14 +1,16 @@
 import React, { useCallback, useState } from "react";
 import {
-  AlertDialog,
   Box,
-  Button,
-  Card,
   Flex,
   IconButton,
   Text,
+} from "core-lib/components/radix/proxies";
+import {
+  AlertDialog,
+  Button,
+  Card,
   Tooltip,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { TrashIcon } from "@radix-ui/react-icons";
 import { StickyNote2Outlined, AddCircleOutline } from "@mui/icons-material";
 import { useApiCallback, useResolution } from "core-lib/core/hooks";

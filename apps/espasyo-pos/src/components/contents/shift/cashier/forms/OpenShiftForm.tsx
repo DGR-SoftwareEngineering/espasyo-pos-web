@@ -1,5 +1,9 @@
 import React from "react";
-import { Box, Flex, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";;
 import { AttachMoneyOutlined, NotesOutlined } from "@mui/icons-material";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { TextField } from "core-lib/components/radix/form/TextField";

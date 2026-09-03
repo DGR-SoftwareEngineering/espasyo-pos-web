@@ -1,5 +1,16 @@
 import React from "react";
-import { Badge, Box, Card, Flex, IconButton, Select, Text, Tooltip } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  IconButton,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Select,
+  Tooltip,
+} from "@radix-ui/themes";;
 import { TrashIcon, PlusIcon, CheckCircledIcon, FileTextIcon } from "@radix-ui/react-icons";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 import { Control, useFieldArray, type FieldArrayPath, type FieldValues } from "react-hook-form";

@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Badge, Box, Flex, Text, TextField, Popover } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  TextField,
+  Popover,
+} from "@radix-ui/themes";;
 import { Anchor as PopoverAnchor } from "@radix-ui/react-popover";
 import {
   SearchOutlined,

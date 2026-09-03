@@ -2,14 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Badge,
   Box,
-  Button,
   Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Button,
   Select,
   Switch,
-  Text,
   TextArea,
   TextField,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
 import { SystemSettingDto } from "core-lib/api/commons/types";
 import {

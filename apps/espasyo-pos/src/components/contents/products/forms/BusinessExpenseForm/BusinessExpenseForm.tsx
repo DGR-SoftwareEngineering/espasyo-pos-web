@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Card, Flex, Grid, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Grid,
+} from "@radix-ui/themes";;
 import {
   DescriptionOutlined,
   InfoOutlined,

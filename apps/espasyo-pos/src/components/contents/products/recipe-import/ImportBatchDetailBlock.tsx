@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { useRouter } from "core-lib/core/router";
 import {
-  Box,
   Flex,
   Text,
-  Card,
   Heading,
   Badge,
+  Separator,
+} from "core-lib/components/radix/proxies";
+import {
+  useRouter } from "core-lib/core/router"; import {   Box,
+  Card,
   Table,
   Button,
   Dialog,
   Callout,
   Spinner,
   RadioGroup,
-  Separator,
   Checkbox,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import { ChevronLeftIcon, CheckIcon, InfoCircledIcon } from "@radix-ui/react-icons";
 import { WarningAmberOutlined } from "@mui/icons-material";
 import { useApi, useApiCallback, useResolution } from "core-lib/core/hooks";

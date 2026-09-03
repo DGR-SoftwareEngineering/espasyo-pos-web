@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Box, Card, Flex, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Box,
+  Flex,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { ReceiptLongOutlined } from "@mui/icons-material";
 import { useApiCallback } from "core-lib/core/hooks";
 import { DataTableV2 } from "core-lib/components/radix/table/DataTableV2";

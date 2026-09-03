@@ -3,14 +3,16 @@ import {
   Box,
   Flex,
   Text,
-  Card,
-  Grid,
   Heading,
   Badge,
-  Callout,
   Separator,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+  Grid,
+  Callout,
   Table,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   TableIcon,
   CheckCircledIcon,

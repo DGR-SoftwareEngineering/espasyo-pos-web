@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Box, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
+  Card,
+} from "@radix-ui/themes";;
 import { BackupTableOutlined } from "@mui/icons-material";
 import { BackupExportPanel } from "./backup/BackupExportPanel";
 import { BackupImportPanel } from "./backup/BackupImportPanel";

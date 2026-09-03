@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Box } from "@radix-ui/themes";
+import {
+  Box,
+} from "core-lib/components/radix/proxies";;
 import { useAuthContext } from "core-lib";
 import { usePublicSettings } from "core-lib/core/contexts";
 import { getDailySalesGross } from "core-lib/business";

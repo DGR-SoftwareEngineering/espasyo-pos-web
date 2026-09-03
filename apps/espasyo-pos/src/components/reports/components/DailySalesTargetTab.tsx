@@ -2,16 +2,18 @@ import React, { useMemo, useState } from "react";
 import {
   Badge,
   Box,
+  Flex,
+  Heading,
+  Separator,
+  Text,
+} from "core-lib/components/radix/proxies";
+import {
   Button,
   Callout,
   Card,
-  Flex,
   Grid,
-  Heading,
-  Separator,
   Spinner,
-  Text,
-} from "@radix-ui/themes";
+} from "@radix-ui/themes";;
 import {
   CalendarIcon,
 } from "@radix-ui/react-icons";
