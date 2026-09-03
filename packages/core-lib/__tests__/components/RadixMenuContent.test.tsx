@@ -262,7 +262,7 @@ describe("RadixMenuContent", () => {
     });
     render(<RadixMenuContent roleName="admin" collapsed onNavigate={onNavigate} />);
     const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[0]);
+    fireEvent.click(buttons[0]!);
     expect(openTab).toHaveBeenCalledWith("/admin/hub", "Dashboard");
     expect(routerMock.push).toHaveBeenCalledWith("/admin/hub");
   });
@@ -274,7 +274,7 @@ describe("RadixMenuContent", () => {
     });
     render(<RadixMenuContent roleName="admin" collapsed onNavigate={onNavigate} />);
     const buttons = screen.getAllByRole("button");
-    fireEvent.keyDown(buttons[0], { key: "Enter" });
+    fireEvent.keyDown(buttons[0]!, { key: "Enter" });
     expect(openTab).toHaveBeenCalledWith("/admin/hub", "Dashboard");
     expect(routerMock.push).toHaveBeenCalledWith("/admin/hub");
   });
@@ -287,7 +287,7 @@ describe("RadixMenuContent", () => {
     });
     render(<RadixMenuContent roleName="admin" collapsed />);
     const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[0]);
+    fireEvent.click(buttons[0]!);
     expect(routerMock.push).not.toHaveBeenCalled();
   });
 
@@ -405,7 +405,7 @@ describe("RadixMenuContent", () => {
       secondaryMenu: [flat("settings", "Settings", "/admin/hub/settings")],
     });
     const { container } = render(<RadixMenuContent roleName="admin" collapsed isDark />);
-    const trigger = screen.getAllByRole("button")[0];
+    const trigger = screen.getAllByRole("button")[0]!;
     fireEvent.click(trigger);
     fireEvent.keyDown(trigger, { key: "Enter" });
     fireEvent.mouseEnter(trigger);
@@ -425,6 +425,48 @@ describe("RadixMenuContent", () => {
     expect(selected.getAttribute("aria-current")).toBe("page");
     fireEvent.mouseEnter(selected);
     fireEvent.mouseLeave(selected);
+    hoverAll(container);
+  });
+
+  it("renders dark mode expanded with opened group (router matches child)", () => {
+    routerMock = mockRouter({ pathname: "/admin/hub/inventory/list" });
+    (useRouter as jest.Mock).mockReturnValue(routerMock);
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        group("inv", "Inventory", [
+          { id: "inv-list", text: "Inventory List", icon, path: "/admin/hub/inventory/list", permissionKey: "inv.list" },
+        ]),
+      ],
+      secondaryMenu: [],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" isDark />);
+    expect(screen.getByText("Inventory List")).toBeInTheDocument();
+    hoverAll(container);
+  });
+
+  it("applies dark mode hover style to non-selected secondary items", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [],
+      secondaryMenu: [flat("settings", "Settings", "/admin/hub/settings")],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" isDark />);
+    const item = screen.getByRole("link", { name: "Settings" });
+    expect(item.getAttribute("aria-current")).toBeNull();
+    fireEvent.mouseEnter(item);
+    fireEvent.mouseLeave(item);
+    hoverAll(container);
+  });
+
+  it("applies light mode selected styling to secondary items", () => {
+    routerMock = mockRouter({ pathname: "/admin/hub/settings" });
+    (useRouter as jest.Mock).mockReturnValue(routerMock);
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [],
+      secondaryMenu: [flat("settings", "Settings", "/admin/hub/settings")],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" />);
+    const selected = screen.getByRole("link", { name: "Settings" });
+    expect(selected.getAttribute("aria-current")).toBe("page");
     hoverAll(container);
   });
 });

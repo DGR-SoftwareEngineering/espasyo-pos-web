@@ -234,4 +234,18 @@ describe("SideMenu", () => {
     render(<SideMenu logout={logout} role="admin" />);
     expect(screen.getByText("TestBrand")).toBeInTheDocument();
   });
+
+  it("falls back to empty string when role is null", () => {
+    render(<SideMenu logout={logout} role={null as any} />);
+    expect(screen.getByText("POS")).toBeInTheDocument();
+  });
+
+  it("falls back to default brand when systemName is null", () => {
+    (usePublicSettings as jest.Mock).mockReturnValue({
+      systemName: null,
+      theme: { logoUrl: null },
+    });
+    render(<SideMenu logout={logout} role="admin" />);
+    expect(screen.getByText("Espasyo")).toBeInTheDocument();
+  });
 });

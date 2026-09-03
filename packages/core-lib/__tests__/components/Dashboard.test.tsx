@@ -291,4 +291,16 @@ describe("RadixDashboard", () => {
     );
     expect(screen.getByTestId("page-content")).toBeInTheDocument();
   });
+
+  it("renders BottomNav with empty role name when role is undefined on small mobile", () => {
+    (useResolution as jest.Mock).mockReturnValue(
+      mockResolution({ isMobile: true, isSmallMobile: true, isTablet: false, isDesktop: false }),
+    );
+    render(
+      <RadixDashboard logout={logout}>
+        <div data-testid="page-content">Content</div>
+      </RadixDashboard>,
+    );
+    expect(screen.getByTestId("bottom-nav")).toBeInTheDocument();
+  });
 });
