@@ -469,4 +469,31 @@ describe("RadixMenuContent", () => {
     expect(selected.getAttribute("aria-current")).toBe("page");
     hoverAll(container);
   });
+
+  it("navigates on Space key for a flat item", () => {
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [flat("dash", "Dashboard", "/admin/hub")],
+      secondaryMenu: [],
+    });
+    render(<RadixMenuContent roleName="admin" onNavigate={onNavigate} />);
+    fireEvent.keyDown(screen.getByText("Dashboard"), { key: " " });
+    expect(openTab).toHaveBeenCalledWith("/admin/hub", "Dashboard");
+    expect(onNavigate).toHaveBeenCalled();
+  });
+
+  it("does not mark grouped items as offline-blocked since they have no path", () => {
+    (useOfflineMode as jest.Mock).mockReturnValue({ isOnline: false });
+    (useFilteredMenu as jest.Mock).mockReturnValue({
+      mainMenu: [
+        group("inv", "Inventory", [
+          { id: "inv-list", text: "Inventory List", icon, path: "/admin/hub/inventory/list", permissionKey: "inv.list" },
+        ]),
+      ],
+      secondaryMenu: [],
+    });
+    const { container } = render(<RadixMenuContent roleName="admin" />);
+    const item = screen.getByRole("button", { name: "Inventory" });
+    expect(item.getAttribute("aria-disabled")).not.toBe("true");
+    hoverAll(container);
+  });
 });
